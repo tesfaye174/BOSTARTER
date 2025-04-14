@@ -1,0 +1,356 @@
+/* Register Page Styles - Apple Design System */
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Colori principali - Stile Apple */
+  --primary: #000000;
+  --primary-light: #1d1d1f;
+  --primary-dark: #000000;
+  --secondary: #86868b;
+  --accent: #0066cc;
+  
+  /* Backgrounds */
+  --bg-light: #f5f5f7;
+  --bg-white: #ffffff;
+  --bg-dark: #1d1d1f;
+  
+  /* Testo */
+  --text-dark: #1d1d1f;
+  --text-light: #86868b;
+  --text-white: #ffffff;
+  
+  /* Bordi e ombre */
+  --border-light: #d2d2d7;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.16);
+  
+  /* Effetti vetro */
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(209, 213, 219, 0.3);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  
+  /* Transizioni */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Styles */
+body {
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.47059;
+  letter-spacing: -0.022em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Registration Container */
+.register-container {
+  max-width: 460px;
+  margin: 80px auto;
+  padding: 0 20px;
+}
+
+/* Registration Card */
+.register-card {
+  background: var(--bg-white);
+  border-radius: 20px;
+  padding: 48px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.register-header h1 {
+  font-size: 32px;
+  line-height: 1.125;
+  font-weight: 600;
+  letter-spacing: -0.009em;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+.register-header p {
+  font-size: 17px;
+  line-height: 1.47059;
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  color: var(--text-light);
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  line-height: 1.33337;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.form-control {
+  width: 100%;
+  height: 44px;
+  padding: 12px 16px;
+  font-size: 17px;
+  line-height: 1.23536;
+  letter-spacing: -0.022em;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  background-color: var(--bg-white);
+  color: var(--text-dark);
+  transition: all var(--transition-normal);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+}
+
+.form-control::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+/* Password Requirements */
+.password-requirements {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--bg-light);
+  border-radius: 12px;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.33337;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
+.requirement-item:last-child {
+  margin-bottom: 0;
+}
+
+.requirement-item i {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.requirement-item.valid {
+  color: #00a300;
+}
+
+/* Submit Button */
+.btn-register {
+  width: 100%;
+  height: 50px;
+  background: var(--accent);
+  color: var(--text-white);
+  border: none;
+  border-radius: 980px;
+  font-size: 17px;
+  line-height: 1.17648;
+  letter-spacing: -0.022em;
+  font-weight: 400;
+  margin-top: 32px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.btn-register:hover {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.btn-register:disabled {
+  background: var(--secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Alternative Options */
+.alternative-options {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-light);
+}
+
+.alternative-options p {
+  font-size: 14px;
+  line-height: 1.33337;
+  color: var(--text-light);
+  margin-bottom: 16px;
+}
+
+.social-login-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-social {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-light);
+  border: 1px solid var(--border-light);
+  color: var(--text-dark);
+  transition: all var(--transition-normal);
+}
+
+.btn-social:hover {
+  background: var(--bg-white);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-social i {
+  font-size: 20px;
+}
+
+/* Login Link */
+.login-link {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.login-link p {
+  font-size: 14px;
+  line-height: 1.33337;
+  color: var(--text-light);
+}
+
+.login-link a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-normal);
+}
+
+.login-link a:hover {
+  color: var(--primary);
+}
+
+/* Error Messages */
+.error-message {
+  color: #ff3b30;
+  font-size: 14px;
+  line-height: 1.33337;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.error-message i {
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+/* Success Messages */
+.success-message {
+  color: #00a300;
+  font-size: 14px;
+  line-height: 1.33337;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.success-message i {
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+/* Loading State */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+  .register-container {
+    margin: 40px auto;
+  }
+
+  .register-card {
+    padding: 32px 24px;
+  }
+
+  .register-header h1 {
+    font-size: 28px;
+  }
+
+  .register-header p {
+    font-size: 16px;
+  }
+
+  .form-control {
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .btn-register {
+    height: 44px;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+} 

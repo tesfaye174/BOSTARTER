@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BOSTARTER - Piattaforma di crowdfunding per progetti hardware e software">
+    <meta name="keywords" content="crowdfunding, progetti, hardware, software, finanziamento">
+    <meta name="author" content="BOSTARTER">
+    <meta name="theme-color" content="#0d6efd">
+    
+    <!-- Metadati per la condivisione social -->
+    <meta property="og:title" content="BOSTARTER - Piattaforma di Crowdfunding">
+    <meta property="og:description" content="Dai vita alle tue idee di progetti hardware e software">
+    <meta property="og:image" content="img/social-preview.jpg">
+    <meta property="og:url" content="https://bostarter.com">
+    <meta property="og:type" content="website">
+    
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <title>BOSTARTER - Piattaforma di Crowdfunding</title>
+    
+    <!-- Preconnect e Preload per risorse critiche -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="css/index.css" as="style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" as="script">
+    
+    <!-- Stili CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+   
+    <link href="css/index.css" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100 bg-gradient">
+    <nav class="navbar navbar-expand-lg navbar-glass animate__animated animate__fadeIn" role="navigation" aria-label="Menu principale">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html" aria-label="BOSTARTER Home">BOSTARTER</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Mostra menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="projects.html" aria-current="page">
+                            <i class="bi bi-grid-3x3-gap-fill me-1" aria-hidden="true"></i>Progetti
+                        </a>
+                    </li>
+                    <li class="nav-item" id="creator-menu" style="display: none;">
+                        <a class="nav-link" href="create-project.html">
+                            <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Nuovo Progetto
+                        </a>
+                    </li>
+                    <li class="nav-item" id="admin-menu" style="display: none;">
+                        <a class="nav-link" href="admin.html">
+                            <i class="bi bi-gear me-1" aria-hidden="true"></i>Amministrazione
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item" id="login-menu">
+                        <a class="nav-link" href="login.html">
+                            <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Accedi
+                        </a>
+                    </li>
+                    <li class="nav-item" id="register-menu">
+                        <a class="nav-link" href="register.html">
+                            <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Registrati
+                        </a>
+                    </li>
+                    <li class="nav-item" id="profile-menu" style="display: none;">
+                        <a class="nav-link" href="profile.html">
+                            <i class="bi bi-person-circle me-1" aria-hidden="true"></i>Profilo
+                        </a>
+                    </li>
+                    <li class="nav-item" id="logout-menu" style="display: none;">
+                        <a class="nav-link" href="#" onclick="logout(event)">
+                            <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+        <!-- Contenitore per messaggi di errore globali -->
+        <div id="global-alerts"></div>
+        
+        <!-- Hero section -->
+        <section class="hero-section text-center py-5 mb-5 animate__animated animate__fadeIn">
+            <h1 class="display-4 fw-bold mb-3">Dai vita alle tue idee</h1>
+            <p class="lead mb-4">BOSTARTER è la piattaforma di crowdfunding che ti aiuta a trasformare i tuoi progetti hardware e software in realtà</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="projects.html" class="btn btn-primary btn-lg">Esplora Progetti</a>
+                <a href="register.html" class="btn btn-outline-light btn-lg">Inizia il tuo Progetto</a>
+            </div>
+        </section>
+        
+        <!-- Statistiche -->
+        <section class="row mb-5 g-4" aria-label="Statistiche principali">
+            <div class="col-md-4">
+                <div class="card hover-lift glass-card animate__animated animate__fadeInUp">
+                    <div class="card-header gradient-primary">
+                        <h5 class="card-title mb-0 d-flex align-items-center">
+                            <i class="bi bi-trophy-fill me-2" aria-hidden="true"></i>Top Creator
+                        </h5>
+                    </div>
+                    <div class="card-body" id="top-creators">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Caricamento...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card hover-lift glass-card animate__animated animate__fadeInUp animate__delay-1s">
+                    <div class="card-header gradient-success">
+                        <h5 class="card-title mb-0 d-flex align-items-center">
+                            <i class="bi bi-graph-up me-2" aria-hidden="true"></i>Progetti Vicini al Completamento
+                        </h5>
+                    </div>
+                    <div class="card-body" id="near-completion">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Caricamento...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card hover-lift glass-card animate__animated animate__fadeInUp animate__delay-2s">
+                    <div class="card-header gradient-accent">
+                        <h5 class="card-title mb-0 d-flex align-items-center">
+                            <i class="bi bi-star-fill me-2" aria-hidden="true"></i>Top Finanziatori
+                        </h5>
+                    </div>
+                    <div class="card-body" id="top-funders">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Caricamento...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progetti in Evidenza -->
+        <section class="mb-5" aria-label="Progetti in evidenza">
+            <h2 class="display-6 fw-bold mb-4">Progetti in Evidenza</h2>
+            <div class="row g-4" id="featured-projects">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Caricamento...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progetti Recenti -->
+        <section class="mb-5" aria-label="Progetti recenti">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="display-6 fw-bold">Progetti Recenti</h2>
+                <a href="projects.html" class="btn btn-outline-primary">Vedi tutti</a>
+            </div>
+            <div class="row g-4" id="recent-projects">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Caricamento...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Come funziona -->
+        <section class="how-it-works-section py-5 mb-5" aria-label="Come funziona">
+            <h2 class="display-6 fw-bold text-center mb-5">Come Funziona</h2>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="step-card text-center p-4">
+                        <div class="step-icon mb-3">
+                            <i class="bi bi-lightbulb-fill" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="h5 mb-3">1. Crea</h3>
+                        <p>Presenta il tuo progetto hardware o software con una descrizione dettagliata</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card text-center p-4">
+                        <div class="step-icon mb-3">
+                            <i class="bi bi-currency-euro" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="h5 mb-3">2. Finanzia</h3>
+                        <p>Stabilisci un budget e un termine per raccogliere i fondi necessari</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card text-center p-4">
+                        <div class="step-icon mb-3">
+                            <i class="bi bi-people-fill" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="h5 mb-3">3. Collabora</h3>
+                        <p>Trova collaboratori con le competenze adatte per il tuo progetto</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card text-center p-4">
+                        <div class="step-icon mb-3">
+                            <i class="bi bi-rocket-takeoff-fill" aria-hidden="true"></i>
+                        </div>
+                        <h3 class="h5 mb-3">4. Realizza</h3>
+                        <p>Sviluppa il tuo progetto e mantieni aggiornati i sostenitori</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer-glass text-light py-5 mt-auto">
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">BOSTARTER</h5>
+                    <p class="mb-0 text-gray-300">Piattaforma di crowdfunding per progetti hardware e software</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="fw-bold mb-3">Link Utili</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="about.html" class="text-gray-300 text-decoration-none">Chi Siamo</a></li>
+                        <li><a href="faq.html" class="text-gray-300 text-decoration-none">FAQ</a></li>
+                        <li><a href="contact.html" class="text-gray-300 text-decoration-none">Contatti</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <h5 class="fw-bold mb-3">Seguici</h5>
+                    <div class="d-flex justify-content-md-end gap-3">
+                        <a href="#" class="text-gray-300 social-icon" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-gray-300 social-icon" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="text-gray-300 social-icon" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-gray-300 social-icon" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                    <p class="mt-3 mb-0 text-gray-300">&copy; 2024 BOSTARTER. Tutti i diritti riservati.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/index.js"></script>
+    
+    <!-- Script per reti neurali di fallback e polyfill (opzionali) -->
+    <script>
+        // Gestione errori globali non catturati
+        window.addEventListener('error', function(event) {
+            console.error('Errore non catturato:', event.error);
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger mt-3 animate__animated animate__fadeIn';
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>Si è verificato un errore imprevisto. Ricarica la pagina.`;
+            
+            const container = document.getElementById('global-alerts');
+            if (container) {
+                container.appendChild(alertDiv);
+                setTimeout(() => {
+                    alertDiv.classList.replace('animate__fadeIn', 'animate__fadeOut');
+                    setTimeout(() => alertDiv.remove(), 500);
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>
