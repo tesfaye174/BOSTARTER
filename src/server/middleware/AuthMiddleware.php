@@ -1,39 +1,62 @@
 <?php
-require_once __DIR__ . '/../utils/Response.php';
-
 class AuthMiddleware {
     public static function authenticate() {
-        $headers = getallheaders();
-        $token = $headers['Authorization'] ?? null;
+        session_start();
         
-        if (!$token) {
-            Response::error('Unauthorized', 401);
+        // Skip authentication for public routes
+        $publicRoutes = [
+            '/api/auth/login',
+            '/api/auth/register',
+            '/api/auth/check',
+            '/api/auth/reset-password',
+            '/api/projects/list',
+            '/api/projects/view',
+            '/api/projects/search',
+            '/api/projects/categories',
+            '/api/stats/top-creators',
+            '/api/stats/top-projects',
+            '/api/stats/top-funders',
+            '/api/competencies/list'
+        ];
+        
+        $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        
+        // Allow public routes to proceed without authentication
+        foreach ($publicRoutes as $route) {
+            if (strpos($requestUri, $route) !== false) {
+                return;
+            }
         }
         
-        try {
-            // Remove 'Bearer ' from token
-            $token = str_replace('Bearer ', '', $token);
-            $decoded = JWT::decode($token, JWT_SECRET, ['HS256']);
-            return $decoded;
-        } catch (Exception $e) {
-            Response::error('Invalid token', 401);
+        // Check if user is authenticated
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Unauthorized: Please log in to access this resource']);
+            exit;
         }
     }
     
-    public static function isAdmin() {
-        $user = self::authenticate();
-        if (!isset($user->isAdmin) || !$user->isAdmin) {
-            Response::error('Admin access required', 403);
+    public static function adminOnly() {
+        self::authenticate();
+        
+        if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Forbidden: Admin access required']);
+            exit;
         }
-        return $user;
     }
     
-    public static function isCreator() {
-        $user = self::authenticate();
-        if (!isset($user->isCreator) || !$user->isCreator) {
-            Response::error('Creator access required', 403);
+    public static function creatorOnly() {
+        self::authenticate();
+        
+        if (!isset($_SESSION['is_creator']) || $_SESSION['is_creator'] !== true) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Forbidden: Creator access required']);
+            exit;
         }
-        return $user;
     }
 }
 ?>

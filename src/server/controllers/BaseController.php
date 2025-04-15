@@ -1,33 +1,80 @@
 <?php
-abstract class BaseController {
+require_once __DIR__ . '/../../database/Database.php';
+require_once __DIR__ . '/../MongoDB/mongodb.php';
+
+use Config\Logger;
+
+class BaseController {
     protected $db;
-    protected $mongodb;
+    protected $logger;
     
     public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
-        $this->mongodb = Database::getInstance()->getMongoDB();
+        $this->db = Database::getInstance();
+        $this->logger = Logger::getInstance();
     }
     
-    abstract public function handleRequest($method, $action, $id = null);
+    protected function json($data, $statusCode = 200) {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
+    }
     
-    protected function getRequestData() {
-        $data = json_decode(file_get_contents('php://input'), true);
+    protected function error($message, $statusCode = 400) {
+        http_response_code($statusCode);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => $message]);
+        exit;
+    }
+    
+    protected function requireAuth() {
+        if (!isset($_SESSION['user_id'])) {
+            $this->error('Unauthorized', 401);
+        }
+        return $_SESSION['user_id'];
+    }
+    
+    protected function requireAdmin() {
+        $userId = $this->requireAuth();
+        
+        $stmt = $this->db->executeQuery(
+            "SELECT COUNT(*) as count FROM admin_users WHERE user_id = ?", 
+            [$userId]
+        );
+        $result = $stmt->fetch();
+        
+        if (!$result || $result['count'] == 0) {
+            $this->error('Forbidden: Admin access required', 403);
+        }
+        
+        return $userId;
+    }
+    
+    protected function requireCreator() {
+        $userId = $this->requireAuth();
+        
+        $stmt = $this->db->executeQuery(
+            "SELECT COUNT(*) as count FROM creator_users WHERE user_id = ?", 
+            [$userId]
+        );
+        $result = $stmt->fetch();
+        
+        if (!$result || $result['count'] == 0) {
+            $this->error('Forbidden: Creator access required', 403);
+        }
+        
+        return $userId;
+    }
+    
+    protected function getRequestBody() {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+        
         if (json_last_error() !== JSON_ERROR_NONE) {
-            Response::error('Invalid JSON data');
+            $this->error('Invalid JSON payload');
         }
+        
         return $data;
-    }
-    
-    protected function logEvent($event) {
-        try {
-            $this->mongodb->events->insertOne([
-                'event' => $event,
-                'timestamp' => new MongoDB\BSON\UTCDateTime(),
-                'ip' => $_SERVER['REMOTE_ADDR']
-            ]);
-        } catch (Exception $e) {
-            error_log("MongoDB logging failed: " . $e->getMessage());
-        }
     }
 }
 ?>

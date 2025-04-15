@@ -1,13 +1,18 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/DatabaseManager.php';
-require_once __DIR__ . '/../utils/Response.php';
-require_once __DIR__ . '/../middleware/AuthMiddleware.php';
-require_once __DIR__ . '/../Router.php';
+require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/config/DatabaseManager.php';
+require_once __DIR__ . '/utils/Response.php';
+require_once __DIR__ . '/middleware/AuthMiddleware.php';
+require_once __DIR__ . '/Router.php';
 
 use Config\Logger;
 use Config\DatabaseManager;
 use Server\Router;
+
+// Enable error reporting for development
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
@@ -19,21 +24,11 @@ if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Define allowed origins
-$allowedOrigins = ['http://localhost:3000', 'http://localhost:8080', 'http://127.0.0.1:3000'];
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-
-// CORS headers
-header('Content-Type: application/json');
-if (in_array($origin, $allowedOrigins)) {
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Access-Control-Allow-Credentials: true');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token, X-Requested-With');
-    header('Access-Control-Max-Age: 86400'); // 24 hours cache
-}
-
 // Security headers
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: ' . ALLOWED_ORIGINS);
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-Token, X-Requested-With');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('X-XSS-Protection: 1; mode=block');
@@ -41,7 +36,6 @@ header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
     exit(0);
 }
 
@@ -64,13 +58,21 @@ $router->addErrorHandler(429, function($e) {
 
 try {
     // Load route configuration
-    require_once __DIR__ . '/../config/routes.php';
+    require_once __DIR__ . '/config/routes.php';
     
     // Register routes
     Config\Routes::register($router);
     
     // Add request validation middleware
     $router->addGlobalMiddleware(function($request) {
+        // Validate CSRF token for non-GET requests
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+            if (!hash_equals($_SESSION['csrf_token'], $token)) {
+                throw new \Exception('Invalid CSRF token', 403);
+            }
+        }
+
         // Validate request data
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (strpos($contentType, 'application/json') !== false) {
@@ -95,10 +97,15 @@ try {
     $router->handleRequest();
     
 } catch (Exception $e) {
-    http_response_code($e->getCode() && $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500);
+    $statusCode = $e->getCode();
+    if (!is_int($statusCode) || $statusCode < 400 || $statusCode >= 600) {
+        $statusCode = 500;
+    }
+
+    http_response_code($statusCode);
     echo json_encode([
         'error' => $e->getMessage(),
-        'code' => $e->getCode()
+        'code' => $statusCode
     ]);
     
     // Log error
@@ -106,14 +113,14 @@ try {
         if (class_exists('Config\Logger')) {
             Logger::getInstance()->log('api_error', [
                 'message' => $e->getMessage(),
-                'code' => $e->getCode(),
+                'code' => $statusCode,
                 'uri' => $_SERVER['REQUEST_URI'],
                 'method' => $_SERVER['REQUEST_METHOD'],
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $_SESSION['user_id'] ?? null
             ]);
         }
     } catch (Exception $logError) {
         error_log("Failed to log error: " . $logError->getMessage());
     }
 }
-?>

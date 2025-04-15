@@ -6,12 +6,15 @@ import { validatePassword } from './validation.js';
 class RegistrationManager {
     static async register(userData) {
         try {
-            const response = await fetch('/api/auth/register', {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            const response = await fetch('/api/auth/register.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
                 },
-                body: JSON.stringify(userData)
+                body: JSON.stringify(userData),
+                credentials: 'include'
             });
 
             if (!response.ok) {
@@ -385,4 +388,4 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', handleRegistration);
 });
 
-export { handleRegistration }; 
+export { handleRegistration };
