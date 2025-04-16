@@ -74,10 +74,12 @@ const CachedAPI = {
         if (cached) return cached;
 
         try {
-            const data = await StatsAPI.getTopCreators();
+            // Use API instead of StatsAPI
+            const data = await API.getTopCreators(); // Assuming API.getTopCreators exists or will be added
             CacheManager.set(CACHE_CONFIG.topCreators.key, data);
             return data;
         } catch (error) {
+            console.error('Error fetching top creators:', error);
             throw error;
         }
     },
@@ -87,10 +89,12 @@ const CachedAPI = {
         if (cached) return cached;
 
         try {
-            const data = await StatsAPI.getNearCompletionProjects();
+            // Use API instead of StatsAPI
+            const data = await API.getNearCompletionProjects(); // Assuming API.getNearCompletionProjects exists
             CacheManager.set(CACHE_CONFIG.nearCompletionProjects.key, data);
             return data;
         } catch (error) {
+            console.error('Error fetching near completion projects:', error);
             throw error;
         }
     },
@@ -100,10 +104,12 @@ const CachedAPI = {
         if (cached) return cached;
 
         try {
-            const data = await StatsAPI.getTopFunders();
+            // Use API instead of StatsAPI
+            const data = await API.getTopFunders(); // Assuming API.getTopFunders exists
             CacheManager.set(CACHE_CONFIG.topFunders.key, data);
             return data;
         } catch (error) {
+            console.error('Error fetching top funders:', error);
             throw error;
         }
     },
@@ -113,11 +119,17 @@ const CachedAPI = {
         if (cached) return cached;
 
         try {
-            const data = await ProjectsAPI.getProjects({ featured: true });
+            // Use API instead of ProjectsAPI, assuming getProjects supports a 'featured' filter
+            const data = await API.getProjects(1, 10, { featured: true }); // Adjust params as needed
             CacheManager.set(CACHE_CONFIG.featuredProjects.key, data);
             return data;
         } catch (error) {
+            console.error('Error fetching featured projects:', error);
             throw error;
         }
     }
 };
+
+// Make CachedAPI globally available if needed, or export if using modules
+// window.CachedAPI = CachedAPI; 
+// export { CachedAPI }; // Uncomment if using modules and cache.js is imported elsewhere

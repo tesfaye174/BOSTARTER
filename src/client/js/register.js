@@ -1,127 +1,103 @@
 import { API } from './api.js';
-import { showErrorMessage, showSuccessMessage } from './notifications.js';
-import { validatePassword } from './validation.js';
+// Rimosso import { showErrorMessage, showSuccessMessage } from './notifications.js';
+// Importa le funzioni di validazione specifiche e sanitizeInput
+import { validatePassword, validateEmail, validateNickname, validateName, sanitizeInput } from './validation.js';
+// Importa ErrorHandler da auth.js (o un file di utilità se spostato)
+import { ErrorHandler } from './auth.js'; 
 
-// Gestione della registrazione
-class RegistrationManager {
-    static async register(userData) {
-        try {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            const response = await fetch('/api/auth/register.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': csrfToken
-                },
-                body: JSON.stringify(userData),
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error('Errore nella registrazione');
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Errore:', error);
-            throw error;
-        }
-    }
-
-    static async validateUsername(username) {
-        try {
-            const response = await fetch(`/api/auth/validate-username?username=${encodeURIComponent(username)}`);
-            return await response.json();
-        } catch (error) {
-            console.error('Errore:', error);
-            throw error;
-        }
-    }
-
-    static async validateEmail(email) {
-        try {
-            const response = await fetch(`/api/auth/validate-email?email=${encodeURIComponent(email)}`);
-            return await response.json();
-        } catch (error) {
-            console.error('Errore:', error);
-            throw error;
-        }
-    }
-}
+// Rimuoviamo RegistrationManager, useremo API direttamente
 
 // Gestione dell'interfaccia utente
 class RegistrationUI {
     static initialize() {
+        const form = document.getElementById('registrationForm');
+        if (!form) {
+            console.error('Elemento form di registrazione non trovato.');
+            return;
+        }
+
         // Inizializza i validatori
-        this.initializeValidators();
+        this.initializeValidators(form);
 
         // Inizializza i toggle per le password
-        this.initializePasswordToggles();
-
-        // Inizializza la gestione delle competenze
-        this.initializeSkills();
+        this.initializePasswordToggles(form);
 
         // Inizializza il form
-        this.initializeForm();
+        this.initializeForm(form);
     }
 
-    static initializeValidators() {
-        const form = document.getElementById('registrationForm');
-        const inputs = form.querySelectorAll('input, select');
+    static initializeValidators(form) {
+        const inputs = form.querySelectorAll('input[required], input[pattern], input[minlength]');
 
         inputs.forEach(input => {
             input.addEventListener('input', () => this.validateInput(input));
-            input.addEventListener('blur', () => this.validateInput(input));
+            // input.addEventListener('blur', () => this.validateInput(input)); // Potrebbe essere fastidioso, validiamo on input e submit
         });
+
+        // Validazione specifica per conferma password
+        const passwordConfirmInput = form.querySelector('#password_confirm');
+        const passwordInput = form.querySelector('#password');
+        if (passwordConfirmInput && passwordInput) {
+            passwordConfirmInput.addEventListener('input', () => {
+                const isValid = passwordConfirmInput.value === passwordInput.value;
+                this.updateInputValidation(passwordConfirmInput, isValid, 'Le password non coincidono');
+            });
+        }
+
+        // Validazione password strength in tempo reale
+        if (passwordInput) {
+            passwordInput.addEventListener('input', () => {
+                this.validatePasswordStrength(passwordInput.value);
+            });
+        }
     }
 
     static validateInput(input) {
-        const value = input.value.trim();
-        let isValid = true;
-        let errorMessage = '';
+        const value = sanitizeInput(input.value); // Sanitizza l'input
+        let isValid = false;
+        let errorMessage = input.title || 'Valore non valido'; // Usa il title per il messaggio di default
 
+        // Usa le funzioni di validazione importate
         switch (input.id) {
             case 'name':
             case 'surname':
-                isValid = /^[a-zA-Z\s]{2,}$/.test(value);
-                errorMessage = 'Inserisci un nome valido (solo lettere e spazi)';
+                isValid = validateName(value);
+                errorMessage = 'Inserisci un nome/cognome valido (min 2 caratteri, lettere, spazi, apostrofi, trattini).';
                 break;
-
             case 'nickname':
-                isValid = /^[a-zA-Z0-9_]{3,20}$/.test(value);
-                errorMessage = 'Il nickname deve contenere tra 3 e 20 caratteri alfanumerici';
+                isValid = validateNickname(value);
+                errorMessage = 'Il nickname deve contenere 3-30 caratteri alfanumerici, trattini o underscore.';
                 break;
-
             case 'email':
-                isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-                errorMessage = 'Inserisci un indirizzo email valido';
+                isValid = validateEmail(value);
+                errorMessage = 'Inserisci un indirizzo email valido.';
                 break;
-
             case 'password':
-                isValid = this.validatePasswordStrength(value);
-                errorMessage = 'La password deve contenere almeno 8 caratteri';
+                // La validazione della forza viene gestita separatamente in tempo reale
+                // Qui controlliamo solo se è vuoto se 'required'
+                isValid = input.required ? value.length > 0 : true; 
+                // La validazione completa della password avviene con validatePasswordStrength
+                // e al momento del submit
+                errorMessage = 'La password è obbligatoria.';
+                // Non mostrare errore qui per la complessità, gestito da strength indicator
+                if (isValid) errorMessage = ''; 
                 break;
-
             case 'password_confirm':
-                isValid = value === document.getElementById('password').value;
-                errorMessage = 'Le password non coincidono';
+                const passwordValue = document.getElementById('password')?.value || '';
+                isValid = value === passwordValue;
+                errorMessage = 'Le password non coincidono.';
                 break;
-
-            case 'birthYear':
-                const year = parseInt(value);
-                const currentYear = new Date().getFullYear();
-                isValid = year >= 1900 && year <= currentYear - 18;
-                errorMessage = 'Inserisci un anno di nascita valido';
+            case 'terms':
+                isValid = input.checked;
+                errorMessage = 'Devi accettare i termini per continuare.';
                 break;
-
-            case 'birthPlace':
-                isValid = value.length >= 2;
-                errorMessage = 'Inserisci un luogo di nascita valido';
-                break;
-
-            case 'securityCode':
-                isValid = value.length >= 6;
-                errorMessage = 'Il codice di sicurezza deve contenere almeno 6 caratteri';
+            // Aggiungere altri casi se necessario
+            default:
+                // Fallback alla validazione HTML5
+                isValid = input.checkValidity(); 
+                if (input.validity.patternMismatch && input.title) {
+                    errorMessage = input.title;
+                }
                 break;
         }
 
@@ -130,262 +106,208 @@ class RegistrationUI {
     }
 
     static validatePasswordStrength(password) {
-        let strength = 0;
-        const strengthBar = document.getElementById('password-strength-bar');
-        const strengthText = document.getElementById('password-strength-text');
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthFeedback = document.getElementById('passwordFeedback');
+        const passwordInput = document.getElementById('password');
 
-        if (password.length >= 8) strength += 20;
-        if (password.length >= 12) strength += 20;
-        if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength += 20;
-        if (/[0-9]/.test(password)) strength += 20;
-        if (/[^A-Za-z0-9]/.test(password)) strength += 20;
+        if (!strengthBar || !strengthFeedback || !passwordInput) return false;
 
-        strengthBar.style.width = `${strength}%`;
-        strengthBar.className = `progress-bar bg-${this.getStrengthColor(strength)}`;
+        const result = {
+            length: password.length >= 12,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /\d/.test(password),
+            special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+        };
 
-        const strengthMessage = this.getStrengthMessage(strength);
-        strengthText.textContent = strengthMessage;
+        let score = 0;
+        if (result.length) score++;
+        if (result.uppercase) score++;
+        if (result.lowercase) score++;
+        if (result.number) score++;
+        if (result.special) score++;
 
-        return strength >= 40;
+        const strengthPercent = (score / 5) * 100;
+        strengthBar.style.width = `${strengthPercent}%`;
+
+        let strengthMessage = 'La password deve contenere almeno 12 caratteri';
+        let colorClass = 'bg-danger';
+
+        if (score >= 5) {
+            strengthMessage = 'Password forte';
+            colorClass = 'bg-success';
+        } else if (score >= 3) {
+            strengthMessage = 'Password media';
+            colorClass = 'bg-warning';
+        } else {
+            strengthMessage = 'Password debole. Requisiti: 12+ caratteri, maiuscole, minuscole, numeri, simboli.';
+            colorClass = 'bg-danger';
+        }
+        
+        // Aggiorna i messaggi e le classi
+        strengthFeedback.textContent = strengthMessage;
+        strengthBar.className = `progress-bar ${colorClass}`;
+
+        // Aggiorna la validità dell'input password basata sulla forza (almeno media)
+        const isStrongEnough = score >= 3; // Consideriamo 'media' come minima accettabile
+        // this.updateInputValidation(passwordInput, isStrongEnough, strengthMessage); 
+        // Non aggiorniamo is-invalid qui per non essere troppo aggressivi durante la digitazione
+        // La validazione finale avverrà al submit
+        return isStrongEnough; 
     }
 
-    static getStrengthColor(strength) {
-        if (strength < 40) return 'danger';
-        if (strength < 80) return 'warning';
-        return 'success';
-    }
-
-    static getStrengthMessage(strength) {
-        if (strength < 40) return 'Password debole';
-        if (strength < 80) return 'Password media';
-        return 'Password forte';
-    }
+    // Rimosso getStrengthColor e getStrengthMessage
 
     static updateInputValidation(input, isValid, errorMessage) {
-        input.classList.remove('is-valid', 'is-invalid');
-        input.classList.add(isValid ? 'is-valid' : 'is-invalid');
-
-        const feedback = input.nextElementSibling;
-        if (feedback && feedback.classList.contains('invalid-feedback')) {
-            feedback.textContent = errorMessage;
+        const feedbackElement = input.closest('.form-group, .mb-3, .col-md-6')?.querySelector('.invalid-feedback');
+        
+        if (isValid) {
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+            if (feedbackElement) {
+                feedbackElement.textContent = ''; // Pulisci messaggio errore se valido
+            }
+        } else {
+            input.classList.remove('is-valid');
+            input.classList.add('is-invalid');
+            if (feedbackElement) {
+                feedbackElement.textContent = errorMessage;
+            }
         }
     }
 
-    static initializePasswordToggles() {
-        const toggleButtons = document.querySelectorAll('[data-toggle="password"]');
+    static initializePasswordToggles(form) {
+        const toggleButtons = form.querySelectorAll('#togglePassword, #toggleConfirmPassword');
         toggleButtons.forEach(button => {
             button.addEventListener('click', () => {
-                const input = document.getElementById(button.dataset.target);
-                const type = input.type === 'password' ? 'text' : 'password';
-                input.type = type;
-                button.querySelector('i').classList.toggle('bi-eye');
-                button.querySelector('i').classList.toggle('bi-eye-slash');
+                const targetId = button.id === 'togglePassword' ? 'password' : 'password_confirm';
+                const input = form.querySelector(`#${targetId}`);
+                if (input) {
+                    const type = input.type === 'password' ? 'text' : 'password';
+                    input.type = type;
+                    const icon = button.querySelector('i');
+                    icon.classList.toggle('bi-eye');
+                    icon.classList.toggle('bi-eye-slash');
+                }
             });
         });
     }
 
-    static initializeSkills() {
-        const roleSelect = document.getElementById('role');
-        const skillsSection = document.getElementById('skillsSection');
+    // Rimosso initializeSkills, gestito da HTML o altro JS se necessario
 
-        roleSelect.addEventListener('change', () => {
-            const isCreator = roleSelect.value === 'creatore';
-            skillsSection.style.display = isCreator ? 'block' : 'none';
-        });
-    }
+    static initializeForm(form) {
+        const submitButton = form.querySelector('#submitButton');
+        const spinner = submitButton?.querySelector('.spinner-border');
 
-    static initializeForm() {
-        const form = document.getElementById('registrationForm');
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
+            ErrorHandler.hideError('registrationError');
+            ErrorHandler.hideError('registrationSuccess'); // Nascondi successo precedente
 
-            if (!this.validateForm()) {
+            let isFormValid = true;
+            const inputsToValidate = form.querySelectorAll('input[required], input[pattern], input[minlength], input#password_confirm, input#terms');
+            
+            inputsToValidate.forEach(input => {
+                // Esegui la validazione per ogni input e aggiorna lo stato generale
+                if (!this.validateInput(input)) {
+                    isFormValid = false;
+                }
+            });
+
+            // Validazione specifica forza password al submit
+            const passwordInput = form.querySelector('#password');
+            if (passwordInput && !validatePassword(passwordInput.value)) {
+                this.updateInputValidation(passwordInput, false, 'La password non soddisfa i requisiti di sicurezza.');
+                isFormValid = false;
+            }
+
+            if (!isFormValid) {
+                ErrorHandler.showError('Per favore, correggi gli errori nel modulo.', 'registrationError');
+                // Focus sul primo campo non valido
+                form.querySelector('.is-invalid')?.focus();
                 return;
             }
 
-            const formData = new FormData(form);
+            // Mostra spinner e disabilita bottone
+            if (spinner) spinner.classList.remove('d-none');
+            if (submitButton) submitButton.disabled = true;
+
+            // Prepara i dati utente
             const userData = {
-                name: formData.get('name'),
-                surname: formData.get('surname'),
-                nickname: formData.get('nickname'),
-                email: formData.get('email'),
-                password: formData.get('password'),
-                birthYear: formData.get('birthYear'),
-                birthPlace: formData.get('birthPlace'),
-                role: formData.get('role')
+                email: sanitizeInput(form.querySelector('#email').value),
+                password: form.querySelector('#password').value, // Non sanitizzare la password
+                nickname: sanitizeInput(form.querySelector('#nickname').value),
+                name: sanitizeInput(form.querySelector('#name').value),
+                surname: sanitizeInput(form.querySelector('#surname').value),
+                // Aggiungere altri campi se presenti nel form
             };
 
-            if (formData.get('role') === 'amministratore') {
-                userData.securityCode = formData.get('securityCode');
-            }
-
-            if (formData.get('role') === 'creatore') {
-                const skills = [];
-                const skillInputs = form.querySelectorAll('select[name="skills[]"]');
-                const levelInputs = form.querySelectorAll('input[name="levels[]"]');
-
-                skillInputs.forEach((select, index) => {
-                    if (select.value) {
-                        skills.push({
-                            skill: select.value,
-                            level: parseInt(levelInputs[index].value)
-                        });
-                    }
-                });
-
-                userData.skills = skills;
-            }
-
             try {
-                const result = await RegistrationManager.register(userData);
-                if (result.success) {
-                    this.showSuccess('Registrazione completata con successo!');
-                    setTimeout(() => {
-                        window.location.href = '/login.html';
-                    }, 2000);
-                } else {
-                    this.showError(result.message || 'Errore durante la registrazione');
-                }
+                // Usa API.register
+                const response = await API.register(userData);
+                
+                // Mostra messaggio di successo
+                ErrorHandler.showSuccess('Registrazione avvenuta con successo! Puoi ora effettuare il login.', 'registrationSuccess');
+                form.reset(); // Resetta il form
+                form.querySelectorAll('.is-valid').forEach(el => el.classList.remove('is-valid')); // Rimuovi classi validazione
+                // Potresti reindirizzare al login dopo un breve ritardo:
+                // setTimeout(() => { window.location.href = 'login.html'; }, 3000);
+
             } catch (error) {
-                this.showError('Errore di connessione al server');
+                console.error('Registration failed:', error);
+                let errorMessage = 'Errore durante la registrazione. Riprova.';
+                if (error instanceof ApiError) { // Assicurati che ApiError sia disponibile
+                    errorMessage = error.message; // Usa il messaggio dall'errore API
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                ErrorHandler.showError(errorMessage, 'registrationError');
+            } finally {
+                // Nascondi spinner e riabilita bottone
+                if (spinner) spinner.classList.add('d-none');
+                if (submitButton) submitButton.disabled = false;
             }
         });
-    }
-
-    static validateForm() {
-        const form = document.getElementById('registrationForm');
-        const inputs = form.querySelectorAll('input, select');
-        let isValid = true;
-
-        inputs.forEach(input => {
-            if (!this.validateInput(input)) {
-                isValid = false;
-            }
-        });
-
-        return isValid;
-    }
-
-    static showError(message) {
-        const errorDiv = document.getElementById('registrationError');
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-    }
-
-    static showSuccess(message) {
-        const successDiv = document.getElementById('registrationSuccess');
-        successDiv.textContent = message;
-        successDiv.style.display = 'block';
     }
 }
 
-// Inizializzazione
+// Inizializzazione all'avvio
 document.addEventListener('DOMContentLoaded', () => {
     RegistrationUI.initialize();
 });
 
-async function handleRegistration(event) {
-    event.preventDefault();
-
-    // Ottieni i dati dal form
-    const formData = {
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value,
-        password_confirm: document.getElementById('password_confirm').value,
-        nickname: document.getElementById('nickname').value,
-        name: document.getElementById('name').value,
-        surname: document.getElementById('surname').value
-    };
-
-    // Validazione base
-    if (!formData.email || !formData.password || !formData.password_confirm || 
-        !formData.nickname || !formData.name || !formData.surname) {
-        showErrorMessage('Tutti i campi sono obbligatori');
-        return;
-    }
-
-    // Validazione email
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-        showErrorMessage('Formato email non valido');
-        return;
-    }
-
-    // Validazione password
-    if (!validatePassword(formData.password)) {
-        showErrorMessage('La password deve essere di almeno 12 caratteri e contenere almeno una lettera maiuscola, un numero e un carattere speciale');
-        return;
-    }
-
-    // Verifica che le password coincidano
-    if (formData.password !== formData.password_confirm) {
-        showErrorMessage('Le password non coincidono');
-        return;
-    }
-
-    try {
-        // Mostra indicatore di caricamento
-        const submitButton = document.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        submitButton.disabled = true;
-        submitButton.textContent = 'Registrazione in corso...';
-
-        // Effettua la richiesta di registrazione
-        const response = await API.register(formData);
-
-        if (response.success) {
-            showSuccessMessage(response.message);
-            // Reindirizza alla pagina di login dopo 2 secondi
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 2000);
+// Assicurati che ErrorHandler abbia un metodo showSuccess o crealo
+if (typeof ErrorHandler.showSuccess !== 'function') {
+    ErrorHandler.showSuccess = function(message, elementId = 'success-message') {
+        const successElement = document.getElementById(elementId);
+        if (successElement) {
+            successElement.textContent = message;
+            successElement.classList.remove('d-none'); // Assicurati che sia visibile
+            successElement.classList.add('alert', 'alert-success'); // Assicurati che abbia le classi corrette
+            successElement.style.display = 'block';
         } else {
-            showErrorMessage(response.message);
+            console.log('Success:', message); // Fallback se l'elemento non esiste
         }
-    } catch (error) {
-        showErrorMessage(error.message || 'Errore durante la registrazione');
-    } finally {
-        // Ripristina il pulsante
-        const submitButton = document.querySelector('button[type="submit"]');
-        submitButton.disabled = false;
-        submitButton.textContent = originalText;
-    }
+    };
+    // Aggiungi anche un metodo per nascondere il successo
+    ErrorHandler.hideSuccess = function(elementId = 'success-message') {
+        const successElement = document.getElementById(elementId);
+        if (successElement) {
+            successElement.style.display = 'none';
+            successElement.classList.add('d-none');
+        }
+    };
 }
 
-// Aggiungi la validazione in tempo reale
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('registrationForm');
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('password_confirm');
-    const emailInput = document.getElementById('email');
-    const nicknameInput = document.getElementById('nickname');
-
-    // Validazione password in tempo reale
-    passwordInput.addEventListener('input', () => {
-        const password = passwordInput.value;
-        const isValid = validatePassword(password);
-        passwordInput.setCustomValidity(isValid ? '' : 'Password non valida');
-        passwordInput.reportValidity();
-    });
-
-    // Verifica password coincidenti in tempo reale
-    confirmPasswordInput.addEventListener('input', () => {
-        const password = passwordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
-        const isValid = password === confirmPassword;
-        confirmPasswordInput.setCustomValidity(isValid ? '' : 'Le password non coincidono');
-        confirmPasswordInput.reportValidity();
-    });
-
-    // Validazione email in tempo reale
-    emailInput.addEventListener('input', () => {
-        const email = emailInput.value;
-        const isValid = email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-        emailInput.setCustomValidity(isValid ? '' : 'Email non valida');
-        emailInput.reportValidity();
-    });
-
-    // Gestione submit del form
-    form.addEventListener('submit', handleRegistration);
-});
-
-export { handleRegistration };
+// Assicurati che ApiError sia definito (potrebbe essere in api.js)
+if (typeof ApiError === 'undefined') {
+    class ApiError extends Error {
+        constructor(message, status, data) {
+            super(message);
+            this.name = 'ApiError';
+            this.status = status;
+            this.data = data;
+        }
+    }
+    window.ApiError = ApiError; 
+}

@@ -5,8 +5,13 @@ require_once __DIR__ . '/../MongoDB/mongodb.php';
 
 use Config\Logger;
 
+// Controller per la gestione dei progetti: visualizzazione, creazione, finanziamento e commenti
 class ProjectController extends BaseController {
     
+    /**
+     * Restituisce una lista di progetti filtrabili per tipo e stato, con paginazione.
+     * @return void
+     */
     public function listProjects() {
         // Get query parameters
         $type = $_GET['type'] ?? null;

@@ -5,8 +5,12 @@ require_once __DIR__ . '/../MongoDB/mongodb.php';
 
 use Config\Logger;
 
+// Controller per la gestione delle statistiche della piattaforma e dei progetti
 class StatsController extends BaseController {
-    
+    /**
+     * Restituisce i top creator ordinati per affidabilità e progetti completati.
+     * @return void
+     */
     public function getTopCreators() {
         // Get top creators by reliability
         $stmt = $this->db->executeQuery(
@@ -20,14 +24,15 @@ class StatsController extends BaseController {
              ORDER BY cu.reliability DESC, completed_projects DESC
              LIMIT 3"
         );
-        
         $creators = $stmt->fetchAll();
-        
         $this->json([
             'top_creators' => $creators
         ]);
     }
-    
+    /**
+     * Restituisce i top progetti più vicini al completamento.
+     * @return void
+     */
     public function getTopProjects() {
         // Get top projects closest to completion
         $stmt = $this->db->executeQuery(
@@ -44,18 +49,14 @@ class StatsController extends BaseController {
             ORDER BY (funded_amount / p.budget) DESC
             LIMIT 3"
         );
-        
         $projects = $stmt->fetchAll();
-        
         // Calculate additional metrics
         foreach ($projects as &$project) {
             $project['funded_percent'] = $project['budget'] > 0 
                 ? round(($project['funded_amount'] / $project['budget']) * 100, 2) 
                 : 0;
-            
             $project['days_left'] = max(0, ceil((strtotime($project['deadline']) - time()) / 86400));
         }
-        
         $this->json([
             'top_projects' => $projects
         ]);

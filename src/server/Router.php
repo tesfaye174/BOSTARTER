@@ -1,187 +1,279 @@
 <?php
+declare(strict_types=1);
+
 namespace Server;
 
 use Config\Logger;
+use Utils\Response;
+use Throwable;
+use Exception;
+use RuntimeException;
+use InvalidArgumentException;
 
 class Router {
-    private static $instance = null;
-    private $routes = [];
-    private $middlewares = [];
-    private $globalMiddlewares = [];
-    private $errorHandlers = [];
-    private $rateLimits = [];
-    private $csrfEnabled = true;
-    
+    private static ?self $instance = null;
+    private array $routes = [];
+    private array $middlewares = [];
+    private array $globalMiddlewares = [];
+    private array $errorHandlers = [];
+    private array $rateLimits = []; // Placeholder for rate limiting config
+    private bool $csrfEnabled = true; // CSRF enabled by default
+
     private function __construct() {}
-    
+    private function __clone() {}
+
     public static function getInstance(): self {
         if (self::$instance === null) {
             self::$instance = new self();
         }
         return self::$instance;
     }
-    
+
+    /**
+     * Adds a route to the router.
+     *
+     * @param string $method HTTP method (GET, POST, etc.)
+     * @param string $path Route path (e.g., /users/{id})
+     * @param callable $handler The function or [class, method] to execute
+     * @param array $middlewares Route-specific middleware callables
+     */
     public function addRoute(string $method, string $path, callable $handler, array $middlewares = []): void {
         $this->routes[] = [
             'method' => strtoupper($method),
-            'path' => $path,
+            'path' => $this->normalizePath($path),
             'handler' => $handler,
             'middlewares' => $middlewares
         ];
     }
-    
-    public function addMiddleware(string $path, callable $middleware): void {
-        $this->middlewares[$path][] = $middleware;
+
+    /**
+     * Adds a middleware that applies to a specific path prefix.
+     *
+     * @param string $pathPrefix The path prefix (e.g., /api)
+     * @param callable $middleware The middleware callable
+     */
+    public function addMiddleware(string $pathPrefix, callable $middleware): void {
+        $this->middlewares[$this->normalizePath($pathPrefix)][] = $middleware;
     }
-    
+
+    /**
+     * Adds a global middleware that runs for every request.
+     *
+     * @param callable $middleware The middleware callable
+     */
     public function addGlobalMiddleware(callable $middleware): void {
         $this->globalMiddlewares[] = $middleware;
     }
-    
+
+    /**
+     * Adds a custom error handler for a specific HTTP status code.
+     *
+     * @param int $code HTTP status code
+     * @param callable $handler The error handling callable
+     */
     public function addErrorHandler(int $code, callable $handler): void {
         $this->errorHandlers[$code] = $handler;
     }
-    
-    public function setRateLimit(string $path, int $limit, int $window): void {
-        $this->rateLimits[$path] = ['limit' => $limit, 'window' => $window];
-    }
-    
+
+    /**
+     * Disables CSRF protection globally (use with caution).
+     */
     public function disableCsrf(): void {
         $this->csrfEnabled = false;
     }
-    
-    private function validateCsrf(): bool {
-        if (!$this->csrfEnabled) return true;
-        
-        $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
-        if (!$token || !isset($_SESSION['csrf_token']) || $token !== $_SESSION['csrf_token']) {
-            throw new \Exception('Invalid CSRF token', 403);
-        }
-        return true;
+
+    /**
+     * Sets rate limiting parameters for a path prefix.
+     * Note: Actual implementation requires external storage (Redis, Memcached).
+     *
+     * @param string $pathPrefix Path prefix
+     * @param int $limit Max requests
+     * @param int $window Time window in seconds
+     */
+    public function setRateLimit(string $pathPrefix, int $limit, int $window): void {
+        $this->rateLimits[$this->normalizePath($pathPrefix)] = ['limit' => $limit, 'window' => $window];
     }
-    
-    private function checkRateLimit(string $path): void {
-        if (!isset($this->rateLimits[$path])) return;
-        
-        $limit = $this->rateLimits[$path];
-        $key = 'rate_limit:' . $_SERVER['REMOTE_ADDR'] . ':' . $path;
-        
-        // Implement rate limiting logic here
-        // This is a placeholder - you would typically use Redis or similar for production
-        if (isset($_SESSION[$key]) && $_SESSION[$key]['count'] >= $limit['limit']) {
-            if (time() - $_SESSION[$key]['start'] < $limit['window']) {
-                throw new \Exception('Rate limit exceeded', 429);
+
+    /**
+     * Handles the incoming HTTP request.
+     */
+    public function handleRequest(): void {
+        $requestMethod = $_SERVER['REQUEST_METHOD'];
+        $requestPath = $this->normalizePath(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/');
+
+        try {
+            $matchedRoute = $this->matchRoute($requestMethod, $requestPath);
+
+            if (!$matchedRoute) {
+                throw new RuntimeException('Route not found', 404);
             }
-            $_SESSION[$key]['count'] = 0;
-            $_SESSION[$key]['start'] = time();
+
+            // --- Middleware Execution --- 
+            $middlewareStack = array_merge(
+                $this->globalMiddlewares,
+                $this->getMiddlewaresForPath($requestPath),
+                $matchedRoute['middlewares']
+            );
+
+            // Create a handler function that includes middleware execution
+            $handler = $matchedRoute['handler'];
+            $params = $matchedRoute['params'];
+
+            $pipeline = array_reduce(
+                array_reverse($middlewareStack), // Process in reverse order for onion-layer execution
+                function ($next, $middleware) {
+                    return function (...$args) use ($middleware, $next) {
+                        // Pass $next callable to the middleware
+                        return $middleware($next, ...$args);
+                    };
+                },
+                // The innermost function is the actual route handler
+                function (...$args) use ($handler) {
+                    return $handler(...$args);
+                }
+            );
+
+            // Execute the pipeline with route parameters
+            $response = $pipeline(...$params);
+
+            // Send the response (assuming handler returns data to be JSON encoded)
+            if ($response !== null) {
+                Response::sendJson($response);
+            }
+            // If handler returns null, assume response was handled manually (e.g., file download)
+
+        } catch (Throwable $e) {
+            $this->handleError($e);
         }
-        
-        if (!isset($_SESSION[$key])) {
-            $_SESSION[$key] = ['count' => 0, 'start' => time()];
-        }
-        $_SESSION[$key]['count']++;
     }
-    
-    public function matchRoute(string $method, string $path): ?array {
+
+    /**
+     * Finds a matching route for the given method and path.
+     *
+     * @param string $method
+     * @param string $path
+     * @return array|null Matched route details or null
+     */
+    private function matchRoute(string $method, string $path): ?array {
         foreach ($this->routes as $route) {
             if ($route['method'] !== $method) {
                 continue;
             }
-            
+
             $pattern = $this->convertPathToRegex($route['path']);
             if (preg_match($pattern, $path, $matches)) {
-                array_shift($matches); // Remove full match
+                array_shift($matches); // Remove the full match
+                // Filter numeric keys from matches (parameters)
+                $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
                 return [
                     'handler' => $route['handler'],
-                    'params' => $matches,
-                    'middlewares' => array_merge(
-                        $this->globalMiddlewares,
-                        $route['middlewares'],
-                        $this->getMiddlewaresForPath($path)
-                    ),
-                    'path' => $route['path']
+                    'params' => $params,
+                    'middlewares' => $route['middlewares'],
+                    'original_path' => $route['path'] // Keep original path for rate limiting etc.
                 ];
             }
         }
         return null;
     }
-    
-    private function convertPathToRegex(string $path): string {
-        return '#^' . preg_replace('/\{([^}]+)\}/', '([^/]+)', $path) . '$#';
-    }
-    
+
+    /**
+     * Gets middlewares applicable to the given path based on prefixes.
+     *
+     * @param string $path
+     * @return array
+     */
     private function getMiddlewaresForPath(string $path): array {
-        $middlewares = [];
-        foreach ($this->middlewares as $pattern => $handlers) {
-            if (strpos($path, $pattern) === 0) {
-                $middlewares = array_merge($middlewares, $handlers);
+        $applicableMiddlewares = [];
+        foreach ($this->middlewares as $prefix => $handlers) {
+            if (str_starts_with($path, $prefix)) {
+                $applicableMiddlewares = array_merge($applicableMiddlewares, $handlers);
             }
         }
-        return $middlewares;
+        return $applicableMiddlewares;
     }
-    
-    public function handleRequest(): void {
-        try {
-            $method = $_SERVER['REQUEST_METHOD'];
-            $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-            
-            // Validate CSRF token for non-GET requests
-            if ($method !== 'GET') {
-                $this->validateCsrf();
-            }
-            
-            $route = $this->matchRoute($method, $path);
-            if (!$route) {
-                throw new \Exception('Route not found', 404);
-            }
-            
-            // Check rate limits
-            $this->checkRateLimit($route['path']);
-            
-            // Execute middlewares
-            foreach ($route['middlewares'] as $middleware) {
-                $middleware();
-            }
-            
-            // Sanitize input
-            $_GET = filter_input_array(INPUT_GET, FILTER_SANITIZE_STRING) ?: [];
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING) ?: [];
-            
-            // Execute route handler
-            $response = $route['handler'](...$route['params']);
-            
-            // Send response
-            header('Content-Type: application/json');
-            echo json_encode($response);
-            
-        } catch (\Exception $e) {
-            $code = $e->getCode() ?: 500;
-            $this->handleError($code, $e);
-            
-            // Log error
-            if (class_exists('Config\Logger')) {
-                Logger::getInstance()->log('router_error', [
-                    'message' => $e->getMessage(),
-                    'code' => $code,
-                    'path' => $_SERVER['REQUEST_URI'],
-                    'method' => $_SERVER['REQUEST_METHOD'],
-                    'trace' => $e->getTraceAsString()
-                ]);
-            }
-        }
+
+    /**
+     * Converts a route path with placeholders (e.g., /users/{id}) to a regex.
+     *
+     * @param string $path
+     * @return string
+     */
+    private function convertPathToRegex(string $path): string {
+        // Replace {param} with a named capture group (?<param>[^/]+)
+        $pattern = preg_replace('/\{([^}]+)\}/', '(?<$1>[^/]+)', $path);
+        return '#^' . $pattern . '$#';
     }
-    
-    private function handleError(int $code, \Exception $e): void {
-        if (isset($this->errorHandlers[$code])) {
-            $this->errorHandlers[$code]($e);
-            return;
-        }
-        
-        http_response_code($code);
-        echo json_encode([
-            'error' => $e->getMessage(),
-            'code' => $code
+
+    /**
+     * Normalizes a path string (adds leading slash, removes trailing slash).
+     *
+     * @param string $path
+     * @return string
+     */
+    private function normalizePath(string $path): string {
+        $path = trim($path, '/');
+        return '/' . $path;
+    }
+
+    /**
+     * Handles exceptions and errors, sending an appropriate response.
+     *
+     * @param Throwable $e
+     */
+    private function handleError(Throwable $e): void {
+        $statusCode = match (true) {
+            $e instanceof InvalidArgumentException => 400,
+            $e instanceof RuntimeException => $e->getCode() !== 0 ? $e->getCode() : 500, // Use code if set, else 500
+            default => 500,
+        };
+        $statusCode = ($statusCode >= 400 && $statusCode < 600) ? $statusCode : 500;
+
+        // Log the error
+        Logger::getInstance()->log('error', [
+            'message' => $e->getMessage(),
+            'code' => $statusCode,
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            // 'trace' => $e->getTraceAsString() // Avoid in production unless necessary
         ]);
+
+        // Check for custom error handler
+        if (isset($this->errorHandlers[$statusCode])) {
+            try {
+                $this->errorHandlers[$statusCode]($e);
+                return; // Assume custom handler sends response
+            } catch (Throwable $handlerError) {
+                // Log error in the error handler itself
+                Logger::getInstance()->log('critical', [
+                    'message' => 'Error in custom error handler',
+                    'handler_exception' => $handlerError->getMessage(),
+                    'original_exception' => $e->getMessage(),
+                ]);
+                // Fallback to default handler
+            }
+        }
+
+        // Default error response
+        $clientMessage = ($statusCode >= 500) ? 'Internal Server Error' : $e->getMessage();
+        Response::sendError($clientMessage, $statusCode);
+    }
+
+    // --- Placeholder Methods (Implement with proper storage) ---
+
+    private function checkRateLimit(string $path): void {
+        // Placeholder: Implement using Redis/Memcached
+        // Example logic:
+        /*
+        foreach ($this->rateLimits as $prefix => $limit) {
+            if (str_starts_with($path, $prefix)) {
+                $key = 'rate_limit:' . $_SERVER['REMOTE_ADDR'] . ':' . $prefix;
+                // $count = $storage->increment($key, $limit['window']);
+                // if ($count > $limit['limit']) {
+                //     throw new RuntimeException('Rate limit exceeded', 429);
+                // }
+                break; // Apply first matching limit
+            }
+        }
+        */
     }
 }
-?>

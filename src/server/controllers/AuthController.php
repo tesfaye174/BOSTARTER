@@ -5,8 +5,12 @@ require_once __DIR__ . '/../MongoDB/mongodb.php';
 
 use Config\Logger;
 
+// Controller per la gestione dell'autenticazione degli utenti: login, registrazione, logout e verifica autenticazione
 class AuthController extends BaseController {
-    
+    /**
+     * Gestisce il login dell'utente, verifica credenziali e imposta la sessione.
+     * @return void
+     */
     public function login() {
         // Get request data
         $data = $this->getRequestBody();
