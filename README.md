@@ -1,4 +1,8 @@
 # BOSTARTER
+Corso	di	Basi	di	Dati	
+CdS	Informatica	per	il	Management	
+TRACCIA	di	PROGETTO,	A.A.	2024/2025	
+PREMESSA.	
 Si	vuole	realizzare	la	piattaforma	BOSTARTER per	supportare	la	creazione	di	campagne	di	
 crowdfounding	finalizzate	alla	realizzazione	di	progetti	hardware/software.	La	piattaforma	è	
 liberamente	ispirata	alla	piattaforma	Kickststarter	(https://www.kickstarter.com).	La	
@@ -114,17 +118,165 @@ menzionate	fin	qui.		E’	previsto	il	seguente	bonus:	-
 (per	la	lode,	solo	se	i	punti	precedenti	sono	stati	sviluppati	correttamente)	Utilizzo	di	
 librerie	
 CSS	per	la	realizzazione	del	front-end	Web	(es.	Bootstrap	
-https://getbootstrap.com)
-## Server Structure
-```bash
-/src/server/
-├── api/                    # API endpoints
-│   ├── auth/              # Authentication endpoints
-│   ├── projects/          # Project management
-│   ├── users/             # User management
-│   └── admin/             # Admin operations
-├── controllers/           # Business logic
-├── models/               # Data models
-├── middleware/           # Request middleware
-├── utils/               # Helper functions
-└── config/              # Configuration files
+https://getbootstrap.com)	
+# 🚀 BOSTARTER
+
+![BOSTARTER Logo](https://api.placeholder.com/800/300)
+
+## 💡 Crowdfunding Platform for Hardware & Software Projects
+
+> *"Bringing innovative ideas to life through community support and collaboration."*
+
+BOSTARTER is a dynamic crowdfunding platform designed to bridge the gap between creative minds and financial resources. Inspired by Kickstarter, our platform empowers creators to launch ambitious hardware and software projects while building a supportive community of backers and collaborators.
+
+---
+
+## ✨ Key Features
+
+### For Backers
+- 💰 Fund exciting projects and receive exclusive rewards
+- 💬 Engage with creators through comments
+- 👀 Track project progress and updates
+- 🏆 Earn recognition as a top supporter
+
+### For Creators
+- 🛠️ Launch hardware or software projects with custom funding goals
+- 🎁 Define unique rewards for your backers
+- 👥 Build your reputation with successful projects
+- 🔄 Interact directly with your community
+
+### For Developers
+- 💻 Apply to work on software projects that match your skills
+- 🌟 Showcase your expertise through the skill matching system
+- 🤝 Collaborate with innovative creators
+- 📈 Expand your portfolio with cutting-edge projects
+
+---
+
+## 🏗️ Platform Architecture
+
+BOSTARTER is built on a robust database infrastructure that manages:
+
+### 👤 User Management
+- **Standard Users**: Profile information, skills, funding history
+- **Administrator Users**: Platform management capabilities
+- **Creator Users**: Project management with reliability tracking
+
+### 📋 Project Management
+- **Hardware Projects**: Component specifications and requirements
+- **Software Projects**: Developer profiles and skill requirements
+- **Rewards System**: Tiered rewards for different funding levels
+- **Comments & Feedback**: Community engagement tools
+
+### 📊 Statistics & Analytics
+- Real-time funding progress tracking
+- Creator reliability rankings
+- Backer contribution leaderboards
+
+---
+
+## 💾 Technical Implementation
+
+### Database Structure
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│    Users    │─────│   Projects  │─────│   Rewards   │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                   │                   │
+       │                   │                   │
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│    Skills   │     │  Financing  │     │  Comments   │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### Advanced Features
+- **Stored Procedures**: Optimized data operations
+- **Database Triggers**: Automated reliability tracking and project status updates
+- **Scheduled Events**: Deadline management for project funding
+- **MongoDB Integration**: Comprehensive event logging
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- MySQL Server
+- MongoDB
+- Web server (Apache/Nginx)
+- PHP 7.4+
+- Modern web browser
+
+### Quick Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/bostarter.git
+   cd bostarter
+   ```
+
+2. **Set up the database**
+   ```bash
+   mysql -u username -p < database/setup.sql
+   ```
+
+3. **Configure the application**
+   ```bash
+   cp config/config.example.php config/config.php
+   # Edit config.php with your database credentials
+   ```
+
+4. **Start the application**
+   ```bash
+   php -S localhost:8000 -t public/
+   ```
+
+5. **Access BOSTARTER**
+   
+   Open your browser and navigate to: http://localhost:8000
+
+---
+
+## 📂 Project Structure
+
+```
+BOSTARTER/
+├── database/              # Database scripts and migrations
+├── backend/               # Server-side logic
+│   ├── models/            # Data models
+│   ├── controllers/       # Request handlers
+│   ├── services/          # Business logic
+│   └── utils/             # Helper functions
+├── frontend/              # Client-side resources
+│   ├── css/               # Stylesheets
+│   ├── js/                # JavaScript files
+│   ├── images/            # Static images
+│   └── templates/         # Page templates
+├── config/                # Configuration files
+└── logs/                  # Application logs
+```
+
+---
+
+## 🎓 Academic Context
+
+This project is being developed as part of the Database Course for the Computer Science for Management degree program, Academic Year 2024/2025.
+
+---
+
+## 👨‍💻 Contributors
+
+- [Your Name]
+- [Team Member 2]
+- [Team Member 3]
+
+---
+
+## 📞 Contact
+
+For questions or support, please contact:
+- Email: your.email@example.com
+- GitHub: [yourusername](https://github.com/yourusername)
+
+---
+
+*Made with ❤️ by the BOSTARTER Team*

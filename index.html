@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOSTARTER - Crowdfunding per Progetti</title>
+    <link rel="stylesheet" href="frontend/css/style.css">
+    <!-- Potresti includere qui librerie CSS come Bootstrap o Tailwind -->
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo">
+                <a href="#">BOSTARTER</a> <!-- O un'immagine del logo -->
+            </div>
+            <div class="search-bar">
+                <form action="/search" method="get">
+                    <input type="search" placeholder="Fai una ricerca per progetti, creatori e categorie">
+                    <button type="submit">Cerca</button> <!-- Potrebbe essere un'icona -->
+                </form>
+            </div>
+            <nav class="user-nav">
+                <ul>
+                    <li><a href="#">Per i creatori</a></li>
+                    <li><a href="#" id="login-link">Accedi</a></li>
+                    <li><a href="#" id="register-link">Registrati</a></li>
+                    <li><a href="#" id="logout-link" style="display: none;">Logout</a></li>
+                    <li><span id="user-greeting" style="display: none;"></span></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="category-nav">
+        <ul>
+            <li><a href="#">Arte</a></li>
+            <li><a href="#">Fumetti</a></li>
+            <li><a href="#">Artigianato</a></li>
+            <li><a href="#">Danza</a></li>
+            <li><a href="#">Design</a></li>
+            <li><a href="#">Moda</a></li>
+            <li><a href="#">Film</a></li>
+            <li><a href="#">Cibo</a></li>
+            <li><a href="#">Giochi</a></li>
+            <li><a href="#">Giornalismo</a></li>
+            <li><a href="#">Musica</a></li>
+            <li><a href="#">Fotografia</a></li>
+            <li><a href="#">Editoriale</a></li>
+            <li><a href="#">Tecnologia</a></li>
+            <li><a href="#">Teatro</a></li>
+            <li><a href="#">Scopri</a></li>
+        </ul>
+    </nav>
+
+    <main id="app-content">
+        <section class="hero-section">
+            <div class="hero-text">
+                <h1>Sfrutta il potenziale del finanziamento</h1>
+                <p>Qualunque sia il tuo sogno, su BOSTARTER puoi trovare le risorse per realizzarlo. Entra a far parte della più vasta community di sostenitori per trasformare le tue idee in realtà.</p>
+                <button class="cta-button">Inizia</button>
+            </div>
+            <!-- Potremmo aggiungere immagini decorative simili a Kickstarter qui -->
+        </section>
+
+        <!-- Il contenuto dinamico (es. lista progetti) verrà caricato qui o sotto -->
+        <h2>Progetti Recenti</h2>
+        <div id="projects-list">
+            <!-- Caricamento progetti... -->
+        </div>
+    </main>
+
+    <footer>
+        <?php /* include 'frontend/templates/footer.php'; */ ?>
+        <p>&copy; 2024 BOSTARTER - Informatica per il Management</p>
+    </footer>
+
+    <!-- Modale per Login (esempio base) -->
+    <div id="login-modal" class="modal" style="display:none;">
+        <form id="login-form">
+            <h3>Login</h3>
+            <label for="login-email">Email:</label>
+            <input type="email" id="login-email" required><br>
+            <label for="login-password">Password:</label>
+            <input type="password" id="login-password" required><br>
+            <button type="submit">Accedi</button>
+            <button type="button" class="close-modal">Chiudi</button>
+            <p id="login-error" class="error-message"></p>
+        </form>
+    </div>
+
+    <!-- Modale per Registrazione (esempio base) -->
+    <div id="register-modal" class="modal" style="display:none;">
+        <form id="register-form">
+            <h3>Registrati</h3>
+            <label>Email: <input type="email" name="email" required></label><br>
+            <label>Nickname: <input type="text" name="nickname" required></label><br>
+            <label>Password: <input type="password" name="password" required></label><br>
+            <label>Nome: <input type="text" name="nome" required></label><br>
+            <label>Cognome: <input type="text" name="cognome" required></label><br>
+            <label>Anno Nascita: <input type="number" name="anno_nascita" required></label><br>
+            <label>Luogo Nascita: <input type="text" name="luogo_nascita" required></label><br>
+            <button type="submit">Registrati</button>
+            <button type="button" class="close-modal">Chiudi</button>
+            <p id="register-error" class="error-message"></p>
+            <p id="register-success" class="success-message"></p>
+        </form>
+    </div>
+
+    <script src="frontend/js/main.js"></script>
+</body>
+</html>

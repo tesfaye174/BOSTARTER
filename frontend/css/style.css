@@ -1,0 +1,287 @@
+/* Stili base per BOSTARTER - Ispirato a Kickstarter */
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Font simile a Kickstarter */
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9; /* Sfondo leggermente grigio */
+    color: #282828; /* Colore testo principale scuro */
+}
+
+/* Rimuoviamo stili header/nav generici precedenti se non più applicabili */
+/* header { ... } */
+/* nav ul { ... } */
+/* nav ul li { ... } */
+/* nav a { ... } */
+/* nav a:hover { ... } */
+
+/* Nuovo Header Principale */
+.main-header {
+    background-color: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 10px 20px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.logo a {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #05ce78; /* Verde Kickstarter */
+    text-decoration: none;
+}
+
+.search-bar {
+    flex-grow: 1;
+    margin: 0 40px;
+}
+
+.search-bar form {
+    position: relative;
+}
+
+.search-bar input[type="search"] {
+    width: 100%;
+    padding: 10px 15px 10px 40px; /* Spazio per icona */
+    border: 1px solid #e8e8e8;
+    border-radius: 20px;
+    background-color: #f5f5f5;
+    font-size: 0.9em;
+}
+
+.search-bar input[type="search"]::placeholder {
+    color: #6a6a6a;
+}
+
+/* Icona di ricerca (esempio base, potrebbe richiedere FontAwesome o SVG) */
+.search-bar::before {
+    content: "\f002"; /* Esempio FontAwesome */
+    font-family: 'Font Awesome 5 Free'; /* Assicurati che FA sia caricato */
+    font-weight: 900;
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6a6a6a;
+}
+
+.search-bar button[type="submit"] {
+    display: none; /* Nascondiamo il bottone di testo */
+}
+
+.user-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.user-nav li {
+    margin-left: 20px;
+}
+
+.user-nav a {
+    color: #6a6a6a;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.user-nav a:hover {
+    color: #05ce78;
+}
+
+/* Navigazione Categorie */
+.category-nav {
+    background-color: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 10px 0;
+}
+
+.category-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+}
+
+.category-nav li {
+    display: inline-block;
+    margin: 0 15px;
+}
+
+.category-nav a {
+    color: #6a6a6a;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.category-nav a:hover {
+    color: #282828;
+}
+
+main {
+    padding: 0; /* Rimuoviamo padding globale se le sezioni lo gestiscono */
+    max-width: 100%; /* Full width per hero */
+    margin: 0 auto; /* Centra se c'è max-width */
+    background-color: transparent; /* Rimuoviamo sfondo bianco di default */
+    box-shadow: none; /* Rimuoviamo ombra di default */
+}
+
+/* Sezione Hero */
+.hero-section {
+    background-color: #f9f9f9; /* Sfondo leggermente grigio */
+    padding: 60px 20px;
+    text-align: center;
+    /* Qui potremmo aggiungere immagini di sfondo o elementi decorativi */
+}
+
+.hero-text {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.hero-text h1 {
+    font-size: 3em;
+    font-weight: bold;
+    color: #282828;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.hero-text p {
+    font-size: 1.2em;
+    color: #6a6a6a;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.cta-button {
+    background-color: #282828;
+    color: #fff;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.cta-button:hover {
+    background-color: #000;
+}
+
+/* Stili per la lista progetti (mantenuti/adattati) */
+#projects-list {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto; /* Centra la lista progetti */
+}
+
+main h2 {
+    text-align: center; /* Centra il titolo Progetti Recenti */
+    margin-bottom: 30px;
+    font-size: 1.5em;
+    color: #282828;
+}
+
+footer {
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* Stili per Modali */
+.modal {
+    display: none; /* Nascosto di default */
+    position: fixed; /* Rimane fisso durante lo scroll */
+    z-index: 1; /* Sopra tutto il resto */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Abilita scroll se necessario */
+    background-color: rgba(0,0,0,0.4); /* Sfondo semi-trasparente */
+}
+
+.modal form {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% dall'alto e centrato */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Potrebbe essere più piccolo su schermi grandi */
+    max-width: 500px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.modal label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.modal input[type=text],
+.modal input[type=email],
+.modal input[type=password],
+.modal input[type=number] {
+    width: calc(100% - 22px); /* Considera padding e border */
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+}
+
+.modal button {
+    padding: 10px 15px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.modal button[type=submit] {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+}
+
+.modal button.close-modal {
+    background-color: #f44336;
+    color: white;
+    border: none;
+}
+
+.error-message {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+.success-message {
+    color: green;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+/* Stili per la lista progetti (placeholder) */
+#projects-list {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.project-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #fff;
+}
+
+.project-card h3 {
+    margin-top: 0;
+}
