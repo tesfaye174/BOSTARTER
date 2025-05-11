@@ -83,6 +83,18 @@ class AuthController {
             return;
         }
 
+        // Se è admin, richiedi anche il codice di sicurezza
+        if ($this->userModel->isAdmin($user['email'])) {
+            if (empty($input['security_code'])) {
+                Router::jsonResponse(['error' => 'Codice di sicurezza richiesto per admin.'], 401);
+                return;
+            }
+            if (!$this->userModel->verifyAdminSecurityCode($user['email'], $input['security_code'])) {
+                Router::jsonResponse(['error' => 'Codice di sicurezza non valido.'], 401);
+                return;
+            }
+        }
+
         // Verifica la password
         if (password_verify($input['password'], $user['password_hash'])) {
             // Login successo
@@ -134,6 +146,17 @@ class AuthController {
             // L'utente non è loggato
             Router::jsonResponse(['loggedIn' => false]);
         }
+    }
+
+    // Endpoint per verifica admin da frontend (usato per mostrare campo codice sicurezza)
+    public function isAdminApi(): void {
+        $email = $_GET['email'] ?? '';
+        if (!$email) {
+            Router::jsonResponse(['is_admin' => false]);
+            return;
+        }
+        $isAdmin = $this->userModel->isAdmin($email);
+        Router::jsonResponse(['is_admin' => $isAdmin]);
     }
 
 }

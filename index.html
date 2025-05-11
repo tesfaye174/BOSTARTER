@@ -1,111 +1,211 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOSTARTER - Crowdfunding per Progetti</title>
+    <title>BOSTARTER - Finanzia e Realizza i Tuoi Progetti Creativi</title>
+    <meta name="description"
+        content="BOSTARTER è la piattaforma leader per il crowdfunding di progetti creativi. Scopri, supporta o lancia la tua idea e trasformala in realtà.">
     <link rel="stylesheet" href="frontend/css/style.css">
-    <!-- Potresti includere qui librerie CSS come Bootstrap o Tailwind -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="frontend/images/favicon.ico" type="image/x-icon">
 </head>
+
 <body>
-    <header class="main-header">
+    <header class="main-header sticky" role="banner">
         <div class="header-content">
             <div class="logo">
-                <a href="#">BOSTARTER</a> <!-- O un'immagine del logo -->
+                <a href="index.html" aria-label="Homepage BOSTARTER">
+                    <img src="frontend/images/hero-left.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
+                    <span class="logo-text">BOSTARTER</span>
+                </a>
             </div>
             <div class="search-bar">
-                <form action="/search" method="get">
-                    <input type="search" placeholder="Fai una ricerca per progetti, creatori e categorie">
-                    <button type="submit">Cerca</button> <!-- Potrebbe essere un'icona -->
+                <form action="/search" method="get" role="search" aria-label="Cerca progetti">
+                    <input type="search" id="search-input" name="q" placeholder="Cerca progetti, creatori, categorie..."
+                        aria-label="Campo di ricerca" autocomplete="on" tabindex="1">
+                    <button type="submit" aria-label="Avvia ricerca"><i class="fas fa-search"></i></button>
                 </form>
             </div>
-            <nav class="user-nav">
+            <nav class="user-nav" aria-label="Navigazione utente">
                 <ul>
-                    <li><a href="#">Per i creatori</a></li>
+                    <li><a href="frontend/creatori.html" class="creator-btn" tabindex="2">Per i creatori</a></li>
                     <li><a href="#" id="login-link">Accedi</a></li>
-                    <li><a href="#" id="register-link">Registrati</a></li>
-                    <li><a href="#" id="logout-link" style="display: none;">Logout</a></li>
-                    <li><span id="user-greeting" style="display: none;"></span></li>
+                    <li><a href="#" id="register-link" class="cta-button-secondary">Registrati</a></li>
+                    <li><a href="#" id="logout-link" class="hidden-by-default">Logout</a></li>
+                    <li><span id="user-greeting" class="hidden-by-default" aria-live="polite"></span></li>
                 </ul>
             </nav>
         </div>
     </header>
 
-    <nav class="category-nav">
+    <nav class="category-nav" aria-label="Navigazione categorie">
         <ul>
-            <li><a href="#">Arte</a></li>
-            <li><a href="#">Fumetti</a></li>
-            <li><a href="#">Artigianato</a></li>
-            <li><a href="#">Danza</a></li>
-            <li><a href="#">Design</a></li>
-            <li><a href="#">Moda</a></li>
-            <li><a href="#">Film</a></li>
-            <li><a href="#">Cibo</a></li>
-            <li><a href="#">Giochi</a></li>
-            <li><a href="#">Giornalismo</a></li>
-            <li><a href="#">Musica</a></li>
-            <li><a href="#">Fotografia</a></li>
-            <li><a href="#">Editoriale</a></li>
-            <li><a href="#">Tecnologia</a></li>
-            <li><a href="#">Teatro</a></li>
-            <li><a href="#">Scopri</a></li>
+            <li><a href="#"><i class="fas fa-paint-brush"></i> Arte</a></li>
+            <li><a href="#"><i class="fas fa-book"></i> Fumetti</a></li>
+            <li><a href="#"><i class="fas fa-hammer"></i> Artigianato</a></li>
+            <li><a href="#"><i class="fas fa-shoe-prints"></i> Danza</a></li>
+            <li><a href="#"><i class="fas fa-drafting-compass"></i> Design</a></li>
+            <li><a href="#"><i class="fas fa-tshirt"></i> Moda</a></li>
+            <li><a href="#"><i class="fas fa-film"></i> Film</a></li>
+            <li><a href="#"><i class="fas fa-utensils"></i> Cibo</a></li>
+            <li><a href="#"><i class="fas fa-gamepad"></i> Giochi</a></li>
+            <li><a href="#"><i class="fas fa-newspaper"></i> Giornalismo</a></li>
+            <li><a href="#"><i class="fas fa-music"></i> Musica</a></li>
+            <li><a href="#"><i class="fas fa-camera"></i> Fotografia</a></li>
+            <li><a href="#"><i class="fas fa-book-open"></i> Editoriale</a></li>
+            <li><a href="#"><i class="fas fa-microchip"></i> Tecnologia</a></li>
+            <li><a href="#"><i class="fas fa-theater-masks"></i> Teatro</a></li>
+            <li><a href="#"><i class="fas fa-compass"></i> Scopri Tutti</a></li>
         </ul>
     </nav>
 
-    <main id="app-content">
-        <section class="hero-section">
-            <div class="hero-text">
-                <h1>Sfrutta il potenziale del finanziamento</h1>
-                <p>Qualunque sia il tuo sogno, su BOSTARTER puoi trovare le risorse per realizzarlo. Entra a far parte della più vasta community di sostenitori per trasformare le tue idee in realtà.</p>
-                <button class="cta-button">Inizia</button>
+    <main id="main-content">
+        <section class="hero" aria-label="Sezione principale">
+            <div class="hero-images" aria-hidden="true">
+                <img src="frontend/images/hero1.jpg" alt="Immagine ispiratrice di un progetto creativo"
+                    class="hero-img-left" loading="lazy">
+                <img src="frontend/images/hero2.jpg" alt="Progetto creativo di successo" class="hero-img-right"
+                    loading="lazy">
             </div>
-            <!-- Potremmo aggiungere immagini decorative simili a Kickstarter qui -->
+            <div class="hero-content">
+                <h1><span class="highlight">Dai Vita alle Tue Idee</span> con BOSTARTER</h1>
+                <p>Qualunque sia il tuo sogno, su BOSTARTER puoi trovare il supporto e le risorse per realizzarlo.<br>
+                    Concretizza le tue idee con la forza della community.</p>
+                <a href="frontend/creatori.html#start-project-form" class="cta-button" tabindex="3">Inizia il Tuo
+                    Progetto</a>
+            </div>
         </section>
 
-        <!-- Il contenuto dinamico (es. lista progetti) verrà caricato qui o sotto -->
-        <h2>Progetti Recenti</h2>
-        <div id="projects-list">
-            <!-- Caricamento progetti... -->
-        </div>
+        <section id="how-it-works" class="how-it-works-section" aria-label="Come funziona">
+            <h2 class="section-title">Come Funziona BOSTARTER</h2>
+            <div class="steps-container">
+                <div class="step-card" tabindex="4">1. Scegli la categoria e inserisci i dettagli del progetto.</div>
+                <div class="step-card" tabindex="5">2. Definisci le ricompense per i sostenitori.</div>
+                <div class="step-card" tabindex="6">3. Lancia la campagna e condividila!</div>
+                <div class="step-card" tabindex="7">4. Raggiungi il tuo obiettivo e realizza la tua idea.</div>
+            </div>
+        </section>
+
+        <section id="statistics-section" class="statistics-section" aria-label="Statistiche della Community">
+            <h2 class="section-title">Statistiche della Community</h2>
+            <div class="statistics-cards">
+                <div class="stat-card" id="top-creators" aria-live="polite">
+                    <h3><i class="fas fa-crown"></i> Top Creatori per Affidabilità</h3>
+                    <ul class="stat-list" id="stat-creators-list">
+                        <li>Caricamento...</li>
+                    </ul>
+                </div>
+                <div class="stat-card" id="top-projects" aria-live="polite">
+                    <h3><i class="fas fa-bullseye"></i> Progetti più Vicini al Completamento</h3>
+                    <ul class="stat-list" id="stat-projects-list">
+                        <li>Caricamento...</li>
+                    </ul>
+                </div>
+                <div class="stat-card" id="top-funders" aria-live="polite">
+                    <h3><i class="fas fa-hand-holding-usd"></i> Top Finanziatori</h3>
+                    <ul class="stat-list" id="stat-funders-list">
+                        <li>Caricamento...</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="featured-projects" aria-label="Progetti in evidenza">
+            <h2 class="section-title">Progetti in Evidenza</h2>
+            <div class="projects-grid" id="featured-projects-list">
+                <!-- Progetti caricati dinamicamente -->
+            </div>
+            <div class="text-center" style="margin-top: 30px;">
+                <a href="#" class="cta-button-outline" tabindex="8">Scopri Altri Progetti</a>
+            </div>
+        </section>
+
+        <section class="final-cta-section" aria-label="Call to action finale">
+            <div class="cta-content">
+                <h2>Pronto a Lanciare la Tua Idea?</h2>
+                <p>Non aspettare il momento perfetto, crealo! Unisciti a migliaia di creatori che hanno trasformato i
+                    loro sogni in realtà su BOSTARTER.</p>
+                <a href="frontend/creatori.html#start-project-form" class="cta-button-large" tabindex="9">Crea il Tuo
+                    Progetto</a>
+            </div>
+        </section>
+
     </main>
 
-    <footer>
-        <?php /* include 'frontend/templates/footer.php'; */ ?>
-        <p>&copy; 2024 BOSTARTER - Informatica per il Management</p>
+    <footer class="modern-footer" role="contentinfo">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="frontend/images/logo-bostarter.svg" alt="BOSTARTER Logo Footer" class="footer-logo-img"
+                    loading="lazy">
+                <span>BOSTARTER</span>
+            </div>
+            <div class="footer-links">
+                <a href="#">Chi siamo</a>
+                <a href="#">Contatti</a>
+                <a href="#">FAQ</a>
+                <a href="#">Termini di Servizio</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-social">
+                <a href="#" aria-label="Facebook BOSTARTER"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter BOSTARTER"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Instagram BOSTARTER"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="LinkedIn BOSTARTER"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+        <p class="copyright-text">&copy; <span id="current-year">2024</span> BOSTARTER. Tutti i diritti riservati.</p>
     </footer>
 
-    <!-- Modale per Login (esempio base) -->
-    <div id="login-modal" class="modal" style="display:none;">
-        <form id="login-form">
-            <h3>Login</h3>
+    <!-- Miglioramento modali login/register -->
+    <div id="login-modal" class="modal" aria-labelledby="login-modal-title" aria-hidden="true" role="dialog"
+        tabindex="-1">
+        <form id="login-form" class="modal-content" autocomplete="on">
+            <button type="button" class="close-modal" aria-label="Chiudi modale">&times;</button>
+            <h3 id="login-modal-title">Accedi a BOSTARTER</h3>
             <label for="login-email">Email:</label>
-            <input type="email" id="login-email" required><br>
+            <input type="email" id="login-email" name="email" required autocomplete="email" aria-label="Email">
             <label for="login-password">Password:</label>
-            <input type="password" id="login-password" required><br>
-            <button type="submit">Accedi</button>
-            <button type="button" class="close-modal">Chiudi</button>
-            <p id="login-error" class="error-message"></p>
+            <input type="password" id="login-password" name="password" required autocomplete="current-password"
+                aria-label="Password">
+            <div id="admin-security-code-wrapper" style="display:none">
+                <label for="login-security-code">Codice di sicurezza (solo admin):</label>
+                <input type="text" id="login-security-code" name="security_code" autocomplete="off"
+                    aria-label="Codice di sicurezza">
+            </div>
+            <button type="submit" class="cta-button">Accedi</button>
+            <p id="login-error" class="error-message" aria-live="assertive"></p>
+            <p>Non hai un account? <a href="#" id="go-to-register">Registrati</a></p>
         </form>
     </div>
 
-    <!-- Modale per Registrazione (esempio base) -->
-    <div id="register-modal" class="modal" style="display:none;">
-        <form id="register-form">
-            <h3>Registrati</h3>
-            <label>Email: <input type="email" name="email" required></label><br>
-            <label>Nickname: <input type="text" name="nickname" required></label><br>
-            <label>Password: <input type="password" name="password" required></label><br>
-            <label>Nome: <input type="text" name="nome" required></label><br>
-            <label>Cognome: <input type="text" name="cognome" required></label><br>
-            <label>Anno Nascita: <input type="number" name="anno_nascita" required></label><br>
-            <label>Luogo Nascita: <input type="text" name="luogo_nascita" required></label><br>
-            <button type="submit">Registrati</button>
-            <button type="button" class="close-modal">Chiudi</button>
-            <p id="register-error" class="error-message"></p>
-            <p id="register-success" class="success-message"></p>
+    <div id="register-modal" class="modal" aria-labelledby="register-modal-title" aria-hidden="true" role="dialog"
+        tabindex="-1">
+        <form id="register-form" class="modal-content" autocomplete="on">
+            <button type="button" class="close-modal" aria-label="Chiudi modale">&times;</button>
+            <h3 id="register-modal-title">Registrati su BOSTARTER</h3>
+            <label for="register-email">Email: <input type="email" id="register-email" name="email" required
+                    autocomplete="email" aria-label="Email"></label>
+            <label for="register-nickname">Nickname: <input type="text" id="register-nickname" name="nickname" required
+                    autocomplete="username" aria-label="Nickname"></label>
+            <label for="register-password">Password: <input type="password" id="register-password" name="password"
+                    required autocomplete="new-password" aria-label="Password"></label>
+            <button type="submit" class="cta-button">Registrati</button>
+            <p id="register-error" class="error-message" aria-live="assertive"></p>
+            <p id="register-success" class="success-message" aria-live="polite"></p>
+            <p>Hai già un account? <a href="#" id="go-to-login">Accedi</a></p>
         </form>
     </div>
+
+    <button id="theme-toggle" title="Cambia tema (Chiaro/Scuro)" aria-label="Attiva tema scuro/chiaro"><i
+            class="fas fa-moon"></i></button>
 
     <script src="frontend/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
 </body>
+
 </html>

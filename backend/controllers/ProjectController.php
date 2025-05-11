@@ -153,5 +153,177 @@ class ProjectController {
     // - Gestire commenti (CommentController?)
     // - Gestire candidature (ApplicationController?)
 
+    /**
+     * Aggiorna un progetto esistente.
+     * Richiede autenticazione e che l'utente sia il creatore del progetto.
+     */
+    public function updateProject(): void {
+        session_start();
+        if (!isset($_SESSION['user_email'])) {
+            Router::jsonResponse(['error' => 'Autenticazione richiesta.'], 401);
+            return;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!isset($input['nome'])) {
+            Router::jsonResponse(['error' => 'Nome del progetto mancante.'], 400);
+            return;
+        }
+        $project = $this->projectModel->findByName($input['nome']);
+        if (!$project) {
+            Router::jsonResponse(['error' => 'Progetto non trovato.'], 404);
+            return;
+        }
+        if ($project['creatore_email'] !== $_SESSION['user_email']) {
+            Router::jsonResponse(['error' => 'Non autorizzato a modificare questo progetto.'], 403);
+            return;
+        }
+        // Validazione input (rafforzata)
+        $fields = ['descrizione', 'budget', 'data_limite', 'tipo'];
+        foreach ($fields as $field) {
+            if (!isset($input[$field])) {
+                Router::jsonResponse(['error' => "Campo '$field' mancante."], 400);
+                return;
+            }
+        }
+        if (!in_array($input['tipo'], ['hardware', 'software'])) {
+            Router::jsonResponse(['error' => 'Tipo di progetto non valido.'], 400);
+            return;
+        }
+        // TODO: Validare formato data_limite, budget numerico > 0, ecc.
+        $data = [
+            'descrizione' => $input['descrizione'],
+            'budget' => $input['budget'],
+            'data_limite' => $input['data_limite'],
+            'tipo' => $input['tipo']
+        ];
+        try {
+            $success = $this->projectModel->updateProject($input['nome'], $data);
+            if ($success) {
+                Router::jsonResponse(['message' => 'Progetto aggiornato con successo.']);
+            } else {
+                Router::jsonResponse(['error' => 'Errore durante l\'aggiornamento del progetto.'], 500);
+            }
+        } catch (\Exception $e) {
+            error_log("Errore in updateProject: " . $e->getMessage());
+            Router::jsonResponse(['error' => 'Errore interno del server.'], 500);
+        }
+    }
+
+    /**
+     * Elimina un progetto esistente.
+     * Richiede autenticazione e che l'utente sia il creatore del progetto.
+     */
+    public function deleteProject(): void {
+        session_start();
+        if (!isset($_SESSION['user_email'])) {
+            Router::jsonResponse(['error' => 'Autenticazione richiesta.'], 401);
+            return;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!isset($input['nome'])) {
+            Router::jsonResponse(['error' => 'Nome del progetto mancante.'], 400);
+            return;
+        }
+        $project = $this->projectModel->findByName($input['nome']);
+        if (!$project) {
+            Router::jsonResponse(['error' => 'Progetto non trovato.'], 404);
+            return;
+        }
+        if ($project['creatore_email'] !== $_SESSION['user_email']) {
+            Router::jsonResponse(['error' => 'Non autorizzato a eliminare questo progetto.'], 403);
+            return;
+        }
+        try {
+            $success = $this->projectModel->deleteProject($input['nome']);
+            if ($success) {
+                Router::jsonResponse(['message' => 'Progetto eliminato con successo.']);
+            } else {
+                Router::jsonResponse(['error' => 'Errore durante l\'eliminazione del progetto.'], 500);
+            }
+        } catch (\Exception $e) {
+            error_log("Errore in deleteProject: " . $e->getMessage());
+            Router::jsonResponse(['error' => 'Errore interno del server.'], 500);
+        }
+    }
+
+    /**
+     * Updates the color settings for a project.
+     * Requires authentication and that the user is the creator of the project.
+     */
+    public function updateProjectColor(): void {
+        session_start();
+        if (!isset($_SESSION['user_email'])) {
+            Router::jsonResponse(['error' => 'Authentication required.'], 401);
+            return;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!isset($input['name'], $input['color'])) {
+            Router::jsonResponse(['error' => 'Project name and color are required.'], 400);
+            return;
+        }
+        $project = $this->projectModel->findByName($input['name']);
+        if (!$project) {
+            Router::jsonResponse(['error' => 'Project not found.'], 404);
+            return;
+        }
+        if ($project['creator_email'] !== $_SESSION['user_email']) {
+            Router::jsonResponse(['error' => 'Not authorized to update this project.'], 403);
+            return;
+        }
+        // Validate color format (e.g., hex code)
+        if (!preg_match('/^#[a-fA-F0-9]{6}$/', $input['color'])) {
+            Router::jsonResponse(['error' => 'Invalid color format.'], 400);
+            return;
+        }
+        try {
+            $success = $this->projectModel->updateProjectColor($input['name'], $input['color']);
+            if ($success) {
+                Router::jsonResponse(['message' => 'Project color updated successfully.']);
+            } else {
+                Router::jsonResponse(['error' => 'Failed to update project color.'], 500);
+            }
+        } catch (\Exception $e) {
+            error_log("Error in updateProjectColor: " . $e->getMessage());
+            Router::jsonResponse(['error' => 'Internal server error.'], 500);
+        }
+    }
+
+    /**
+     * Mirrors a project to another platform.
+     * Requires authentication and that the user is the creator of the project.
+     */
+    public function mirrorProject(): void {
+        session_start();
+        if (!isset($_SESSION['user_email'])) {
+            Router::jsonResponse(['error' => 'Authentication required.'], 401);
+            return;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!isset($input['name'], $input['platform'])) {
+            Router::jsonResponse(['error' => 'Project name and platform are required.'], 400);
+            return;
+        }
+        $project = $this->projectModel->findByName($input['name']);
+        if (!$project) {
+            Router::jsonResponse(['error' => 'Project not found.'], 404);
+            return;
+        }
+        if ($project['creator_email'] !== $_SESSION['user_email']) {
+            Router::jsonResponse(['error' => 'Not authorized to mirror this project.'], 403);
+            return;
+        }
+        // Example logic for mirroring
+        try {
+            $success = $this->projectModel->mirrorToPlatform($input['name'], $input['platform']);
+            if ($success) {
+                Router::jsonResponse(['message' => 'Project mirrored successfully.']);
+            } else {
+                Router::jsonResponse(['error' => 'Failed to mirror project.'], 500);
+            }
+        } catch (\Exception $e) {
+            error_log("Error in mirrorProject: " . $e->getMessage());
+            Router::jsonResponse(['error' => 'Internal server error.'], 500);
+        }
+    }
 }
 ?>

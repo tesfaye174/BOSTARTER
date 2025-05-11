@@ -125,16 +125,26 @@ class UserModel {
      * @return bool
      */
     public function isAdmin(string $email): bool {
-        $sql = "SELECT COUNT(*) FROM Amministratore WHERE utente_email = :email";
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':email', $email);
-            $stmt->execute();
-            return $stmt->fetchColumn() > 0;
-        } catch (\PDOException $e) {
-            error_log("Errore DB in isAdmin: " . $e->getMessage());
-            return false;
-        }
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM Admin_Users au JOIN Users u ON au.user_id = u.id WHERE u.email = :email");
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * Verifica il codice di sicurezza admin.
+     * @param string $email
+     * @param string $securityCode
+     * @return bool
+     */
+    public function verifyAdminSecurityCode(string $email, string $securityCode): bool {
+        $stmt = $this->db->prepare("SELECT au.security_code FROM Admin_Users au JOIN Users u ON au.user_id = u.id WHERE u.email = :email");
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) return false;
+        // Confronto diretto, oppure hash se vuoi maggiore sicurezza
+        return $row['security_code'] === $securityCode;
     }
 
     /**

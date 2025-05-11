@@ -36,23 +36,32 @@ class ProjectModel {
      *
      * @param array $data Dati del progetto [nome, descrizione, budget, data_limite, creatore_email, tipo]
      * @return bool True in caso di successo, false altrimenti.
+
      */
-    public function create(array $data): bool {
+    public function create(array $data): array {
         $sql = "INSERT INTO Progetto (nome, descrizione, budget, data_limite, creatore_email, tipo)
                 VALUES (:nome, :descrizione, :budget, :data_limite, :creatore_email, :tipo)";
         try {
+            $nome = htmlspecialchars(strip_tags($data['nome']));
+            $descrizione = htmlspecialchars(strip_tags($data['descrizione']));
+            $budget = $data['budget'];
+            $data_limite = $data['data_limite'];
+            $creatore_email = htmlspecialchars(strip_tags($data['creatore_email']));
+            $tipo = htmlspecialchars(strip_tags($data['tipo']));
             $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':nome', $data['nome']);
-            $stmt->bindParam(':descrizione', $data['descrizione']);
-            $stmt->bindParam(':budget', $data['budget']); // PDO gestisce decimali come stringhe
-            $stmt->bindParam(':data_limite', $data['data_limite']);
-            $stmt->bindParam(':creatore_email', $data['creatore_email']);
-            $stmt->bindParam(':tipo', $data['tipo']); // 'hardware' o 'software'
-            return $stmt->execute();
+            $stmt->bindParam(':nome', $nome);
+            $stmt->bindParam(':descrizione', $descrizione);
+            $stmt->bindParam(':budget', $budget);
+            $stmt->bindParam(':data_limite', $data_limite);
+            $stmt->bindParam(':creatore_email', $creatore_email);
+            $stmt->bindParam(':tipo', $tipo);
+            if ($stmt->execute()) {
+                return ['success' => true, 'error' => null];
+            }
+            return ['success' => false, 'error' => 'Errore inserimento progetto'];
         } catch (\PDOException $e) {
-            error_log("Errore DB in create (Project): " . $e->getMessage());
-            // Potrebbe fallire per chiave duplicata (nome progetto) o foreign key (creatore)
-            return false;
+            error_log('Errore DB in create (Project): ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
@@ -77,10 +86,10 @@ class ProjectModel {
             $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
             $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC), 'error' => null];
         } catch (\PDOException $e) {
-            error_log("Errore DB in getAll (Project): " . $e->getMessage());
-            return [];
+            error_log('Errore DB in getAll (Project): ' . $e->getMessage());
+            return ['success' => false, 'data' => [], 'error' => $e->getMessage()];
         }
     }
 
@@ -128,13 +137,14 @@ class ProjectModel {
     public function getPhotos(string $progettoNome): array {
         $sql = "SELECT id, url_foto FROM Foto_Progetto WHERE progetto_nome = :progetto_nome";
         try {
+            $progettoNome = htmlspecialchars(strip_tags($progettoNome));
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':progetto_nome', $progettoNome);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC), 'error' => null];
         } catch (\PDOException $e) {
-            error_log("Errore DB in getPhotos (Project): " . $e->getMessage());
-            return [];
+            error_log('Errore DB in getPhotos (Project): ' . $e->getMessage());
+            return ['success' => false, 'data' => [], 'error' => $e->getMessage()];
         }
     }
 
@@ -144,19 +154,26 @@ class ProjectModel {
      * @param array $data [codice, progetto_nome, descrizione, url_foto]
      * @return bool
      */
-    public function addReward(array $data): bool {
+    public function addReward(array $data): array {
         $sql = "INSERT INTO Reward (codice, progetto_nome, descrizione, url_foto)
                 VALUES (:codice, :progetto_nome, :descrizione, :url_foto)";
         try {
+            $codice = htmlspecialchars(strip_tags($data['codice']));
+            $progetto_nome = htmlspecialchars(strip_tags($data['progetto_nome']));
+            $descrizione = htmlspecialchars(strip_tags($data['descrizione']));
+            $url_foto = isset($data['url_foto']) ? htmlspecialchars(strip_tags($data['url_foto'])) : null;
             $stmt = $this->db->prepare($sql);
-            $stmt->bindParam(':codice', $data['codice']);
-            $stmt->bindParam(':progetto_nome', $data['progetto_nome']);
-            $stmt->bindParam(':descrizione', $data['descrizione']);
-            $stmt->bindParam(':url_foto', $data['url_foto']); // Può essere NULL
-            return $stmt->execute();
+            $stmt->bindParam(':codice', $codice);
+            $stmt->bindParam(':progetto_nome', $progetto_nome);
+            $stmt->bindParam(':descrizione', $descrizione);
+            $stmt->bindParam(':url_foto', $url_foto);
+            if ($stmt->execute()) {
+                return ['success' => true, 'error' => null];
+            }
+            return ['success' => false, 'error' => 'Errore inserimento reward'];
         } catch (\PDOException $e) {
-            error_log("Errore DB in addReward (Project): " . $e->getMessage());
-            return false;
+            error_log('Errore DB in addReward (Project): ' . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
@@ -169,13 +186,14 @@ class ProjectModel {
     public function getRewards(string $progettoNome): array {
         $sql = "SELECT codice, descrizione, url_foto FROM Reward WHERE progetto_nome = :progetto_nome";
         try {
+            $progettoNome = htmlspecialchars(strip_tags($progettoNome));
             $stmt = $this->db->prepare($sql);
             $stmt->bindParam(':progetto_nome', $progettoNome);
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC), 'error' => null];
         } catch (\PDOException $e) {
-            error_log("Errore DB in getRewards (Project): " . $e->getMessage());
-            return [];
+            error_log('Errore DB in getRewards (Project): ' . $e->getMessage());
+            return ['success' => false, 'data' => [], 'error' => $e->getMessage()];
         }
     }
 
@@ -386,6 +404,47 @@ class ProjectModel {
     }
 
     // TODO: Aggiungere metodi per aggiornare/eliminare progetti, gestire stati, etc.
+
+    /**
+     * Aggiorna i dati di un progetto esistente.
+     *
+     * @param string $nome Nome univoco del progetto da aggiornare.
+     * @param array $data Dati da aggiornare (descrizione, budget, data_limite, tipo)
+     * @return bool True se aggiornato, false altrimenti.
+     */
+    public function updateProject(string $nome, array $data): bool {
+        $sql = "UPDATE Progetto SET descrizione = :descrizione, budget = :budget, data_limite = :data_limite, tipo = :tipo WHERE nome = :nome";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':descrizione', $data['descrizione']);
+            $stmt->bindParam(':budget', $data['budget']);
+            $stmt->bindParam(':data_limite', $data['data_limite']);
+            $stmt->bindParam(':tipo', $data['tipo']);
+            $stmt->bindParam(':nome', $nome);
+            return $stmt->execute();
+        } catch (\PDOException $e) {
+            error_log("Errore DB in updateProject (Project): " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Elimina un progetto esistente.
+     *
+     * @param string $nome Nome univoco del progetto da eliminare.
+     * @return bool True se eliminato, false altrimenti.
+     */
+    public function deleteProject(string $nome): bool {
+        $sql = "DELETE FROM Progetto WHERE nome = :nome";
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':nome', $nome);
+            return $stmt->execute();
+        } catch (\PDOException $e) {
+            error_log("Errore DB in deleteProject (Project): " . $e->getMessage());
+            return false;
+        }
+    }
 
 }
 ?>

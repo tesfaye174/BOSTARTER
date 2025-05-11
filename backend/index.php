@@ -30,6 +30,7 @@ use BOSTARTER\Backend\Controllers\SkillController; // Includi il controller dell
 use BOSTARTER\Backend\Controllers\RewardController; // Includi il controller delle ricompense
 use BOSTARTER\Backend\Controllers\CommentController; // Includi il controller dei commenti
 use BOSTARTER\Backend\Controllers\ApplicationController; // Includi il controller delle candidature
+use BOSTARTER\Backend\Controllers\StatisticsController;
 
 // Inizia la sessione (se usi l'autenticazione basata su sessione)
 session_start();
@@ -44,6 +45,7 @@ $router->addRoute('POST', '/api/register', [AuthController::class, 'register']);
 $router->addRoute('POST', '/api/login', [AuthController::class, 'login']);
 $router->addRoute('POST', '/api/logout', [AuthController::class, 'logout']); // POST o GET a seconda delle preferenze
 $router->addRoute('GET', '/api/session', [AuthController::class, 'checkSession']);
+$router->addRoute('GET', '/api/is-admin', [AuthController::class, 'isAdminApi']);
 
 // Rotte Progetti
 $router->addRoute('GET', '/api/projects', [ProjectController::class, 'getAllProjects']);
@@ -73,6 +75,11 @@ $router->addRoute('GET', '/api/projects/{projectId}/applications', [ApplicationC
 $router->addRoute('GET', '/api/user/applications', [ApplicationController::class, 'getUserApplications']); // Richiede autenticazione (utente loggato)
 $router->addRoute('POST', '/api/projects/{projectId}/applications', [ApplicationController::class, 'createApplication']); // Richiede autenticazione
 $router->addRoute('PUT', '/api/applications/{applicationId}/status', [ApplicationController::class, 'updateApplicationStatus']); // Richiede autenticazione (creatore progetto)
+
+// Rotte Statistiche
+$router->addRoute('GET', '/api/statistics/top-creators', [StatisticsController::class, 'topCreators']);
+$router->addRoute('GET', '/api/statistics/top-projects', [StatisticsController::class, 'topProjects']);
+$router->addRoute('GET', '/api/statistics/top-funders', [StatisticsController::class, 'topFunders']);
 
 // --- Gestione della Richiesta --- 
 

@@ -21,41 +21,83 @@ class Router {
     }
 
     /**
+     * Utility method for sending JSON responses.
+     * Controllers can use this method.
+     */
+    public static function jsonResponse($data, int $statusCode = 200): void {
+        http_response_code($statusCode);
+        // Ensure header is set, though index.php might set it globally
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode($data);
+        exit; // Terminate script execution after sending the response
+    }
+
+    /**
      * Gestisce la richiesta corrente.
      */
     public function handleRequest(): void {
-        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+        $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        $requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
 
         // Rimuovi query string se presente
-        $path = strtok($path, '?');
+        $requestPath = strtok($requestPath, '?');
 
-        // Trova la rotta corrispondente
-        if (isset($this->routes[$method][$path])) {
-            $handler = $this->routes[$method][$path];
+        $matchedHandler = null;
+        $params = [];
 
-            if (is_callable($handler)) {
-                // Se è una funzione anonima
-                call_user_func($handler);
-            } elseif (is_array($handler) && count($handler) === 2) {
-                // Se è nel formato [ClasseController, 'metodo']
-                $controllerClass = $handler[0];
-                $controllerMethod = $handler[1];
+        if (isset($this->routes[strtoupper($requestMethod)])) {
+            foreach ($this->routes[strtoupper($requestMethod)] as $routePattern => $handler) {
+                // Convert route pattern with placeholders like {paramName} to a regex
+                // Example: /BOSTARTER/api/projects/{projectId}/rewards -> #^/BOSTARTER/api/projects/([^/]+)/rewards$#
+                $regexPattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([^/]+)', $routePattern);
+                $regexPattern = '#^' . $regexPattern . '$#';
 
-                // Verifica che la classe e il metodo esistano
+                if (preg_match($regexPattern, $requestPath, $matches)) {
+                    array_shift($matches); // Remove the full match (index 0)
+                    
+                    // Extract parameter names from the route pattern
+                    // Example: /BOSTARTER/api/projects/{projectId}/rewards -> ['projectId']
+                    preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $routePattern, $paramNames);
+                    $paramNames = $paramNames[1]; // Get the captured group names
+
+                    if (count($paramNames) === count($matches)) {
+                        $params = array_combine($paramNames, $matches);
+                    } else {
+                        // Fallback if param names extraction doesn't align, or for simple numeric array
+                        // This case might need adjustment based on how you want to handle unnamed params
+                        $params = $matches; 
+                    }
+                    
+                    $matchedHandler = $handler;
+                    break; // First matched route wins
+                }
+            }
+        }
+
+        if ($matchedHandler) {
+            if (is_callable($matchedHandler)) {
+                // For anonymous functions or invokable objects
+                call_user_func_array($matchedHandler, $params);
+            } elseif (is_array($matchedHandler) && count($matchedHandler) === 2) {
+                // For [ControllerClass, 'methodName']
+                $controllerClass = $matchedHandler[0];
+                $controllerMethod = $matchedHandler[1];
+
                 if (class_exists($controllerClass) && method_exists($controllerClass, $controllerMethod)) {
                     $controllerInstance = new $controllerClass();
-                    // Chiama il metodo del controller
-                    // In futuro, potresti passare parametri estratti dall'URL o dal corpo della richiesta
-                    call_user_func([$controllerInstance, $controllerMethod]);
+                    // Pass extracted params as a single associative array to the controller method
+                    // Controller methods should expect an array, e.g., public function myMethod(array $urlParams)
+                    call_user_func_array([$controllerInstance, $controllerMethod], [$params]);
                 } else {
-                    $this->sendNotFound("Controller o metodo non trovato: {$controllerClass}::{$controllerMethod}");
+                    $this->sendNotFound("Controller or method not found: {$controllerClass}::{$controllerMethod}");
                 }
             } else {
-                $this->sendNotFound("Handler non valido per la rotta: {$path}");
+                $this->sendNotFound("Invalid handler for route: {$requestPath}");
             }
         } else {
-            $this->sendNotFound("Nessuna rotta trovata per {$method} {$path}");
+            $this->sendNotFound("No route found for {$requestMethod} {$requestPath}");
         }
     }
 
@@ -64,24 +106,9 @@ class Router {
      *
      * @param string $message Messaggio di errore opzionale.
      */
-    private function sendNotFound(string $message = 'Risorsa non trovata'): void {
-        http_response_code(404);
-        // In un'app reale, avresti una pagina 404 dedicata
-        echo json_encode(['error' => $message]);
-        exit;
-    }
-
-    /**
-     * Invia una risposta JSON.
-     *
-     * @param mixed $data Dati da inviare.
-     * @param int $statusCode Codice di stato HTTP (default 200).
-     */
-    public static function jsonResponse($data, int $statusCode = 200): void {
-        http_response_code($statusCode);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($data);
-        exit;
+    private function sendNotFound(string $message = 'Resource not found'): void {
+        // Use the static jsonResponse method for consistency
+        self::jsonResponse(['error' => $message], 404);
     }
 }
 

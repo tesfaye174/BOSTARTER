@@ -1,282 +1,186 @@
-# BOSTARTER
-Corso	di	Basi	di	Dati	
-CdS	Informatica	per	il	Management	
-TRACCIA	di	PROGETTO,	A.A.	2024/2025	
-PREMESSA.	
-Si	vuole	realizzare	la	piattaforma	BOSTARTER per	supportare	la	creazione	di	campagne	di	
-crowdfounding	finalizzate	alla	realizzazione	di	progetti	hardware/software.	La	piattaforma	è	
-liberamente	ispirata	alla	piattaforma	Kickststarter	(https://www.kickstarter.com).	La	
-piattaforma	consente	agli	utenti	di	creare	un	progetto	hardware	o	software	che	si	vuole	
-finanziare,	indicando	il	budget	da	raggiungere	e	la	data	limite	entro	cui	ottenere	tale	importo.	
-Altri	utenti	della	piattaforma	possono	finanziare	il	progetto,	ricevendo	in	cambio	una	qualche	
-reward	(non	economica)	dai	creatori.	E’	prevista	la	possibilità	di	candidarsi	allo	sviluppo	di	un	
-progetto	software,	se	le	skill	possedute	dall’utente	fanno	matching	con	quelle	dei	profili	
-richiesti	dal	progetto.	Infine,	la	piattaforma	consente	l’inserimento	di	commenti.	
-SPECIFICA	DELLA	PIATTAFORMA.	
-La	piattaforma	BOSTARTER gestisce	i	dati	degli	utenti	registrati.	Ogni	utente	dispone	di	
-indirizzo	email	(univoco),	nickname,	password,	nome,	cognome,	anno	di	nascita,	luogo	di	
-nascita.	Inoltre,	ogni	utente	può	indicare	le	proprie	skill	di	curriculum.	Le	skill	di	curriculum	
-consistono	in	una	sequenza	di:	<competenza,	livello>,	dove	la	competenza	è	una	stringa	ed	il	
-livello	è	un	numero	tra	0	e	5	(es.	<AI,	3>).	La	lista	delle	competenze	è	comune	a	tutti	gli	utenti	
-della	piattaforma.	Alcuni	utenti	-ma	non	tutti-	possono	appartenere	a	due	sotto-categorie:	
-utenti	amministratori,	o	utenti	creatori.	Gli	utenti	amministratori	dispongono	anche	di	un	
-codice	di	sicurezza.	Solo	gli	utenti	amministratori	possono	popolare	la	lista	delle	competenze.	
-Un	utente	creatore	dispone	anche	dei	campi:	#nr_progetti	(ridondanza	concettuale,	vedi	
-sotto)	ed	affidabilità.	Un	utente	creatore	–	e	solo	lui-	può	inserire	uno	o	più	progetti.	Ogni	
-progetto	dispone	di	un	nome	(univoco),	un	campo	descrizione,	una	data	di	inserimento,	una	o	
-più	foto,	un	budget	da	raggiungere	per	avviare	il	progetto,	una	data	limite	entro	cui	
-raggiungere	il	budget,	uno	stato.	Lo	stato	è	un	campo	di	tipo	enum	(aperto/chiuso).	Ogni	
-progetto	è	associato	ad	un	solo	utente	creatore.	Inoltre,	ogni	progetto	prevede	una	lista	di	
-reward:	una	reward	dispone	di	un	codice	univoco,	una	breve	descrizione,	una	foto.	I	progetti	
-appartengono	esclusivamente	a	due	categorie:	progetti	hardware	o	progetti	software.	Nel	
-caso	dei	progetti	hardware,	è	presente	anche	la	lista	delle	componenti	necessarie:	ogni	
-componente	ha	un	nome	univoco,	una	descrizione,	un	prezzo,	una	quantità	(>0).	Nel	caso	dei	
-progetti	software,	viene	elencata	la	lista	dei	profili	necessari	per	lo	sviluppo.	Ogni	profilo	
-dispone	di	un	nome	(es.	“Esperto	AI”)	e	di	skill	richieste:	come	nel	caso	delle	skill	di	
-curriculum,	esse	consistono	in	una	sequenza	<competenza,	livello>,	dove	la	competenza	è	una	
-stringa	-tra	quelle	presenti	in	piattaforma-	ed	il	livello	è	un	numero	tra	0	e	5.	Ogni	utente	della	
-piattaforma	può	finanziare	un	progetto:	ogni	finanziamento	dispone	di	un	importo	ed	una	
-data.	Un	utente	potrebbe	inserire	più	finanziamenti	per	lo	stesso	progetto,	ma	in	date	diverse.	
-Nel	momento	in	cui	la	somma	totale	degli	importi	dei	finanziamenti	supera	il	budget	del	
-progetto,	oppure	il	progetto	resta	in	stato	aperto	oltre	la	data	limite,	lo	stato	di	tale	progetto	
-diventa	pari	a	chiuso:	un	progetto	chiuso	non	accetta	ulteriori	finanziamenti.		Ad	ogni	
-finanziamento	è	associata	una	sola	reward,	tra	quelle	previste	per	il	progetto	finanziato.	Un	
-utente	può	inserire	commenti	relativi	ad	un	progetto.	Ogni	commento	dispone	di	un	id	
-(univoco),	una	data	ed	un	campo	testo.	L’	utente	creatore	può	eventualmente	inserire	una	
-risposta	per	ogni	singolo	commento	(un	commento	ha	al	massimo	1	risposta).	Infine,	è	
-prevista	la	possibilità	per	gli	utenti	di	candidarsi	come	partecipanti	allo	sviluppo	di	un	
-progetto	software.	Un	utente	può	candidarsi	ad	un	numero	qualsiasi	di	profili.	Un	progetto	
-software	può	ricevere	un	numero	qualsiasi	di	candidature	per	un	certo	profilo.	La	piattaforma	
-consente	ad	un	utente	di	inserire	una	candidatura	su	un	profilo	SOLO	se,	per	ogni	skill	
-richiesta	da	un	profilo,	l’utente	dispone	di	un	livello	superiore	o	uguale	al	valore	richiesto.	
-L’utente	creatore	può	accettare	o	meno	la	candidatura.	
-Infine,	si	vuole	tenere	traccia	di	tutti	gli	eventi	che	occorrono	nella	piattaforma,	
-relativamente	all’inserimento	di	nuovi	dati	(es.	nuovi	utenti,	nuovi	progetti,	etc).	Tali	
-eventi	vanno	inseriti,	sotto	forma	di	messaggi	di	testo,	all’interno	di	un	log,	
-implementato	in	un’	apposita	collezione	MongoDB.		
-Operazioni	sui	dati1:	
-Operazioni	che	riguardano	tutti	gli	utenti:	
-• Autenticazione/registrazione	sulla	piattaforma	
-• Inserimento	delle	proprie	skill	di	curriculum	
-• Visualizzazione	dei	progetti	disponibili	
-• Finanziamento	di	un	progetto	(aperto).	Un	utente	può	finanziare	anche	il	progetto	di	cui	è	
-creatore.	
-• Scelta	della	reward	a	valle	del	finanziamento	di	un	progetto	
-• Inserimento	di	un	commento	relativo	ad	un	progetto	
-• Inserimento	di	una	candidatura	per	un	profilo	richiesto	per	la	realizzazione	di	un	progetto	
-software	
-Operazioni	che	riguardano	SOLO	gli	amministratori:	
-• Inserimento	di	una	nuova	stringa	nella	lista	delle	competenze	
-• In	fase	di	autenticazione,	oltre	a	username	e	password,	viene	richiesto	anche	il	codice	di	
-sicurezza	
-Operazioni	che	riguardano	SOLO	gli	utenti	creatori:	
-• Inserimento	di	un	nuovo	progetto	
-• Inserimento	delle	reward	per	un	progetto	
-• Inserimento	di	una	risposta	ad	un	commento		
-• Inserimento	di	un	profilo	-solo	per	la	realizzazione	di	un	progetto	software	
-• Accettazione	o	meno	di	una	candidatura	
-Statistiche	(visibili	da	tutti	gli	utenti):	
-• Visualizzare	la	classifica	degli	utenti	creatori,	in	base	al	loro	valore	di	affidabilità.	Mostrare	
-solo	il	nickname	dei	primi	3	utenti.		
-• Visualizzare	i	progetti	APERTI	che	sono	più	vicini	al	proprio	completamento	(=	minore	
-differenza	tra	budget	richiesto	e	somma	totale	dei	finanziamenti	ricevuti).	Mostrare	solo	i	
-primi	3	progetti.	
-• Visualizzare	la	classifica	degli	utenti,	ordinati	in	base	al	TOTALE	di	finanziamenti	erogati.	
-Mostrare	solo	i	nickname	dei	primi	3	utenti.	
-1 La	lista	contiene	le	operazioni	di	base:	può	essere	estesa/modificata	a	discrezione	dello	
-studente.	
-Popolamento	della	piattaforma:	
-Non	richiesta,	bastano	i	dati	sufficienti	per	la	demo	in	sede	d’esame.	
-Vincoli	sull’implementazione:	- - - - - - 
-Implementare	tutte	le	operazioni	sui	dati	(ove	possibile)	attraverso	stored	procedure.	
-Implementare	le	tre	statistiche	menzionate	in	precedenza	mediante	viste.	
-Utilizzare	dei	trigger	per	aggiornare	l’affidabilità	di	un	utente	creatore.	L’affidabilità	viene	
-calcolata	come	X	è	la	percentuale	di	progetti	creati	dall’utente	che	hanno	ottenuto	almeno	
-un	finanziamento.	L’affidabilità	viene	aggiornata:	(i)	ogni	qualvolta	un	utente	crea	un	
-progetto	(denominatore);	(ii)	ogni	qualvolta	un	progetto	dell’utente	riceve	un	
-finanziamento	(contribuisce	al	numeratore).	
-Utilizzare	un	trigger	per	cambiare	lo	stato	di	un	progetto.	Lo	stato	di	un	progetto	diventa	
-CHIUSO	quando	ha	raggiunto	un	valore	complessivo	di	finanziamenti	pari	al	budget	
-richiesto.		
-Utilizzare	un	trigger	per	incrementare	il	campo	#nr_progetti.	Ogni	qualvolta	un	utente	
-creatore	inserisce	un	progetto,	il	campo	viene	incrementato	di	un’unità.	
-Utilizzare	un	evento	per	cambiare	lo	stato	di	un	progetto.	Lo	stato	di	un	progetto	diventa	
-CHIUSO	quando	la	data	attuale	è	posteriore	alla	data	di	chiusura	del	progetto	stesso.	
-L’evento	viene	eseguito	1	volta	al	giorno.	
-Tabelle	dei	volumi:	- 
-Valutare	se	la	seguente	ridondanza:		
-campo	#nr_progetti	relativo	ad	un	utente	creatore	
-debba	essere	tenuta	o	eliminata,	sulla	base	delle	seguenti	operazioni:	
-o Aggiungere	un	nuovo	progetto	ad	un	utente	creatore	esistente	(1	volte/mese,	
-interattiva)	
-o Visualizzare	tutti	i	progetti	e	tutti	i	finanziamenti	(1	volta/mese,	batch)	
-o Contare	il	numero	di	progetti	associati	ad	uno	specifico	utente	(3	volte/mese,	batch)	- Coefficienti	per	l’analisi:	wI	=	1,	wB	=	0.5,	a	=	2	- Tabella	dei	volumi:	10	progetti,	3	finanziamenti	per	progetto,	5	utenti,	2	progetti	per	
-utente	
-Bonus:	
-Il	punteggio	massimo	ottenibile	è	30/30	se	si	implementano	correttamente	tutte	le	specifiche	
-menzionate	fin	qui.		E’	previsto	il	seguente	bonus:	- 
-(per	la	lode,	solo	se	i	punti	precedenti	sono	stati	sviluppati	correttamente)	Utilizzo	di	
-librerie	
-CSS	per	la	realizzazione	del	front-end	Web	(es.	Bootstrap	
-https://getbootstrap.com)	
+---
 # 🚀 BOSTARTER
 
-![BOSTARTER Logo](https://api.placeholder.com/800/300)
+> **Bringing innovative ideas to life through community support and collaboration.**
 
-## 💡 Crowdfunding Platform for Hardware & Software Projects
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
+[![License](https://img.shields.io/badge/license-MIT-blue)]()
 
-> *"Bringing innovative ideas to life through community support and collaboration."*
-
-BOSTARTER is a dynamic crowdfunding platform designed to bridge the gap between creative minds and financial resources. Inspired by Kickstarter, our platform empowers creators to launch ambitious hardware and software projects while building a supportive community of backers and collaborators.
-
----
-
-## ✨ Key Features
-
-### For Backers
-- 💰 Fund exciting projects and receive exclusive rewards
-- 💬 Engage with creators through comments
-- 👀 Track project progress and updates
-- 🏆 Earn recognition as a top supporter
-
-### For Creators
-- 🛠️ Launch hardware or software projects with custom funding goals
-- 🎁 Define unique rewards for your backers
-- 👥 Build your reputation with successful projects
-- 🔄 Interact directly with your community
-
-### For Developers
-- 💻 Apply to work on software projects that match your skills
-- 🌟 Showcase your expertise through the skill matching system
-- 🤝 Collaborate with innovative creators
-- 📈 Expand your portfolio with cutting-edge projects
+**BOSTARTER** è una piattaforma crowdfunding per progetti hardware e software.
 
 ---
 
-## 🏗️ Platform Architecture
-
-BOSTARTER is built on a robust database infrastructure that manages:
-
-### 👤 User Management
-- **Standard Users**: Profile information, skills, funding history
-- **Administrator Users**: Platform management capabilities
-- **Creator Users**: Project management with reliability tracking
-
-### 📋 Project Management
-- **Hardware Projects**: Component specifications and requirements
-- **Software Projects**: Developer profiles and skill requirements
-- **Rewards System**: Tiered rewards for different funding levels
-- **Comments & Feedback**: Community engagement tools
-
-### 📊 Statistics & Analytics
-- Real-time funding progress tracking
-- Creator reliability rankings
-- Backer contribution leaderboards
+## 📋 Indice
+1. [Panoramica](#panoramica)
+2. [Funzionalità](#funzionalità)
+3. [Architettura](#architettura)
+4. [Implementazione](#implementazione)
+5. [Setup](#setup)
+6. [Struttura del progetto](#struttura-del-progetto)
+7. [Contribuire](#contribuire)
+8. [Licenza](#licenza)
+9. [Supporto](#supporto)
 
 ---
 
-## 💾 Technical Implementation
+## 🔍 Panoramica
+BOSTARTER connette creatori, sostenitori e sviluppatori.
 
-### Database Structure
+- Creatori avviano campagne.
+- Sostenitori finanziano e commentano.
+- Sviluppatori offrono competenze.
+
+---
+
+## 🔑 Funzionalità
+
+### Sostenitori
+- Finanziano progetti a livelli di ricompensa.
+- Commentano e seguono aggiornamenti.
+- Guadagnano riconoscimenti.
+
+### Creatori
+- Pubblicano progetti hardware e software.
+- Definiscono obiettivi e ricompense.
+- Gestiscono la reputazione.
+
+### Sviluppatori
+- Candidano profili a progetti.
+- Mostrano competenze.
+- Collaborano con i creatori.
+
+---
+
+## 🏗️ Architettura
+
+### Utenti
+- **Standard**: profilo, competenze, cronologia.
+- **Creatori**: progetti, affidabilità.
+- **Amministratori**: configurazione piattaforma.
+
+### Progetti
+- **Hardware**: componenti e specifiche.
+- **Software**: profili richiesti.
+- **Ricompense**: livelli di premio.
+- **Commenti**: feedback e risposte.
+
+### Analisi
+- Monitoraggio finanziamenti.
+- Classifica creatori.
+- Top sostenitori.
+
+---
+
+## 💾 Implementazione
+
+### Database (MySQL)
+```sql
+Users(
+  id,
+  email,
+  nickname,
+  password,
+  name,
+  surname,
+  birth_year,
+  birth_place
+)
+Projects(
+  id,
+  name,
+  description,
+  insert_date,
+  photos,
+  budget,
+  deadline,
+  status
+)
+Rewards(id, code, description, photo, project_id)
+Skills(id, competency, level)
+HardwareProjects(project_id, components)
+SoftwareProjects(project_id, required_profiles)
+CreatorUsers(user_id, project_count, reliability)
+AdminUsers(user_id, security_code)
+Funding(id, user_id, project_id, amount, date, reward_id)
+Comments(id, user_id, project_id, date, text, response)
+Candidatures(user_id, profile_id, project_id, status)
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│    Users    │─────│   Projects  │─────│   Rewards   │
-└─────────────┘     └─────────────┘     └─────────────┘
-       │                   │                   │
-       │                   │                   │
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│    Skills   │     │  Financing  │     │  Comments   │
-└─────────────┘     └─────────────┘     └─────────────┘
-```
 
-### Advanced Features
-- **Stored Procedures**: Optimized data operations
-- **Database Triggers**: Automated reliability tracking and project status updates
-- **Scheduled Events**: Deadline management for project funding
-- **MongoDB Integration**: Comprehensive event logging
+### Funzionalità avanzate
+- Stored procedure per operazioni rapide.
+- Trigger per aggiornare affidabilità.
+- Eventi schedulati per scadenze.
+- Logging eventi in MongoDB.
 
 ---
 
-## 🚀 Getting Started
+## ⚙️ Setup
 
-### Prerequisites
-- MySQL Server
+### Prerequisiti
+- PHP ≥ 7.4
+- MySQL
 - MongoDB
-- Web server (Apache/Nginx)
-- PHP 7.4+
-- Modern web browser
+- Apache o Nginx
 
-### Quick Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/bostarter.git
-   cd bostarter
-   ```
-
-2. **Set up the database**
-   ```bash
-   mysql -u username -p < database/setup.sql
-   ```
-
-3. **Configure the application**
-   ```bash
-   cp config/config.example.php config/config.php
-   # Edit config.php with your database credentials
-   ```
-
-4. **Start the application**
-   ```bash
-   php -S localhost:8000 -t public/
-   ```
-
-5. **Access BOSTARTER**
-   
-   Open your browser and navigate to: http://localhost:8000
+### Avvio rapido
+```bash
+git clone https://github.com/yourusername/bostarter.git
+cd bostarter
+mysql -u user -p < database/setup.sql
+cp config/config.example.php config/config.php
+# modifica credenziali in config.php
+php -S localhost:8000 -t .
+```
+Apri `http://localhost:8000`
 
 ---
 
-## 📂 Project Structure
+## 🗂️ Struttura del progetto
 
 ```
 BOSTARTER/
-├── database/              # Database scripts and migrations
-├── backend/               # Server-side logic
-│   ├── models/            # Data models
-│   ├── controllers/       # Request handlers
-│   ├── services/          # Business logic
-│   └── utils/             # Helper functions
-├── frontend/              # Client-side resources
-│   ├── css/               # Stylesheets
-│   ├── js/                # JavaScript files
-│   ├── images/            # Static images
-│   └── templates/         # Page templates
-├── config/                # Configuration files
-└── logs/                  # Application logs
+├─ database/
+│  ├─ schema/
+│  ├─ procedures/
+│  ├─ triggers/
+│  ├─ views/
+│  ├─ events/
+│  └─ seed/
+├─ backend/
+│  ├─ controllers/
+│  ├─ models/
+│  ├─ services/
+│  ├─ middleware/
+│  └─ api/
+├─ frontend/
+│  ├─ css/
+│  ├─ js/
+│  ├─ templates/
+│  └─ assets/
+├─ config/
+├─ public/
+└─ logs/
 ```
 
 ---
 
-## 🎓 Academic Context
-
-This project is being developed as part of the Database Course for the Computer Science for Management degree program, Academic Year 2024/2025.
-
----
-
-## 👨‍💻 Contributors
-
-- [Your Name]
-- [Team Member 2]
-- [Team Member 3]
+## 🤝 Contribuire
+1. Fai fork del progetto.
+2. Crea un branch (`feat/nome-funzione`).
+3. Commetti le modifiche. Mantieni i messaggi brevi.
+4. Apri una pull request.
 
 ---
 
-## 📞 Contact
-
-For questions or support, please contact:
-- Email: your.email@example.com
-- GitHub: [yourusername](https://github.com/yourusername)
+## 📄 Licenza
+Questo progetto è distribuito sotto licenza **MIT**. Vedi `LICENSE`.
 
 ---
 
-*Made with ❤️ by the BOSTARTER Team*
+## 🛠️ Supporto
+Per problemi o idee, apri un issue su GitHub.
+
+---
+
+*© 2025 BOSTARTER Team*
+

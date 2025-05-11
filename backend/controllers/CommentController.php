@@ -122,5 +122,97 @@ class CommentController {
     }
 
     // Potresti aggiungere metodi per PUT /api/comments/{id}, DELETE /api/comments/{id}
-    // Ricorda di implementare controlli sui permessi (es. solo l'autore può modificare/eliminare)
+    /**
+     * Gestisce la richiesta PUT /api/comments/{id}
+     * Modifica un commento (solo autore).
+     * @param array $params Parametri dall'URL (es. ['id' => 123])
+     */
+    public function updateComment(array $params) {
+        $commentId = $params['id'] ?? null;
+        if (!$commentId || !is_numeric($commentId)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ID commento mancante o non valido']);
+            return;
+        }
+        $userId = Auth::getUserId();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Autenticazione richiesta']);
+            return;
+        }
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (empty($data['content'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Contenuto del commento mancante']);
+            return;
+        }
+        try {
+            $comment = $this->commentModel->findById((int)$commentId);
+            if (!$comment) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Commento non trovato']);
+                return;
+            }
+            if ($comment['user_id'] != $userId) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Non autorizzato a modificare questo commento']);
+                return;
+            }
+            $success = $this->commentModel->update((int)$commentId, $data['content']);
+            if ($success) {
+                http_response_code(200);
+                echo json_encode(['success' => true, 'message' => 'Commento aggiornato con successo']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Errore nell\'aggiornamento del commento']);
+            }
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Errore del server: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Gestisce la richiesta DELETE /api/comments/{id}
+     * Elimina un commento (solo autore).
+     * @param array $params Parametri dall'URL (es. ['id' => 123])
+     */
+    public function deleteComment(array $params) {
+        $commentId = $params['id'] ?? null;
+        if (!$commentId || !is_numeric($commentId)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ID commento mancante o non valido']);
+            return;
+        }
+        $userId = Auth::getUserId();
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Autenticazione richiesta']);
+            return;
+        }
+        try {
+            $comment = $this->commentModel->findById((int)$commentId);
+            if (!$comment) {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Commento non trovato']);
+                return;
+            }
+            if ($comment['user_id'] != $userId) {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Non autorizzato a eliminare questo commento']);
+                return;
+            }
+            $success = $this->commentModel->delete((int)$commentId);
+            if ($success) {
+                http_response_code(200);
+                echo json_encode(['success' => true, 'message' => 'Commento eliminato con successo']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Errore nell\'eliminazione del commento']);
+            }
+        } catch (\Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Errore del server: ' . $e->getMessage()]);
+        }
+    }
 }
