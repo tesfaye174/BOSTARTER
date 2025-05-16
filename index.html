@@ -4,38 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOSTARTER - Finanzia e Realizza i Tuoi Progetti Creativi</title>
+    <title>BOSTARTER</title>
     <meta name="description"
         content="BOSTARTER è la piattaforma leader per il crowdfunding di progetti creativi. Scopri, supporta o lancia la tua idea e trasformala in realtà.">
     <link rel="stylesheet" href="frontend/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="frontend/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="frontend/images/logo1.svg" type="image/x-icon">
 </head>
 
 <body>
     <header class="main-header sticky" role="banner">
-        <div class="header-content">
-            <div class="logo">
+        <div class="header-content"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 2rem;">
+            <div class="logo" style="flex: 0 0 auto;">
                 <a href="index.html" aria-label="Homepage BOSTARTER">
-                    <img src="frontend/images/hero-left.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
-                    <span class="logo-text">BOSTARTER</span>
+                    <img src="frontend/images/logo1.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
+                    <span class="logo-text" aria-hidden="true"></span>
                 </a>
             </div>
-            <div class="search-bar">
-                <form action="/search" method="get" role="search" aria-label="Cerca progetti">
+            <div class="search-bar" style="flex: 1 1 300px; max-width: 500px; margin: 0 2rem;">
+                <form action="/search" method="get" role="search" aria-label="Cerca progetti" style="display: flex;">
                     <input type="search" id="search-input" name="q" placeholder="Cerca progetti, creatori, categorie..."
-                        aria-label="Campo di ricerca" autocomplete="on" tabindex="1">
-                    <button type="submit" aria-label="Avvia ricerca"><i class="fas fa-search"></i></button>
+                        aria-label="Campo di ricerca" autocomplete="on" tabindex="1"
+                        style="flex:1; border-radius: 20px 0 0 20px;">
+                    <button type="submit" aria-label="Avvia ricerca" style="border-radius: 0 20px 20px 0;"><i
+                            class="fas fa-search"></i></button>
                 </form>
             </div>
-            <nav class="user-nav" aria-label="Navigazione utente">
-                <ul>
-                    <li><a href="frontend/creatori.html" class="creator-btn" tabindex="2">Per i creatori</a></li>
-                    <li><a href="#" id="login-link">Accedi</a></li>
-                    <li><a href="#" id="register-link" class="cta-button-secondary">Registrati</a></li>
-                    <li><a href="#" id="logout-link" class="hidden-by-default">Logout</a></li>
+            <nav class="user-nav" aria-label="Navigazione utente" style="flex: 0 0 auto;">
+                <ul style="display: flex; align-items: center; gap: 1rem; margin: 0; padding: 0; list-style: none;">
+                    <li><a href="frontend/creatori_dashboard.html" class="creator-btn" tabindex="2">Per i creatori</a>
+                    </li>
+                    <li><a href="#" id="login-link" data-modal="login-modal">Accedi</a></li>
+                    <li><a href="#" id="register-link" class="cta-button-secondary"
+                            data-modal="register-modal">Registrati</a></li>
                     <li><span id="user-greeting" class="hidden-by-default" aria-live="polite"></span></li>
+                </ul>
+            </nav>
+            <!-- mobile menu toggle button -->
+            <button class="mobile-menu-btn" aria-label="Apri menu" aria-expanded="false" aria-controls="mobile-menu"
+                style="margin-left: 1rem;"><i class="fas fa-bars"></i></button>
+            <!-- mobile navigation menu -->
+            <nav class="mobile-menu" id="mobile-menu" aria-label="Navigazione mobile" aria-hidden="true">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="frontend/creatori_dashboard.html" class="creator-btn">Per i creatori</a></li>
+                    <li><a href="#" id="login-link-mobile" data-modal="login-modal">Accedi</a></li>
+                    <li><a href="#" id="register-link-mobile" class="cta-button-secondary"
+                            data-modal="register-modal">Registrati</a></li>
                 </ul>
             </nav>
         </div>
@@ -138,8 +155,7 @@
     <footer class="modern-footer" role="contentinfo">
         <div class="footer-content">
             <div class="footer-logo">
-                <img src="frontend/images/logo-bostarter.svg" alt="BOSTARTER Logo Footer" class="footer-logo-img"
-                    loading="lazy">
+                <img src="frontend/images/logo1.svg" alt="BOSTARTER Logo Footer" class="footer-logo-img" loading="lazy">
                 <span>BOSTARTER</span>
             </div>
             <div class="footer-links">
@@ -160,16 +176,20 @@
     </footer>
 
     <!-- Miglioramento modali login/register -->
-    <div id="login-modal" class="modal" aria-labelledby="login-modal-title" aria-hidden="true" role="dialog"
-        tabindex="-1">
-        <form id="login-form" class="modal-content" autocomplete="on">
+    <div id="login-modal" class="modal modern-modal" aria-labelledby="login-modal-title" aria-hidden="true"
+        role="dialog" tabindex="-1">
+        <form id="login-form" class="modal-content modern-form" autocomplete="on">
             <button type="button" class="close-modal" aria-label="Chiudi modale">&times;</button>
             <h3 id="login-modal-title">Accedi a BOSTARTER</h3>
-            <label for="login-email">Email:</label>
-            <input type="email" id="login-email" name="email" required autocomplete="email" aria-label="Email">
-            <label for="login-password">Password:</label>
-            <input type="password" id="login-password" name="password" required autocomplete="current-password"
-                aria-label="Password">
+            <div class="input-group">
+                <label for="login-email">Email:</label>
+                <input type="email" id="login-email" name="email" required autocomplete="email" aria-label="Email">
+            </div>
+            <div class="input-group">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" name="password" required autocomplete="current-password"
+                    aria-label="Password">
+            </div>
             <div id="admin-security-code-wrapper" style="display:none">
                 <label for="login-security-code">Codice di sicurezza (solo admin):</label>
                 <input type="text" id="login-security-code" name="security_code" autocomplete="off"
@@ -181,17 +201,29 @@
         </form>
     </div>
 
-    <div id="register-modal" class="modal" aria-labelledby="register-modal-title" aria-hidden="true" role="dialog"
-        tabindex="-1">
-        <form id="register-form" class="modal-content" autocomplete="on">
+    <div id="register-modal" class="modal modern-modal" aria-labelledby="register-modal-title" aria-hidden="true"
+        role="dialog" tabindex="-1">
+        <form id="register-form" class="modal-content modern-form" autocomplete="on">
             <button type="button" class="close-modal" aria-label="Chiudi modale">&times;</button>
             <h3 id="register-modal-title">Registrati su BOSTARTER</h3>
-            <label for="register-email">Email: <input type="email" id="register-email" name="email" required
-                    autocomplete="email" aria-label="Email"></label>
-            <label for="register-nickname">Nickname: <input type="text" id="register-nickname" name="nickname" required
-                    autocomplete="username" aria-label="Nickname"></label>
-            <label for="register-password">Password: <input type="password" id="register-password" name="password"
-                    required autocomplete="new-password" aria-label="Password"></label>
+            <div class="input-group">
+                <label for="register-email">Email:</label>
+                <input type="email" id="register-email" name="email" required autocomplete="email" aria-label="Email">
+            </div>
+            <div class="input-group">
+                <label for="register-nickname">Nickname:</label>
+                <input type="text" id="register-nickname" name="nickname" required autocomplete="username"
+                    aria-label="Nickname">
+            </div>
+            <div class="input-group">
+                <label for="register-password">Password:</label>
+                <input type="password" id="register-password" name="password" required autocomplete="new-password"
+                    aria-label="Password">
+            </div>
+            <div class="input-group">
+                <input type="checkbox" id="register-is-creatore" name="is_creatore">
+                <label for="register-is-creatore">Registrati come Creatore</label>
+            </div>
             <button type="submit" class="cta-button">Registrati</button>
             <p id="register-error" class="error-message" aria-live="assertive"></p>
             <p id="register-success" class="success-message" aria-live="polite"></p>

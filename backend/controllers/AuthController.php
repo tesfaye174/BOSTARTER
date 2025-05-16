@@ -23,7 +23,37 @@ class AuthController {
 
         // Validazione base (da migliorare)
         if (!isset($input['email'], $input['nickname'], $input['password'], $input['nome'], $input['cognome'], $input['anno_nascita'], $input['luogo_nascita'])) {
-            Router::jsonResponse(['error' => 'Dati mancanti per la registrazione.'], 400);
+            Router::jsonResponse(['error' => 'Dati mancanti per la registrazione.', 'fields' => [
+                'email' => empty($input['email']),
+                'nickname' => empty($input['nickname']),
+                'password' => empty($input['password']),
+                'nome' => empty($input['nome']),
+                'cognome' => empty($input['cognome']),
+                'anno_nascita' => empty($input['anno_nascita']),
+                'luogo_nascita' => empty($input['luogo_nascita'])
+            ]], 400);
+            return;
+        }
+
+        // Validazione email
+        if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+            Router::jsonResponse(['error' => 'Formato email non valido.'], 400);
+            return;
+        }
+        // Validazione password (minimo 8 caratteri)
+        if (strlen($input['password']) < 8) {
+            Router::jsonResponse(['error' => 'La password deve contenere almeno 8 caratteri.'], 400);
+            return;
+        }
+        // Validazione nickname (solo caratteri alfanumerici)
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $input['nickname'])) {
+            Router::jsonResponse(['error' => 'Il nickname può contenere solo lettere, numeri e underscore.'], 400);
+            return;
+        }
+        // Validazione anno di nascita (range plausibile)
+        $anno = (int)$input['anno_nascita'];
+        if ($anno < 1900 || $anno > (int)date('Y')) {
+            Router::jsonResponse(['error' => 'Anno di nascita non valido.'], 400);
             return;
         }
 
@@ -60,7 +90,7 @@ class AuthController {
             unset($userData['password_hash']);
             Router::jsonResponse(['message' => 'Registrazione avvenuta con successo.', 'user' => $userData], 201); // 201 Created
         } else {
-            Router::jsonResponse(['error' => 'Errore durante la registrazione.'], 500);
+            Router::jsonResponse(['error' => 'Errore durante la registrazione. L\'email potrebbe essere già registrata o i dati non sono validi.'], 409);
         }
     }
 

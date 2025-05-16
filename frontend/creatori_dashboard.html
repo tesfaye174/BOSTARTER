@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOSTARTER</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+    <header class="main-header sticky" role="banner">
+        <div class="header-content"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 0 1.5rem; min-height: 64px;">
+            <div class="logo" style="flex: 0 0 auto; display: flex; align-items: center;">
+                <a href="../index.html" aria-label="Homepage BOSTARTER"
+                    style="display: flex; align-items: center; gap: 0.5rem;">
+                    <img src="images/logo.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy"
+                        style="height: 36px;">
+                    <span class="logo-text" aria-hidden="true"
+                        style="font-weight: 700; font-size: 1.2rem; color: #222; letter-spacing: 1px;">BOSTARTER
+                    </span>
+                </a>
+            </div>
+            <div class="search-bar" style="flex: 1 1 300px; max-width: 500px; margin: 0 2rem; min-width: 180px;">
+                <form action="#" method="get" role="search" aria-label="Cerca progetti"
+                    style="display: flex; background: #fff; border-radius: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+                    <input type="search" id="search-input" name="q" placeholder="Cerca progetti, ricompense..."
+                        aria-label="Campo di ricerca" autocomplete="on" tabindex="1"
+                        style="flex:1; border:none; outline:none; padding: 0.6rem 1rem; border-radius: 20px 0 0 20px; font-size: 1rem;">
+                    <button type="submit" aria-label="Avvia ricerca"
+                        style="background: #2b7cff; color: #fff; border:none; padding: 0 1.1rem; border-radius: 0 20px 20px 0; font-size: 1.1rem; cursor:pointer;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+            <nav class="user-nav" aria-label="Navigazione utente" style="flex: 0 0 auto;">
+                <ul style="display: flex; align-items: center; gap: 1rem; margin: 0; padding: 0; list-style: none;">
+                    <li><a href="../index.html" class="nav-link">Home</a></li>
+                    <li><a href="#" id="login-link" class="cta-button-outline">Accedi</a></li>
+                    <li><a href="#" id="register-link" class="cta-button">Registrati</a></li>
+                </ul>
+            </nav>
+            <button class="mobile-menu-btn" aria-label="Apri menu" aria-expanded="false" aria-controls="mobile-menu"
+                style="margin-left: 1rem; background: none; border: none; font-size: 1.5rem; color: #2b7cff; cursor:pointer;">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav class="mobile-menu" id="mobile-menu" aria-label="Navigazione mobile" aria-hidden="true"
+                style="position: absolute; top: 64px; right: 0; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 0 0 12px 12px; min-width: 180px; display: none; z-index: 100;">
+                <ul
+                    style="list-style: none; margin: 0; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.7rem;">
+                    <li><a href="../index.html" class="nav-link">Home</a></li>
+                    <li><a href="#" id="login-link-mobile" class="cta-button-outline">Accedi</a></li>
+                    <li><a href="#" id="register-link-mobile" class="cta-button">Registrati</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main-content" style="display: flex; gap: 2rem; align-items: flex-start;">
+        <!-- Sidebar di navigazione dashboard -->
+        <aside class="dashboard-sidebar"
+            style="width: 220px; background: #f7f7f7; border-radius: 12px; padding: 24px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+            <nav aria-label="Navigazione dashboard">
+                <ul
+                    style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.2rem;">
+                    <li><a href="#dashboard-overview" class="sidebar-link"><i class="fas fa-tachometer-alt"></i>
+                            Riepilogo</a></li>
+                    <li><a href="#my-projects" class="sidebar-link"><i class="fas fa-folder-open"></i> I miei
+                            progetti</a></li>
+                    <li><a href="#start-project-form" class="sidebar-link"><i class="fas fa-plus-circle"></i> Nuovo
+                            progetto</a></li>
+                    <li><a href="#reward-section" class="sidebar-link"><i class="fas fa-gift"></i> Ricompense</a>
+                    </li>
+                    <li><a href="#user-skills-section" class="sidebar-link"><i class="fas fa-user-cog"></i> Le mie
+                            skill</a></li>
+                    <li><a href="#hardware-components-section" class="sidebar-link"><i class="fas fa-microchip"></i>
+                            Hardware</a></li>
+                    <li><a href="#software-profiles-section" class="sidebar-link"><i class="fas fa-users"></i> Profili
+                            software</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <!-- Contenuto principale dashboard -->
+        <section class="dashboard-content" style="flex: 1 1 0; min-width: 0;">
+            <!-- Riepilogo dashboard -->
+            <section id="dashboard-overview" class="dashboard-overview" aria-label="Riepilogo Creatore"
+                style="margin-bottom: 2.5rem;">
+                <h2 class="section-title">Benvenuto nella tua Dashboard</h2>
+                <div class="dashboard-stats" style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                    <div class="stat-card"><i class="fas fa-folder-open"></i>
+                        <div class="stat-value" id="stat-projects">0</div>
+                        <div class="stat-label">Progetti creati</div>
+                    </div>
+                    <div class="stat-card"><i class="fas fa-gift"></i>
+                        <div class="stat-value" id="stat-rewards">0</div>
+                        <div class="stat-label">Ricompense</div>
+                    </div>
+                    <div class="stat-card"><i class="fas fa-users"></i>
+                        <div class="stat-value" id="stat-supporters">0</div>
+                        <div class="stat-label">Sostenitori</div>
+                    </div>
+                    <div class="stat-card"><i class="fas fa-euro-sign"></i>
+                        <div class="stat-value" id="stat-funds">0</div>
+                        <div class="stat-label">Totale raccolto</div>
+                    </div>
+                </div>
+            </section>
+            <!-- Lista progetti -->
+            <section id="my-projects" class="form-section" aria-label="I miei progetti">
+                <h2 class="section-title">I miei progetti</h2>
+                <div id="my-projects-list">
+                    <!-- Progetti caricati dinamicamente -->
+                </div>
+            </section>
+
+            <section class="creator-hero" aria-label="Diventa un creatore">
+                <div class="hero-content">
+                    <h1>Lancia il Tuo Progetto su BOSTARTER</h1>
+                    <p>Hai un'idea creativa che merita di vedere la luce? BOSTARTER è la piattaforma che ti aiuta a
+                        raccogliere fondi e a costruire una community attorno al tuo progetto.</p>
+                    <a href="#start-project-form" class="cta-button" tabindex="1">Inizia Ora</a>
+                </div>
+            </section>
+
+            <section id="creator-guide" class="how-it-works-section" aria-label="Guida per creatori">
+                <h2 class="section-title">Guida per Creatori</h2>
+                <div class="steps-container">
+                    <div class="step-card" tabindex="2">1. Scegli la categoria e inserisci i dettagli del progetto.
+                    </div>
+                    <div class="step-card" tabindex="3">2. Definisci le ricompense per i sostenitori.</div>
+                    <div class="step-card" tabindex="4">3. Lancia la campagna e condividila!</div>
+                    <div class="step-card" tabindex="5">4. Raggiungi il tuo obiettivo e realizza la tua idea.
+                    </div>
+                </div>
+            </section>
+
+            <section id="start-project-form" class="form-section" aria-label="Crea la tua pagina progetto">
+                <h2 class="section-title">Crea la Tua Pagina Progetto</h2>
+                <form id="project-creation-form" class="modern-form" autocomplete="on">
+                    <label for="project-title">Titolo del Progetto:<span class="sr-only"> (campo
+                            obbligatorio)</span></label>
+                    <input type="text" id="project-title" name="project-title" required autofocus
+                        aria-label="Titolo del Progetto" autocomplete="on" aria-required="true">
+
+                    <label for="project-category">Categoria:<span class="sr-only"> (campo obbligatorio)</span></label>
+                    <select id="project-category" name="project-category" required aria-label="Categoria"
+                        aria-required="true">
+                        <option value="">Seleziona una categoria...</option>
+                        <option value="arte">Arte</option>
+                        <option value="fumetti">Fumetti</option>
+                        <option value="artigianato">Artigianato</option>
+                        <option value="danza">Danza</option>
+                        <option value="design">Design</option>
+                        <option value="moda">Moda</option>
+                        <option value="film">Film</option>
+                        <option value="cibo">Cibo</option>
+                        <option value="giochi">Giochi</option>
+                        <option value="giornalismo">Giornalismo</option>
+                        <option value="musica">Musica</option>
+                        <option value="fotografia">Fotografia</option>
+                        <option value="editoriale">Editoriale</option>
+                        <option value="tecnologia">Tecnologia</option>
+                        <option value="teatro">Teatro</option>
+                    </select>
+
+                    <label for="project-description">Descrizione Breve (max 280 caratteri):<span class="sr-only"> (campo
+                            obbligatorio)</span></label>
+                    <textarea id="project-description" name="project-description" rows="3" maxlength="280" required
+                        aria-label="Descrizione breve" aria-required="true"></textarea>
+
+                    <label for="funding-goal">Obiettivo di Finanziamento (€):<span class="sr-only"> (campo
+                            obbligatorio)</span></label>
+                    <input type="number" id="funding-goal" name="funding-goal" min="1" required
+                        aria-label="Obiettivo di Finanziamento" aria-required="true">
+
+                    <label for="campaign-duration">Durata Campagna (giorni):<span class="sr-only"> (campo
+                            obbligatorio)</span></label>
+                    <input type="number" id="campaign-duration" name="campaign-duration" min="1" max="60" value="30"
+                        required aria-label="Durata Campagna" aria-required="true">
+
+                    <button type="submit" class="cta-button" aria-label="Crea Progetto">Crea Progetto</button>
+                </form>
+            </section>
+
+            <!-- Form aggiunta ricompensa -->
+            <section id="reward-section" class="form-section">
+                <h2 class="section-title">Aggiungi una Ricompensa al Progetto</h2>
+                <form id="reward-form" class="modern-form">
+                    <label for="reward-project-id">ID Progetto:<span class="sr-only"> (campo
+                            obbligatorio)</span></label>
+                    <input type="number" id="reward-project-id" name="reward-project-id" required aria-required="true">
+
+                    <label for="reward-code">Codice Ricompensa:<span class="sr-only"> (campo
+                            obbligatorio)</span></label>
+                    <input type="text" id="reward-code" name="reward-code" required aria-required="true">
+
+                    <label for="reward-description">Descrizione:<span class="sr-only"> (campo
+                            obbligatorio)</span></label>
+                    <textarea id="reward-description" name="reward-description" rows="2" required
+                        aria-required="true"></textarea>
+
+                    <label for="reward-photo">Foto (URL):</label>
+                    <input type="text" id="reward-photo" name="reward-photo">
+
+                    <button type="submit" class="cta-button" aria-label="Aggiungi Ricompensa">Aggiungi
+                        Ricompensa</button>
+                </form>
+            </section>
+            <!-- Fine form ricompensa -->
+
+            <!-- Visualizzazione ricompense progetto -->
+            <section id="rewards-list-section" class="form-section">
+                <h2 class="section-title">Ricompense del Progetto</h2>
+                <label for="rewards-project-id-view">ID Progetto:<span class="sr-only"> (campo
+                        obbligatorio)</span></label>
+                <input type="number" id="rewards-project-id-view" name="rewards-project-id-view" min="1" required
+                    aria-required="true">
+                <button id="load-rewards-btn" class="cta-button" type="button">Carica Ricompense</button>
+                <div id="rewards-list"></div>
+            </section>
+            <!-- Fine visualizzazione ricompense -->
+
+            <!-- Sezione gestione skill utente -->
+            <section id="user-skills-section" class="form-section">
+                <h2 class="section-title">Le mie Skill</h2>
+                <div id="user-skills-list"></div>
+                <form id="add-skill-form" class="modern-form" style="margin-top:18px;">
+                    <label for="skill-select">Competenza:</label>
+                    <select id="skill-select" name="skill-select" required></select>
+                    <label for="skill-level">Livello:</label>
+                    <input type="number" id="skill-level" name="skill-level" min="0" max="5" required>
+                    <button type="submit" class="cta-button">Aggiungi Skill</button>
+                    <div id="add-skill-feedback"></div>
+                </form>
+            </section>
+            <!-- Fine sezione gestione skill utente -->
+
+            <!-- Sezione gestione skill globali (solo admin) -->
+            <section id="admin-skills-section" class="form-section" style="display:none;">
+                <h2 class="section-title">Gestione Competenze (Admin)</h2>
+                <form id="add-global-skill-form" class="modern-form">
+                    <label for="global-skill-name">Nuova Competenza:</label>
+                    <input type="text" id="global-skill-name" name="global-skill-name" required>
+                    <button type="submit" class="cta-button">Aggiungi Competenza</button>
+                    <div id="add-global-skill-feedback"></div>
+                </form>
+            </section>
+            <!-- Fine sezione gestione skill globali -->
+
+            <!-- Sezione gestione componenti hardware (solo per progetti hardware) -->
+            <section id="hardware-components-section" class="form-section" style="display:none;">
+                <h2 class="section-title">Componenti hardware necessari (solo per progetti hardware)</h2>
+                <form id="add-hardware-component-form" class="modern-form">
+                    <label for="hardware-project-id">ID Progetto:</label>
+                    <input type="number" id="hardware-project-id" name="hardware-project-id" min="1" required>
+                    <label for="component-name">Nome componente:</label>
+                    <input type="text" id="component-name" name="component-name" required>
+                    <label for="component-description">Descrizione:</label>
+                    <textarea id="component-description" name="component-description" rows="2" required></textarea>
+                    <label for="component-price">Prezzo (€):</label>
+                    <input type="number" id="component-price" name="component-price" min="0" step="0.01" required>
+                    <label for="component-quantity">Quantità:</label>
+                    <input type="number" id="component-quantity" name="component-quantity" min="1" required>
+                    <button type="submit" class="cta-button">Aggiungi Componente</button>
+                    <div id="add-hardware-feedback"></div>
+                </form>
+                <div id="hardware-components-list"></div>
+            </section>
+            <!-- Fine sezione gestione componenti hardware -->
+
+            <!-- Sezione gestione profili richiesti per progetti software (solo creatore) -->
+            <section id="software-profiles-section" class="form-section" style="display:none;">
+                <h2 class="section-title">Profili richiesti (solo per progetti software)</h2>
+                <form id="add-profile-form" class="modern-form">
+                    <label for="profile-project-id">ID Progetto:</label>
+                    <input type="number" id="profile-project-id" name="profile-project-id" min="1" required>
+                    <label for="profile-name">Nome profilo:</label>
+                    <input type="text" id="profile-name" name="profile-name" required>
+                    <label for="profile-skill-select">Skill richiesta:</label>
+                    <select id="profile-skill-select" name="profile-skill-select" required></select>
+                    <label for="profile-skill-level">Livello richiesto:</label>
+                    <input type="number" id="profile-skill-level" name="profile-skill-level" min="0" max="5" required>
+                    <button type="submit" class="cta-button">Aggiungi Profilo</button>
+                    <div id="add-profile-feedback"></div>
+                </form>
+                <div id="profiles-list"></div>
+            </section>
+            <!-- Fine sezione gestione profili software -->
+
+        </section>
+    </main>
+
+    <footer class="modern-footer" role="contentinfo">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="images/logo-bostarter.svg" alt="BOSTARTER Logo Footer"
+                    style="height:32px;vertical-align:middle;" loading="lazy">
+                <span>BOSTARTER</span>
+            </div>
+            <div class="footer-links">
+                <a href="#">Chi siamo</a>
+                <a href="#">Contatti</a>
+                <a href="#">FAQ</a>
+                <a href="#">Termini di Servizio</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-social">
+                <a href="#" aria-label="Facebook BOSTARTER"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter BOSTARTER"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Instagram BOSTARTER"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="LinkedIn BOSTARTER"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+        <p class="copyright-text">&copy; <span id="current-year"></span> BOSTARTER. Tutti i diritti riservati.</p>
+    </footer>
+
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        // Miglioramento accessibilità: focus su primo campo form
+        window.addEventListener('DOMContentLoaded', function () {
+            var firstInput = document.querySelector('.modern-form input, .modern-form select, .modern-form textarea');
+            if (firstInput) firstInput.focus();
+        });
+    </script>
+</body>
+
+</html>

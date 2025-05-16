@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Utente - BOSTARTER</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <header class="main-header sticky" role="banner">
+        <div class="header-content">
+            <div class="logo">
+                <a href="../index.html" aria-label="Homepage BOSTARTER">
+                    <img src="images/logo1.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
+                </a>
+            </div>
+            <nav class="user-nav" aria-label="Navigazione utente">
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="#" id="logout-link">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main id="main-content">
+        <section class="dashboard-hero" aria-label="Benvenuto in Dashboard">
+            <div class="hero-content">
+                <h1 id="dashboard-title">Benvenuto nella tua Dashboard</h1>
+                <p id="dashboard-description">Gestisci i tuoi progetti, supporti e profilo da qui.</p>
+            </div>
+        </section>
+        <section id="dashboard-content" class="dashboard-section">
+            <!-- Contenuto dinamico: differenziato tra utente e creatore -->
+        </section>
+    </main>
+    <footer class="modern-footer" role="contentinfo">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="images/logo1.svg" alt="BOSTARTER Logo Footer" class="footer-logo-img" loading="lazy">
+                <span>BOSTARTER</span>
+            </div>
+            <div class="footer-links">
+                <a href="#">Chi siamo</a>
+                <a href="#">Contatti</a>
+                <a href="#">FAQ</a>
+                <a href="#">Termini di Servizio</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-social">
+                <a href="#" aria-label="Facebook BOSTARTER"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Twitter BOSTARTER"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Instagram BOSTARTER"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="LinkedIn BOSTARTER"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+        <p class="copyright-text">&copy; <span id="current-year">2024</span> BOSTARTER. Tutti i diritti riservati.</p>
+    </footer>
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        // Logica per mostrare dashboard utente o creatore
+        function renderDashboard() {
+            // Esempio: recupera tipo utente da localStorage/sessionStorage
+            const userType = sessionStorage.getItem('userType') || 'user';
+            const dashboardContent = document.getElementById('dashboard-content');
+            if (userType === 'creator') {
+                document.getElementById('dashboard-title').textContent = 'Dashboard Creatore';
+                document.getElementById('dashboard-description').textContent = 'Gestisci i tuoi progetti, crea nuove campagne e monitora i tuoi sostenitori.';
+                dashboardContent.innerHTML = `
+                    <div class="dashboard-cards">
+                        <div class="dashboard-card"><i class="fas fa-lightbulb"></i><h3>I tuoi Progetti</h3><p>Visualizza e modifica i tuoi progetti creativi.</p></div>
+                        <div class="dashboard-card"><i class="fas fa-plus-circle"></i><h3>Crea Nuovo Progetto</h3><p>Lancia una nuova campagna di crowdfunding.</p></div>
+                        <div class="dashboard-card"><i class="fas fa-users"></i><h3>Sostenitori</h3><p>Monitora chi ha supportato le tue idee.</p></div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('dashboard-title').textContent = 'Dashboard Utente';
+                document.getElementById('dashboard-description').textContent = 'Gestisci i progetti che hai supportato e aggiorna il tuo profilo.';
+                dashboardContent.innerHTML = `
+                    <div class="dashboard-cards">
+                        <div class="dashboard-card"><i class="fas fa-heart"></i><h3>Progetti Supportati</h3><p>Visualizza i progetti che hai sostenuto.</p></div>
+                        <div class="dashboard-card"><i class="fas fa-user"></i><h3>Profilo</h3><p>Gestisci le tue informazioni personali.</p></div>
+                    </div>
+                `;
+            }
+        }
+        renderDashboard();
+    </script>
+</body>
+</html>
