@@ -1,12 +1,8 @@
 ---
 # 🚀 BOSTARTER
 
-> **Bringing innovative ideas to life through community support and collaboration.**
-
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
-
-**BOSTARTER** è una piattaforma crowdfunding per progetti hardware e software.
 
 ---
 
@@ -71,41 +67,6 @@ BOSTARTER connette creatori, sostenitori e sviluppatori.
 
 ---
 
-## 💾 Implementazione
-
-### Database (MySQL)
-```sql
-Users(
-  id,
-  email,
-  nickname,
-  password,
-  name,
-  surname,
-  birth_year,
-  birth_place
-)
-Projects(
-  id,
-  name,
-  description,
-  insert_date,
-  photos,
-  budget,
-  deadline,
-  status
-)
-Rewards(id, code, description, photo, project_id)
-Skills(id, competency, level)
-HardwareProjects(project_id, components)
-SoftwareProjects(project_id, required_profiles)
-CreatorUsers(user_id, project_count, reliability)
-AdminUsers(user_id, security_code)
-Funding(id, user_id, project_id, amount, date, reward_id)
-Comments(id, user_id, project_id, date, text, response)
-Candidatures(user_id, profile_id, project_id, status)
-```
-
 ### Funzionalità avanzate
 - Stored procedure per operazioni rapide.
 - Trigger per aggiornare affidabilità.
@@ -133,36 +94,6 @@ php -S localhost:8000 -t .
 ```
 Apri `http://localhost:8000`
 
----
-
-## 🗂️ Struttura del progetto
-
-```
-BOSTARTER/
-├─ database/
-│  ├─ schema/
-│  ├─ procedures/
-│  ├─ triggers/
-│  ├─ views/
-│  ├─ events/
-│  └─ seed/
-├─ backend/
-│  ├─ controllers/
-│  ├─ models/
-│  ├─ services/
-│  ├─ middleware/
-│  └─ api/
-├─ frontend/
-│  ├─ css/
-│  ├─ js/
-│  ├─ templates/
-│  └─ assets/
-├─ config/
-├─ public/
-└─ logs/
-```
-
----
 
 ## 🤝 Contribuire
 1. Fai fork del progetto.

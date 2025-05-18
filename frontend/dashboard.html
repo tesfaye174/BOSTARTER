@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard personale BOSTARTER - Gestisci i tuoi progetti e il tuo profilo">
     <title>Dashboard Utente - BOSTARTER</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,6 +16,7 @@
             <div class="logo">
                 <a href="../index.html" aria-label="Homepage BOSTARTER">
                     <img src="images/logo1.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
+                    <span class="logo-text">BOSTARTER</span>
                 </a>
             </div>
             <nav class="user-nav" aria-label="Navigazione utente">
@@ -23,6 +25,15 @@
                     <li><a href="#" id="logout-link">Logout</a></li>
                 </ul>
             </nav>
+            <button class="mobile-menu-btn" aria-label="Menu mobile" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="mobile-menu">
+            <ul>
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="#" id="mobile-logout-link">Logout</a></li>
+            </ul>
         </div>
     </header>
     <main id="main-content">
@@ -32,7 +43,7 @@
                 <p id="dashboard-description">Gestisci i tuoi progetti, supporti e profilo da qui.</p>
             </div>
         </section>
-        <section id="dashboard-content" class="dashboard-section">
+        <section id="dashboard-content" class="dashboard-section container">
             <!-- Contenuto dinamico: differenziato tra utente e creatore -->
         </section>
     </main>
@@ -61,6 +72,35 @@
     <script src="js/main.js"></script>
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        // Toggle menu mobile
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', function() {
+                mobileMenu.classList.toggle('open');
+                const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+                mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
+            });
+        }
+        
+        // Sincronizza il logout tra menu desktop e mobile
+        const logoutLink = document.getElementById('logout-link');
+        const mobileLogoutLink = document.getElementById('mobile-logout-link');
+        
+        if (logoutLink && mobileLogoutLink) {
+            const logoutHandler = function(e) {
+                e.preventDefault();
+                // Implementa qui la logica di logout
+                sessionStorage.removeItem('userType');
+                window.location.href = '../index.html';
+            };
+            
+            logoutLink.addEventListener('click', logoutHandler);
+            mobileLogoutLink.addEventListener('click', logoutHandler);
+        }
+        
         // Logica per mostrare dashboard utente o creatore
         function renderDashboard() {
             // Esempio: recupera tipo utente da localStorage/sessionStorage
@@ -71,9 +111,9 @@
                 document.getElementById('dashboard-description').textContent = 'Gestisci i tuoi progetti, crea nuove campagne e monitora i tuoi sostenitori.';
                 dashboardContent.innerHTML = `
                     <div class="dashboard-cards">
-                        <div class="dashboard-card"><i class="fas fa-lightbulb"></i><h3>I tuoi Progetti</h3><p>Visualizza e modifica i tuoi progetti creativi.</p></div>
-                        <div class="dashboard-card"><i class="fas fa-plus-circle"></i><h3>Crea Nuovo Progetto</h3><p>Lancia una nuova campagna di crowdfunding.</p></div>
-                        <div class="dashboard-card"><i class="fas fa-users"></i><h3>Sostenitori</h3><p>Monitora chi ha supportato le tue idee.</p></div>
+                        <div class="dashboard-card"><i class="fas fa-lightbulb"></i><h3>I tuoi Progetti</h3><p>Visualizza e modifica i tuoi progetti creativi.</p><a href="#" class="cta-button-outline">Gestisci</a></div>
+                        <div class="dashboard-card"><i class="fas fa-plus-circle"></i><h3>Crea Nuovo Progetto</h3><p>Lancia una nuova campagna di crowdfunding.</p><a href="#" class="cta-button-outline">Inizia</a></div>
+                        <div class="dashboard-card"><i class="fas fa-users"></i><h3>Sostenitori</h3><p>Monitora chi ha supportato le tue idee.</p><a href="#" class="cta-button-outline">Visualizza</a></div>
                     </div>
                 `;
             } else {
@@ -81,13 +121,25 @@
                 document.getElementById('dashboard-description').textContent = 'Gestisci i progetti che hai supportato e aggiorna il tuo profilo.';
                 dashboardContent.innerHTML = `
                     <div class="dashboard-cards">
-                        <div class="dashboard-card"><i class="fas fa-heart"></i><h3>Progetti Supportati</h3><p>Visualizza i progetti che hai sostenuto.</p></div>
-                        <div class="dashboard-card"><i class="fas fa-user"></i><h3>Profilo</h3><p>Gestisci le tue informazioni personali.</p></div>
+                        <div class="dashboard-card"><i class="fas fa-heart"></i><h3>Progetti Supportati</h3><p>Visualizza i progetti che hai sostenuto.</p><a href="#" class="cta-button-outline">Visualizza</a></div>
+                        <div class="dashboard-card"><i class="fas fa-user"></i><h3>Profilo</h3><p>Gestisci le tue informazioni personali.</p><a href="#" class="cta-button-outline">Modifica</a></div>
                     </div>
                 `;
             }
         }
         renderDashboard();
+        
+        // Aggiungi classe per animazioni
+        document.addEventListener('DOMContentLoaded', function() {
+            const dashboardCards = document.querySelectorAll('.dashboard-card');
+            setTimeout(() => {
+                dashboardCards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('visible');
+                    }, index * 150);
+                });
+            }, 300);
+        });
     </script>
 </body>
 </html>

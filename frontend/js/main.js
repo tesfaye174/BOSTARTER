@@ -1,245 +1,183 @@
-// Wait for the DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', function () {
-    // Initialize mobile menu
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const mobileMenu = document.querySelector('.mobile-menu');
+// Funzionalità homepage BOSTARTER
 
+document.addEventListener('DOMContentLoaded', function () {
+    // Mobile menu toggle
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
     if (mobileMenuBtn && mobileMenu) {
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('active');
+        mobileMenuBtn.addEventListener('click', function () {
+            const expanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+            mobileMenuBtn.setAttribute('aria-expanded', !expanded);
+            mobileMenu.setAttribute('aria-hidden', expanded);
+            mobileMenu.classList.toggle('open');
+        });
+        // Chiudi menu al click fuori
+        document.addEventListener('click', function (e) {
+            if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                mobileMenu.setAttribute('aria-hidden', 'true');
+                mobileMenu.classList.remove('open');
+            }
         });
     }
 
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-
-    // Form validation
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const requiredFields = form.querySelectorAll('[required]');
-            let isValid = true;
-
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    isValid = false;
-                    field.classList.add('error');
-                } else {
-                    field.classList.remove('error');
+    // Animazione scroll per "Come funziona"
+    const steps = document.querySelectorAll('.step-card');
+    if (steps.length) {
+        const revealSteps = () => {
+            steps.forEach(step => {
+                const rect = step.getBoundingClientRect();
+                if (rect.top < window.innerHeight - 50) {
+                    step.classList.add('visible');
                 }
             });
-
-            if (isValid) {
-                // Add form submission logic here
-                console.log('Form submitted successfully');
-            }
-        });
-    });
-
-    // Initialize plugins
-    initializePlugins();
-
-    // Dynamic content loading
-    const loadMoreBtn = document.querySelector('.load-more');
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/api/content');
-                const data = await response.json();
-                // Handle the loaded content
-                console.log('Content loaded:', data);
-            } catch (error) {
-                console.error('Error loading content:', error);
-            }
-        });
-    }
-});
-
-// Utility functions
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
         };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
+        window.addEventListener('scroll', revealSteps);
+        revealSteps();
+    }
 
-// Window resize handler with debounce
-window.addEventListener('resize', debounce(() => {
-    // Handle resize events
-    console.log('Window resized');
-}, 250));
+    // Aggiorna anno footer
+    const yearSpan = document.getElementById('current-year');
+    if (yearSpan) {
+        yearSpan.textContent = new Date().getFullYear();
+    }
 
-// Initialize any third-party libraries or plugins
-function initializePlugins() {
-    // Add initialization code for external libraries here
-    console.log('Plugins initialized');
-}
+    // Placeholder: caricamento dinamico progetti in evidenza
+    const featuredProjects = document.getElementById('featured-projects-list');
+    if (featuredProjects) {
+        // Simulazione caricamento
+        featuredProjects.innerHTML = '<div class="project-card">Progetto 1</div><div class="project-card">Progetto 2</div><div class="project-card">Progetto 3</div>';
+    }
 
-// Call plugin initialization
-initializePlugins();
+    // Placeholder: caricamento statistiche
+    const creatorsList = document.getElementById('stat-creators-list');
+    const projectsList = document.getElementById('stat-projects-list');
+    const fundersList = document.getElementById('stat-funders-list');
+    if (creatorsList) creatorsList.innerHTML = '<li>Mario Rossi</li><li>Anna Bianchi</li>';
+    if (projectsList) projectsList.innerHTML = '<li>EcoLampada (95%)</li><li>Libro Illustrato (90%)</li>';
+    if (fundersList) fundersList.innerHTML = '<li>Giulia Verdi</li><li>Luca Neri</li>';
 
-// --- Miglioramento gestione autenticazione e modali ---
-// Gestione modali login/register e autenticazione
-const loginLink = document.getElementById('login-link');
-const registerLink = document.getElementById('register-link');
-const logoutLink = document.getElementById('logout-link');
-const userGreeting = document.getElementById('user-greeting');
-const loginModal = document.getElementById('login-modal');
-const registerModal = document.getElementById('register-modal');
-const closeModalBtns = document.querySelectorAll('.close-modal');
-const loginForm = document.getElementById('login-form');
-const registerForm = document.getElementById('register-form');
-const goToRegister = document.getElementById('go-to-register');
-const goToLogin = document.getElementById('go-to-login');
+    // Gestione modali login/register (apertura/chiusura)
+    document.querySelectorAll('[data-modal]').forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const modalId = link.getAttribute('data-modal');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.setAttribute('aria-hidden', 'false');
+                modal.classList.add('open');
+                // Focus automatico sul primo input abilitato
+                const firstInput = modal.querySelector('input:not([type=hidden]):not([disabled]),button,select,textarea');
+                if(firstInput) firstInput.focus();
+                // Reset messaggi feedback
+                const errorMsg = modal.querySelector('.error-message');
+                const successMsg = modal.querySelector('.success-message');
+                if(errorMsg) errorMsg.textContent = '';
+                if(successMsg) successMsg.textContent = '';
+            }
+        });
+    });
+    document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const modal = btn.closest('.modal');
+            if (modal) {
+                modal.setAttribute('aria-hidden', 'true');
+                modal.classList.remove('open');
+            }
+        });
+    });
+    // Chiudi modale con ESC
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.open').forEach(modal => {
+                modal.setAttribute('aria-hidden', 'true');
+                modal.classList.remove('open');
+            });
+        }
+    });
 
-function showModal(modal) {
-    modal.setAttribute('aria-hidden', 'false');
-    modal.style.display = 'block';
-    setTimeout(() => modal.classList.add('open'), 10);
-}
-function hideModal(modal) {
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden', 'true');
-    modal.style.display = 'none';
-}
-if (loginLink) loginLink.addEventListener('click', e => { e.preventDefault(); showModal(loginModal); });
-if (registerLink) registerLink.addEventListener('click', e => { e.preventDefault(); showModal(registerModal); });
-if (closeModalBtns) closeModalBtns.forEach(btn => btn.addEventListener('click', e => {
-    hideModal(btn.closest('.modal'));
-}));
-window.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-        if (loginModal && loginModal.classList.contains('open')) hideModal(loginModal);
-        if (registerModal && registerModal.classList.contains('open')) hideModal(registerModal);
+    // Migliora feedback login
+    const loginForm = document.getElementById('login-form');
+    if(loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = loginForm.querySelector('#login-email').value.trim();
+            const password = loginForm.querySelector('#login-password').value.trim();
+            const errorMsg = loginForm.querySelector('#login-error');
+            const successMsg = loginForm.querySelector('#login-success');
+            errorMsg.textContent = '';
+            successMsg.textContent = '';
+            if(!email || !password) {
+                errorMsg.textContent = 'Inserisci email e password.';
+                return;
+            }
+            // Simulazione login (da sostituire con chiamata reale)
+            if(email === 'admin@bostarter.it' && password === 'admin') {
+                successMsg.textContent = 'Accesso effettuato! Benvenuto.';
+                setTimeout(()=>{
+                    document.getElementById('login-modal').setAttribute('aria-hidden','true');
+                    document.getElementById('login-modal').classList.remove('open');
+                }, 1200);
+            } else {
+                errorMsg.textContent = 'Credenziali non valide. Riprova.';
+            }
+        });
+    }
+    // Gestione form di registrazione
+    const registerForm = document.getElementById('register-form');
+    if(registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = registerForm.querySelector('#register-email').value.trim();
+            const nickname = registerForm.querySelector('#register-nickname').value.trim();
+            const password = registerForm.querySelector('#register-password').value.trim();
+            const isCreatore = registerForm.querySelector('#register-is-creatore').checked;
+            const errorMsg = registerForm.querySelector('#register-error');
+            const successMsg = registerForm.querySelector('#register-success');
+            
+            errorMsg.textContent = '';
+            successMsg.textContent = '';
+            
+            if(!email || !nickname || !password) {
+                errorMsg.textContent = 'Compila tutti i campi richiesti.';
+                return;
+            }
+            
+            // Simulazione registrazione (da sostituire con chiamata reale all'API)
+            successMsg.textContent = 'Registrazione completata con successo!';
+            
+            // Reindirizzamento alla dashboard creatori dopo breve attesa
+            setTimeout(() => {
+                // Utilizzo percorso assoluto dal root del sito per evitare problemi di navigazione
+                window.location.href = '/BOSTARTER/frontend/creatori/creatori_dashboard.html';
+                // Nota: tutti gli utenti vengono reindirizzati alla pagina dei creatori, indipendentemente dall'opzione selezionata
+            }, 1500);
+        });
+    }
+    
+    // Passaggio rapido tra login e registrazione
+    const goToRegister = document.getElementById('go-to-register');
+    if(goToRegister) {
+        goToRegister.addEventListener('click', function(e){
+            e.preventDefault();
+            document.getElementById('login-modal').setAttribute('aria-hidden','true');
+            document.getElementById('login-modal').classList.remove('open');
+            document.getElementById('register-modal').setAttribute('aria-hidden','false');
+            document.getElementById('register-modal').classList.add('open');
+            const firstInput = document.getElementById('register-modal').querySelector('input:not([type=hidden]):not([disabled]),button,select,textarea');
+            if(firstInput) firstInput.focus();
+        });
+    }
+    const goToLogin = document.getElementById('go-to-login');
+    if(goToLogin) {
+        goToLogin.addEventListener('click', function(e){
+            e.preventDefault();
+            document.getElementById('register-modal').setAttribute('aria-hidden','true');
+            document.getElementById('register-modal').classList.remove('open');
+            document.getElementById('login-modal').setAttribute('aria-hidden','false');
+            document.getElementById('login-modal').classList.add('open');
+            const firstInput = document.getElementById('login-modal').querySelector('input:not([type=hidden]):not([disabled]),button,select,textarea');
+            if(firstInput) firstInput.focus();
+        });
     }
 });
-if (goToRegister) goToRegister.addEventListener('click', e => { e.preventDefault(); hideModal(loginModal); showModal(registerModal); });
-if (goToLogin) goToLogin.addEventListener('click', e => { e.preventDefault(); hideModal(registerModal); showModal(loginModal); });
-
-// Mobile login/register links
-const loginLinkMobile = document.getElementById('login-link-mobile');
-if (loginLinkMobile) loginLinkMobile.addEventListener('click', e => { e.preventDefault(); hideModal(registerModal); showModal(loginModal); });
-const registerLinkMobile = document.getElementById('register-link-mobile');
-if (registerLinkMobile) registerLinkMobile.addEventListener('click', e => { e.preventDefault(); hideModal(loginModal); showModal(registerModal); });
-
-// Simulazione database utenti (solo per demo frontend)
-let utentiFake = JSON.parse(localStorage.getItem('utentiFake') || '[]');
-function salvaUtentiFake() {
-    localStorage.setItem('utentiFake', JSON.stringify(utentiFake));
-}
-function trovaUtente(email, password) {
-    return utentiFake.find(u => u.email === email && u.password === password);
-}
-function trovaUtentePerEmail(email) {
-    return utentiFake.find(u => u.email === email);
-}
-
-// LOGIN
-if (loginForm) {
-    loginForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const email = loginForm.email.value.trim();
-        const password = loginForm.password.value;
-        const errorMsg = document.getElementById('login-error');
-        errorMsg.textContent = '';
-        if (!email || !password) {
-            errorMsg.textContent = 'Compila tutti i campi.';
-            return;
-        }
-        const utente = trovaUtente(email, password);
-        if (utente) {
-            // Login riuscito
-            hideModal(loginModal);
-            localStorage.setItem('utenteLoggato', JSON.stringify(utente));
-            if (utente.ruolo === 'creatore') {
-                window.location.href = 'frontend/creatori_dashboard.html';
-            } else {
-                window.location.href = 'frontend/dashboard.html';
-            }
-        } else {
-            errorMsg.textContent = 'Credenziali non valide.';
-        }
-    });
-}
-// REGISTRAZIONE
-if (registerForm) {
-    registerForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const email = registerForm.email.value.trim();
-        const nickname = registerForm.nickname.value.trim();
-        const password = registerForm.password.value;
-        const isCreatore = registerForm.querySelector('[name="is_creatore"]') ? registerForm.querySelector('[name="is_creatore"]').checked : false;
-        const errorMsg = document.getElementById('register-error');
-        const successMsg = document.getElementById('register-success');
-        errorMsg.textContent = '';
-        successMsg.textContent = '';
-        if (!email || !nickname || !password) {
-            errorMsg.textContent = 'Compila tutti i campi.';
-            return;
-        }
-        if (trovaUtentePerEmail(email)) {
-            errorMsg.textContent = 'Email già registrata.';
-            return;
-        }
-        // Salva nuovo utente
-        const nuovoUtente = { email, nickname, password, ruolo: isCreatore ? 'creatore' : 'utente' };
-        utentiFake.push(nuovoUtente);
-        salvaUtentiFake();
-        successMsg.textContent = 'Registrazione avvenuta con successo!';
-        setTimeout(() => {
-            hideModal(registerModal);
-            localStorage.setItem('utenteLoggato', JSON.stringify(nuovoUtente));
-            if (isCreatore) {
-                window.location.href = 'frontend/creatori_dashboard.html';
-            } else {
-                window.location.href = 'frontend/dashboard.html';
-            }
-        }, 800);
-    });
-}
-// LOGOUT
-if (logoutLink) {
-    logoutLink.addEventListener('click', e => {
-        e.preventDefault();
-        localStorage.removeItem('utenteLoggato');
-        window.location.href = 'index.html';
-    });
-}
-// Mostra/nascondi link in base allo stato login
-function aggiornaNavLogin() {
-    const utente = JSON.parse(localStorage.getItem('utenteLoggato') || 'null');
-    if (utente) {
-        if (loginLink) loginLink.classList.add('hidden-by-default');
-        if (registerLink) registerLink.classList.add('hidden-by-default');
-        if (logoutLink) logoutLink.classList.remove('hidden-by-default');
-        if (userGreeting) {
-            userGreeting.classList.remove('hidden-by-default');
-            userGreeting.textContent = 'Ciao, ' + (utente.nickname || utente.email);
-        }
-    } else {
-        if (loginLink) loginLink.classList.remove('hidden-by-default');
-        if (registerLink) registerLink.classList.remove('hidden-by-default');
-        if (logoutLink) logoutLink.classList.add('hidden-by-default');
-        if (userGreeting) {
-            userGreeting.classList.add('hidden-by-default');
-            userGreeting.textContent = '';
-        }
-    }
-}
-document.addEventListener('DOMContentLoaded', aggiornaNavLogin);

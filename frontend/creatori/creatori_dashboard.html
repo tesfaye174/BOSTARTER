@@ -4,69 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOSTARTER</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Dashboard Creatori - BOSTARTER</title>
+    <meta name="description" content="Dashboard per creatori di BOSTARTER - Gestisci i tuoi progetti, ricompense e profilo">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="creatori.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="../images/logo1.svg" type="image/x-icon">
 </head>
 
 <body>
     <header class="main-header sticky" role="banner">
-        <div class="header-content"
-            style="display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 0 1.5rem; min-height: 64px;">
-            <div class="logo" style="flex: 0 0 auto; display: flex; align-items: center;">
-                <a href="../index.html" aria-label="Homepage BOSTARTER"
-                    style="display: flex; align-items: center; gap: 0.5rem;">
-                    <img src="images/logo.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy"
-                        style="height: 36px;">
-                    <span class="logo-text" aria-hidden="true"
-                        style="font-weight: 700; font-size: 1.2rem; color: #222; letter-spacing: 1px;">BOSTARTER
-                    </span>
+        <div class="header-content">
+            <div class="logo">
+                <a href="../index.html" aria-label="Homepage BOSTARTER">
+                    <img src="../images/logo1.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
+                    <span class="logo-text">BOSTARTER</span>
                 </a>
             </div>
-            <div class="search-bar" style="flex: 1 1 300px; max-width: 500px; margin: 0 2rem; min-width: 180px;">
-                <form action="#" method="get" role="search" aria-label="Cerca progetti"
-                    style="display: flex; background: #fff; border-radius: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+            <div class="search-bar">
+                <form action="#" method="get" role="search" aria-label="Cerca progetti">
                     <input type="search" id="search-input" name="q" placeholder="Cerca progetti, ricompense..."
-                        aria-label="Campo di ricerca" autocomplete="on" tabindex="1"
-                        style="flex:1; border:none; outline:none; padding: 0.6rem 1rem; border-radius: 20px 0 0 20px; font-size: 1rem;">
-                    <button type="submit" aria-label="Avvia ricerca"
-                        style="background: #2b7cff; color: #fff; border:none; padding: 0 1.1rem; border-radius: 0 20px 20px 0; font-size: 1.1rem; cursor:pointer;">
+                        aria-label="Campo di ricerca" autocomplete="on" tabindex="1">
+                    <button type="submit" aria-label="Avvia ricerca" class="search-btn">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
             </div>
-            <nav class="user-nav" aria-label="Navigazione utente" style="flex: 0 0 auto;">
-                <ul style="display: flex; align-items: center; gap: 1rem; margin: 0; padding: 0; list-style: none;">
-                    <li><a href="../index.html" class="nav-link">Home</a></li>
-                    <li><a href="#" id="login-link" class="cta-button-outline">Accedi</a></li>
-                    <li><a href="#" id="register-link" class="cta-button">Registrati</a></li>
+            <nav class="user-nav" aria-label="Navigazione utente">
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="#" id="login-link" data-modal="login-modal">Accedi</a></li>
+                    <li><a href="#" id="register-link" class="cta-button-secondary" data-modal="register-modal">Registrati</a></li>
+                    <li><span id="user-greeting" class="hidden-by-default" aria-live="polite"></span></li>
                 </ul>
             </nav>
-            <button class="mobile-menu-btn" aria-label="Apri menu" aria-expanded="false" aria-controls="mobile-menu"
-                style="margin-left: 1rem; background: none; border: none; font-size: 1.5rem; color: #2b7cff; cursor:pointer;">
+            <button class="mobile-menu-btn" aria-label="Apri menu" aria-expanded="false" aria-controls="mobile-menu">
                 <i class="fas fa-bars"></i>
             </button>
-            <nav class="mobile-menu" id="mobile-menu" aria-label="Navigazione mobile" aria-hidden="true"
-                style="position: absolute; top: 64px; right: 0; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 0 0 12px 12px; min-width: 180px; display: none; z-index: 100;">
-                <ul
-                    style="list-style: none; margin: 0; padding: 1rem 0; display: flex; flex-direction: column; gap: 0.7rem;">
-                    <li><a href="../index.html" class="nav-link">Home</a></li>
-                    <li><a href="#" id="login-link-mobile" class="cta-button-outline">Accedi</a></li>
-                    <li><a href="#" id="register-link-mobile" class="cta-button">Registrati</a></li>
+            <nav class="mobile-menu" id="mobile-menu" aria-label="Navigazione mobile" aria-hidden="true">
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="#" id="login-link-mobile" data-modal="login-modal">Accedi</a></li>
+                    <li><a href="#" id="register-link-mobile" class="cta-button-secondary" data-modal="register-modal">Registrati</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
-    <main id="main-content" style="display: flex; gap: 2rem; align-items: flex-start;">
+    <main id="main-content">
         <!-- Sidebar di navigazione dashboard -->
-        <aside class="dashboard-sidebar"
-            style="width: 220px; background: #f7f7f7; border-radius: 12px; padding: 24px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <aside class="dashboard-sidebar">
             <nav aria-label="Navigazione dashboard">
-                <ul
-                    style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1.2rem;">
+                <ul>
                     <li><a href="#dashboard-overview" class="sidebar-link"><i class="fas fa-tachometer-alt"></i>
                             Riepilogo</a></li>
                     <li><a href="#my-projects" class="sidebar-link"><i class="fas fa-folder-open"></i> I miei
@@ -85,25 +75,28 @@
             </nav>
         </aside>
         <!-- Contenuto principale dashboard -->
-        <section class="dashboard-content" style="flex: 1 1 0; min-width: 0;">
+        <section class="dashboard-content">
             <!-- Riepilogo dashboard -->
-            <section id="dashboard-overview" class="dashboard-overview" aria-label="Riepilogo Creatore"
-                style="margin-bottom: 2.5rem;">
+            <section id="dashboard-overview" class="dashboard-overview" aria-label="Riepilogo Creatore">
                 <h2 class="section-title">Benvenuto nella tua Dashboard</h2>
-                <div class="dashboard-stats" style="display: flex; gap: 2rem; flex-wrap: wrap;">
-                    <div class="stat-card"><i class="fas fa-folder-open"></i>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-folder-open"></i>
                         <div class="stat-value" id="stat-projects">0</div>
                         <div class="stat-label">Progetti creati</div>
                     </div>
-                    <div class="stat-card"><i class="fas fa-gift"></i>
+                    <div class="stat-card">
+                        <i class="fas fa-gift"></i>
                         <div class="stat-value" id="stat-rewards">0</div>
                         <div class="stat-label">Ricompense</div>
                     </div>
-                    <div class="stat-card"><i class="fas fa-users"></i>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
                         <div class="stat-value" id="stat-supporters">0</div>
                         <div class="stat-label">Sostenitori</div>
                     </div>
-                    <div class="stat-card"><i class="fas fa-euro-sign"></i>
+                    <div class="stat-card">
+                        <i class="fas fa-euro-sign"></i>
                         <div class="stat-value" id="stat-funds">0</div>
                         <div class="stat-label">Totale raccolto</div>
                     </div>
@@ -129,11 +122,25 @@
             <section id="creator-guide" class="how-it-works-section" aria-label="Guida per creatori">
                 <h2 class="section-title">Guida per Creatori</h2>
                 <div class="steps-container">
-                    <div class="step-card" tabindex="2">1. Scegli la categoria e inserisci i dettagli del progetto.
+                    <div class="step-card" tabindex="2">
+                        <i class="fas fa-list-ol"></i>
+                        <h3>1. Scegli la categoria</h3>
+                        <p>Inserisci i dettagli del progetto e seleziona la categoria più adatta.</p>
                     </div>
-                    <div class="step-card" tabindex="3">2. Definisci le ricompense per i sostenitori.</div>
-                    <div class="step-card" tabindex="4">3. Lancia la campagna e condividila!</div>
-                    <div class="step-card" tabindex="5">4. Raggiungi il tuo obiettivo e realizza la tua idea.
+                    <div class="step-card" tabindex="3">
+                        <i class="fas fa-gift"></i>
+                        <h3>2. Definisci le ricompense</h3>
+                        <p>Crea ricompense interessanti per i tuoi sostenitori.</p>
+                    </div>
+                    <div class="step-card" tabindex="4">
+                        <i class="fas fa-rocket"></i>
+                        <h3>3. Lancia la campagna</h3>
+                        <p>Pubblica e condividi il tuo progetto con il mondo!</p>
+                    </div>
+                    <div class="step-card" tabindex="5">
+                        <i class="fas fa-flag-checkered"></i>
+                        <h3>4. Raggiungi l'obiettivo</h3>
+                        <p>Realizza la tua idea con il supporto della community.</p>
                     </div>
                 </div>
             </section>
@@ -141,46 +148,60 @@
             <section id="start-project-form" class="form-section" aria-label="Crea la tua pagina progetto">
                 <h2 class="section-title">Crea la Tua Pagina Progetto</h2>
                 <form id="project-creation-form" class="modern-form" autocomplete="on">
-                    <label for="project-title">Titolo del Progetto:<span class="sr-only"> (campo
-                            obbligatorio)</span></label>
-                    <input type="text" id="project-title" name="project-title" required autofocus
-                        aria-label="Titolo del Progetto" autocomplete="on" aria-required="true">
+                    <div class="form-group">
+                        <label for="project-title">Titolo del Progetto:<span class="sr-only"> (campo
+                                obbligatorio)</span></label>
+                        <input type="text" id="project-title" name="project-title" required autofocus
+                            aria-label="Titolo del Progetto" autocomplete="on" aria-required="true" 
+                            placeholder="Inserisci un titolo accattivante">
+                    </div>
 
-                    <label for="project-category">Categoria:<span class="sr-only"> (campo obbligatorio)</span></label>
-                    <select id="project-category" name="project-category" required aria-label="Categoria"
-                        aria-required="true">
-                        <option value="">Seleziona una categoria...</option>
-                        <option value="arte">Arte</option>
-                        <option value="fumetti">Fumetti</option>
-                        <option value="artigianato">Artigianato</option>
-                        <option value="danza">Danza</option>
-                        <option value="design">Design</option>
-                        <option value="moda">Moda</option>
-                        <option value="film">Film</option>
-                        <option value="cibo">Cibo</option>
-                        <option value="giochi">Giochi</option>
-                        <option value="giornalismo">Giornalismo</option>
-                        <option value="musica">Musica</option>
-                        <option value="fotografia">Fotografia</option>
-                        <option value="editoriale">Editoriale</option>
-                        <option value="tecnologia">Tecnologia</option>
-                        <option value="teatro">Teatro</option>
-                    </select>
+                    <div class="form-group">
+                        <label for="project-category">Categoria:<span class="sr-only"> (campo obbligatorio)</span></label>
+                        <select id="project-category" name="project-category" required aria-label="Categoria"
+                            aria-required="true">
+                            <option value="">Seleziona una categoria...</option>
+                            <option value="arte">Arte</option>
+                            <option value="fumetti">Fumetti</option>
+                            <option value="artigianato">Artigianato</option>
+                            <option value="danza">Danza</option>
+                            <option value="design">Design</option>
+                            <option value="moda">Moda</option>
+                            <option value="film">Film</option>
+                            <option value="cibo">Cibo</option>
+                            <option value="giochi">Giochi</option>
+                            <option value="giornalismo">Giornalismo</option>
+                            <option value="musica">Musica</option>
+                            <option value="fotografia">Fotografia</option>
+                            <option value="editoriale">Editoriale</option>
+                            <option value="tecnologia">Tecnologia</option>
+                            <option value="teatro">Teatro</option>
+                        </select>
+                    </div>
 
-                    <label for="project-description">Descrizione Breve (max 280 caratteri):<span class="sr-only"> (campo
-                            obbligatorio)</span></label>
-                    <textarea id="project-description" name="project-description" rows="3" maxlength="280" required
-                        aria-label="Descrizione breve" aria-required="true"></textarea>
+                    <div class="form-group">
+                        <label for="project-description">Descrizione Breve (max 280 caratteri):<span class="sr-only"> (campo
+                                obbligatorio)</span></label>
+                        <textarea id="project-description" name="project-description" rows="3" maxlength="280" required
+                            aria-label="Descrizione breve" aria-required="true" 
+                            placeholder="Descrivi brevemente il tuo progetto"></textarea>
+                    </div>
 
-                    <label for="funding-goal">Obiettivo di Finanziamento (€):<span class="sr-only"> (campo
-                            obbligatorio)</span></label>
-                    <input type="number" id="funding-goal" name="funding-goal" min="1" required
-                        aria-label="Obiettivo di Finanziamento" aria-required="true">
+                    <div class="form-row">
+                        <div class="form-group form-group-half">
+                            <label for="funding-goal">Obiettivo di Finanziamento (€):<span class="sr-only"> (campo
+                                    obbligatorio)</span></label>
+                            <input type="number" id="funding-goal" name="funding-goal" min="1" required
+                                aria-label="Obiettivo di Finanziamento" aria-required="true" placeholder="es. 5000">
+                        </div>
 
-                    <label for="campaign-duration">Durata Campagna (giorni):<span class="sr-only"> (campo
-                            obbligatorio)</span></label>
-                    <input type="number" id="campaign-duration" name="campaign-duration" min="1" max="60" value="30"
-                        required aria-label="Durata Campagna" aria-required="true">
+                        <div class="form-group form-group-half">
+                            <label for="campaign-duration">Durata Campagna (giorni):<span class="sr-only"> (campo
+                                    obbligatorio)</span></label>
+                            <input type="number" id="campaign-duration" name="campaign-duration" min="1" max="60" value="30"
+                                required aria-label="Durata Campagna" aria-required="true">
+                        </div>
+                    </div>
 
                     <button type="submit" class="cta-button" aria-label="Crea Progetto">Crea Progetto</button>
                 </form>
@@ -190,37 +211,50 @@
             <section id="reward-section" class="form-section">
                 <h2 class="section-title">Aggiungi una Ricompensa al Progetto</h2>
                 <form id="reward-form" class="modern-form">
-                    <label for="reward-project-id">ID Progetto:<span class="sr-only"> (campo
-                            obbligatorio)</span></label>
-                    <input type="number" id="reward-project-id" name="reward-project-id" required aria-required="true">
+                    <div class="form-group">
+                        <label for="reward-project-id">ID Progetto:<span class="sr-only"> (campo
+                                obbligatorio)</span></label>
+                        <input type="number" id="reward-project-id" name="reward-project-id" required aria-required="true" 
+                            placeholder="Inserisci l'ID del progetto">
+                    </div>
 
-                    <label for="reward-code">Codice Ricompensa:<span class="sr-only"> (campo
-                            obbligatorio)</span></label>
-                    <input type="text" id="reward-code" name="reward-code" required aria-required="true">
+                    <div class="form-group">
+                        <label for="reward-code">Codice Ricompensa:<span class="sr-only"> (campo
+                                obbligatorio)</span></label>
+                        <input type="text" id="reward-code" name="reward-code" required aria-required="true" 
+                            placeholder="Codice univoco per la ricompensa">
+                    </div>
 
-                    <label for="reward-description">Descrizione:<span class="sr-only"> (campo
-                            obbligatorio)</span></label>
-                    <textarea id="reward-description" name="reward-description" rows="2" required
-                        aria-required="true"></textarea>
+                    <div class="form-group">
+                        <label for="reward-description">Descrizione:<span class="sr-only"> (campo
+                                obbligatorio)</span></label>
+                        <textarea id="reward-description" name="reward-description" rows="2" required
+                            aria-required="true" placeholder="Descrivi cosa riceveranno i sostenitori"></textarea>
+                    </div>
 
-                    <label for="reward-photo">Foto (URL):</label>
-                    <input type="text" id="reward-photo" name="reward-photo">
+                    <div class="form-group">
+                        <label for="reward-photo">URL Foto (opzionale):</label>
+                        <input type="url" id="reward-photo" name="reward-photo" aria-label="URL Foto"
+                            placeholder="https://esempio.com/immagine.jpg">
+                    </div>
 
-                    <button type="submit" class="cta-button" aria-label="Aggiungi Ricompensa">Aggiungi
-                        Ricompensa</button>
+                    <button type="submit" class="cta-button">Aggiungi Ricompensa</button>
                 </form>
-            </section>
-            <!-- Fine form ricompensa -->
 
-            <!-- Visualizzazione ricompense progetto -->
-            <section id="rewards-list-section" class="form-section">
-                <h2 class="section-title">Ricompense del Progetto</h2>
-                <label for="rewards-project-id-view">ID Progetto:<span class="sr-only"> (campo
-                        obbligatorio)</span></label>
-                <input type="number" id="rewards-project-id-view" name="rewards-project-id-view" min="1" required
-                    aria-required="true">
-                <button id="load-rewards-btn" class="cta-button" type="button">Carica Ricompense</button>
-                <div id="rewards-list"></div>
+                <div class="reward-viewer">
+                    <h3>Visualizza Ricompense</h3>
+                    <div class="form-row">
+                        <div class="form-group form-group-half">
+                            <label for="rewards-project-id-view">ID Progetto:</label>
+                            <input type="number" id="rewards-project-id-view" name="rewards-project-id-view"
+                                placeholder="Inserisci l'ID del progetto">
+                        </div>
+                        <div class="form-group form-group-half" style="display: flex; align-items: flex-end;">
+                            <button id="load-rewards-btn" class="cta-button">Carica Ricompense</button>
+                        </div>
+                    </div>
+                    <div id="rewards-list" class="rewards-container"></div>
+                </div>
             </section>
             <!-- Fine visualizzazione ricompense -->
 
@@ -297,9 +331,7 @@
     <footer class="modern-footer" role="contentinfo">
         <div class="footer-content">
             <div class="footer-logo">
-                <img src="images/logo-bostarter.svg" alt="BOSTARTER Logo Footer"
-                    style="height:32px;vertical-align:middle;" loading="lazy">
-                <span>BOSTARTER</span>
+                <img src="../images/logo1.svg" alt="BOSTARTER Logo Footer" class="footer-logo-img" loading="lazy">
             </div>
             <div class="footer-links">
                 <a href="#">Chi siamo</a>
@@ -308,23 +340,22 @@
                 <a href="#">Termini di Servizio</a>
                 <a href="#">Privacy Policy</a>
             </div>
-            <div class="footer-social">
+            <div class="footer-social" aria-label="Social network">
                 <a href="#" aria-label="Facebook BOSTARTER"><i class="fab fa-facebook-f"></i></a>
                 <a href="#" aria-label="Twitter BOSTARTER"><i class="fab fa-twitter"></i></a>
                 <a href="#" aria-label="Instagram BOSTARTER"><i class="fab fa-instagram"></i></a>
                 <a href="#" aria-label="LinkedIn BOSTARTER"><i class="fab fa-linkedin-in"></i></a>
             </div>
         </div>
-        <p class="copyright-text">&copy; <span id="current-year"></span> BOSTARTER. Tutti i diritti riservati.</p>
+        <hr style="border: none; border-top: 1.5px solid #e6f0ff33; margin: 1.5rem 0 0.7rem 0; width: 90%; opacity: 0.5;">
+        <p class="copyright-text">&copy; <span id="current-year">2024</span> BOSTARTER. Tutti i diritti riservati.</p>
     </footer>
 
+    <button id="theme-toggle" title="Cambia tema (Chiaro/Scuro)" aria-label="Attiva tema scuro/chiaro"><i class="fas fa-moon"></i></button>
+
+    <script src="creatori.js"></script>
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
-        // Miglioramento accessibilità: focus su primo campo form
-        window.addEventListener('DOMContentLoaded', function () {
-            var firstInput = document.querySelector('.modern-form input, .modern-form select, .modern-form textarea');
-            if (firstInput) firstInput.focus();
-        });
     </script>
 </body>
 

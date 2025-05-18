@@ -15,44 +15,34 @@
 
 <body>
     <header class="main-header sticky" role="banner">
-        <div class="header-content"
-            style="display: flex; align-items: center; justify-content: space-between; gap: 2rem;">
-            <div class="logo" style="flex: 0 0 auto;">
+        <div class="header-content">
+            <div class="logo">
                 <a href="index.html" aria-label="Homepage BOSTARTER">
                     <img src="frontend/images/logo1.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
-                    <span class="logo-text" aria-hidden="true"></span>
+                 
                 </a>
             </div>
-            <div class="search-bar" style="flex: 1 1 300px; max-width: 500px; margin: 0 2rem;">
-                <form action="/search" method="get" role="search" aria-label="Cerca progetti" style="display: flex;">
-                    <input type="search" id="search-input" name="q" placeholder="Cerca progetti, creatori, categorie..."
-                        aria-label="Campo di ricerca" autocomplete="on" tabindex="1"
-                        style="flex:1; border-radius: 20px 0 0 20px;">
-                    <button type="submit" aria-label="Avvia ricerca" style="border-radius: 0 20px 20px 0;"><i
-                            class="fas fa-search"></i></button>
+            <div class="search-bar">
+                <form action="#" method="get" role="search" aria-label="Cerca progetti">
+                    <input type="search" id="search-input" name="q" placeholder="Cerca progetti, creatori, categorie..." aria-label="Campo di ricerca" autocomplete="on" tabindex="1">
+                    <button type="submit" aria-label="Avvia ricerca" class="search-btn"><i class="fas fa-search"></i></button>
                 </form>
             </div>
-            <nav class="user-nav" aria-label="Navigazione utente" style="flex: 0 0 auto;">
-                <ul style="display: flex; align-items: center; gap: 1rem; margin: 0; padding: 0; list-style: none;">
-                    <li><a href="frontend/creatori_dashboard.html" class="creator-btn" tabindex="2">Per i creatori</a>
-                    </li>
+            <nav class="user-nav" aria-label="Navigazione utente">
+                <ul>
+                    <li><a href="frontend/creatori/creatori_dashboard.html" class="creator-btn" tabindex="2">Per i creatori</a></li>
                     <li><a href="#" id="login-link" data-modal="login-modal">Accedi</a></li>
-                    <li><a href="#" id="register-link" class="cta-button-secondary"
-                            data-modal="register-modal">Registrati</a></li>
+                    <li><a href="#" id="register-link" class="cta-button-secondary" data-modal="register-modal">Registrati</a></li>
                     <li><span id="user-greeting" class="hidden-by-default" aria-live="polite"></span></li>
                 </ul>
             </nav>
-            <!-- mobile menu toggle button -->
-            <button class="mobile-menu-btn" aria-label="Apri menu" aria-expanded="false" aria-controls="mobile-menu"
-                style="margin-left: 1rem;"><i class="fas fa-bars"></i></button>
-            <!-- mobile navigation menu -->
+            <button class="mobile-menu-btn" aria-label="Apri menu" aria-expanded="false" aria-controls="mobile-menu"><i class="fas fa-bars"></i></button>
             <nav class="mobile-menu" id="mobile-menu" aria-label="Navigazione mobile" aria-hidden="true">
                 <ul>
                     <li><a href="index.html">Home</a></li>
-                    <li><a href="frontend/creatori_dashboard.html" class="creator-btn">Per i creatori</a></li>
+                    <li><a href="frontend/creatori/creatori_dashboard.html" class="creator-btn">Per i creatori</a></li>
                     <li><a href="#" id="login-link-mobile" data-modal="login-modal">Accedi</a></li>
-                    <li><a href="#" id="register-link-mobile" class="cta-button-secondary"
-                            data-modal="register-modal">Registrati</a></li>
+                    <li><a href="#" id="register-link-mobile" class="cta-button-secondary" data-modal="register-modal">Registrati</a></li>
                 </ul>
             </nav>
         </div>
@@ -80,20 +70,20 @@
     </nav>
 
     <main id="main-content">
-        <section class="hero" aria-label="Sezione principale">
-            <div class="hero-images" aria-hidden="true">
-                <img src="frontend/images/hero1.jpg" alt="Immagine ispiratrice di un progetto creativo"
-                    class="hero-img-left" loading="lazy">
-                <img src="frontend/images/hero2.jpg" alt="Progetto creativo di successo" class="hero-img-right"
-                    loading="lazy">
-            </div>
-            <div class="hero-content">
-                <h1><span class="highlight">Dai Vita alle Tue Idee</span> con BOSTARTER</h1>
-                <p>Qualunque sia il tuo sogno, su BOSTARTER puoi trovare il supporto e le risorse per realizzarlo.<br>
-                    Concretizza le tue idee con la forza della community.</p>
-                <a href="frontend/creatori.html#start-project-form" class="cta-button" tabindex="3">Inizia il Tuo
-                    Progetto</a>
-            </div>
+        <section class="hero asymmetric-layout" aria-label="Sezione principale">
+            <div class="hero-content-wrapper">
+                <div class="hero-images" aria-hidden="true">
+                    <img src="frontend/images/man.svg" alt="Immagine ispiratrice di un progetto creativo" class="hero-img-left floating" loading="lazy">
+                    <img src="frontend/images/hero-right.svg" alt="Progetto creativo di successo" class="hero-img-right offset-right"
+                        loading="lazy">
+                </div>
+                <div class="hero-content offset-left">
+                    <h1 class="dynamic-title"><span class="highlight gradient-text">Dai Vita alle Tue Idee</span> con BOSTARTER</h1>
+                    <p class="staggered-text">Qualunque sia il tuo sogno, su BOSTARTER puoi trovare il supporto e le risorse per realizzarlo.<br>
+                        Concretizza le tue idee con la forza della community.</p>
+                    <a href="frontend/creatori/creatori_dashboard.html#start-project-form" class="cta-button animated" tabindex="3">Inizia il Tuo
+                        Progetto</a>
+                </div>
         </section>
 
         <section id="how-it-works" class="how-it-works-section" aria-label="Come funziona">
@@ -106,25 +96,25 @@
             </div>
         </section>
 
-        <section id="statistics-section" class="statistics-section" aria-label="Statistiche della Community">
-            <h2 class="section-title">Statistiche della Community</h2>
-            <div class="statistics-cards">
-                <div class="stat-card" id="top-creators" aria-live="polite">
-                    <h3><i class="fas fa-crown"></i> Top Creatori per Affidabilità</h3>
-                    <ul class="stat-list" id="stat-creators-list">
-                        <li>Caricamento...</li>
+        <section id="statistics-section" class="statistics-section asymmetric-grid" aria-label="Statistiche della Community">
+            <h2 class="section-title offset-right">Statistiche della Community</h2>
+            <div class="statistics-cards dynamic-grid">
+                <div class="stat-card offset-left" id="top-creators" aria-live="polite">
+                    <h3 class="card-title"><i class="fas fa-crown animated-icon"></i> Top Creatori per Affidabilità</h3>
+                    <ul class="stat-list staggered-items" id="stat-creators-list">
+                        <li class="loading-item">Caricamento...</li>
                     </ul>
                 </div>
-                <div class="stat-card" id="top-projects" aria-live="polite">
-                    <h3><i class="fas fa-bullseye"></i> Progetti più Vicini al Completamento</h3>
-                    <ul class="stat-list" id="stat-projects-list">
-                        <li>Caricamento...</li>
+                <div class="stat-card offset-right" id="top-projects" aria-live="polite">
+                    <h3 class="card-title"><i class="fas fa-bullseye animated-icon"></i> Progetti più Vicini al Completamento</h3>
+                    <ul class="stat-list staggered-items" id="stat-projects-list">
+                        <li class="loading-item">Caricamento...</li>
                     </ul>
                 </div>
-                <div class="stat-card" id="top-funders" aria-live="polite">
-                    <h3><i class="fas fa-hand-holding-usd"></i> Top Finanziatori</h3>
-                    <ul class="stat-list" id="stat-funders-list">
-                        <li>Caricamento...</li>
+                <div class="stat-card offset-center" id="top-funders" aria-live="polite">
+                    <h3 class="card-title"><i class="fas fa-hand-holding-usd animated-icon"></i> Top Finanziatori</h3>
+                    <ul class="stat-list staggered-items" id="stat-funders-list">
+                        <li class="loading-item">Caricamento...</li>
                     </ul>
                 </div>
             </div>
@@ -136,7 +126,7 @@
                 <!-- Progetti caricati dinamicamente -->
             </div>
             <div class="text-center" style="margin-top: 30px;">
-                <a href="#" class="cta-button-outline" tabindex="8">Scopri Altri Progetti</a>
+                <a href="frontend/dashboard.html" class="cta-button-outline" tabindex="8">Scopri Altri Progetti</a>
             </div>
         </section>
 
@@ -145,7 +135,7 @@
                 <h2>Pronto a Lanciare la Tua Idea?</h2>
                 <p>Non aspettare il momento perfetto, crealo! Unisciti a migliaia di creatori che hanno trasformato i
                     loro sogni in realtà su BOSTARTER.</p>
-                <a href="frontend/creatori.html#start-project-form" class="cta-button-large" tabindex="9">Crea il Tuo
+                <a href="frontend/creatori/creatori_dashboard.html" class="cta-button-large" tabindex="9">Crea il Tuo
                     Progetto</a>
             </div>
         </section>
@@ -156,7 +146,6 @@
         <div class="footer-content">
             <div class="footer-logo">
                 <img src="frontend/images/logo1.svg" alt="BOSTARTER Logo Footer" class="footer-logo-img" loading="lazy">
-                <span>BOSTARTER</span>
             </div>
             <div class="footer-links">
                 <a href="#">Chi siamo</a>
@@ -165,13 +154,14 @@
                 <a href="#">Termini di Servizio</a>
                 <a href="#">Privacy Policy</a>
             </div>
-            <div class="footer-social">
+            <div class="footer-social" aria-label="Social network">
                 <a href="#" aria-label="Facebook BOSTARTER"><i class="fab fa-facebook-f"></i></a>
                 <a href="#" aria-label="Twitter BOSTARTER"><i class="fab fa-twitter"></i></a>
                 <a href="#" aria-label="Instagram BOSTARTER"><i class="fab fa-instagram"></i></a>
                 <a href="#" aria-label="LinkedIn BOSTARTER"><i class="fab fa-linkedin-in"></i></a>
             </div>
         </div>
+        <hr style="border: none; border-top: 1.5px solid #e6f0ff33; margin: 1.5rem 0 0.7rem 0; width: 90%; opacity: 0.5;">
         <p class="copyright-text">&copy; <span id="current-year">2024</span> BOSTARTER. Tutti i diritti riservati.</p>
     </footer>
 
@@ -197,6 +187,7 @@
             </div>
             <button type="submit" class="cta-button">Accedi</button>
             <p id="login-error" class="error-message" aria-live="assertive"></p>
+            <p id="login-success" class="success-message" aria-live="polite"></p>
             <p>Non hai un account? <a href="#" id="go-to-register">Registrati</a></p>
         </form>
     </div>
