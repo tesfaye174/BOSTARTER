@@ -4,6 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cibo - BOSTARTER</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Banner Interattivo -->
+    <div class="interactive-banner">
+        <h1>Scopri la Cucina Italiana</h1>
+        <p>Esplora le creazioni culinarie dei migliori chef</p>
+    </div>
+
+    <!-- Sezione Filtri -->
+    <div class="filter-section">
+        <button class="filter-btn active" data-filter="tutti">Tutti</button>
+        <button class="filter-btn" data-filter="primi">Primi Piatti</button>
+        <button class="filter-btn" data-filter="secondi">Secondi Piatti</button>
+        <button class="filter-btn" data-filter="dessert">Dessert</button>
+    </div>
+
+    <!-- Galleria Cibi -->
+    <div class="gallery" id="food-gallery">
+        <!-- Le card dei piatti verranno inserite dinamicamente via JavaScript -->
+    </div>
+
+    <!-- Sezione Chef -->
+    <section class="chefs-section">
+        <h2>Chef in Evidenza</h2>
+        <div class="chef-grid" id="featured-chefs">
+            <!-- Le card degli chef verranno inserite dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Sezione Eventi -->
+    <section class="events-section">
+        <h2>Eventi Gastronomici</h2>
+        <div id="food-events">
+            <!-- Gli eventi verranno inseriti dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cibo - BOSTARTER</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>

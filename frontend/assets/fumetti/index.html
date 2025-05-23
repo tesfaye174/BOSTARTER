@@ -4,15 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fumetti - BOSTARTER</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Categoria: Fumetti</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
-    </header>
-    <main>
-        <p>Benvenuto nella sezione Fumetti di BOSTARTER. Qui troverai progetti dedicati al mondo dei fumetti.</p>
-    </main>
+    <!-- Banner Interattivo -->
+    <div class="interactive-banner">
+        <h1>Esplora il Mondo dei Fumetti</h1>
+        <p>Scopri artisti emergenti e nuove storie illustrate</p>
+    </div>
+
+    <!-- Sezione Filtri -->
+    <div class="filter-section">
+        <button class="filter-btn active" data-filter="tutti">Tutti</button>
+        <button class="filter-btn" data-filter="manga">Manga</button>
+        <button class="filter-btn" data-filter="graphic-novel">Graphic Novel</button>
+        <button class="filter-btn" data-filter="webcomic">Webcomic</button>
+        <button class="filter-btn" data-filter="fumetto-italiano">Fumetto Italiano</button>
+    </div>
+
+    <!-- Galleria Fumetti -->
+    <div class="gallery" id="comics-gallery">
+        <!-- Le card dei fumetti verranno inserite dinamicamente via JavaScript -->
+    </div>
+
+    <!-- Sezione Artisti -->
+    <section class="artists-section">
+        <h2>Artisti in Evidenza</h2>
+        <div class="artist-grid" id="featured-artists">
+            <!-- Le card degli artisti verranno inserite dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Sezione Eventi -->
+    <section class="events-section">
+        <h2>Fiere e Convention</h2>
+        <div id="comic-events">
+            <!-- Gli eventi verranno inseriti dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

@@ -1,115 +1,110 @@
 <?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+require_once __DIR__ . '/config/config.php';
 
-namespace BOSTARTER\Backend;
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
 
-// Semplice router basato su URL
-// In un'applicazione reale, si userebbe una libreria di routing più robusta (es. FastRoute, Symfony Routing)
-
-class Router {
-    private $routes = [];
-    private $basePath = '/BOSTARTER'; // Imposta il percorso base della tua applicazione
-
-    /**
-     * Aggiunge una rotta.
-     *
-     * @param string $method Metodo HTTP (GET, POST, etc.)
-     * @param string $path Percorso URL (es. '/users')
-     * @param callable|array $handler Funzione o [ClasseController, 'metodo']
-     */
-    public function addRoute(string $method, string $path, $handler): void {
-        $this->routes[strtoupper($method)][$this->basePath . $path] = $handler;
-    }
-
-    /**
-     * Utility method for sending JSON responses.
-     * Controllers can use this method.
-     */
-    public static function jsonResponse($data, int $statusCode = 200): void {
-        http_response_code($statusCode);
-        // Ensure header is set, though index.php might set it globally
-        if (!headers_sent()) {
-            header('Content-Type: application/json; charset=utf-8');
-        }
-        echo json_encode($data);
-        exit; // Terminate script execution after sending the response
-    }
-
-    /**
-     * Gestisce la richiesta corrente.
-     */
-    public function handleRequest(): void {
-        $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $requestPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
-
-        // Rimuovi query string se presente
-        $requestPath = strtok($requestPath, '?');
-
-        $matchedHandler = null;
-        $params = [];
-
-        if (isset($this->routes[strtoupper($requestMethod)])) {
-            foreach ($this->routes[strtoupper($requestMethod)] as $routePattern => $handler) {
-                // Convert route pattern with placeholders like {paramName} to a regex
-                // Example: /BOSTARTER/api/projects/{projectId}/rewards -> #^/BOSTARTER/api/projects/([^/]+)/rewards$#
-                $regexPattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '([^/]+)', $routePattern);
-                $regexPattern = '#^' . $regexPattern . '$#';
-
-                if (preg_match($regexPattern, $requestPath, $matches)) {
-                    array_shift($matches); // Remove the full match (index 0)
-                    
-                    // Extract parameter names from the route pattern
-                    // Example: /BOSTARTER/api/projects/{projectId}/rewards -> ['projectId']
-                    preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $routePattern, $paramNames);
-                    $paramNames = $paramNames[1]; // Get the captured group names
-
-                    if (count($paramNames) === count($matches)) {
-                        $params = array_combine($paramNames, $matches);
-                    } else {
-                        // Fallback if param names extraction doesn't align, or for simple numeric array
-                        // This case might need adjustment based on how you want to handle unnamed params
-                        $params = $matches; 
-                    }
-                    
-                    $matchedHandler = $handler;
-                    break; // First matched route wins
-                }
-            }
-        }
-
-        if ($matchedHandler) {
-            if (is_callable($matchedHandler)) {
-                // For anonymous functions or invokable objects
-                call_user_func_array($matchedHandler, $params);
-            } elseif (is_array($matchedHandler) && count($matchedHandler) === 2) {
-                // For [ControllerClass, 'methodName']
-                $controllerClass = $matchedHandler[0];
-                $controllerMethod = $matchedHandler[1];
-
-                if (class_exists($controllerClass) && method_exists($controllerClass, $controllerMethod)) {
-                    $controllerInstance = new $controllerClass();
-                    // Pass extracted params as a single associative array to the controller method
-                    // Controller methods should expect an array, e.g., public function myMethod(array $urlParams)
-                    call_user_func_array([$controllerInstance, $controllerMethod], [$params]);
-                } else {
-                    $this->sendNotFound("Controller or method not found: {$controllerClass}::{$controllerMethod}");
-                }
-            } else {
-                $this->sendNotFound("Invalid handler for route: {$requestPath}");
-            }
-        } else {
-            $this->sendNotFound("No route found for {$requestMethod} {$requestPath}");
-        }
-    }
-
-    /**
-     * Invia una risposta 404 Not Found.
-     *
-     * @param string $message Messaggio di errore opzionale.
-     */
-    private function sendNotFound(string $message = 'Resource not found'): void {
-        // Use the static jsonResponse method for consistency
-        self::jsonResponse(['error' => $message], 404);
-    }
+// Gestione delle richieste OPTIONS per CORS
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
 }
 
+// Verifica del token CSRF
+function validateCSRFToken() {
+    $headers = getallheaders();
+    if (!isset($headers['X-CSRF-Token']) || !verify_csrf_token($headers['X-CSRF-Token'])) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'Token CSRF non valido']);
+        exit();
+    }
+    return true;
+}
+
+// Ottieni il percorso della richiesta
+$request_uri = $_SERVER['REQUEST_URI'];
+$path = parse_url($request_uri, PHP_URL_PATH);
+$path = str_replace('/BOSTARTER/backend/', '', $path);
+
+// Routing delle richieste
+// Routing delle richieste
+switch ($path) {
+    case 'auth/login.php':
+        // Il login non richiede CSRF per permettere l'accesso iniziale
+        require_once __DIR__ . '/controllers/AuthController.php';
+        $controller = new AuthController();
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($controller->login($data));
+        break;
+
+    case 'auth/register.php':
+        // La registrazione non richiede CSRF per permettere l'accesso iniziale
+        require_once __DIR__ . '/controllers/AuthController.php';
+        $controller = new AuthController();
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($controller->register($data));
+        break;
+
+    case 'projects/create.php':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            validateCSRFToken();
+        }
+        require_once __DIR__ . '/controllers/ProjectController.php';
+        $controller = new ProjectController();
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($controller->createProject($data));
+        break;
+
+    case 'projects/get_by_creator.php':
+        // Le richieste GET non richiedono CSRF
+        require_once __DIR__ . '/controllers/ProjectController.php';
+        $controller = new ProjectController();
+        $creator_id = $_GET['creator_id'] ?? null;
+        if ($creator_id) {
+            echo json_encode($controller->getCreatorProjects($creator_id));
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'ID creatore mancante']);
+        }
+        break;
+
+    case 'projects/fund.php':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            validateCSRFToken();
+        }
+        require_once __DIR__ . '/controllers/ProjectController.php';
+        $controller = new ProjectController();
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($controller->fundProject($data));
+        break;
+
+    case 'projects/add_reward.php':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            validateCSRFToken();
+        }
+        require_once __DIR__ . '/controllers/ProjectController.php';
+        $controller = new ProjectController();
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($controller->addProjectReward($data));
+        break;
+
+    case 'projects/publish.php':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            validateCSRFToken();
+        }
+        require_once __DIR__ . '/controllers/ProjectController.php';
+        $controller = new ProjectController();
+        $data = json_decode(file_get_contents('php://input'), true);
+        echo json_encode($controller->publishProject($data['project_id']));
+        break;
+
+    default:
+        http_response_code(404);
+        echo json_encode(['status' => 'error', 'message' => 'Endpoint non trovato']);
+        break;
+}
 ?>

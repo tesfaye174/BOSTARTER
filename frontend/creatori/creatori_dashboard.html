@@ -1,362 +1,1170 @@
 <!DOCTYPE html>
 <html lang="it">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Creatori - BOSTARTER</title>
-    <meta name="description" content="Dashboard per creatori di BOSTARTER - Gestisci i tuoi progetti, ricompense e profilo">
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="creatori.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="../images/logo1.svg" type="image/x-icon">
-</head>
-
-<body>
-    <header class="main-header sticky" role="banner">
-        <div class="header-content">
-            <div class="logo">
-                <a href="../index.html" aria-label="Homepage BOSTARTER">
-                    <img src="../images/logo1.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
-                    <span class="logo-text">BOSTARTER</span>
-                </a>
-            </div>
-            <div class="search-bar">
-                <form action="#" method="get" role="search" aria-label="Cerca progetti">
-                    <input type="search" id="search-input" name="q" placeholder="Cerca progetti, ricompense..."
-                        aria-label="Campo di ricerca" autocomplete="on" tabindex="1">
-                    <button type="submit" aria-label="Avvia ricerca" class="search-btn">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </form>
-            </div>
-            <nav class="user-nav" aria-label="Navigazione utente">
-                <ul>
-                    <li><a href="../index.html">Home</a></li>
-                    <li><a href="#" id="login-link" data-modal="login-modal">Accedi</a></li>
-                    <li><a href="#" id="register-link" class="cta-button-secondary" data-modal="register-modal">Registrati</a></li>
-                    <li><span id="user-greeting" class="hidden-by-default" aria-live="polite"></span></li>
-                </ul>
-            </nav>
-            <button class="mobile-menu-btn" aria-label="Apri menu" aria-expanded="false" aria-controls="mobile-menu">
-                <i class="fas fa-bars"></i>
-            </button>
-            <nav class="mobile-menu" id="mobile-menu" aria-label="Navigazione mobile" aria-hidden="true">
-                <ul>
-                    <li><a href="../index.html">Home</a></li>
-                    <li><a href="#" id="login-link-mobile" data-modal="login-modal">Accedi</a></li>
-                    <li><a href="#" id="register-link-mobile" class="cta-button-secondary" data-modal="register-modal">Registrati</a></li>
-                </ul>
-            </nav>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Creatore - BOSTARTER</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { primary: "#3176FF", secondary: "" },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/creatori.js"></script>
+    <style>
+      :where([class^="ri-"])::before { content: "\f3c2"; }
+      body {
+          font-family: 'Inter', sans-serif;
+      }
+      .custom-checkbox {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 20px;
+          height: 20px;
+          border: 2px solid #d1d5db;
+          border-radius: 4px;
+          outline: none;
+          cursor: pointer;
+          position: relative;
+      }
+      .custom-checkbox:checked {
+          background-color: #3176FF;
+          border-color: #3176FF;
+      }
+      .custom-checkbox:checked::after {
+          content: '';
+          position: absolute;
+          left: 6px;
+          top: 2px;
+          width: 6px;
+          height: 10px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: rotate(45deg);
+      }
+      .custom-switch {
+          position: relative;
+          display: inline-block;
+          width: 48px;
+          height: 24px;
+      }
+      .custom-switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+      }
+      .switch-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #e5e7eb;
+          transition: .4s;
+          border-radius: 24px;
+      }
+      .switch-slider:before {
+          position: absolute;
+          content: "";
+          height: 18px;
+          width: 18px;
+          left: 3px;
+          bottom: 3px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+      }
+      input:checked + .switch-slider {
+          background-color: #3176FF;
+      }
+      input:checked + .switch-slider:before {
+          transform: translateX(24px);
+      }
+      .tab-active {
+          color: #3176FF;
+          border-bottom: 2px solid #3176FF;
+      }
+      .progress-bar {
+          height: 8px;
+          border-radius: 4px;
+          background-color: #e5e7eb;
+          overflow: hidden;
+      }
+      .progress-fill {
+          height: 100%;
+          background-color: #3176FF;
+          border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+      <div
+        class="container mx-auto px-4 py-3 flex items-center justify-between"
+      >
+        <div class="flex items-center">
+          <a href="../index.html" class="font-['Pacifico'] text-2xl text-primary"
+            >BOSTARTER</a
+          >
+          <nav class="hidden md:flex ml-10">
+            <a
+              href="../index.html"
+              class="px-4 py-2 text-gray-800 font-medium hover:text-primary"
+              >Home</a
+            >
+            <a
+              href="../progetti/progetti.html"
+              class="px-4 py-2 text-gray-800 font-medium hover:text-primary"
+              >Progetti</a
+            >
+            <a
+              href="../esplora/esplora.html"
+              class="px-4 py-2 text-gray-800 font-medium hover:text-primary"
+              >Esplora</a
+            >
+            <a
+              href="./creatori_dashboard.html"
+              class="px-4 py-2 text-primary font-medium"
+              >Dashboard Creatore</a
+            >
+          </nav>
         </div>
+        <div class="flex items-center">
+          <div class="relative mr-4 hidden md:block w-64">
+            <input
+              type="text"
+              placeholder="Cerca progetti..."
+              class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+            />
+            <div
+              class="absolute right-3 top-2.5 w-5 h-5 flex items-center justify-center text-gray-500"
+            >
+              <i class="ri-search-line"></i>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <div id="user-info-container" class="flex items-center">
+              <!-- User avatar and name will be injected here by JS -->
+            </div>
+            <a href="#" id="logout-link" class="ml-4 px-4 py-2 text-gray-800 font-medium hover:text-primary">Logout</a>
+          </div>
+          <button id="mobile-menu-button" class="ml-4 p-2 rounded-full md:hidden">
+            <div class="w-6 h-6 flex items-center justify-center">
+              <i class="ri-menu-line text-gray-800"></i>
+            </div>
+          </button>
+        </div>
+      </div>
     </header>
 
-    <main id="main-content">
-        <!-- Sidebar di navigazione dashboard -->
-        <aside class="dashboard-sidebar">
-            <nav aria-label="Navigazione dashboard">
-                <ul>
-                    <li><a href="#dashboard-overview" class="sidebar-link"><i class="fas fa-tachometer-alt"></i>
-                            Riepilogo</a></li>
-                    <li><a href="#my-projects" class="sidebar-link"><i class="fas fa-folder-open"></i> I miei
-                            progetti</a></li>
-                    <li><a href="#start-project-form" class="sidebar-link"><i class="fas fa-plus-circle"></i> Nuovo
-                            progetto</a></li>
-                    <li><a href="#reward-section" class="sidebar-link"><i class="fas fa-gift"></i> Ricompense</a>
-                    </li>
-                    <li><a href="#user-skills-section" class="sidebar-link"><i class="fas fa-user-cog"></i> Le mie
-                            skill</a></li>
-                    <li><a href="#hardware-components-section" class="sidebar-link"><i class="fas fa-microchip"></i>
-                            Hardware</a></li>
-                    <li><a href="#software-profiles-section" class="sidebar-link"><i class="fas fa-users"></i> Profili
-                            software</a></li>
-                </ul>
-            </nav>
-        </aside>
-        <!-- Contenuto principale dashboard -->
-        <section class="dashboard-content">
-            <!-- Riepilogo dashboard -->
-            <section id="dashboard-overview" class="dashboard-overview" aria-label="Riepilogo Creatore">
-                <h2 class="section-title">Benvenuto nella tua Dashboard</h2>
-                <div class="dashboard-stats">
-                    <div class="stat-card">
-                        <i class="fas fa-folder-open"></i>
-                        <div class="stat-value" id="stat-projects">0</div>
-                        <div class="stat-label">Progetti creati</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-gift"></i>
-                        <div class="stat-value" id="stat-rewards">0</div>
-                        <div class="stat-label">Ricompense</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-users"></i>
-                        <div class="stat-value" id="stat-supporters">0</div>
-                        <div class="stat-label">Sostenitori</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-euro-sign"></i>
-                        <div class="stat-value" id="stat-funds">0</div>
-                        <div class="stat-label">Totale raccolto</div>
-                    </div>
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+      <div class="flex flex-col md:flex-row gap-8">
+        <!-- Sidebar -->
+        <div class="md:w-1/4">
+          <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex flex-col items-center">
+              <div
+                class="w-24 h-24 rounded-full bg-gray-200 mb-4 overflow-hidden"
+              >
+                <img
+                  src="https://readdy.ai/api/search-image?query=professional%2520headshot%2520of%2520a%2520young%2520Italian%2520man%2520with%2520short%2520dark%2520hair%2520and%2520a%2520friendly%2520smile%252C%2520business%2520casual%2520attire%252C%2520neutral%2520background%252C%2520high-quality%2520portrait%2520photography&width=200&height=200&seq=1&orientation=squarish"
+                  alt="Foto Profilo"
+                  class="w-full h-full object-cover object-top"
+                />
+              </div>
+              <h2 id="sidebar-username" class="text-xl font-semibold text-gray-800 mb-1">
+                Matteo Ricci
+              </h2>
+              <p id="sidebar-member-since" class="text-gray-500 text-sm mb-4">Membro dal 12 Marzo 2024</p>
+              <button
+                class="w-full px-4 py-2 bg-primary text-white font-medium rounded-button whitespace-nowrap hover:bg-opacity-90 transition mb-2"
+              >
+                Modifica Profilo
+              </button>
+              <button
+                class="w-full px-4 py-2 bg-white text-primary border border-primary font-medium rounded-button whitespace-nowrap hover:bg-gray-50 transition"
+              >
+                Condividi Profilo
+              </button>
+            </div>
+            <div class="mt-6 pt-6 border-t border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                  <span class="text-gray-600">Progetti creati</span>
+                  <span id="sidebar-projects-created" class="font-semibold text-gray-800">-</span>
                 </div>
-            </section>
-            <!-- Lista progetti -->
-            <section id="my-projects" class="form-section" aria-label="I miei progetti">
-                <h2 class="section-title">I miei progetti</h2>
-                <div id="my-projects-list">
-                    <!-- Progetti caricati dinamicamente -->
+                <div class="flex justify-between items-center mb-4">
+                  <span class="text-gray-600">Progetti finanziati</span>
+                  <span id="sidebar-projects-funded" class="font-semibold text-gray-800">-</span>
                 </div>
-            </section>
-
-            <section class="creator-hero" aria-label="Diventa un creatore">
-                <div class="hero-content">
-                    <h1>Lancia il Tuo Progetto su BOSTARTER</h1>
-                    <p>Hai un'idea creativa che merita di vedere la luce? BOSTARTER è la piattaforma che ti aiuta a
-                        raccogliere fondi e a costruire una community attorno al tuo progetto.</p>
-                    <a href="#start-project-form" class="cta-button" tabindex="1">Inizia Ora</a>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Totale investito</span>
+                  <span id="sidebar-total-invested" class="font-semibold text-gray-800">-</span>
                 </div>
-            </section>
+              </div>
+          </div>
+          <div class="bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+              Menu Rapido
+            </h3>
+            <ul class="space-y-2">
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center text-gray-700 hover:text-primary py-2 transition"
+                >
+                  <div class="w-5 h-5 flex items-center justify-center mr-3">
+                    <i class="ri-dashboard-line"></i>
+                  </div>
+                  <span>Dashboard</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center text-gray-700 hover:text-primary py-2 transition"
+                >
+                  <div class="w-5 h-5 flex items-center justify-center mr-3">
+                    <i class="ri-lightbulb-line"></i>
+                  </div>
+                  <span>I Miei Progetti</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center text-gray-700 hover:text-primary py-2 transition"
+                >
+                  <div class="w-5 h-5 flex items-center justify-center mr-3">
+                    <i class="ri-hand-coin-line"></i>
+                  </div>
+                  <span>Investimenti</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center text-gray-700 hover:text-primary py-2 transition"
+                >
+                  <div class="w-5 h-5 flex items-center justify-center mr-3">
+                    <i class="ri-wallet-3-line"></i>
+                  </div>
+                  <span>Metodi di Pagamento</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center text-gray-700 hover:text-primary py-2 transition"
+                >
+                  <div class="w-5 h-5 flex items-center justify-center mr-3">
+                    <i class="ri-notification-line"></i>
+                  </div>
+                  <span>Notifiche</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center text-gray-700 hover:text-primary py-2 transition"
+                >
+                  <div class="w-5 h-5 flex items-center justify-center mr-3">
+                    <i class="ri-settings-line"></i>
+                  </div>
+                  <span>Impostazioni</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  class="flex items-center text-gray-700 hover:text-primary py-2 transition"
+                >
+                  <div class="w-5 h-5 flex items-center justify-center mr-3">
+                    <i class="ri-question-line"></i>
+                  </div>
+                  <span>Aiuto e Supporto</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
 
-            <section id="creator-guide" class="how-it-works-section" aria-label="Guida per creatori">
-                <h2 class="section-title">Guida per Creatori</h2>
-                <div class="steps-container">
-                    <div class="step-card" tabindex="2">
-                        <i class="fas fa-list-ol"></i>
-                        <h3>1. Scegli la categoria</h3>
-                        <p>Inserisci i dettagli del progetto e seleziona la categoria più adatta.</p>
+        <!-- Main Content -->
+        <div class="md:w-3/4">
+          <!-- Tabs Navigation -->
+          <div class="bg-white rounded-lg shadow-sm mb-6">
+            <div class="border-b border-gray-200">
+              <div class="flex overflow-x-auto">
+                <button
+                  class="px-6 py-4 text-gray-800 font-medium tab-active whitespace-nowrap"
+                >
+                  Panoramica
+                </button>
+                <button
+                  class="px-6 py-4 text-gray-500 font-medium hover:text-gray-800 whitespace-nowrap"
+                >
+                  Informazioni Personali
+                </button>
+                <button
+                  class="px-6 py-4 text-gray-500 font-medium hover:text-gray-800 whitespace-nowrap"
+                >
+                  I Miei Progetti
+                </button>
+                <button
+                  class="px-6 py-4 text-gray-500 font-medium hover:text-gray-800 whitespace-nowrap"
+                >
+                  Progetti Finanziati
+                </button>
+                <button
+                  class="px-6 py-4 text-gray-500 font-medium hover:text-gray-800 whitespace-nowrap"
+                >
+                  Impostazioni
+                </button>
+              </div>
+            </div>
+
+            <!-- Dashboard Overview -->
+            <div class="p-6">
+              <h2 id="welcome-title" class="text-2xl font-bold text-gray-800 mb-6">
+                Benvenuto, Matteo!
+              </h2>
+
+              <!-- Stats Cards -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white border border-gray-200 rounded-lg p-5">
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-500 font-medium">Progetti Attivi</h3>
+                    <div
+                      class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center"
+                    >
+                      <div
+                        class="w-5 h-5 flex items-center justify-center text-primary"
+                      >
+                        <i class="ri-rocket-line"></i>
+                      </div>
                     </div>
-                    <div class="step-card" tabindex="3">
-                        <i class="fas fa-gift"></i>
-                        <h3>2. Definisci le ricompense</h3>
-                        <p>Crea ricompense interessanti per i tuoi sostenitori.</p>
-                    </div>
-                    <div class="step-card" tabindex="4">
-                        <i class="fas fa-rocket"></i>
-                        <h3>3. Lancia la campagna</h3>
-                        <p>Pubblica e condividi il tuo progetto con il mondo!</p>
-                    </div>
-                    <div class="step-card" tabindex="5">
-                        <i class="fas fa-flag-checkered"></i>
-                        <h3>4. Raggiungi l'obiettivo</h3>
-                        <p>Realizza la tua idea con il supporto della community.</p>
-                    </div>
+                  </div>
+                  <p class="text-3xl font-bold text-gray-800">2</p>
+                  <p class="text-sm text-gray-500 mt-1">+1 nell'ultimo mese</p>
                 </div>
-            </section>
 
-            <section id="start-project-form" class="form-section" aria-label="Crea la tua pagina progetto">
-                <h2 class="section-title">Crea la Tua Pagina Progetto</h2>
-                <form id="project-creation-form" class="modern-form" autocomplete="on">
-                    <div class="form-group">
-                        <label for="project-title">Titolo del Progetto:<span class="sr-only"> (campo
-                                obbligatorio)</span></label>
-                        <input type="text" id="project-title" name="project-title" required autofocus
-                            aria-label="Titolo del Progetto" autocomplete="on" aria-required="true" 
-                            placeholder="Inserisci un titolo accattivante">
+                <div class="bg-white border border-gray-200 rounded-lg p-5">
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-500 font-medium">Fondi Raccolti</h3>
+                    <div
+                      class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center"
+                    >
+                      <div
+                        class="w-5 h-5 flex items-center justify-center text-green-600"
+                      >
+                        <i class="ri-money-euro-circle-line"></i>
+                      </div>
                     </div>
+                  </div>
+                  <p class="text-3xl font-bold text-gray-800">€ 18.750</p>
+                  <p class="text-sm text-green-600 mt-1">
+                    +€ 4.250 nell'ultimo mese
+                  </p>
+                </div>
 
-                    <div class="form-group">
-                        <label for="project-category">Categoria:<span class="sr-only"> (campo obbligatorio)</span></label>
-                        <select id="project-category" name="project-category" required aria-label="Categoria"
-                            aria-required="true">
-                            <option value="">Seleziona una categoria...</option>
-                            <option value="arte">Arte</option>
-                            <option value="fumetti">Fumetti</option>
-                            <option value="artigianato">Artigianato</option>
-                            <option value="danza">Danza</option>
-                            <option value="design">Design</option>
-                            <option value="moda">Moda</option>
-                            <option value="film">Film</option>
-                            <option value="cibo">Cibo</option>
-                            <option value="giochi">Giochi</option>
-                            <option value="giornalismo">Giornalismo</option>
-                            <option value="musica">Musica</option>
-                            <option value="fotografia">Fotografia</option>
-                            <option value="editoriale">Editoriale</option>
-                            <option value="tecnologia">Tecnologia</option>
-                            <option value="teatro">Teatro</option>
-                        </select>
+                <div class="bg-white border border-gray-200 rounded-lg p-5">
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-gray-500 font-medium">Sostenitori</h3>
+                    <div
+                      class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center"
+                    >
+                      <div
+                        class="w-5 h-5 flex items-center justify-center text-purple-600"
+                      >
+                        <i class="ri-user-heart-line"></i>
+                      </div>
                     </div>
+                  </div>
+                  <p class="text-3xl font-bold text-gray-800">86</p>
+                  <p class="text-sm text-purple-600 mt-1">
+                    +12 nell'ultimo mese
+                  </p>
+                </div>
+              </div>
 
-                    <div class="form-group">
-                        <label for="project-description">Descrizione Breve (max 280 caratteri):<span class="sr-only"> (campo
-                                obbligatorio)</span></label>
-                        <textarea id="project-description" name="project-description" rows="3" maxlength="280" required
-                            aria-label="Descrizione breve" aria-required="true" 
-                            placeholder="Descrivi brevemente il tuo progetto"></textarea>
-                    </div>
+              <!-- Progress Chart -->
+              <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    Andamento Progetti
+                  </h3>
+                  <select
+                    class="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option>Ultimi 30 giorni</option>
+                    <option>Ultimi 3 mesi</option>
+                    <option>Ultimi 6 mesi</option>
+                    <option>Ultimo anno</option>
+                  </select>
+                </div>
+                <div id="progressChart" class="w-full h-64"></div>
+              </div>
 
-                    <div class="form-row">
-                        <div class="form-group form-group-half">
-                            <label for="funding-goal">Obiettivo di Finanziamento (€):<span class="sr-only"> (campo
-                                    obbligatorio)</span></label>
-                            <input type="number" id="funding-goal" name="funding-goal" min="1" required
-                                aria-label="Obiettivo di Finanziamento" aria-required="true" placeholder="es. 5000">
+              <!-- Active Projects -->
+              <div class="mb-8">
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    Progetti Attivi
+                  </h3>
+                  <a href="#" class="text-primary font-medium hover:underline"
+                    >Vedi tutti</a
+                  >
+                </div>
+
+                <div class="space-y-4">
+                  <!-- Project 1 -->
+                  <div class="bg-white border border-gray-200 rounded-lg p-5">
+                    <div class="flex flex-col md:flex-row">
+                      <div class="md:w-1/4 mb-4 md:mb-0 md:mr-6">
+                        <div class="h-32 rounded overflow-hidden">
+                          <img
+                            src="https://readdy.ai/api/search-image?query=a%2520modern%2520smart%2520home%2520device%2520with%2520sleek%2520design%252C%2520displayed%2520on%2520a%2520minimalist%2520white%2520background%252C%2520professional%2520product%2520photography&width=300&height=200&seq=2&orientation=landscape"
+                            alt="SmartHome Hub"
+                            class="w-full h-full object-cover object-top"
+                          />
                         </div>
-
-                        <div class="form-group form-group-half">
-                            <label for="campaign-duration">Durata Campagna (giorni):<span class="sr-only"> (campo
-                                    obbligatorio)</span></label>
-                            <input type="number" id="campaign-duration" name="campaign-duration" min="1" max="60" value="30"
-                                required aria-label="Durata Campagna" aria-required="true">
+                      </div>
+                      <div class="md:w-3/4">
+                        <div class="flex justify-between items-start mb-2">
+                          <h4 class="text-lg font-semibold text-gray-800">
+                            SmartHome Hub
+                          </h4>
+                          <span
+                            class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                            >Attivo</span
+                          >
                         </div>
-                    </div>
-
-                    <button type="submit" class="cta-button" aria-label="Crea Progetto">Crea Progetto</button>
-                </form>
-            </section>
-
-            <!-- Form aggiunta ricompensa -->
-            <section id="reward-section" class="form-section">
-                <h2 class="section-title">Aggiungi una Ricompensa al Progetto</h2>
-                <form id="reward-form" class="modern-form">
-                    <div class="form-group">
-                        <label for="reward-project-id">ID Progetto:<span class="sr-only"> (campo
-                                obbligatorio)</span></label>
-                        <input type="number" id="reward-project-id" name="reward-project-id" required aria-required="true" 
-                            placeholder="Inserisci l'ID del progetto">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="reward-code">Codice Ricompensa:<span class="sr-only"> (campo
-                                obbligatorio)</span></label>
-                        <input type="text" id="reward-code" name="reward-code" required aria-required="true" 
-                            placeholder="Codice univoco per la ricompensa">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="reward-description">Descrizione:<span class="sr-only"> (campo
-                                obbligatorio)</span></label>
-                        <textarea id="reward-description" name="reward-description" rows="2" required
-                            aria-required="true" placeholder="Descrivi cosa riceveranno i sostenitori"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="reward-photo">URL Foto (opzionale):</label>
-                        <input type="url" id="reward-photo" name="reward-photo" aria-label="URL Foto"
-                            placeholder="https://esempio.com/immagine.jpg">
-                    </div>
-
-                    <button type="submit" class="cta-button">Aggiungi Ricompensa</button>
-                </form>
-
-                <div class="reward-viewer">
-                    <h3>Visualizza Ricompense</h3>
-                    <div class="form-row">
-                        <div class="form-group form-group-half">
-                            <label for="rewards-project-id-view">ID Progetto:</label>
-                            <input type="number" id="rewards-project-id-view" name="rewards-project-id-view"
-                                placeholder="Inserisci l'ID del progetto">
+                        <p class="text-gray-600 text-sm mb-4">
+                          Un dispositivo centrale per controllare tutti i tuoi
+                          dispositivi smart home con un'interfaccia intuitiva e
+                          comandi vocali avanzati.
+                        </p>
+                        <div class="mb-3">
+                          <div class="flex justify-between text-sm mb-1">
+                            <span class="font-medium">€ 12.450 raccolti</span>
+                            <span class="text-gray-500">di € 20.000</span>
+                          </div>
+                          <div class="progress-bar">
+                            <div class="progress-fill" style="width: 62%"></div>
+                          </div>
                         </div>
-                        <div class="form-group form-group-half" style="display: flex; align-items: flex-end;">
-                            <button id="load-rewards-btn" class="cta-button">Carica Ricompense</button>
+                        <div
+                          class="flex flex-wrap justify-between items-center"
+                        >
+                          <div class="flex items-center mr-4">
+                            <div
+                              class="w-5 h-5 flex items-center justify-center text-green-500 mr-1"
+                            >
+                              <i class="ri-time-line"></i>
+                            </div>
+                            <span class="text-sm text-gray-600"
+                              >18 giorni rimasti</span
+                            >
+                          </div>
+                          <div class="flex items-center mr-4">
+                            <div
+                              class="w-5 h-5 flex items-center justify-center text-gray-500 mr-1"
+                            >
+                              <i class="ri-user-line"></i>
+                            </div>
+                            <span class="text-sm text-gray-600"
+                              >64 sostenitori</span
+                            >
+                          </div>
+                          <div class="flex items-center mt-2 md:mt-0">
+                            <a
+                              href="#"
+                              class="text-primary text-sm font-medium hover:underline"
+                              >Gestisci progetto</a
+                            >
+                          </div>
                         </div>
+                      </div>
                     </div>
-                    <div id="rewards-list" class="rewards-container"></div>
+                  </div>
+
+                  <!-- Project 2 -->
+                  <div class="bg-white border border-gray-200 rounded-lg p-5">
+                    <div class="flex flex-col md:flex-row">
+                      <div class="md:w-1/4 mb-4 md:mb-0 md:mr-6">
+                        <div class="h-32 rounded overflow-hidden">
+                          <img
+                            src="https://readdy.ai/api/search-image?query=a%2520modern%2520mobile%2520app%2520interface%2520for%2520health%2520tracking%2520displayed%2520on%2520a%2520smartphone%252C%2520with%2520clean%2520design%2520and%2520health%2520metrics%2520visualization%252C%2520professional%2520mockup%2520on%2520white%2520background&width=300&height=200&seq=3&orientation=landscape"
+                            alt="HealthTrack App"
+                            class="w-full h-full object-cover object-top"
+                          />
+                        </div>
+                      </div>
+                      <div class="md:w-3/4">
+                        <div class="flex justify-between items-start mb-2">
+                          <h4 class="text-lg font-semibold text-gray-800">
+                            HealthTrack App
+                          </h4>
+                          <span
+                            class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded"
+                            >Attivo</span
+                          >
+                        </div>
+                        <p class="text-gray-600 text-sm mb-4">
+                          Un'applicazione completa per il monitoraggio della
+                          salute che integra dati da dispositivi wearable e
+                          offre consigli personalizzati.
+                        </p>
+                        <div class="mb-3">
+                          <div class="flex justify-between text-sm mb-1">
+                            <span class="font-medium">€ 6.300 raccolti</span>
+                            <span class="text-gray-500">di € 15.000</span>
+                          </div>
+                          <div class="progress-bar">
+                            <div class="progress-fill" style="width: 42%"></div>
+                          </div>
+                        </div>
+                        <div
+                          class="flex flex-wrap justify-between items-center"
+                        >
+                          <div class="flex items-center mr-4">
+                            <div
+                              class="w-5 h-5 flex items-center justify-center text-green-500 mr-1"
+                            >
+                              <i class="ri-time-line"></i>
+                            </div>
+                            <span class="text-sm text-gray-600"
+                              >24 giorni rimasti</span
+                            >
+                          </div>
+                          <div class="flex items-center mr-4">
+                            <div
+                              class="w-5 h-5 flex items-center justify-center text-gray-500 mr-1"
+                            >
+                              <i class="ri-user-line"></i>
+                            </div>
+                            <span class="text-sm text-gray-600"
+                              >22 sostenitori</span
+                            >
+                          </div>
+                          <div class="flex items-center mt-2 md:mt-0">
+                            <a
+                              href="#"
+                              class="text-primary text-sm font-medium hover:underline"
+                              >Gestisci progetto</a
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-            </section>
-            <!-- Fine visualizzazione ricompense -->
+              </div>
 
-            <!-- Sezione gestione skill utente -->
-            <section id="user-skills-section" class="form-section">
-                <h2 class="section-title">Le mie Skill</h2>
-                <div id="user-skills-list"></div>
-                <form id="add-skill-form" class="modern-form" style="margin-top:18px;">
-                    <label for="skill-select">Competenza:</label>
-                    <select id="skill-select" name="skill-select" required></select>
-                    <label for="skill-level">Livello:</label>
-                    <input type="number" id="skill-level" name="skill-level" min="0" max="5" required>
-                    <button type="submit" class="cta-button">Aggiungi Skill</button>
-                    <div id="add-skill-feedback"></div>
-                </form>
-            </section>
-            <!-- Fine sezione gestione skill utente -->
+              <!-- Recent Investments -->
+              <div>
+                <div class="flex justify-between items-center mb-6">
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    Investimenti Recenti
+                  </h3>
+                  <a href="#" class="text-primary font-medium hover:underline"
+                    >Vedi tutti</a
+                  >
+                </div>
 
-            <!-- Sezione gestione skill globali (solo admin) -->
-            <section id="admin-skills-section" class="form-section" style="display:none;">
-                <h2 class="section-title">Gestione Competenze (Admin)</h2>
-                <form id="add-global-skill-form" class="modern-form">
-                    <label for="global-skill-name">Nuova Competenza:</label>
-                    <input type="text" id="global-skill-name" name="global-skill-name" required>
-                    <button type="submit" class="cta-button">Aggiungi Competenza</button>
-                    <div id="add-global-skill-feedback"></div>
-                </form>
-            </section>
-            <!-- Fine sezione gestione skill globali -->
-
-            <!-- Sezione gestione componenti hardware (solo per progetti hardware) -->
-            <section id="hardware-components-section" class="form-section" style="display:none;">
-                <h2 class="section-title">Componenti hardware necessari (solo per progetti hardware)</h2>
-                <form id="add-hardware-component-form" class="modern-form">
-                    <label for="hardware-project-id">ID Progetto:</label>
-                    <input type="number" id="hardware-project-id" name="hardware-project-id" min="1" required>
-                    <label for="component-name">Nome componente:</label>
-                    <input type="text" id="component-name" name="component-name" required>
-                    <label for="component-description">Descrizione:</label>
-                    <textarea id="component-description" name="component-description" rows="2" required></textarea>
-                    <label for="component-price">Prezzo (€):</label>
-                    <input type="number" id="component-price" name="component-price" min="0" step="0.01" required>
-                    <label for="component-quantity">Quantità:</label>
-                    <input type="number" id="component-quantity" name="component-quantity" min="1" required>
-                    <button type="submit" class="cta-button">Aggiungi Componente</button>
-                    <div id="add-hardware-feedback"></div>
-                </form>
-                <div id="hardware-components-list"></div>
-            </section>
-            <!-- Fine sezione gestione componenti hardware -->
-
-            <!-- Sezione gestione profili richiesti per progetti software (solo creatore) -->
-            <section id="software-profiles-section" class="form-section" style="display:none;">
-                <h2 class="section-title">Profili richiesti (solo per progetti software)</h2>
-                <form id="add-profile-form" class="modern-form">
-                    <label for="profile-project-id">ID Progetto:</label>
-                    <input type="number" id="profile-project-id" name="profile-project-id" min="1" required>
-                    <label for="profile-name">Nome profilo:</label>
-                    <input type="text" id="profile-name" name="profile-name" required>
-                    <label for="profile-skill-select">Skill richiesta:</label>
-                    <select id="profile-skill-select" name="profile-skill-select" required></select>
-                    <label for="profile-skill-level">Livello richiesto:</label>
-                    <input type="number" id="profile-skill-level" name="profile-skill-level" min="0" max="5" required>
-                    <button type="submit" class="cta-button">Aggiungi Profilo</button>
-                    <div id="add-profile-feedback"></div>
-                </form>
-                <div id="profiles-list"></div>
-            </section>
-            <!-- Fine sezione gestione profili software -->
-
-        </section>
+                <div
+                  class="bg-white border border-gray-200 rounded-lg overflow-hidden"
+                >
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th
+                          scope="col"
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Progetto
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Data
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Importo
+                        </th>
+                        <th
+                          scope="col"
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Stato
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div class="w-8 h-8 rounded overflow-hidden mr-3">
+                              <img
+                                src="https://readdy.ai/api/search-image?query=a%2520compact%2520drone%2520with%2520camera%2520on%2520white%2520background%252C%2520professional%2520product%2520photography&width=50&height=50&seq=4&orientation=squarish"
+                                alt="EcoDrone"
+                                class="w-full h-full object-cover object-top"
+                              />
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">
+                              EcoDrone
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          15 Maggio 2025
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                        >
+                          € 350
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+                            >Attivo</span
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div class="w-8 h-8 rounded overflow-hidden mr-3">
+                              <img
+                                src="https://readdy.ai/api/search-image?query=a%2520modern%2520software%2520interface%2520for%2520data%2520visualization%2520on%2520white%2520background%252C%2520professional%2520mockup&width=50&height=50&seq=5&orientation=squarish"
+                                alt="DataViz Pro"
+                                class="w-full h-full object-cover object-top"
+                              />
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">
+                              DataViz Pro
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          2 Maggio 2025
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                        >
+                          € 200
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+                            >Attivo</span
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div class="w-8 h-8 rounded overflow-hidden mr-3">
+                              <img
+                                src="https://readdy.ai/api/search-image?query=a%2520modern%2520smart%2520security%2520camera%2520on%2520white%2520background%252C%2520professional%2520product%2520photography&width=50&height=50&seq=6&orientation=squarish"
+                                alt="SecureHome"
+                                class="w-full h-full object-cover object-top"
+                              />
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">
+                              SecureHome
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          18 Aprile 2025
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                        >
+                          € 300
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+                            >Attivo</span
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="flex items-center">
+                            <div class="w-8 h-8 rounded overflow-hidden mr-3">
+                              <img
+                                src="https://readdy.ai/api/search-image?query=a%2520modern%2520task%2520management%2520app%2520interface%2520on%2520white%2520background%252C%2520professional%2520mockup&width=50&height=50&seq=7&orientation=squarish"
+                                alt="TaskMaster"
+                                class="w-full h-full object-cover object-top"
+                              />
+                            </div>
+                            <div class="text-sm font-medium text-gray-900">
+                              TaskMaster
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                        >
+                          5 Aprile 2025
+                        </td>
+                        <td
+                          class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                        >
+                          € 150
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
+                            >Completato</span
+                          >
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
-    <footer class="modern-footer" role="contentinfo">
-        <div class="footer-content">
-            <div class="footer-logo">
-                <img src="../images/logo1.svg" alt="BOSTARTER Logo Footer" class="footer-logo-img" loading="lazy">
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white pt-12 pb-6 mt-12">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <div>
+            <a href="#" class="font-['Pacifico'] text-2xl text-white mb-4 block"
+              >BOSTARTER</a
+            >
+            <p class="text-gray-400 mb-4">
+              La piattaforma di crowdfunding per progetti hardware e software
+              innovativi.
+            </p>
+            <div class="flex space-x-4">
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-facebook-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-twitter-x-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-instagram-fill"></i>
+                </div>
+              </a>
+              <a href="#" class="text-gray-400 hover:text-white transition">
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-linkedin-fill"></i>
+                </div>
+              </a>
             </div>
-            <div class="footer-links">
-                <a href="#">Chi siamo</a>
-                <a href="#">Contatti</a>
-                <a href="#">FAQ</a>
-                <a href="#">Termini di Servizio</a>
-                <a href="#">Privacy Policy</a>
-            </div>
-            <div class="footer-social" aria-label="Social network">
-                <a href="#" aria-label="Facebook BOSTARTER"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" aria-label="Twitter BOSTARTER"><i class="fab fa-twitter"></i></a>
-                <a href="#" aria-label="Instagram BOSTARTER"><i class="fab fa-instagram"></i></a>
-                <a href="#" aria-label="LinkedIn BOSTARTER"><i class="fab fa-linkedin-in"></i></a>
-            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-4">Esplora</h3>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Progetti hardware</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Progetti software</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Progetti in evidenza</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Progetti recenti</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Storie di successo</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-4">Risorse</h3>
+            <ul class="space-y-2">
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Come funziona</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Crea un progetto</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Finanzia un progetto</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >Candidati come sviluppatore</a
+                >
+              </li>
+              <li>
+                <a href="#" class="text-gray-400 hover:text-white transition"
+                  >FAQ</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-4">Contatti</h3>
+            <ul class="space-y-2">
+              <li class="flex items-start">
+                <div
+                  class="w-5 h-5 flex items-center justify-center text-gray-400 mr-2 mt-0.5"
+                >
+                  <i class="ri-map-pin-line"></i>
+                </div>
+                <span class="text-gray-400"
+                  >Via dell'Innovazione 42, Milano, Italia</span
+                >
+              </li>
+              <li class="flex items-start">
+                <div
+                  class="w-5 h-5 flex items-center justify-center text-gray-400 mr-2 mt-0.5"
+                >
+                  <i class="ri-mail-line"></i>
+                </div>
+                <span class="text-gray-400">info@bostarter.it</span>
+              </li>
+              <li class="flex items-start">
+                <div
+                  class="w-5 h-5 flex items-center justify-center text-gray-400 mr-2 mt-0.5"
+                >
+                  <i class="ri-phone-line"></i>
+                </div>
+                <span class="text-gray-400">+39 02 1234567</span>
+              </li>
+            </ul>
+          </div>
         </div>
-        <hr style="border: none; border-top: 1.5px solid #e6f0ff33; margin: 1.5rem 0 0.7rem 0; width: 90%; opacity: 0.5;">
-        <p class="copyright-text">&copy; <span id="current-year">2024</span> BOSTARTER. Tutti i diritti riservati.</p>
+        <div
+          class="pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center"
+        >
+          <p class="text-gray-400 text-sm mb-4 md:mb-0">
+            © 2025 BOSTARTER. Tutti i diritti riservati.
+          </p>
+          <div class="flex space-x-6">
+            <a
+              href="#"
+              class="text-gray-400 hover:text-white text-sm transition"
+              >Privacy Policy</a
+            >
+            <a
+              href="#"
+              class="text-gray-400 hover:text-white text-sm transition"
+              >Termini di Servizio</a
+            >
+            <a
+              href="#"
+              class="text-gray-400 hover:text-white text-sm transition"
+              >Cookie Policy</a
+            >
+          </div>
+        </div>
+      </div>
     </footer>
 
-    <button id="theme-toggle" title="Cambia tema (Chiaro/Scuro)" aria-label="Attiva tema scuro/chiaro"><i class="fas fa-moon"></i></button>
-
-    <script src="creatori.js"></script>
     <script>
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-    </script>
-</body>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Mobile menu toggle
+        const menuButton =
+          document.querySelector(".ri-menu-line").parentElement.parentElement;
+        const mobileNav = document.querySelector("nav");
+        menuButton.addEventListener("click", function () {
+          mobileNav.classList.toggle("hidden");
+        });
 
+        // Progress Chart
+        const progressChart = echarts.init(document.getElementById("progressChart"));
+        const option = {
+          animation: false,
+          tooltip: {
+            trigger: "axis",
+            backgroundColor: "rgba(255, 255, 255, 0.8)",
+            borderColor: "#ddd",
+            borderWidth: 1,
+            textStyle: {
+              color: "#1f2937",
+            },
+          },
+          grid: {
+            left: "3%",
+            right: "4%",
+            bottom: "3%",
+            top: "3%",
+            containLabel: true,
+          },
+          xAxis: {
+            type: "category",
+            boundaryGap: false,
+            data: [
+              "21/04",
+              "28/04",
+              "05/05",
+              "12/05",
+              "19/05",
+              "26/05",
+              "02/05",
+              "09/05",
+              "16/05",
+              "21/05",
+            ],
+            axisLine: {
+              lineStyle: {
+                color: "#ddd",
+              },
+            },
+            axisLabel: {
+              color: "#1f2937",
+            },
+          },
+          yAxis: {
+            type: "value",
+            axisLine: {
+              lineStyle: {
+                color: "#ddd",
+              },
+            },
+            axisLabel: {
+              color: "#1f2937",
+              formatter: "€ {value}",
+            },
+            splitLine: {
+              lineStyle: {
+                color: "#eee",
+              },
+            },
+          },
+          series: [
+            {
+              name: "SmartHome Hub",
+              type: "line",
+              stack: "Total",
+              smooth: true,
+              lineStyle: {
+                width: 2,
+                color: "rgba(87, 181, 231, 1)",
+              },
+              areaStyle: {
+                color: {
+                  type: "linear",
+                  x: 0,
+                  y: 0,
+                  x2: 0,
+                  y2: 1,
+                  colorStops: [
+                    {
+                      offset: 0,
+                      color: "rgba(87, 181, 231, 0.2)",
+                    },
+                    {
+                      offset: 1,
+                      color: "rgba(87, 181, 231, 0.05)",
+                    },
+                  ],
+                },
+              },
+              emphasis: {
+                focus: "series",
+              },
+              data: [3200, 4500, 5800, 6900, 8100, 9300, 10200, 11000, 11800, 12450],
+            },
+            {
+              name: "HealthTrack App",
+              type: "line",
+              stack: "Total",
+              smooth: true,
+              lineStyle: {
+                width: 2,
+                color: "rgba(141, 211, 199, 1)",
+              },
+              areaStyle: {
+                color: {
+                  type: "linear",
+                  x: 0,
+                  y: 0,
+                  x2: 0,
+                  y2: 1,
+                  colorStops: [
+                    {
+                      offset: 0,
+                      color: "rgba(141, 211, 199, 0.2)",
+                    },
+                    {
+                      offset: 1,
+                      color: "rgba(141, 211, 199, 0.05)",
+                    },
+                  ],
+                },
+              },
+              emphasis: {
+                focus: "series",
+              },
+              data: [1500, 2200, 2800, 3400, 3900, 4500, 5000, 5400, 5900, 6300],
+            },
+          ],
+        };
+        progressChart.setOption(option);
+
+        // Responsive chart
+        window.addEventListener("resize", function () {
+          progressChart.resize();
+        });
+      });
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const menuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.querySelector('.hidden.md\:flex.ml-10'); // Adjust selector as needed
+
+        if (menuButton && mobileMenu) {
+            menuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+        // Check session and display user info
+        checkSession().then(userData => {
+            if (userData && userData.role === 'creator') {
+                displayUserInfo(userData, 'user-info-container');
+                // Initialize other creator-specific dashboard functionalities here
+                // e.g., loadProjects(), loadRewards(), etc.
+            } else {
+                // If not a creator or not logged in, redirect to login or home
+                // You might want to show a message before redirecting
+                alert('Accesso non autorizzato o sessione scaduta. Verrai reindirizzato alla pagina di login.');
+                window.location.href = '../index.html'; // Or your login page
+            }
+        }).catch(error => {
+            console.error('Errore di sessione:', error);
+            alert('Errore durante la verifica della sessione. Verrai reindirizzato alla pagina di login.');
+            window.location.href = '../index.html'; // Or your login page
+        });
+
+        // Logout functionality
+        const logoutLink = document.getElementById('logout-link');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                logoutUser("frontend/index.html");
+            });
+        }
+
+        // ECharts - Andamento Progetti (Example)
+        var chartDom = document.getElementById('progressChart');
+        if (chartDom) {
+            var myChart = echarts.init(chartDom);
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['Fondi Raccolti', 'Sostenitori']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: 'Fondi Raccolti',
+                        type: 'line',
+                        stack: 'Total',
+                        smooth: true,
+                        data: [1200, 1320, 1010, 1340, 900, 2300, 2100]
+                    },
+                    {
+                        name: 'Sostenitori',
+                        type: 'line',
+                        stack: 'Total',
+                        smooth: true,
+                        data: [22, 18, 19, 23, 29, 33, 31]
+                    }
+                ]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', function() {
+                myChart.resize();
+            });
+        }
+      });
+    </script>
+  </body>
 </html>

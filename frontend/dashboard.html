@@ -73,40 +73,25 @@
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
         
-        // Toggle menu mobile
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        const mobileMenu = document.querySelector('.mobile-menu');
-        
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', function() {
-                mobileMenu.classList.toggle('open');
-                const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
-                mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
-            });
-        }
-        
-        // Sincronizza il logout tra menu desktop e mobile
-        const logoutLink = document.getElementById('logout-link');
-        const mobileLogoutLink = document.getElementById('mobile-logout-link');
-        
-        if (logoutLink && mobileLogoutLink) {
-            const logoutHandler = function(e) {
-                e.preventDefault();
-                // Implementa qui la logica di logout
-                sessionStorage.removeItem('userType');
-                window.location.href = '../index.html';
-            };
-            
-            logoutLink.addEventListener('click', logoutHandler);
-            mobileLogoutLink.addEventListener('click', logoutHandler);
-        }
-        
-        // Logica per mostrare dashboard utente o creatore
-        function renderDashboard() {
-            // Esempio: recupera tipo utente da localStorage/sessionStorage
-            const userType = sessionStorage.getItem('userType') || 'user';
+        // Verifica sessione utente
+        fetch('../backend/user.php')
+        .then(response => {
+            if(!response.ok) throw new Error('Sessione scaduta');
+            return response.json();
+        })
+        .then(userData => {
+            sessionStorage.setItem('userRole', userData.role);
+            renderDashboard(userData);
+        })
+        .catch(error => {
+            alert(`${error}. Reindirizzamento al login...`);
+            window.location.href = '../index.html';
+        });
+
+        function renderDashboard(userData) {
             const dashboardContent = document.getElementById('dashboard-content');
-            if (userType === 'creator') {
+            // Utilizza userData.role per differenziare utente e creatore
+            if (userData.role === 'creator') {
                 document.getElementById('dashboard-title').textContent = 'Dashboard Creatore';
                 document.getElementById('dashboard-description').textContent = 'Gestisci i tuoi progetti, crea nuove campagne e monitora i tuoi sostenitori.';
                 dashboardContent.innerHTML = `
@@ -127,7 +112,7 @@
                 `;
             }
         }
-        renderDashboard();
+        // Non chiamare renderDashboard() qui, verrà chiamata dopo il fetch
         
         // Aggiungi classe per animazioni
         document.addEventListener('DOMContentLoaded', function() {

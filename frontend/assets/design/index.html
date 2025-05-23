@@ -4,15 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Design - BOSTARTER</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Categoria: Design</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
-    </header>
-    <main>
-        <p>Benvenuto nella sezione Design di BOSTARTER. Qui troverai progetti dedicati al mondo del design.</p>
-    </main>
+    <!-- Banner Interattivo -->
+    <div class="interactive-banner">
+        <h1>Esplora il Design Contemporaneo</h1>
+        <p>Scopri progetti innovativi e soluzioni creative</p>
+    </div>
+
+    <!-- Sezione Filtri -->
+    <div class="filter-section">
+        <button class="filter-btn active" data-filter="tutti">Tutti</button>
+        <button class="filter-btn" data-filter="interni">Interni</button>
+        <button class="filter-btn" data-filter="prodotto">Prodotto</button>
+        <button class="filter-btn" data-filter="grafica">Grafica</button>
+    </div>
+
+    <!-- Galleria Design -->
+    <div class="gallery" id="design-gallery">
+        <!-- Le card dei progetti di design verranno inserite dinamicamente via JavaScript -->
+    </div>
+
+    <!-- Sezione Designer -->
+    <section class="artists-section">
+        <h2>Designer in Evidenza</h2>
+        <div class="artist-grid" id="featured-designers">
+            <!-- Le card dei designer verranno inserite dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Sezione Eventi -->
+    <section class="events-section">
+        <h2>Eventi e Presentazioni</h2>
+        <div id="design-events">
+            <!-- Gli eventi verranno inseriti dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

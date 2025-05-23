@@ -4,15 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arte - BOSTARTER</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Categoria: Arte</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
-    </header>
-    <main>
-        <p>Benvenuto nella sezione Arte di BOSTARTER. Qui troverai progetti creativi legati al mondo artistico.</p>
-    </main>
+    <!-- Banner Interattivo -->
+    <div class="interactive-banner">
+        <h1>Scopri l'Arte Contemporanea</h1>
+        <p>Esplora opere uniche di artisti emergenti e affermati</p>
+    </div>
+
+    <!-- Sezione Filtri -->
+    <div class="filter-section">
+        <button class="filter-btn active" data-filter="tutti">Tutti</button>
+        <button class="filter-btn" data-filter="pittura">Pittura</button>
+        <button class="filter-btn" data-filter="scultura">Scultura</button>
+        <button class="filter-btn" data-filter="digitale">Arte Digitale</button>
+    </div>
+
+    <!-- Galleria Arte -->
+    <div class="gallery" id="art-gallery">
+        <!-- Le card delle opere d'arte verranno inserite dinamicamente via JavaScript -->
+    </div>
+
+    <!-- Sezione Artisti -->
+    <section class="artists-section">
+        <h2>Artisti in Evidenza</h2>
+        <div class="artist-grid" id="featured-artists">
+            <!-- Le card degli artisti verranno inserite dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Sezione Eventi -->
+    <section class="events-section">
+        <h2>Eventi e Mostre</h2>
+        <div id="art-events">
+            <!-- Gli eventi verranno inseriti dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

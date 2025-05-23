@@ -1,193 +1,103 @@
 <?php
-
-namespace BOSTARTER\Backend\Controllers;
-
-use BOSTARTER\Backend\Models\UserModel;
-use BOSTARTER\Backend\Router; // Per usare jsonResponse
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../utils/Logger.php';
 
 class AuthController {
-
-    private $userModel;
+    private $db;
 
     public function __construct() {
-        $this->userModel = new UserModel();
+        $database = new Database();
+        $this->db = $database->getConnection();
     }
 
-    /**
-     * Gestisce la registrazione di un nuovo utente.
-     * Legge i dati dal corpo della richiesta POST (JSON).
-     */
-    public function register(): void {
-        // Leggi il corpo della richiesta JSON
-        $input = json_decode(file_get_contents('php://input'), true);
+    public function register($data) {
+        try {
+            $stmt = $this->db->prepare("CALL register_user(?, ?, ?, ?, ?, ?, ?, @p_user_id, @p_success, @p_message)");
+            
+            $stmt->bindParam(1, $data['email']);
+            $stmt->bindParam(2, $data['nickname']);
+            $stmt->bindParam(3, password_hash($data['password'], PASSWORD_DEFAULT));
+            $stmt->bindParam(4, $data['name']);
+            $stmt->bindParam(5, $data['surname']);
+            $stmt->bindParam(6, $data['birth_year'], PDO::PARAM_INT);
+            $stmt->bindParam(7, $data['birth_place']);
+            $stmt->execute();
 
-        // Validazione base (da migliorare)
-        if (!isset($input['email'], $input['nickname'], $input['password'], $input['nome'], $input['cognome'], $input['anno_nascita'], $input['luogo_nascita'])) {
-            Router::jsonResponse(['error' => 'Dati mancanti per la registrazione.', 'fields' => [
-                'email' => empty($input['email']),
-                'nickname' => empty($input['nickname']),
-                'password' => empty($input['password']),
-                'nome' => empty($input['nome']),
-                'cognome' => empty($input['cognome']),
-                'anno_nascita' => empty($input['anno_nascita']),
-                'luogo_nascita' => empty($input['luogo_nascita'])
-            ]], 400);
-            return;
-        }
-
-        // Validazione email
-        if (!filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
-            Router::jsonResponse(['error' => 'Formato email non valido.'], 400);
-            return;
-        }
-        // Validazione password (minimo 8 caratteri)
-        if (strlen($input['password']) < 8) {
-            Router::jsonResponse(['error' => 'La password deve contenere almeno 8 caratteri.'], 400);
-            return;
-        }
-        // Validazione nickname (solo caratteri alfanumerici)
-        if (!preg_match('/^[a-zA-Z0-9_]+$/', $input['nickname'])) {
-            Router::jsonResponse(['error' => 'Il nickname può contenere solo lettere, numeri e underscore.'], 400);
-            return;
-        }
-        // Validazione anno di nascita (range plausibile)
-        $anno = (int)$input['anno_nascita'];
-        if ($anno < 1900 || $anno > (int)date('Y')) {
-            Router::jsonResponse(['error' => 'Anno di nascita non valido.'], 400);
-            return;
-        }
-
-        // Verifica se email o nickname esistono già
-        if ($this->userModel->findByEmail($input['email'])) {
-            Router::jsonResponse(['error' => 'Email già registrata.'], 409); // 409 Conflict
-            return;
-        }
-        if ($this->userModel->findByNickname($input['nickname'])) {
-            Router::jsonResponse(['error' => 'Nickname già in uso.'], 409);
-            return;
-        }
-
-        // Hash della password (usare password_hash)
-        $hashedPassword = password_hash($input['password'], PASSWORD_DEFAULT);
-        if ($hashedPassword === false) {
-             error_log("Errore durante l'hashing della password.");
-             Router::jsonResponse(['error' => 'Errore interno del server.'], 500);
-             return;
-        }
-
-        $userData = [
-            'email' => $input['email'],
-            'nickname' => $input['nickname'],
-            'password_hash' => $hashedPassword,
-            'nome' => $input['nome'],
-            'cognome' => $input['cognome'],
-            'anno_nascita' => (int)$input['anno_nascita'],
-            'luogo_nascita' => $input['luogo_nascita']
-        ];
-
-        if ($this->userModel->create($userData)) {
-            // Non inviare la password hash nella risposta
-            unset($userData['password_hash']);
-            Router::jsonResponse(['message' => 'Registrazione avvenuta con successo.', 'user' => $userData], 201); // 201 Created
-        } else {
-            Router::jsonResponse(['error' => 'Errore durante la registrazione. L\'email potrebbe essere già registrata o i dati non sono validi.'], 409);
+            $result = $this->db->query("SELECT @p_user_id as user_id, @p_success as success, @p_message as message")->fetch(PDO::FETCH_ASSOC);
+            
+            return [
+                'status' => $result['success'] ? 'success' : 'error',
+                'message' => $result['message'],
+                'user_id' => $result['user_id']
+            ];
+        } catch (PDOException $e) {
+            Logger::error('Errore durante la registrazione', [
+                'error' => $e->getMessage(),
+                'email' => $data['email'],
+                'nickname' => $data['nickname']
+            ]);
+            return [
+                'status' => 'error',
+                'message' => 'Si è verificato un errore durante la registrazione. Il nostro team è stato notificato.'
+            ];
         }
     }
 
-    /**
-     * Gestisce il login dell'utente.
-     * Legge i dati dal corpo della richiesta POST (JSON).
-     */
-    public function login(): void {
-        $input = json_decode(file_get_contents('php://input'), true);
+    public function login($data) {
+        try {
+            $stmt = $this->db->prepare("CALL login_user(?, ?, @p_user_id, @p_success, @p_message)");
+            
+            $stmt->bindParam(1, $data['email']);
+            $stmt->bindParam(2, $data['password']);
+            $stmt->execute();
 
-        if (!isset($input['email'], $input['password'])) {
-            Router::jsonResponse(['error' => 'Email o password mancanti.'], 400);
-            return;
-        }
+            $result = $this->db->query("SELECT @p_user_id as user_id, @p_success as success, @p_message as message")->fetch(PDO::FETCH_ASSOC);
 
-        $user = $this->userModel->findByEmail($input['email']);
-
-        if (!$user) {
-            Router::jsonResponse(['error' => 'Credenziali non valide.'], 401); // 401 Unauthorized
-            return;
-        }
-
-        // Se è admin, richiedi anche il codice di sicurezza
-        if ($this->userModel->isAdmin($user['email'])) {
-            if (empty($input['security_code'])) {
-                Router::jsonResponse(['error' => 'Codice di sicurezza richiesto per admin.'], 401);
-                return;
+            if ($result['success']) {
+                session_start();
+                $_SESSION['user_id'] = $result['user_id'];
             }
-            if (!$this->userModel->verifyAdminSecurityCode($user['email'], $input['security_code'])) {
-                Router::jsonResponse(['error' => 'Codice di sicurezza non valido.'], 401);
-                return;
-            }
-        }
 
-        // Verifica la password
-        if (password_verify($input['password'], $user['password_hash'])) {
-            // Login successo
-            // In un'app reale, qui inizieresti una sessione o genereresti un token JWT
-            session_start(); // Esempio base con sessioni
-            $_SESSION['user_email'] = $user['email'];
-            $_SESSION['user_nickname'] = $user['nickname'];
-            $_SESSION['is_admin'] = $this->userModel->isAdmin($user['email']);
-            $_SESSION['is_creator'] = $this->userModel->isCreator($user['email']);
-
-            // Non inviare la password hash
-            unset($user['password_hash']);
-
-            Router::jsonResponse(['message' => 'Login effettuato con successo.', 'user' => $user]);
-        } else {
-            // Password errata
-            Router::jsonResponse(['error' => 'Credenziali non valide.'], 401);
+            return [
+                'status' => $result['success'] ? 'success' : 'error',
+                'message' => $result['message'],
+                'user_id' => $result['user_id']
+            ];
+        } catch (PDOException $e) {
+            Logger::error('Errore durante il login', [
+                'error' => $e->getMessage(),
+                'email' => $data['email']
+            ]);
+            return [
+                'status' => 'error',
+                'message' => 'Si è verificato un errore durante l\'accesso. Il nostro team è stato notificato.'
+            ];
         }
     }
 
-    /**
-     * Gestisce il logout dell'utente.
-     */
-    public function logout(): void {
-        session_start();
-        session_unset(); // Rimuove tutte le variabili di sessione
-        session_destroy(); // Distrugge la sessione
-        Router::jsonResponse(['message' => 'Logout effettuato con successo.']);
-    }
+    public function registerCreator($userId) {
+        try {
+            $stmt = $this->db->prepare("CALL register_creator(?, @p_success, @p_message)");
+            
+            $stmt->bindParam(1, $userId, PDO::PARAM_INT);
+            $stmt->execute();
 
-    /**
-     * Controlla lo stato della sessione corrente.
-     */
-     public function checkSession(): void {
-        session_start();
-        if (isset($_SESSION['user_email'])) {
-            // L'utente è loggato, restituisci i dati dell'utente (senza hash pw)
-            $user = $this->userModel->findByEmail($_SESSION['user_email']);
-            if ($user) {
-                 unset($user['password_hash']);
-                 Router::jsonResponse(['loggedIn' => true, 'user' => $user]);
-            } else {
-                 // Utente in sessione ma non trovato nel DB? Strano, effettua logout
-                 session_unset();
-                 session_destroy();
-                 Router::jsonResponse(['loggedIn' => false, 'error' => 'Sessione non valida.']);
-            }
-        } else {
-            // L'utente non è loggato
-            Router::jsonResponse(['loggedIn' => false]);
+            $result = $this->db->query("SELECT @p_success as success, @p_message as message")->fetch(PDO::FETCH_ASSOC);
+            
+            return [
+                'status' => $result['success'] ? 'success' : 'error',
+                'message' => $result['message']
+            ];
+        } catch (PDOException $e) {
+            Logger::error('Errore durante la registrazione come creatore', [
+                'error' => $e->getMessage(),
+                'userId' => $userId
+            ]);
+            return [
+                'status' => 'error',
+                'message' => 'Si è verificato un errore durante la registrazione come creatore. Il nostro team è stato notificato.'
+            ];
         }
     }
-
-    // Endpoint per verifica admin da frontend (usato per mostrare campo codice sicurezza)
-    public function isAdminApi(): void {
-        $email = $_GET['email'] ?? '';
-        if (!$email) {
-            Router::jsonResponse(['is_admin' => false]);
-            return;
-        }
-        $isAdmin = $this->userModel->isAdmin($email);
-        Router::jsonResponse(['is_admin' => $isAdmin]);
-    }
-
 }
 ?>

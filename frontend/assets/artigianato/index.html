@@ -4,15 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Artigianato - BOSTARTER</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Categoria: Artigianato</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
-    </header>
-    <main>
-        <p>Benvenuto nella sezione Artigianato di BOSTARTER. Qui troverai progetti dedicati al mondo dell'artigianato.</p>
-    </main>
+    <!-- Banner Interattivo -->
+    <div class="interactive-banner">
+        <h1>Scopri l'Artigianato Tradizionale</h1>
+        <p>Esplora creazioni uniche realizzate da artigiani esperti</p>
+    </div>
+
+    <!-- Sezione Filtri -->
+    <div class="filter-section">
+        <button class="filter-btn active" data-filter="tutti">Tutti</button>
+        <button class="filter-btn" data-filter="ceramica">Ceramica</button>
+        <button class="filter-btn" data-filter="legno">Legno</button>
+        <button class="filter-btn" data-filter="tessuti">Tessuti</button>
+    </div>
+
+    <!-- Galleria Artigianato -->
+    <div class="gallery" id="craft-gallery">
+        <!-- Le card dei prodotti artigianali verranno inserite dinamicamente via JavaScript -->
+    </div>
+
+    <!-- Sezione Artigiani -->
+    <section class="artists-section">
+        <h2>Artigiani in Evidenza</h2>
+        <div class="artist-grid" id="featured-artisans">
+            <!-- Le card degli artigiani verranno inserite dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Sezione Eventi -->
+    <section class="events-section">
+        <h2>Eventi e Workshop</h2>
+        <div id="craft-events">
+            <!-- Gli eventi verranno inseriti dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

@@ -4,15 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Musica - BOSTARTER</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Categoria: Musica</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
-    </header>
-    <main>
-        <p>Benvenuto nella sezione Musica di BOSTARTER. Qui troverai progetti dedicati al mondo della musica.</p>
-    </main>
+    <!-- Banner Interattivo -->
+    <div class="interactive-banner">
+        <h1>Esplora il Mondo della Musica</h1>
+        <p>Scopri artisti emergenti e nuovi talenti musicali</p>
+    </div>
+
+    <!-- Sezione Filtri -->
+    <div class="filter-section">
+        <button class="filter-btn active" data-filter="tutti">Tutti</button>
+        <button class="filter-btn" data-filter="classica">Classica</button>
+        <button class="filter-btn" data-filter="jazz">Jazz</button>
+        <button class="filter-btn" data-filter="elettronica">Elettronica</button>
+    </div>
+
+    <!-- Galleria Musica -->
+    <div class="gallery" id="music-gallery">
+        <!-- Le card degli album e brani verranno inserite dinamicamente via JavaScript -->
+    </div>
+
+    <!-- Sezione Musicisti -->
+    <section class="artists-section">
+        <h2>Musicisti in Evidenza</h2>
+        <div class="artist-grid" id="featured-musicians">
+            <!-- Le card dei musicisti verranno inserite dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Sezione Eventi -->
+    <section class="events-section">
+        <h2>Concerti ed Eventi</h2>
+        <div id="music-events">
+            <!-- Gli eventi verranno inseriti dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

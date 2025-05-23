@@ -4,15 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fotografia - BOSTARTER</title>
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <header>
-        <h1>Categoria: Fotografia</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
-    </header>
-    <main>
-        <p>Benvenuto nella sezione Fotografia di BOSTARTER. Qui troverai progetti dedicati al mondo della fotografia.</p>
-    </main>
+    <!-- Banner Interattivo -->
+    <div class="interactive-banner">
+        <h1>Esplora la Fotografia d'Autore</h1>
+        <p>Scopri opere uniche attraverso l'obiettivo di fotografi talentuosi</p>
+    </div>
+
+    <!-- Sezione Filtri -->
+    <div class="filter-section">
+        <button class="filter-btn active" data-filter="tutti">Tutti</button>
+        <button class="filter-btn" data-filter="ritratti">Ritratti</button>
+        <button class="filter-btn" data-filter="paesaggi">Paesaggi</button>
+        <button class="filter-btn" data-filter="street">Street</button>
+    </div>
+
+    <!-- Galleria Fotografia -->
+    <div class="gallery" id="photo-gallery">
+        <!-- Le card delle fotografie verranno inserite dinamicamente via JavaScript -->
+    </div>
+
+    <!-- Sezione Fotografi -->
+    <section class="artists-section">
+        <h2>Fotografi in Evidenza</h2>
+        <div class="artist-grid" id="featured-photographers">
+            <!-- Le card dei fotografi verranno inserite dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Sezione Eventi -->
+    <section class="events-section">
+        <h2>Mostre ed Eventi</h2>
+        <div id="photo-events">
+            <!-- Gli eventi verranno inseriti dinamicamente via JavaScript -->
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
 </body>
 </html>

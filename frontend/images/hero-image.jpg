@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <rect width="800" height="500" fill="#f0f4ff"/>
+  <rect x="50" y="50" width="700" height="400" rx="20" fill="#ffffff" stroke="#3176FF" stroke-width="2"/>
+  <rect x="100" y="100" width="600" height="100" rx="10" fill="#3176FF" opacity="0.1"/>
+  <rect x="100" y="220" width="400" height="30" rx="5" fill="#3176FF" opacity="0.2"/>
+  <rect x="100" y="270" width="300" height="20" rx="5" fill="#3176FF" opacity="0.15"/>
+  <rect x="100" y="310" width="350" height="20" rx="5" fill="#3176FF" opacity="0.15"/>
+  <rect x="100" y="350" width="200" height="40" rx="8" fill="#3176FF"/>
+  <text x="200" y="375" font-family="Arial" font-size="16" fill="#ffffff" text-anchor="middle">Sostieni il progetto</text>
+  <circle cx="650" cy="150" r="50" fill="#FF6B35" opacity="0.2"/>
+  <circle cx="650" cy="150" r="30" fill="#FF6B35" opacity="0.4"/>
+  <path d="M650 130 L650 170 M630 150 L670 150" stroke="#ffffff" stroke-width="4"/>
+</svg>
