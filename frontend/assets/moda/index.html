@@ -4,15 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moda - BOSTARTER</title>
+    <meta name="description" content="Scopri il mondo della moda su BOSTARTER. Collezioni esclusive, designer emergenti e tendenze innovative.">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <link rel="icon" href="../../frontend/images/logo1.svg" type="image/x-icon">
 </head>
 <body>
     <header>
-        <h1>Categoria: Moda</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
+        <h1><a href="../../index.html">BOSTARTER</a> <span>/ Moda</span></h1>
+        <nav>
+            <a href="../../index.html"><i class="ri-home-line"></i> Home</a>
+            <a href="../../frontend/explore.html"><i class="ri-compass-line"></i> Esplora</a>
+            <a href="../../frontend/dashboard.html"><i class="ri-dashboard-line"></i> Dashboard</a>
+        </nav>
     </header>
+    
     <main>
-        <p>Benvenuto nella sezione Moda di BOSTARTER. Qui troverai progetti dedicati al mondo della moda.</p>
+        <!-- Banner fashion -->
+        <section class="fashion-banner">
+            <h1>Moda & Stile</h1>
+            <p>Dove l'eleganza incontra l'innovazione. Scopri collezioni esclusive e designer emergenti che ridefiniscono il concetto di moda.</p>
+        </section>
+        
+        <!-- Sezione filtri fashion -->
+        <section class="fashion-filters">
+            <h2>Esplora per Categoria</h2>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="tutti">Tutti</button>
+                <button class="filter-btn" data-filter="alta-moda">Alta Moda</button>
+                <button class="filter-btn" data-filter="streetwear">Streetwear</button>
+                <button class="filter-btn" data-filter="accessori">Accessori</button>
+                <button class="filter-btn" data-filter="sostenibile">Sostenibile</button>
+                <button class="filter-btn" data-filter="vintage">Vintage</button>
+                <button class="filter-btn" data-filter="sera">Abiti da Sera</button>
+            </div>
+        </section>
+        
+        <!-- Galleria fashion -->
+        <section class="gallery-section">
+            <h2>Collezioni in Evidenza</h2>
+            <div class="fashion-gallery" id="fashion-gallery">
+                <!-- Gli articoli fashion verranno caricati dinamicamente via JavaScript -->
+            </div>
+        </section>
+        
+        <!-- Sezione designer -->
+        <section class="designers-section">
+            <h2>I Nostri Designer</h2>
+            <p>Incontra i talenti creativi che danno vita alle collezioni più innovative e ricercate del panorama fashion contemporaneo.</p>
+            <div class="designer-grid" id="designers-grid">
+                <!-- I designer verranno caricati dinamicamente via JavaScript -->
+            </div>
+        </section>
+        
+        <!-- Sezione eventi fashion -->
+        <section class="fashion-events">
+            <h2>Eventi & Sfilate</h2>
+            <p>Non perdere gli appuntamenti più importanti del mondo della moda. Sfilate, presentazioni e eventi esclusivi.</p>
+            <div id="fashion-events-container">
+                <!-- Gli eventi verranno caricati dinamicamente via JavaScript -->
+            </div>
+        </section>
     </main>
+    
+    <script src="js/main.js"></script>
 </body>
 </html>

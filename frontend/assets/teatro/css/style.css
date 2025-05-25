@@ -1,0 +1,474 @@
+/* Stili specifici per la sezione Teatro */
+:root {
+    --primary-color: #8b0000;
+    --secondary-color: #ffd700;
+    --accent-color: #dc143c;
+    --background-color: #1a1a1a;
+    --text-color: #f5f5f5;
+    --text-light: #cccccc;
+    --card-bg: #2d2d2d;
+    --shadow-sm: 0 2px 8px rgba(139,0,0,0.15);
+    --shadow-md: 0 4px 16px rgba(139,0,0,0.2);
+    --shadow-lg: 0 8px 32px rgba(139,0,0,0.25);
+    --border-radius-sm: 12px;
+    --border-radius-md: 18px;
+    --border-radius-lg: 24px;
+    --transition-fast: all 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+    --transition-default: all 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+    --transition-slow: all 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* Reset e stili di base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Crimson Text', 'Georgia', serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background: linear-gradient(135deg, var(--background-color), #0f0f0f);
+    min-height: 100vh;
+}
+
+/* Banner teatrale */
+.theater-banner {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: var(--text-color);
+    padding: 120px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.theater-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="theater-pattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M15,5 Q20,10 15,15 Q10,10 15,5" fill="%23ffd700" opacity="0.1"/><circle cx="15" cy="25" r="2" fill="%23ffd700" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23theater-pattern)"/></svg>') repeat;
+    opacity: 0.4;
+}
+
+.theater-banner h1 {
+    font-size: 4em;
+    margin-bottom: 25px;
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+    font-weight: 400;
+    letter-spacing: 3px;
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(45deg, var(--text-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theater-banner p {
+    font-size: 1.4em;
+    max-width: 700px;
+    margin: 0 auto;
+    opacity: 0.95;
+    font-style: italic;
+    position: relative;
+    z-index: 1;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+/* Sezione filtri teatro */
+.theater-filters {
+    padding: 60px 40px;
+    text-align: center;
+    background: rgba(45,45,45,0.9);
+    margin: 40px auto;
+    max-width: 1200px;
+    border-radius: var(--border-radius-lg);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,215,0,0.2);
+}
+
+.theater-filters h2 {
+    margin-bottom: 35px;
+    color: var(--secondary-color);
+    font-size: 2.5em;
+    font-weight: 400;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.filter-btn {
+    background: linear-gradient(135deg, rgba(45,45,45,0.9), rgba(60,60,60,0.9));
+    border: 2px solid var(--secondary-color);
+    padding: 15px 30px;
+    margin: 0 12px 12px 0;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition-default);
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-color);
+    box-shadow: var(--shadow-sm);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 0.9em;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: var(--text-color);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--secondary-color);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Galleria teatro */
+.theater-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 40px;
+    padding: 60px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.theater-item {
+    background: linear-gradient(135deg, var(--card-bg), #3a3a3a);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    transition: var(--transition-default);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(255,215,0,0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    position: relative;
+}
+
+.theater-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,215,0,0.05) 50%, transparent 70%);
+    opacity: 0;
+    transition: var(--transition-default);
+    pointer-events: none;
+}
+
+.theater-item:hover {
+    transform: translateY(-10px) rotateX(5deg);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--secondary-color);
+}
+
+.theater-item:hover::before {
+    opacity: 1;
+}
+
+.theater-item img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    transition: var(--transition-slow);
+    filter: sepia(20%) contrast(1.1);
+}
+
+.theater-item:hover img {
+    transform: scale(1.1);
+    filter: sepia(0%) contrast(1.2) brightness(1.1);
+}
+
+.theater-info {
+    padding: 30px;
+    position: relative;
+}
+
+.theater-info h3 {
+    margin-bottom: 15px;
+    color: var(--secondary-color);
+    font-size: 1.5em;
+    font-weight: 400;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.theater-info .company {
+    color: var(--accent-color);
+    font-weight: 600;
+    font-size: 1em;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.theater-info p {
+    color: var(--text-light);
+    font-size: 0.95em;
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+.theater-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,215,0,0.2);
+}
+
+.theater-date {
+    color: var(--secondary-color);
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.theater-genre {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: var(--text-color);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Sezione compagnie teatrali */
+.companies-section {
+    padding: 80px 40px;
+    background: linear-gradient(135deg, rgba(45,45,45,0.8), rgba(30,30,30,0.8));
+    border-radius: var(--border-radius-lg);
+    margin: 60px auto;
+    max-width: 1200px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,215,0,0.1);
+}
+
+.companies-section h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--secondary-color);
+    font-size: 2.8em;
+    font-weight: 400;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.companies-section > p {
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-light);
+    font-size: 1.2em;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    font-style: italic;
+}
+
+.company-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 50px;
+    margin-top: 50px;
+}
+
+.company-card {
+    text-align: center;
+    padding: 40px 30px;
+    background: linear-gradient(135deg, rgba(45,45,45,0.9), rgba(60,60,60,0.9));
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-default);
+    border: 2px solid transparent;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.company-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--secondary-color);
+}
+
+.company-card img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    margin-bottom: 30px;
+    object-fit: cover;
+    border: 3px solid var(--secondary-color);
+    transition: var(--transition-default);
+    filter: sepia(30%) contrast(1.1);
+}
+
+.company-card:hover img {
+    transform: scale(1.05) rotate(2deg);
+    box-shadow: 0 0 0 12px rgba(255,215,0,0.2);
+    filter: sepia(0%) contrast(1.2);
+}
+
+.company-card h3 {
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    font-size: 1.6em;
+    font-weight: 400;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.company-card .specialty {
+    color: var(--accent-color);
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9em;
+}
+
+.company-card .bio {
+    color: var(--text-light);
+    font-size: 0.95em;
+    line-height: 1.7;
+    font-style: italic;
+}
+
+/* Sezione eventi teatrali */
+.theater-events {
+    padding: 80px 40px;
+    margin: 60px auto;
+    max-width: 1200px;
+}
+
+.theater-events h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: var(--secondary-color);
+    font-size: 2.8em;
+    font-weight: 400;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.theater-events > p {
+    text-align: center;
+    margin-bottom: 60px;
+    color: var(--text-light);
+    font-size: 1.2em;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    font-style: italic;
+}
+
+.event-card {
+    background: linear-gradient(135deg, rgba(45,45,45,0.9), rgba(60,60,60,0.9));
+    border-radius: var(--border-radius-md);
+    padding: 40px;
+    margin-bottom: 40px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    transition: var(--transition-default);
+    border: 2px solid transparent;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.event-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--secondary-color);
+}
+
+.event-date {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: var(--text-color);
+    padding: 30px;
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    min-width: 150px;
+    font-weight: bold;
+    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--secondary-color);
+}
+
+.event-date .day {
+    font-size: 3em;
+    display: block;
+    line-height: 1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.event-date .month {
+    font-size: 1.1em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 8px;
+    color: var(--secondary-color);
+}
+
+.event-info h3 {
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    font-size: 2em;
+    font-weight: 400;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.event-info .location {
+    color: var(--accent-color);
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9em;
+}
+
+.event-info p {
+    color: var(--text-light);
+    line-height: 1.7;
+    font-size: 1em;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .theater-banner h1 {
+        font-size: 2.8em;
+    }
+    
+    .theater-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        padding: 40px 20px;
+        gap: 30px;
+    }
+    
+    .company-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 30px;
+    }
+    
+    .event-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 30px 20px;
+        gap: 25px;
+    }
+    
+    .event-date {
+        margin-bottom: 0;
+    }
+    
+    .filter-btn {
+        margin: 0 8px 12px 0;
+        padding: 12px 20px;
+        font-size: 0.8em;
+    }
+}

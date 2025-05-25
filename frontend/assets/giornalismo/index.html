@@ -4,15 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giornalismo - BOSTARTER</title>
+    <meta name="description" content="Esplora il mondo del giornalismo su BOSTARTER. Articoli, inchieste e reportage di qualità.">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <link rel="icon" href="../../frontend/images/logo1.svg" type="image/x-icon">
 </head>
 <body>
     <header>
-        <h1>Categoria: Giornalismo</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
+        <h1><a href="../../index.html">BOSTARTER</a> <span>/ Giornalismo</span></h1>
+        <nav>
+            <a href="../../index.html"><i class="ri-home-line"></i> Home</a>
+            <a href="../../frontend/explore.html"><i class="ri-compass-line"></i> Esplora</a>
+            <a href="../../frontend/dashboard.html"><i class="ri-dashboard-line"></i> Dashboard</a>
+        </nav>
     </header>
+    
     <main>
-        <p>Benvenuto nella sezione Giornalismo di BOSTARTER. Qui troverai progetti dedicati al mondo del giornalismo.</p>
+        <!-- Banner interattivo -->
+        <section class="interactive-banner">
+            <h1>Giornalismo di Qualità</h1>
+            <p>Scopri articoli, inchieste e reportage che fanno la differenza. Il giornalismo che informa, approfondisce e ispira.</p>
+        </section>
+        
+        <!-- Sezione filtri -->
+        <section class="filter-section">
+            <h2>Filtra per Categoria</h2>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="tutti">Tutti</button>
+                <button class="filter-btn" data-filter="tecnologia">Tecnologia</button>
+                <button class="filter-btn" data-filter="ambiente">Ambiente</button>
+                <button class="filter-btn" data-filter="politica">Politica</button>
+                <button class="filter-btn" data-filter="sport">Sport</button>
+                <button class="filter-btn" data-filter="cultura">Cultura</button>
+                <button class="filter-btn" data-filter="economia">Economia</button>
+            </div>
+        </section>
+        
+        <!-- Galleria articoli -->
+        <section class="gallery-section">
+            <h2>Articoli Recenti</h2>
+            <div class="gallery" id="articles-gallery">
+                <!-- Gli articoli verranno caricati dinamicamente via JavaScript -->
+            </div>
+        </section>
+        
+        <!-- Sezione giornalisti -->
+        <section class="journalists-section">
+            <h2>I Nostri Giornalisti</h2>
+            <p>Incontra il team di professionisti che rendono possibile il nostro giornalismo di qualità.</p>
+            <div class="journalist-grid" id="journalists-grid">
+                <!-- I giornalisti verranno caricati dinamicamente via JavaScript -->
+            </div>
+        </section>
+        
+        <!-- Sezione eventi -->
+        <section class="events-section">
+            <h2>Eventi e Conferenze</h2>
+            <p>Partecipa agli eventi del mondo del giornalismo e della comunicazione.</p>
+            <div id="events-container">
+                <!-- Gli eventi verranno caricati dinamicamente via JavaScript -->
+            </div>
+        </section>
     </main>
+    
+    <script src="js/main.js"></script>
 </body>
 </html>

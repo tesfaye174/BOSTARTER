@@ -4,15 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teatro - BOSTARTER</title>
+    <meta name="description" content="Immergiti nel mondo del teatro su BOSTARTER. Spettacoli, compagnie teatrali e eventi dal vivo.">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <link rel="icon" href="../../frontend/images/logo1.svg" type="image/x-icon">
 </head>
 <body>
     <header>
-        <h1>Categoria: Teatro</h1>
-        <nav><a href="../../index.html">Torna alla Home</a></nav>
+        <h1><a href="../../index.html">BOSTARTER</a> <span>/ Teatro</span></h1>
+        <nav>
+            <a href="../../index.html"><i class="ri-home-line"></i> Home</a>
+            <a href="../../frontend/explore.html"><i class="ri-compass-line"></i> Esplora</a>
+            <a href="../../frontend/dashboard.html"><i class="ri-dashboard-line"></i> Dashboard</a>
+        </nav>
     </header>
+    
     <main>
-        <p>Benvenuto nella sezione Teatro di BOSTARTER. Qui troverai progetti dedicati al mondo del teatro.</p>
+        <!-- Banner teatrale -->
+        <section class="theater-banner">
+            <h1>Teatro & Spettacolo</h1>
+            <p>Dove le emozioni prendono vita sul palcoscenico. Scopri produzioni teatrali, compagnie innovative e l'arte della rappresentazione dal vivo.</p>
+        </section>
+        
+        <!-- Sezione filtri teatro -->
+        <section class="theater-filters">
+            <h2>Esplora per Genere</h2>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="tutti">Tutti</button>
+                <button class="filter-btn" data-filter="dramma">Dramma</button>
+                <button class="filter-btn" data-filter="commedia">Commedia</button>
+                <button class="filter-btn" data-filter="musical">Musical</button>
+                <button class="filter-btn" data-filter="danza-teatro">Danza-Teatro</button>
+                <button class="filter-btn" data-filter="famiglia">Famiglia</button>
+                <button class="filter-btn" data-filter="monologo">Monologo</button>
+            </div>
+        </section>
+        
+        <!-- Galleria teatro -->
+        <section class="gallery-section">
+            <h2>Spettacoli in Programma</h2>
+            <div class="theater-gallery" id="theater-gallery">
+                <!-- Le produzioni teatrali verranno caricate dinamicamente via JavaScript -->
+            </div>
+        </section>
+        
+        <!-- Sezione compagnie teatrali -->
+        <section class="companies-section">
+            <h2>Compagnie Teatrali</h2>
+            <p>Conosci le compagnie teatrali che portano sul palcoscenico le storie più coinvolgenti e innovative del panorama contemporaneo.</p>
+            <div class="company-grid" id="companies-grid">
+                <!-- Le compagnie verranno caricate dinamicamente via JavaScript -->
+            </div>
+        </section>
+        
+        <!-- Sezione eventi teatrali -->
+        <section class="theater-events">
+            <h2>Festival & Eventi</h2>
+            <p>Partecipa ai festival teatrali, workshop e eventi speciali che celebrano l'arte della rappresentazione scenica.</p>
+            <div id="theater-events-container">
+                <!-- Gli eventi verranno caricati dinamicamente via JavaScript -->
+            </div>
+        </section>
     </main>
+    
+    <script src="js/main.js"></script>
 </body>
 </html>
