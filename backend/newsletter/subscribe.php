@@ -22,6 +22,9 @@ if (!$email) {
 }
 
 try {
+    $database = new Database();
+    $pdo = $database->getConnection();
+
     // Verifica se l'email è già registrata
     $stmt = $pdo->prepare("SELECT id FROM newsletter_subscribers WHERE email = ? LIMIT 1");
     $stmt->execute([$email]);

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Creatore - BOSTARTER</title>
+    <title>Dashboard Creatori | BOSTARTER</title>
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script>
       tailwind.config = {
@@ -28,18 +28,8 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/creatori.js"></script>
@@ -1080,53 +1070,91 @@
       });
     </script>
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const menuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.querySelector('.hidden.md\:flex.ml-10'); // Adjust selector as needed
-
-        if (menuButton && mobileMenu) {
-            menuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
-
-        // Check session and display user info
-        checkSession().then(userData => {
-            if (userData && userData.role === 'creator') {
-                displayUserInfo(userData, 'user-info-container');
-                // Initialize other creator-specific dashboard functionalities here
-                // e.g., loadProjects(), loadRewards(), etc.
-            } else {
-                // If not a creator or not logged in, redirect to login or home
-                // You might want to show a message before redirecting
-                alert('Accesso non autorizzato o sessione scaduta. Verrai reindirizzato alla pagina di login.');
-                window.location.href = '../index.html'; // Or your login page
+      // Sposta tutte le funzioni JS personalizzate in un unico file separato per migliorare la manutenibilità
+      // Esempio: frontend/creatori/js/dashboard.js
+      // ...
+    </script>
+      document.addEventListener('DOMContentLoaded', async function () {
+        // Mobile menu handling
+        const initMobileMenu = () => {
+            const menuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.querySelector('.hidden.md\\:flex.ml-10');
+            
+            if (menuButton && mobileMenu) {
+                menuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                    // Add animation classes
+                    mobileMenu.classList.toggle('fade-in');
+                });
             }
-        }).catch(error => {
-            console.error('Errore di sessione:', error);
-            alert('Errore durante la verifica della sessione. Verrai reindirizzato alla pagina di login.');
-            window.location.href = '../index.html'; // Or your login page
-        });
+        };
 
-        // Logout functionality
-        const logoutLink = document.getElementById('logout-link');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', function(event) {
-                event.preventDefault();
-                logoutUser("frontend/index.html");
-            });
-        }
+        // Session management
+        const handleSession = async () => {
+            try {
+                const userData = await checkSession();
+                
+                if (userData?.role === 'creator') {
+                    await Promise.all([
+                        displayUserInfo(userData, 'user-info-container'),
+                        updateDashboardStats(userData),
+                        initializeCharts(),
+                        loadProjects(userData.id),
+                        loadRewards(userData.id)
+                    ]);
+                } else {
+                    throw new Error('Unauthorized access');
+                }
+            } catch (error) {
+                console.error('Session error:', error);
+                showErrorMessage('Accesso non autorizzato o sessione scaduta');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 2000);
+            }
+        };
 
-        // ECharts - Andamento Progetti (Example)
-        var chartDom = document.getElementById('progressChart');
-        if (chartDom) {
-            var myChart = echarts.init(chartDom);
-            var option = {
+        // Logout handler
+        const initLogout = () => {
+            const logoutLink = document.getElementById('logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    try {
+                        await logoutUser("frontend/index.html");
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                        showErrorMessage('Errore durante il logout');
+                    }
+                });
+            }
+        };
+
+        // Chart initialization
+        const initializeCharts = () => {
+            const chartDom = document.getElementById('progressChart');
+            if (!chartDom) return;
+
+            const myChart = echarts.init(chartDom);
+            const option = {
                 tooltip: {
-                    trigger: 'axis'
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        let result = params[0].axisValue + '<br/>';
+                        params.forEach(param => {
+                            const value = param.seriesName === 'Fondi Raccolti' 
+                                ? '€' + param.value.toLocaleString()
+                                : param.value;
+                            result += `${param.marker} ${param.seriesName}: ${value}<br/>`;
+                        });
+                        return result;
+                    }
                 },
                 legend: {
-                    data: ['Fondi Raccolti', 'Sostenitori']
+                    data: ['Fondi Raccolti', 'Sostenitori'],
+                    textStyle: {
+                        color: '#666'
+                    }
                 },
                 grid: {
                     left: '3%',
@@ -1137,33 +1165,83 @@
                 xAxis: {
                     type: 'category',
                     boundaryGap: false,
-                    data: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug']
+                    data: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug'],
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ddd'
+                        }
+                    }
                 },
                 yAxis: {
-                    type: 'value'
+                    type: 'value',
+                    splitLine: {
+                        lineStyle: {
+                            color: '#eee'
+                        }
+                    }
                 },
                 series: [
                     {
                         name: 'Fondi Raccolti',
                         type: 'line',
-                        stack: 'Total',
                         smooth: true,
-                        data: [1200, 1320, 1010, 1340, 900, 2300, 2100]
+                        symbolSize: 6,
+                        data: [1200, 1320, 1010, 1340, 900, 2300, 2100],
+                        itemStyle: {
+                            color: '#3176FF'
+                        },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [{
+                                    offset: 0,
+                                    color: 'rgba(49, 118, 255, 0.3)'
+                                }, {
+                                    offset: 1,
+                                    color: 'rgba(49, 118, 255, 0.1)'
+                                }]
+                            }
+                        }
                     },
                     {
                         name: 'Sostenitori',
                         type: 'line',
-                        stack: 'Total',
                         smooth: true,
-                        data: [22, 18, 19, 23, 29, 33, 31]
+                        symbolSize: 6,
+                        data: [22, 18, 19, 23, 29, 33, 31],
+                        itemStyle: {
+                            color: '#34D399'
+                        }
                     }
                 ]
             };
+
             myChart.setOption(option);
-            window.addEventListener('resize', function() {
+
+            // Responsive chart
+            const handleResize = () => {
                 myChart.resize();
-            });
-        }
+            };
+            window.addEventListener('resize', handleResize);
+            
+            // Cleanup
+            return () => window.removeEventListener('resize', handleResize);
+        };
+
+        // Error message helper
+        const showErrorMessage = (message) => {
+            // You can implement a better UI feedback here
+            alert(message);
+        };
+
+        // Initialize everything
+        initMobileMenu();
+        await handleSession();
+        initLogout();
       });
     </script>
   </body>

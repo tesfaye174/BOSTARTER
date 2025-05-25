@@ -5,7 +5,7 @@
  */
 
 // Includi il file di connessione
-require_once 'db_connect.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Funzione per visualizzare messaggi di stato
 function showMessage($message, $isError = false) {
@@ -18,37 +18,33 @@ function showMessage($message, $isError = false) {
 // Funzione per inizializzare il database
 function initializeDatabase() {
     // Connessione al server MySQL senza selezionare un database
-    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS);
-    
-    if ($conn->connect_error) {
-        showMessage('Errore di connessione al server MySQL: ' . $conn->connect_error, true);
-        return false;
-    }
-    
-    // Leggi il file SQL
-    $sqlFile = __DIR__ . '/bostarter_schema.sql';
-    
-    if (!file_exists($sqlFile)) {
-        showMessage('File di schema del database non trovato: ' . $sqlFile, true);
-        return false;
-    }
-    
-    $sql = file_get_contents($sqlFile);
-    
-    // Esegui le query multiple
-    if ($conn->multi_query($sql)) {
+    // Questo script assume che il database specificato in config/config.php non esista ancora o sia vuoto.
+    // PDO constructor per mysql non permette di creare il database direttamente se non esiste.
+    // Si connette prima al server mysql, poi crea il database se non esiste.
+    try {
+        $db_host = defined('DB_HOST') ? DB_HOST : 'localhost';
+        $db_user = defined('DB_USER') ? DB_USER : 'root';
+        $db_pass = defined('DB_PASS') ? DB_PASS : '';
+        $db_name = defined('DB_NAME') ? DB_NAME : 'bostarter';
+        $db_charset = defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4';
+
+        $pdo = new PDO("mysql:host=$db_host", $db_user, $db_pass);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET $db_charset COLLATE utf8mb4_unicode_ci;");
+        $pdo->exec("USE `$db_name`");
+
+        // Leggi il file SQL
+        $sqlFile = __DIR__ . '/bostarter_schema.sql';
+        if (!file_exists($sqlFile)) {
+            showMessage('File di schema del database non trovato: ' . $sqlFile, true);
+            return false;
+        }
+        $sql = file_get_contents($sqlFile);
+        $pdo->exec($sql);
         showMessage('Database BOSTARTER inizializzato con successo!');
-        
-        // Consuma tutti i risultati
-        do {
-            if ($result = $conn->store_result()) {
-                $result->free();
-            }
-        } while ($conn->more_results() && $conn->next_result());
-        
         return true;
-    } else {
-        showMessage('Errore nell\'inizializzazione del database: ' . $conn->error, true);
+    } catch (PDOException $e) {
+        showMessage('Errore nell\'inizializzazione del database: ' . $e->getMessage(), true);
         return false;
     }
 }
@@ -56,19 +52,20 @@ function initializeDatabase() {
 // Funzione per verificare la connessione al database
 function testConnection() {
     try {
-        $conn = getDbConnection();
+        $db = new Database();
+        $conn = $db->getConnection();
         showMessage('Connessione al database BOSTARTER riuscita!');
         
         // Verifica se le tabelle esistono
-        $result = $conn->query("SHOW TABLES");
-        $tableCount = $result->num_rows;
+        $stmt = $conn->query("SHOW TABLES");
+        $tableCount = $stmt->rowCount();
         
         showMessage("Numero di tabelle nel database: $tableCount");
         
         if ($tableCount > 0) {
             echo '<h3>Tabelle presenti nel database:</h3>';
             echo '<ul>';
-            while ($row = $result->fetch_row()) {
+            while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
                 echo '<li>' . $row[0] . '</li>';
             }
             echo '</ul>';
@@ -84,8 +81,11 @@ function testConnection() {
 // Funzione per verificare i dati di base
 function checkBasicData() {
     try {
+        $db = new Database();
+        $conn = $db->getConnection();
         // Verifica le impostazioni
-        $settings = fetchAll("SELECT * FROM impostazioni LIMIT 10");
+        $stmt = $conn->query("SELECT * FROM impostazioni LIMIT 10");
+        $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         if (count($settings) > 0) {
             echo '<h3>Impostazioni di base:</h3>';
@@ -206,9 +206,9 @@ function checkBasicData() {
     
     <div class="card">
         <h2>Informazioni</h2>
-        <p><strong>Host:</strong> <?php echo DB_HOST; ?></p>
-        <p><strong>Database:</strong> <?php echo DB_NAME; ?></p>
-        <p><strong>Charset:</strong> <?php echo DB_CHARSET; ?></p>
+        <p><strong>Host:</strong> <?php echo defined('DB_HOST') ? DB_HOST : 'N/A'; ?></p>
+        <p><strong>Database:</strong> <?php echo defined('DB_NAME') ? DB_NAME : 'N/A'; ?></p>
+        <p><strong>Charset:</strong> <?php echo defined('DB_CHARSET') ? DB_CHARSET : 'N/A'; ?></p>
         <p><strong>File Schema:</strong> <?php echo realpath(__DIR__ . '/bostarter_schema.sql'); ?></p>
     </div>
     

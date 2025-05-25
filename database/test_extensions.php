@@ -5,7 +5,8 @@
  */
 
 // Includi i file necessari
-require_once 'db_connect.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/config.php'; // For DB constants if not already included by database.php
 require_once 'stored_procedures.php';
 
 // Funzione per visualizzare messaggi di stato
@@ -16,6 +17,8 @@ function showMessage($message, $isError = false) {
          $message . '</div>';
 }
 
+// TODO: Define or include registraUtente function, possibly a wrapper for sp_registra_utente
+/*
 // Funzione per testare la registrazione utente
 function testRegistraUtente() {
     // Dati di test
@@ -29,7 +32,8 @@ function testRegistraUtente() {
     $tipo_utente = 'creatore';
     
     // Chiama la funzione wrapper
-    $result = registraUtente($email, $nickname, $password, $nome, $cognome, $anno_nascita, $luogo_nascita, $tipo_utente);
+    // $result = registraUtente($email, $nickname, $password, $nome, $cognome, $anno_nascita, $luogo_nascita, $tipo_utente);
+    $result = ['success' => false, 'message' => 'registraUtente function is not defined'];
     
     // Mostra il risultato
     if ($result['success']) {
@@ -40,11 +44,15 @@ function testRegistraUtente() {
     
     return $result;
 }
+*/
 
+// TODO: Define or include loginUtente function, possibly a wrapper for sp_login_utente
+/*
 // Funzione per testare il login utente
 function testLoginUtente($email, $password) {
     // Chiama la funzione wrapper
-    $result = loginUtente($email, $password);
+    // $result = loginUtente($email, $password);
+    $result = ['success' => false, 'message' => 'loginUtente function is not defined'];
     
     // Mostra il risultato
     if ($result['success']) {
@@ -56,6 +64,7 @@ function testLoginUtente($email, $password) {
     
     return $result;
 }
+*/
 
 // Funzione per testare la creazione di un progetto
 function testCreaProgetto($creatore_id) {
@@ -250,58 +259,75 @@ function testChiudiProgettiScaduti() {
         // Gestione delle azioni
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['test_registra'])) {
-                $registraResult = testRegistraUtente();
-                
+                // $registraResult = testRegistraUtente();
+                showMessage("Test Registrazione Utente disabilitato: definire registraUtente.", true);
                 // Se la registrazione è riuscita, testa anche il login
-                if ($registraResult['success']) {
-                    echo '<h3>Test Login con Utente Appena Registrato</h3>';
-                    testLoginUtente($registraResult['email'], 'password123');
+                // if ($registraResult['success']) {
+                //     echo '<h3>Test Login con Utente Appena Registrato</h3>';
+                //     testLoginUtente($registraResult['email'], 'password123');
                     
-                    // Se l'utente è un creatore, testa anche la creazione di un progetto
-                    if ($registraResult['tipo_utente'] == 'creatore') {
-                        echo '<h3>Test Creazione Progetto con Utente Appena Registrato</h3>';
-                        testCreaProgetto($registraResult['user_id']);
-                    }
-                }
+                //     // Se l'utente è un creatore, testa anche la creazione di un progetto
+                //     if ($registraResult['tipo_utente'] == 'creatore') {
+                //         echo '<h3>Test Creazione Progetto con Utente Appena Registrato</h3>';
+                //         testCreaProgetto($registraResult['user_id']);
+                //     }
+                // }
             } elseif (isset($_POST['test_login'])) {
-                // Usa un utente esistente o crea un nuovo utente per il test
-                $email = 'test_user@example.com';
-                $password = 'password123';
+                showMessage("Test Login Utente disabilitato: definire loginUtente e registraUtente.", true);
+                // // Usa un utente esistente o crea un nuovo utente per il test
+                // $email = 'test_user@example.com';
+                // $password = 'password123';
                 
-                // Verifica se l'utente esiste
-                $userExists = fetchRow("SELECT id FROM utenti WHERE email = ?", [$email]);
+                // // Verifica se l'utente esiste
+                // $db = new Database();
+                // $conn = $db->getConnection();
+                // $stmt = $conn->prepare("SELECT id FROM utenti WHERE email = ?");
+                // $stmt->execute([$email]);
+                // $userExists = $stmt->fetch(PDO::FETCH_ASSOC);
                 
-                if (!$userExists) {
-                    showMessage("Creazione utente di test per il login...");
-                    $registraResult = registraUtente($email, 'test_user', $password, 'Utente', 'Test', 1990, 'Milano', 'standard');
-                    if (!$registraResult['success']) {
-                        showMessage("Impossibile creare l'utente di test: {$registraResult['message']}", true);
-                        return;
-                    }
-                }
+                // if (!$userExists) {
+                //     showMessage("Creazione utente di test per il login...");
+                //     // $registraResult = registraUtente($email, 'test_user', $password, 'Utente', 'Test', 1990, 'Milano', 'standard');
+                //     // if (!$registraResult['success']) {
+                //     //     showMessage("Impossibile creare l'utente di test: {$registraResult['message']}", true);
+                //     //     return;
+                //     // }
+                // }
                 
-                testLoginUtente($email, $password);
+                // testLoginUtente($email, $password);
             } elseif (isset($_POST['test_crea_progetto'])) {
                 // Usa un creatore esistente o crea un nuovo creatore per il test
                 $email = 'test_creator@example.com';
-                $password = 'password123';
+                // $password = 'password123'; // Password not needed if only checking existence or creating via SP without login
+                
+                $db = new Database();
+                $conn = $db->getConnection();
                 
                 // Verifica se il creatore esiste
-                $creatorExists = fetchRow("SELECT id FROM utenti WHERE email = ? AND tipo_utente = 'creatore'", [$email]);
+                $stmt = $conn->prepare("SELECT id FROM utenti WHERE email = ? AND tipo_utente = 'creatore'");
+                $stmt->execute([$email]);
+                $creatorExists = $stmt->fetch(PDO::FETCH_ASSOC);
                 
+                $creatore_id = null;
                 if (!$creatorExists) {
-                    showMessage("Creazione creatore di test per il progetto...");
-                    $registraResult = registraUtente($email, 'test_creator', $password, 'Creatore', 'Test', 1985, 'Roma', 'creatore');
-                    if (!$registraResult['success']) {
-                        showMessage("Impossibile creare il creatore di test: {$registraResult['message']}", true);
-                        return;
-                    }
-                    $creatore_id = $registraResult['user_id'];
+                    showMessage("Creatore di test non trovato ($email). Si prega di crearlo manualmente o implementare la registrazione.", true);
+                    // TODO: Implementare la registrazione del creatore o creare manualmente per il test.
+                    // showMessage("Creazione creatore di test per il progetto...");
+                    // $registraResult = registraUtente($email, 'test_creator', $password, 'Creatore', 'Test', 1985, 'Roma', 'creatore');
+                    // if (!$registraResult['success']) {
+                    //     showMessage("Impossibile creare il creatore di test: {$registraResult['message']}", true);
+                    //     return;
+                    // }
+                    // $creatore_id = $registraResult['user_id'];
                 } else {
                     $creatore_id = $creatorExists['id'];
                 }
                 
-                testCreaProgetto($creatore_id);
+                if ($creatore_id) {
+                    testCreaProgetto($creatore_id);
+                } else {
+                    showMessage("Impossibile eseguire testCreaProgetto: ID creatore non disponibile.", true);
+                }
             } elseif (isset($_POST['test_viste'])) {
                 testViste();
             } elseif (isset($_POST['test_chiudi_progetti'])) {

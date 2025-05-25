@@ -5,7 +5,7 @@
  */
 
 // Includi il file di connessione
-require_once 'db_connect.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Funzione per visualizzare messaggi di stato
 function showMessage($message, $isError = false) {
@@ -17,7 +17,8 @@ function showMessage($message, $isError = false) {
 
 // Funzione per applicare le estensioni al database
 function applyDatabaseExtensions() {
-    $conn = getDbConnection();
+    $db = new Database();
+    $conn = $db->getConnection();
     
     // Leggi il file SQL delle estensioni
     $sqlFile = __DIR__ . '/bostarter_extensions.sql';
@@ -30,19 +31,12 @@ function applyDatabaseExtensions() {
     $sql = file_get_contents($sqlFile);
     
     // Esegui le query multiple
-    if ($conn->multi_query($sql)) {
+    try {
+        $conn->exec($sql);
         showMessage('Estensioni del database BOSTARTER applicate con successo!');
-        
-        // Consuma tutti i risultati
-        do {
-            if ($result = $conn->store_result()) {
-                $result->free();
-            }
-        } while ($conn->more_results() && $conn->next_result());
-        
         return true;
-    } else {
-        showMessage('Errore nell\'applicazione delle estensioni: ' . $conn->error, true);
+    } catch (PDOException $e) {
+        showMessage('Errore nell\'applicazione delle estensioni: ' . $e->getMessage(), true);
         return false;
     }
 }
@@ -50,19 +44,20 @@ function applyDatabaseExtensions() {
 // Funzione per verificare le estensioni applicate
 function checkExtensions() {
     try {
-        $conn = getDbConnection();
+        $db = new Database();
+        $conn = $db->getConnection();
         
         // Verifica se l'evento esiste
-        $eventResult = $conn->query("SHOW EVENTS WHERE Name = 'ev_close_expired_projects'");
-        $eventExists = ($eventResult && $eventResult->num_rows > 0);
+        $stmt = $conn->query("SHOW EVENTS WHERE Name = 'ev_close_expired_projects'");
+        $eventExists = ($stmt && $stmt->rowCount() > 0);
         
         // Verifica se le viste esistono
         $viewsToCheck = ['v_top_creatori', 'v_progetti_near_completion', 'v_top_finanziatori'];
         $viewsExist = [];
         
         foreach ($viewsToCheck as $view) {
-            $viewResult = $conn->query("SHOW TABLES LIKE '$view'");
-            $viewsExist[$view] = ($viewResult && $viewResult->num_rows > 0);
+            $stmt = $conn->query("SHOW TABLES LIKE '$view'");
+            $viewsExist[$view] = ($stmt && $stmt->rowCount() > 0);
         }
         
         // Verifica se le stored procedures esistono
@@ -70,8 +65,8 @@ function checkExtensions() {
         $procsExist = [];
         
         foreach ($procsToCheck as $proc) {
-            $procResult = $conn->query("SHOW PROCEDURE STATUS WHERE Name = '$proc'");
-            $procsExist[$proc] = ($procResult && $procResult->num_rows > 0);
+            $stmt = $conn->query("SHOW PROCEDURE STATUS WHERE Name = '$proc'");
+            $procsExist[$proc] = ($stmt && $stmt->rowCount() > 0);
         }
         
         // Mostra i risultati
@@ -192,9 +187,9 @@ function checkExtensions() {
     
     <div class="card">
         <h2>Informazioni</h2>
-        <p><strong>Host:</strong> <?php echo DB_HOST; ?></p>
-        <p><strong>Database:</strong> <?php echo DB_NAME; ?></p>
-        <p><strong>Charset:</strong> <?php echo DB_CHARSET; ?></p>
+        <p><strong>Host:</strong> <?php echo defined('DB_HOST') ? DB_HOST : 'N/A'; ?></p>
+        <p><strong>Database:</strong> <?php echo defined('DB_NAME') ? DB_NAME : 'N/A'; ?></p>
+        <p><strong>Charset:</strong> <?php echo defined('DB_CHARSET') ? DB_CHARSET : 'N/A'; ?></p>
         <p><strong>File Estensioni:</strong> <?php echo realpath(__DIR__ . '/bostarter_extensions.sql'); ?></p>
     </div>
     

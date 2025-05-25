@@ -6,7 +6,7 @@
  */
 
 // Includi il file di connessione
-require_once 'db_connect.php';
+require_once __DIR__ . '/../config/database.php';
 
 
 /**
@@ -22,24 +22,31 @@ require_once 'db_connect.php';
  * @return array Risultato dell'operazione con chiavi 'success', 'message' e 'progetto_id' se successo
  */
 function creaProgetto($nome, $descrizione, $creatore_id, $tipo_progetto, $budget_richiesto, $data_scadenza, $categoria) {
-    $conn = getDbConnection();
+    $db = new Database();
+    $conn = $db->getConnection();
     
     // Prepara la chiamata alla stored procedure
-    $stmt = $conn->prepare("CALL sp_crea_progetto(?, ?, ?, ?, ?, ?, ?, @p_progetto_id, @p_success, @p_message)");
-    $stmt->bind_param("ssissdss", $nome, $descrizione, $creatore_id, $tipo_progetto, $budget_richiesto, $data_scadenza, $categoria);
+    $stmt = $conn->prepare("CALL sp_crea_progetto(:nome, :descrizione, :creatore_id, :tipo_progetto, :budget_richiesto, :data_scadenza, :categoria, @p_progetto_id, @p_success, @p_message)");
+    
+    $stmt->bindParam(':nome', $nome, PDO::PARAM_STR);
+    $stmt->bindParam(':descrizione', $descrizione, PDO::PARAM_STR);
+    $stmt->bindParam(':creatore_id', $creatore_id, PDO::PARAM_INT);
+    $stmt->bindParam(':tipo_progetto', $tipo_progetto, PDO::PARAM_STR);
+    $stmt->bindParam(':budget_richiesto', $budget_richiesto, PDO::PARAM_STR); // PDO uses STR for decimals
+    $stmt->bindParam(':data_scadenza', $data_scadenza, PDO::PARAM_STR);
+    $stmt->bindParam(':categoria', $categoria, PDO::PARAM_STR);
     
     // Esegui la stored procedure
     $stmt->execute();
-    $stmt->close();
+    $stmt->closeCursor(); // Chiudi il cursore per permettere altre query
     
     // Ottieni i parametri di output
-    $result = $conn->query("SELECT @p_progetto_id as progetto_id, @p_success as success, @p_message as message");
-    $row = $result->fetch_assoc();
+    $output = $conn->query("SELECT @p_progetto_id as progetto_id, @p_success as success, @p_message as message")->fetch(PDO::FETCH_ASSOC);
     
     return [
-        'success' => (bool)$row['success'],
-        'message' => $row['message'],
-        'progetto_id' => $row['progetto_id']
+        'success' => (bool)$output['success'],
+        'message' => $output['message'],
+        'progetto_id' => $output['progetto_id']
     ];
 }
 
@@ -49,7 +56,10 @@ function creaProgetto($nome, $descrizione, $creatore_id, $tipo_progetto, $budget
  * @return array Array di creatori con le loro statistiche
  */
 function getTopCreatori() {
-    return fetchAll("SELECT * FROM v_top_creatori");
+    $db = new Database();
+    $conn = $db->getConnection();
+    $stmt = $conn->query("SELECT * FROM v_top_creatori");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /**
@@ -58,7 +68,10 @@ function getTopCreatori() {
  * @return array Array di progetti vicini al completamento
  */
 function getProgettiNearCompletion() {
-    return fetchAll("SELECT * FROM v_progetti_near_completion");
+    $db = new Database();
+    $conn = $db->getConnection();
+    $stmt = $conn->query("SELECT * FROM v_progetti_near_completion");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /**
@@ -67,7 +80,10 @@ function getProgettiNearCompletion() {
  * @return array Array di finanziatori con le loro statistiche
  */
 function getTopFinanziatori() {
-    return fetchAll("SELECT * FROM v_top_finanziatori");
+    $db = new Database();
+    $conn = $db->getConnection();
+    $stmt = $conn->query("SELECT * FROM v_top_finanziatori");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /**
@@ -77,18 +93,21 @@ function getTopFinanziatori() {
  * @return bool True se l'operazione è riuscita, false altrimenti
  */
 function chiudiProgettiScaduti() {
-    $conn = getDbConnection();
+    $db = new Database();
+    $conn = $db->getConnection();
     
-    // Esegui la query dell'evento manualmente
-    $updateResult = $conn->query("UPDATE progetti SET stato = 'chiuso' WHERE data_scadenza < NOW() AND stato = 'aperto'");
-    
-    if (!$updateResult) {
+    try {
+        // Esegui la query dell'evento manualmente
+        $conn->exec("UPDATE progetti SET stato = 'chiuso' WHERE data_scadenza < NOW() AND stato = 'aperto'");
+        
+        // Registra l'operazione nel log
+        $conn->exec("INSERT INTO log_attivita (tipo_attivita, descrizione) VALUES ('progetti_scaduti_chiusi', CONCAT('Progetti scaduti chiusi manualmente alle ', NOW()))");
+        
+        return true;
+    } catch (PDOException $e) {
+        // Logga l'errore o gestiscilo come preferisci
+        error_log("Errore in chiudiProgettiScaduti: " . $e->getMessage());
         return false;
     }
-    
-    // Registra l'operazione nel log
-    $logResult = $conn->query("INSERT INTO log_attivita (tipo_attivita, descrizione) VALUES ('progetti_scaduti_chiusi', CONCAT('Progetti scaduti chiusi manualmente alle ', NOW()))");
-    
-    return ($logResult !== false);
 }
 ?>

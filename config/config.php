@@ -99,16 +99,6 @@ function verify_csrf_token($token) {
 }
 
 /**
- * Sanitizza l'input per prevenire SQL injection
- * @param string $input Input da sanitizzare
- * @return string Input sanitizzato
- */
-function sanitize_sql($input) {
-    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-    return $conn->real_escape_string($input);
-}
-
-/**
  * Registra un errore nel file di log
  * @param string $message Messaggio di errore
  * @param array $context Contesto dell'errore (opzionale)
