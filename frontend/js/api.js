@@ -1,116 +1,147 @@
-// Configurazione delle chiamate API per BOSTARTER
-
+// Configurazione dell'API
 const API_CONFIG = {
-    BASE_URL: '/BOSTARTER/backend',
-    ENDPOINTS: {
-        AUTH: {
-            LOGIN: '/auth/login.php',
-            REGISTER: '/auth/register.php',
-            LOGOUT: '/auth/logout.php',
-            CHECK_SESSION: '/auth/check_session.php'
-        },
-        PROJECTS: {
-            CREATE: '/projects/create.php',
-            GET_ALL: '/projects/get_all.php',
-            GET_BY_CREATOR: '/projects/get_by_creator.php',
-            GET_FEATURED: '/projects/get_featured.php',
-            FUND: '/projects/fund.php',
-            ADD_REWARD: '/projects/add_reward.php',
-            PUBLISH: '/projects/publish.php'
-        },
-        STATISTICS: {
-            GET_TOP_CREATORS: '/statistics/get_top_creators.php',
-            GET_TOP_PROJECTS: '/statistics/get_top_projects.php',
-            GET_TOP_FUNDERS: '/statistics/get_top_funders.php'
-        },
-        NEWSLETTER: {
-            SUBSCRIBE: '/newsletter/subscribe.php'
-        }
+    baseUrl: 'http://localhost:8080/api',
+    timeout: 10000,
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
     }
 };
 
-// Classe per gestire le chiamate API
-class ApiService {
-    static async request(endpoint, method = 'GET', data = null) {
-        const options = {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': CSRF_TOKEN
-            },
-            credentials: 'include'
-        };
+// Classe per la gestione delle API
+class ApiManager {
+    constructor() {
+        this.baseUrl = API_CONFIG.baseUrl;
+        this.timeout = API_CONFIG.timeout;
+        this.headers = { ...API_CONFIG.headers };
+    }
 
-        if (data) {
-            options.body = JSON.stringify(data);
+    // Gestione degli errori
+    handleError(error) {
+        if (error.response) {
+            throw new Error(error.response.data.message || 'Errore nella richiesta');
+        } else if (error.request) {
+            throw new Error('Nessuna risposta dal server');
+        } else {
+            throw new Error('Errore nella configurazione della richiesta');
         }
+    }
 
+    // Gestione del timeout
+    async timeoutPromise(ms) {
+        return new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout della richiesta')), ms);
+        });
+    }
+
+    // Metodo per le richieste GET
+    async get(endpoint, params = {}) {
         try {
-            const response = await fetch(API_CONFIG.BASE_URL + endpoint, options);
-            const result = await response.json();
+            const url = new URL(`${this.baseUrl}${endpoint}`);
+            Object.entries(params).forEach(([key, value]) => {
+                url.searchParams.append(key, value);
+            });
+
+            const response = await Promise.race([
+                fetch(url, {
+                    method: 'GET',
+                    headers: this.headers
+                }),
+                this.timeoutPromise(this.timeout)
+            ]);
 
             if (!response.ok) {
-                throw new Error(result.message || 'Errore nella richiesta API');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            return result;
+            return await response.json();
         } catch (error) {
-            console.error('Errore API:', error);
-            throw error;
+            this.handleError(error);
         }
     }
 
-    // Metodi per l'autenticazione
-    static async login(credentials) {
-        return this.request(API_CONFIG.ENDPOINTS.AUTH.LOGIN, 'POST', credentials);
+    // Metodo per le richieste POST
+    async post(endpoint, data = {}) {
+        try {
+            const response = await Promise.race([
+                fetch(`${this.baseUrl}${endpoint}`, {
+                    method: 'POST',
+                    headers: this.headers,
+                    body: JSON.stringify(data)
+                }),
+                this.timeoutPromise(this.timeout)
+            ]);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            this.handleError(error);
+        }
     }
 
-    static async register(userData) {
-        return this.request(API_CONFIG.ENDPOINTS.AUTH.REGISTER, 'POST', userData);
+    // Metodo per le richieste PUT
+    async put(endpoint, data = {}) {
+        try {
+            const response = await Promise.race([
+                fetch(`${this.baseUrl}${endpoint}`, {
+                    method: 'PUT',
+                    headers: this.headers,
+                    body: JSON.stringify(data)
+                }),
+                this.timeoutPromise(this.timeout)
+            ]);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            this.handleError(error);
+        }
     }
 
-    static async logout() {
-        return this.request(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, 'POST');
+    // Metodo per le richieste DELETE
+    async delete(endpoint) {
+        try {
+            const response = await Promise.race([
+                fetch(`${this.baseUrl}${endpoint}`, {
+                    method: 'DELETE',
+                    headers: this.headers
+                }),
+                this.timeoutPromise(this.timeout)
+            ]);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            this.handleError(error);
+        }
     }
 
-    // Metodi per i progetti
-    static async createProject(projectData) {
-        return this.request(API_CONFIG.ENDPOINTS.PROJECTS.CREATE, 'POST', projectData);
+    // Imposta il token di autenticazione
+    setAuthToken(token) {
+        if (token) {
+            this.headers['Authorization'] = `Bearer ${token}`;
+        } else {
+            delete this.headers['Authorization'];
+        }
     }
 
-    static async getCreatorProjects(creatorId) {
-        return this.request(`${API_CONFIG.ENDPOINTS.PROJECTS.GET_BY_CREATOR}?creator_id=${creatorId}`);
-    }
-
-    static async fundProject(fundingData) {
-        return this.request(API_CONFIG.ENDPOINTS.PROJECTS.FUND, 'POST', fundingData);
-    }
-
-    static async addProjectReward(rewardData) {
-        return this.request(API_CONFIG.ENDPOINTS.PROJECTS.ADD_REWARD, 'POST', rewardData);
-    }
-
-    static async publishProject(projectId) {
-        return this.request(API_CONFIG.ENDPOINTS.PROJECTS.PUBLISH, 'POST', { project_id: projectId });
+    // Rimuove il token di autenticazione
+    removeAuthToken() {
+        delete this.headers['Authorization'];
     }
 }
 
-// Gestore della sessione utente
-const SessionManager = {
-    setSession(userData) {
-        localStorage.setItem('user_session', JSON.stringify(userData));
-    },
+// Crea un'istanza globale del gestore API
+const apiManager = new ApiManager();
 
-    getSession() {
-        const session = localStorage.getItem('user_session');
-        return session ? JSON.parse(session) : null;
-    },
-
-    clearSession() {
-        localStorage.removeItem('user_session');
-    },
-
-    isLoggedIn() {
-        return !!this.getSession();
-    }
-};
+// Esporta l'istanza e la classe
+export { apiManager, ApiManager };

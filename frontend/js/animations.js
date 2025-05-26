@@ -105,4 +105,165 @@ document.addEventListener('DOMContentLoaded', () => {
             element.style.outlineOffset = '0';
         });
     });
+
+    // Gestione delle animazioni al caricamento
+    const animateOnScroll = () => {
+        const elements = document.querySelectorAll('.animate-on-scroll');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        elements.forEach(element => observer.observe(element));
+    };
+
+    // Gestione delle animazioni hover
+    const initHoverAnimations = () => {
+        const cards = document.querySelectorAll('.card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('hover-lift');
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('hover-lift');
+            });
+        });
+    };
+
+    // Gestione delle animazioni di transizione
+    const initTransitionAnimations = () => {
+        const links = document.querySelectorAll('a[href^="#"]');
+        
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                const targetId = link.getAttribute('href');
+                if (targetId === '#') return;
+                
+                e.preventDefault();
+                const targetElement = document.querySelector(targetId);
+                if (!targetElement) return;
+                
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+    };
+
+    // Gestione delle animazioni di caricamento
+    const initLoadingAnimations = () => {
+        const loadingElements = document.querySelectorAll('.loading');
+        
+        loadingElements.forEach(element => {
+            const spinner = document.createElement('div');
+            spinner.className = 'loading-spinner';
+            element.appendChild(spinner);
+        });
+    };
+
+    // Gestione delle animazioni di notifica
+    const initNotificationAnimations = () => {
+        const notifications = document.querySelectorAll('.notification');
+        
+        notifications.forEach(notification => {
+            notification.classList.add('notification-slide-in');
+            
+            const closeButton = notification.querySelector('.notification-close');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    notification.classList.add('notification-hide');
+                    setTimeout(() => notification.remove(), 300);
+                });
+            }
+        });
+    };
+
+    // Gestione delle animazioni di modale
+    const initModalAnimations = () => {
+        const modals = document.querySelectorAll('.modal');
+        
+        modals.forEach(modal => {
+            const content = modal.querySelector('.modal-content');
+            if (!content) return;
+            
+            modal.addEventListener('show', () => {
+                modal.classList.add('active');
+                content.classList.add('modal-fade');
+            });
+            
+            modal.addEventListener('hide', () => {
+                modal.classList.remove('active');
+                content.classList.remove('modal-fade');
+            });
+        });
+    };
+
+    // Gestione delle animazioni di testo
+    const initTextAnimations = () => {
+        const textElements = document.querySelectorAll('.text-reveal');
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.5
+        });
+
+        textElements.forEach(element => observer.observe(element));
+    };
+
+    // Gestione delle animazioni di immagine
+    const initImageAnimations = () => {
+        const images = document.querySelectorAll('.image-zoom');
+        
+        images.forEach(image => {
+            image.addEventListener('mouseenter', () => {
+                image.style.transform = 'scale(1.1)';
+            });
+            
+            image.addEventListener('mouseleave', () => {
+                image.style.transform = 'scale(1)';
+            });
+        });
+    };
+
+    // Inizializzazione di tutte le animazioni
+    const initAnimations = () => {
+        animateOnScroll();
+        initHoverAnimations();
+        initTransitionAnimations();
+        initLoadingAnimations();
+        initNotificationAnimations();
+        initModalAnimations();
+        initTextAnimations();
+        initImageAnimations();
+    };
+
+    // Esporta le funzioni
+    export {
+        initAnimations,
+        animateOnScroll,
+        initHoverAnimations,
+        initTransitionAnimations,
+        initLoadingAnimations,
+        initNotificationAnimations,
+        initModalAnimations,
+        initTextAnimations,
+        initImageAnimations
+    };
 }));

@@ -81,3 +81,251 @@
         opacity: 0.1;
     }
 }
+
+/* Hero Section */
+.hero {
+    position: relative;
+    padding: var(--spacing-2xl) 0;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+    color: white;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('../images/pattern.svg') repeat;
+    opacity: 0.1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.2;
+}
+
+.hero-description {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-xl);
+    opacity: 0.9;
+}
+
+/* Featured Projects */
+.featured-projects {
+    padding: var(--spacing-2xl) 0;
+    background-color: var(--color-gray-50);
+}
+
+.featured-projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+}
+
+/* Categories */
+.categories {
+    padding: var(--spacing-xl) 0;
+}
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.category-card {
+    position: relative;
+    height: 200px;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.category-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease-out;
+}
+
+.category-card:hover img {
+    transform: scale(1.1);
+}
+
+.category-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    display: flex;
+    align-items: flex-end;
+    padding: var(--spacing-lg);
+    color: white;
+}
+
+/* Statistics */
+.statistics {
+    padding: var(--spacing-2xl) 0;
+    background-color: var(--color-gray-100);
+}
+
+.statistics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-xl);
+    text-align: center;
+}
+
+.statistic-item {
+    padding: var(--spacing-lg);
+}
+
+.statistic-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.statistic-label {
+    color: var(--color-gray-600);
+    font-size: 1.1rem;
+}
+
+/* Testimonials */
+.testimonials {
+    padding: var(--spacing-2xl) 0;
+    background-color: var(--color-gray-50);
+}
+
+.testimonial-card {
+    background-color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    margin: var(--spacing-md);
+}
+
+.testimonial-content {
+    font-style: italic;
+    margin-bottom: var(--spacing-lg);
+    color: var(--color-gray-700);
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.testimonial-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.testimonial-info h4 {
+    font-weight: 600;
+    color: var(--color-gray-900);
+}
+
+.testimonial-info p {
+    color: var(--color-gray-600);
+    font-size: 0.9rem;
+}
+
+/* Newsletter */
+.newsletter {
+    padding: var(--spacing-2xl) 0;
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.newsletter-content {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.newsletter-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+}
+
+.newsletter-description {
+    margin-bottom: var(--spacing-xl);
+    opacity: 0.9;
+}
+
+.newsletter-form {
+    display: flex;
+    gap: var(--spacing-md);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-description {
+        font-size: 1rem;
+    }
+
+    .newsletter-form {
+        flex-direction: column;
+    }
+
+    .statistics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .featured-projects,
+    .testimonials {
+        background-color: var(--color-gray-800);
+    }
+
+    .statistics {
+        background-color: var(--color-gray-900);
+    }
+
+    .testimonial-card {
+        background-color: var(--color-gray-700);
+    }
+
+    .testimonial-content {
+        color: var(--color-gray-300);
+    }
+
+    .testimonial-info h4 {
+        color: var(--color-gray-100);
+    }
+
+    .testimonial-info p {
+        color: var(--color-gray-400);
+    }
+}

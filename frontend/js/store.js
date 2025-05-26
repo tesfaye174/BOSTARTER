@@ -1,26 +1,42 @@
 // Store centralizzato per la gestione dello stato dell'applicazione BOSTARTER
 
-const Store = {
-    state: {
-        user: null,
-        projects: [],
-        categories: [],
-        notifications: [],
-        loading: false,
-        errors: {},
-        filters: {
-            category: null,
-            sort: 'newest',
-            search: ''
-        },
-        statistics: {
-            topCreators: [],
-            topProjects: [],
-            topFunders: []
-        }
+// Stato iniziale dell'applicazione
+const initialState = {
+    user: null,
+    isAuthenticated: false,
+    projects: [],
+    featuredProjects: [],
+    categories: [],
+    notifications: [],
+    currentPage: 1,
+    isLoading: false,
+    error: null,
+    filters: {
+        category: null,
+        sortBy: 'newest',
+        searchQuery: ''
     },
+    statistics: {
+        topCreators: [],
+        topProjects: [],
+        topFunders: []
+    }
+};
 
-    listeners: new Set(),
+// Classe per la gestione dello stato
+class Store {
+    constructor() {
+        this.state = { ...initialState };
+        this.listeners = new Set();
+
+        // Inizializza lo store con i dati salvati
+        this.initialize();
+    }
+
+    // Ottiene lo stato corrente
+    getState() {
+        return { ...this.state };
+    }
 
     // Inizializza lo store con i dati salvati
     initialize() {
@@ -36,7 +52,7 @@ const Store = {
 
         // Salva lo stato quando l'utente chiude la pagina
         window.addEventListener('beforeunload', () => this.saveState());
-    },
+    }
 
     // Salva lo stato nel localStorage
     saveState() {
@@ -45,112 +61,140 @@ const Store = {
             filters: this.state.filters
         };
         localStorage.setItem('bostarter_state', JSON.stringify(stateToSave));
-    },
+    }
 
-    // Aggiorna lo stato e notifica i listener
+    // Imposta lo stato
     setState(newState) {
-        this.state = { ...this.state, ...newState };
+        this.state = {
+            ...this.state,
+            ...newState
+        };
         this.notifyListeners();
         this.saveState();
-    },
+    }
 
-    // Aggiorna una proprietà specifica dello stato
-    updateState(key, value) {
-        if (key.includes('.')) {
-            const keys = key.split('.');
-            let current = this.state;
-            for (let i = 0; i < keys.length - 1; i++) {
-                current = current[keys[i]];
-            }
-            current[keys[keys.length - 1]] = value;
-        } else {
-            this.state[key] = value;
-        }
-        this.notifyListeners();
-        this.saveState();
-    },
-
-    // Sottoscrivi un listener per i cambiamenti dello stato
+    // Sottoscrive un listener
     subscribe(listener) {
         this.listeners.add(listener);
         return () => this.listeners.delete(listener);
-    },
+    }
 
-    // Notifica tutti i listener dei cambiamenti
+    // Notifica i listener
     notifyListeners() {
         this.listeners.forEach(listener => listener(this.state));
-    },
+    }
 
-    // Gestione utente
+    // Azioni per l'utente
     setUser(user) {
-        this.updateState('user', user);
-    },
+        this.setState({
+            user,
+            isAuthenticated: !!user
+        });
+    }
 
     clearUser() {
-        this.updateState('user', null);
-    },
+        this.setState({
+            user: null,
+            isAuthenticated: false
+        });
+    }
 
-    // Gestione progetti
+    // Azioni per i progetti
     setProjects(projects) {
-        this.updateState('projects', projects);
-    },
+        this.setState({ projects });
+    }
+
+    setFeaturedProjects(projects) {
+        this.setState({ featuredProjects: projects });
+    }
 
     addProject(project) {
-        this.updateState('projects', [...this.state.projects, project]);
-    },
-
-    updateProject(projectId, updates) {
-        const updatedProjects = this.state.projects.map(project =>
-            project.id === projectId ? { ...project, ...updates } : project
-        );
-        this.setProjects(updatedProjects);
-    },
-
-    removeProject(projectId) {
-        const filteredProjects = this.state.projects.filter(project => project.id !== projectId);
-        this.setProjects(filteredProjects);
-    },
-
-    // Gestione filtri
-    setFilter(key, value) {
-        this.updateState(`filters.${key}`, value);
-    },
-
-    clearFilters() {
-        this.updateState('filters', {
-            category: null,
-            sort: 'newest',
-            search: ''
+        this.setState({
+            projects: [...this.state.projects, project]
         });
-    },
+    }
+
+    updateProject(updatedProject) {
+        this.setState({
+            projects: this.state.projects.map(project =>
+                project.id === updatedProject.id ? updatedProject : project
+            )
+        });
+    }
+
+    deleteProject(projectId) {
+        this.setState({
+            projects: this.state.projects.filter(project => project.id !== projectId)
+        });
+    }
+
+    // Azioni per le categorie
+    setCategories(categories) {
+        this.setState({ categories });
+    }
+
+    // Azioni per le notifiche
+    addNotification(notification) {
+        this.setState({
+            notifications: [...this.state.notifications, notification]
+        });
+    }
+
+    removeNotification(notificationId) {
+        this.setState({
+            notifications: this.state.notifications.filter(
+                notification => notification.id !== notificationId
+            )
+        });
+    }
+
+    // Azioni per il caricamento
+    setLoading(isLoading) {
+        this.setState({ isLoading });
+    }
+
+    // Azioni per gli errori
+    setError(error) {
+        this.setState({ error });
+    }
+
+    clearError() {
+        this.setState({ error: null });
+    }
+
+    // Azioni per i filtri
+    setFilters(filters) {
+        this.setState({
+            filters: {
+                ...this.state.filters,
+                ...filters
+            }
+        });
+    }
+
+    // Azioni per la paginazione
+    setCurrentPage(page) {
+        this.setState({ currentPage: page });
+    }
+
+    // Reset dello stato
+    reset() {
+        this.setState({ ...initialState });
+    }
 
     // Gestione statistiche
     updateStatistics(key, value) {
-        this.updateState(`statistics.${key}`, value);
-    },
-
-    // Gestione errori
-    setError(key, error) {
-        this.updateState(`errors.${key}`, error);
-    },
-
-    clearError(key) {
-        const newErrors = { ...this.state.errors };
-        delete newErrors[key];
-        this.updateState('errors', newErrors);
-    },
-
-    clearAllErrors() {
-        this.updateState('errors', {});
-    },
-
-    // Gestione loading state
-    setLoading(isLoading) {
-        this.updateState('loading', isLoading);
+        this.setState({
+            statistics: {
+                ...this.state.statistics,
+                [key]: value
+            }
+        });
     }
-};
+}
 
-// Inizializza lo store
-Store.initialize();
+// Crea un'istanza globale dello store
+const store = new Store();
 
-export default Store;
+// Esporta l'istanza e la classe
+export { store, Store };

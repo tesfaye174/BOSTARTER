@@ -7,15 +7,23 @@
 ---
 
 ## 📋 Indice
-1. [Panoramica](#panoramica)
-2. [Funzionalità](#funzionalità)
-3. [Architettura](#architettura)
-4. [Implementazione](#implementazione)
-5. [Setup](#setup)
-6. [Struttura del progetto](#struttura-del-progetto)
-7. [Contribuire](#contribuire)
-8. [Licenza](#licenza)
-9. [Supporto](#supporto)
+- [📋 Indice](#-indice)
+- [🔍 Panoramica](#-panoramica)
+- [🔑 Funzionalità](#-funzionalità)
+  - [Sostenitori](#sostenitori)
+  - [Creatori](#creatori)
+  - [Sviluppatori](#sviluppatori)
+- [🏗️ Architettura](#️-architettura)
+  - [Utenti](#utenti)
+  - [Progetti](#progetti)
+  - [Analisi](#analisi)
+  - [Funzionalità avanzate](#funzionalità-avanzate)
+- [⚙️ Setup](#️-setup)
+  - [Prerequisiti](#prerequisiti)
+  - [Avvio rapido](#avvio-rapido)
+- [🤝 Contribuire](#-contribuire)
+- [📄 Licenza](#-licenza)
+- [🛠️ Supporto](#️-supporto)
 
 ---
 
@@ -115,3 +123,40 @@ Per problemi o idee, apri un issue su GitHub.
 
 *© 2025 BOSTARTER Team*
 
+BOSTARTER/
+│
+├── backend/
+│   ├── api/                # Endpoint REST PHP (es: progetti.php, utenti.php, auth.php)
+│   ├── auth/               # Login/registrazione (es: login.php, register.php)
+│   ├── controllers/        # Logica di business (es: ProgettoController.php)
+│   ├── models/             # Classi PHP per entità (es: Progetto.php, Utente.php)
+│   ├── utils/              # Funzioni di utilità (es: db.php, jwt.php)
+│   ├── config/             # Configurazione DB (database.php, config.php)
+│   ├── logs/               # Log MongoDB (eventi_log.php)
+│   └── index.php           # Router principale API REST
+│
+├── database/
+│   ├── bostarter_schema.sql      # Schema MySQL
+│   ├── bostarter_procedures.sql  # Stored procedure
+│   ├── bostarter_views.sql       # Viste statistiche
+│   ├── bostarter_triggers.sql    # Trigger
+│   └── bostarter_events.sql      # Eventi MySQL
+│
+├── frontend/
+│   ├── assets/             # Immagini, SVG, font, icone
+│   ├── css/                # Bootstrap + custom CSS
+│   ├── js/                 # JS custom (moduli, servizi, store, utilità)
+│   │   ├── api/            # Chiamate API REST
+│   │   ├── components/     # Componenti riutilizzabili (modali, card, navbar)
+│   │   ├── features/       # Logica specifica per feature (progetti, auth, dashboard, ecc.)
+│   │   ├── store/          # Stato globale (es: authStore.js, projectStore.js)
+│   │   ├── utils/          # Funzioni di utilità (es: validators.js, helpers.js)
+│   │   └── main.js         # Entry point JS
+│   ├── images/             # Immagini progetti/utenti
+│   ├── index.html          # Homepage
+│   ├── dashboard.html      # Dashboard utente
+│   ├── project.html        # Dettaglio progetto
+│   ├── admin/              # Pagine e JS per admin
+│   └── ...                 # Altre pagine (login, register, ecc.)
+│
+└── README.md
