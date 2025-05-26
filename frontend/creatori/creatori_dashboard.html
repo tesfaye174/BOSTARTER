@@ -172,7 +172,7 @@
             </div>
             <a href="#" id="logout-link" class="ml-4 px-4 py-2 text-gray-800 font-medium hover:text-primary">Logout</a>
           </div>
-          <button id="mobile-menu-button" class="ml-4 p-2 rounded-full md:hidden">
+          <button id="mobile-menu-button" class="ml-4 p-2 rounded-full md:hidden" aria-label="Menu mobile" title="Menu mobile">
             <div class="w-6 h-6 flex items-center justify-center">
               <i class="ri-menu-line text-gray-800"></i>
             </div>
@@ -419,6 +419,8 @@
                   </h3>
                   <select
                     class="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    aria-label="Seleziona periodo"
+                    title="Seleziona periodo"
                   >
                     <option>Ultimi 30 giorni</option>
                     <option>Ultimi 3 mesi</option>
@@ -1070,178 +1072,287 @@
       });
     </script>
     <script>
-      // Sposta tutte le funzioni JS personalizzate in un unico file separato per migliorare la manutenibilità
-      // Esempio: frontend/creatori/js/dashboard.js
-      // ...
-    </script>
-      document.addEventListener('DOMContentLoaded', async function () {
-        // Mobile menu handling
-        const initMobileMenu = () => {
-            const menuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.querySelector('.hidden.md\\:flex.ml-10');
-            
-            if (menuButton && mobileMenu) {
-                menuButton.addEventListener('click', () => {
-                    mobileMenu.classList.toggle('hidden');
-                    // Add animation classes
-                    mobileMenu.classList.toggle('fade-in');
-                });
-            }
-        };
+      // Utility functions
+      const utils = {
+        showError: (message, type = 'error') => {
+          const toast = document.createElement('div');
+          toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+            type === 'error' ? 'bg-red-500' : 'bg-green-500'
+          } text-white z-50`;
+          toast.textContent = message;
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        },
 
-        // Session management
-        const handleSession = async () => {
-            try {
-                const userData = await checkSession();
-                
-                if (userData?.role === 'creator') {
-                    await Promise.all([
-                        displayUserInfo(userData, 'user-info-container'),
-                        updateDashboardStats(userData),
-                        initializeCharts(),
-                        loadProjects(userData.id),
-                        loadRewards(userData.id)
-                    ]);
-                } else {
-                    throw new Error('Unauthorized access');
+        debounce: (func, wait) => {
+          let timeout;
+          return function executedFunction(...args) {
+            const later = () => {
+              clearTimeout(timeout);
+              func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+          };
+        }
+      };
+
+      // Dashboard initialization
+      class Dashboard {
+        constructor() {
+          this.chart = null;
+          this.userData = null;
+          this.init();
+        }
+
+        async init() {
+          try {
+            await this.handleSession();
+            this.initMobileMenu();
+            this.initLogout();
+            this.initEventListeners();
+          } catch (error) {
+            utils.showError('Errore durante l\'inizializzazione della dashboard');
+            console.error('Init error:', error);
+          }
+        }
+
+        async handleSession() {
+          try {
+            this.userData = await checkSession();
+            
+            if (this.userData?.role !== 'creator') {
+              throw new Error('Accesso non autorizzato');
+            }
+
+            await Promise.all([
+              this.displayUserInfo(),
+              this.updateDashboardStats(),
+              this.initializeCharts(),
+              this.loadProjects(),
+              this.loadRewards()
+            ]);
+          } catch (error) {
+            utils.showError('Sessione non valida o scaduta');
+            setTimeout(() => window.location.href = '../index.html', 2000);
+          }
+        }
+
+        initMobileMenu() {
+          const menuButton = document.getElementById('mobile-menu-button');
+          const mobileMenu = document.querySelector('.hidden.md\\:flex.ml-10');
+          
+          if (menuButton && mobileMenu) {
+            menuButton.addEventListener('click', () => {
+              mobileMenu.classList.toggle('hidden');
+              menuButton.setAttribute('aria-expanded', 
+                menuButton.getAttribute('aria-expanded') === 'true' ? 'false' : 'true'
+              );
+            });
+          }
+        }
+
+        initLogout() {
+          const logoutLink = document.getElementById('logout-link');
+          if (logoutLink) {
+            logoutLink.addEventListener('click', async (event) => {
+              event.preventDefault();
+              try {
+                await logoutUser("frontend/index.html");
+              } catch (error) {
+                utils.showError('Errore durante il logout');
+                console.error('Logout error:', error);
+              }
+            });
+          }
+        }
+
+        initEventListeners() {
+          // Responsive chart handling
+          const handleResize = utils.debounce(() => {
+            if (this.chart) {
+              this.chart.resize();
+            }
+          }, 250);
+
+          window.addEventListener('resize', handleResize);
+
+          // Period selector handling
+          const periodSelector = document.querySelector('select[aria-label="Seleziona periodo"]');
+          if (periodSelector) {
+            periodSelector.addEventListener('change', () => {
+              this.updateChartData(periodSelector.value);
+            });
+          }
+        }
+
+        async displayUserInfo() {
+          const container = document.getElementById('user-info-container');
+          if (!container || !this.userData) return;
+
+          container.innerHTML = `
+            <div class="flex items-center">
+              <img src="${this.userData.avatar || '../assets/images/default-avatar.png'}" 
+                   alt="Avatar utente" 
+                   class="w-8 h-8 rounded-full mr-2">
+              <span class="text-gray-800">${this.userData.name}</span>
+            </div>
+          `;
+        }
+
+        async updateDashboardStats() {
+          // Update sidebar stats
+          const stats = {
+            'sidebar-projects-created': this.userData.projectsCreated || 0,
+            'sidebar-projects-funded': this.userData.projectsFunded || 0,
+            'sidebar-total-invested': `€ ${(this.userData.totalInvested || 0).toLocaleString()}`
+          };
+
+          Object.entries(stats).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+          });
+        }
+
+        initializeCharts() {
+          const chartDom = document.getElementById('progressChart');
+          if (!chartDom) return;
+
+          this.chart = echarts.init(chartDom);
+          this.updateChartData('30days');
+        }
+
+        updateChartData(period) {
+          if (!this.chart) return;
+
+          const option = {
+            tooltip: {
+              trigger: 'axis',
+              formatter: (params) => {
+                let result = params[0].axisValue + '<br/>';
+                params.forEach(param => {
+                  const value = param.seriesName === 'Fondi Raccolti' 
+                    ? '€' + param.value.toLocaleString()
+                    : param.value;
+                  result += `${param.marker} ${param.seriesName}: ${value}<br/>`;
+                });
+                return result;
+              }
+            },
+            legend: {
+              data: ['Fondi Raccolti', 'Sostenitori'],
+              textStyle: { color: '#666' }
+            },
+            grid: {
+              left: '3%',
+              right: '4%',
+              bottom: '3%',
+              containLabel: true
+            },
+            xAxis: {
+              type: 'category',
+              boundaryGap: false,
+              data: this.getChartData(period).dates,
+              axisLine: { lineStyle: { color: '#ddd' } }
+            },
+            yAxis: {
+              type: 'value',
+              splitLine: { lineStyle: { color: '#eee' } }
+            },
+            series: [
+              {
+                name: 'Fondi Raccolti',
+                type: 'line',
+                smooth: true,
+                symbolSize: 6,
+                data: this.getChartData(period).funds,
+                itemStyle: { color: '#3176FF' },
+                areaStyle: {
+                  color: {
+                    type: 'linear',
+                    x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [
+                      { offset: 0, color: 'rgba(49, 118, 255, 0.3)' },
+                      { offset: 1, color: 'rgba(49, 118, 255, 0.1)' }
+                    ]
+                  }
                 }
-            } catch (error) {
-                console.error('Session error:', error);
-                showErrorMessage('Accesso non autorizzato o sessione scaduta');
-                setTimeout(() => {
-                    window.location.href = '../index.html';
-                }, 2000);
+              },
+              {
+                name: 'Sostenitori',
+                type: 'line',
+                smooth: true,
+                symbolSize: 6,
+                data: this.getChartData(period).supporters,
+                itemStyle: { color: '#34D399' }
+              }
+            ]
+          };
+
+          this.chart.setOption(option);
+        }
+
+        getChartData(period) {
+          // In a real application, this would fetch data from the server
+          // based on the selected period
+          const data = {
+            '30days': {
+              dates: ['01/05', '08/05', '15/05', '22/05', '29/05'],
+              funds: [1200, 1800, 2400, 3000, 3600],
+              supporters: [12, 18, 24, 30, 36]
+            },
+            '3months': {
+              dates: ['Mar', 'Apr', 'Mag'],
+              funds: [5000, 7500, 10000],
+              supporters: [50, 75, 100]
             }
-        };
+          };
+          return data[period] || data['30days'];
+        }
 
-        // Logout handler
-        const initLogout = () => {
-            const logoutLink = document.getElementById('logout-link');
-            if (logoutLink) {
-                logoutLink.addEventListener('click', async (event) => {
-                    event.preventDefault();
-                    try {
-                        await logoutUser("frontend/index.html");
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                        showErrorMessage('Errore durante il logout');
-                    }
-                });
-            }
-        };
+        async loadProjects() {
+          try {
+            // In a real application, this would fetch projects from the server
+            const projects = await this.fetchProjects();
+            this.renderProjects(projects);
+          } catch (error) {
+            utils.showError('Errore nel caricamento dei progetti');
+            console.error('Load projects error:', error);
+          }
+        }
 
-        // Chart initialization
-        const initializeCharts = () => {
-            const chartDom = document.getElementById('progressChart');
-            if (!chartDom) return;
+        async loadRewards() {
+          try {
+            // In a real application, this would fetch rewards from the server
+            const rewards = await this.fetchRewards();
+            this.renderRewards(rewards);
+          } catch (error) {
+            utils.showError('Errore nel caricamento delle ricompense');
+            console.error('Load rewards error:', error);
+          }
+        }
 
-            const myChart = echarts.init(chartDom);
-            const option = {
-                tooltip: {
-                    trigger: 'axis',
-                    formatter: function(params) {
-                        let result = params[0].axisValue + '<br/>';
-                        params.forEach(param => {
-                            const value = param.seriesName === 'Fondi Raccolti' 
-                                ? '€' + param.value.toLocaleString()
-                                : param.value;
-                            result += `${param.marker} ${param.seriesName}: ${value}<br/>`;
-                        });
-                        return result;
-                    }
-                },
-                legend: {
-                    data: ['Fondi Raccolti', 'Sostenitori'],
-                    textStyle: {
-                        color: '#666'
-                    }
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: {
-                    type: 'category',
-                    boundaryGap: false,
-                    data: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug'],
-                    axisLine: {
-                        lineStyle: {
-                            color: '#ddd'
-                        }
-                    }
-                },
-                yAxis: {
-                    type: 'value',
-                    splitLine: {
-                        lineStyle: {
-                            color: '#eee'
-                        }
-                    }
-                },
-                series: [
-                    {
-                        name: 'Fondi Raccolti',
-                        type: 'line',
-                        smooth: true,
-                        symbolSize: 6,
-                        data: [1200, 1320, 1010, 1340, 900, 2300, 2100],
-                        itemStyle: {
-                            color: '#3176FF'
-                        },
-                        areaStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0,
-                                y: 0,
-                                x2: 0,
-                                y2: 1,
-                                colorStops: [{
-                                    offset: 0,
-                                    color: 'rgba(49, 118, 255, 0.3)'
-                                }, {
-                                    offset: 1,
-                                    color: 'rgba(49, 118, 255, 0.1)'
-                                }]
-                            }
-                        }
-                    },
-                    {
-                        name: 'Sostenitori',
-                        type: 'line',
-                        smooth: true,
-                        symbolSize: 6,
-                        data: [22, 18, 19, 23, 29, 33, 31],
-                        itemStyle: {
-                            color: '#34D399'
-                        }
-                    }
-                ]
-            };
+        // Placeholder methods for API calls
+        async fetchProjects() {
+          return [];
+        }
 
-            myChart.setOption(option);
+        async fetchRewards() {
+          return [];
+        }
 
-            // Responsive chart
-            const handleResize = () => {
-                myChart.resize();
-            };
-            window.addEventListener('resize', handleResize);
-            
-            // Cleanup
-            return () => window.removeEventListener('resize', handleResize);
-        };
+        renderProjects(projects) {
+          // Implementation for rendering projects
+        }
 
-        // Error message helper
-        const showErrorMessage = (message) => {
-            // You can implement a better UI feedback here
-            alert(message);
-        };
+        renderRewards(rewards) {
+          // Implementation for rendering rewards
+        }
+      }
 
-        // Initialize everything
-        initMobileMenu();
-        await handleSession();
-        initLogout();
+      // Initialize dashboard when DOM is loaded
+      document.addEventListener('DOMContentLoaded', () => {
+        new Dashboard();
       });
     </script>
   </body>

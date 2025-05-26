@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sfondo -->
+  <rect width="800" height="600" fill="#1F2937"/>
+  
+  <!-- Finestra principale -->
+  <rect x="100" y="100" width="600" height="400" rx="10" fill="#374151"/>
+  
+  <!-- Barra del titolo -->
+  <rect x="100" y="100" width="600" height="40" rx="10" fill="#4B5563"/>
+  <circle cx="130" cy="120" r="8" fill="#EF4444"/>
+  <circle cx="160" cy="120" r="8" fill="#F59E0B"/>
+  <circle cx="190" cy="120" r="8" fill="#10B981"/>
+  
+  <!-- Contenuto -->
+  <rect x="130" y="160" width="540" height="40" rx="5" fill="#6B7280"/>
+  <rect x="130" y="220" width="540" height="40" rx="5" fill="#6B7280"/>
+  <rect x="130" y="280" width="540" height="40" rx="5" fill="#6B7280"/>
+  <rect x="130" y="340" width="540" height="40" rx="5" fill="#6B7280"/>
+  
+  <!-- Icone -->
+  <circle cx="150" cy="180" r="10" fill="#3176FF"/>
+  <circle cx="150" cy="240" r="10" fill="#3176FF"/>
+  <circle cx="150" cy="300" r="10" fill="#3176FF"/>
+  <circle cx="150" cy="360" r="10" fill="#3176FF"/>
+  
+  <!-- Dettagli -->
+  <path d="M170 180 L 650 180" stroke="#9CA3AF" stroke-width="2"/>
+  <path d="M170 240 L 650 240" stroke="#9CA3AF" stroke-width="2"/>
+  <path d="M170 300 L 650 300" stroke="#9CA3AF" stroke-width="2"/>
+  <path d="M170 360 L 650 360" stroke="#9CA3AF" stroke-width="2"/>
+</svg> 

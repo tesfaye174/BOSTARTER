@@ -5,17 +5,34 @@
  * Utilizza la classe User per gestire tutte le operazioni di autenticazione
  */
 
-// Includi la classe User
+// Includi le dipendenze necessarie
 require_once __DIR__ . '/classes/User.php';
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/utils/logger.php';
+require_once __DIR__ . '/utils/validator.php';
 
-// Avvia la sessione se non è già attiva (già gestito nella classe User)
+// Configurazione
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_TIMEOUT = 900; // 15 minuti in secondi
+const PASSWORD_MIN_LENGTH = 8;
+const SESSION_LIFETIME = 3600; // 1 ora in secondi
+
+// Avvia la sessione con impostazioni di sicurezza
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 1);
+ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.gc_maxlifetime', SESSION_LIFETIME);
+session_start();
 
 // Verifica il login automatico all'inclusione del file
-$database = new Database();
-$db = $database->getConnection();
-$user = new User($db);
-$user->checkRememberMe();
+try {
+    $database = new Database();
+    $db = $database->getConnection();
+    $user = new User($db);
+    $user->checkRememberMe();
+} catch (Exception $e) {
+    Logger::error('Errore durante il login automatico: ' . $e->getMessage());
+}
 
 /**
  * Funzione wrapper per registrare un nuovo utente
@@ -23,26 +40,44 @@ $user->checkRememberMe();
  * @return array Risultato dell'operazione
  */
 function registraUtente($dati) {
-    global $db;
-    $user = new User($db);
-    
-    $user->email = $dati['email'];
-    $user->nickname = $dati['nickname'];
-    $user->password_hash = $dati['password']; // Sarà hashata nel metodo register()
-    $user->nome = $dati['nome'];
-    $user->cognome = $dati['cognome'];
-    $user->anno_nascita = $dati['anno_nascita'];
-    $user->luogo_nascita = $dati['luogo_nascita'];
-    $user->tipo_utente = $dati['tipo_utente'] ?? 'standard';
-    
-    $result = $user->register();
-    
-    // Converti il formato della risposta per compatibilità
-    return [
-        'success' => ($result['status'] === 'success'),
-        'message' => $result['message'],
-        'user_id' => $result['user_id']
-    ];
+    try {
+        // Validazione input
+        $validator = new Validator();
+        $validator->validateRegistration($dati);
+        
+        global $db;
+        $user = new User($db);
+        
+        // Sanitizzazione input
+        $user->email = filter_var($dati['email'], FILTER_SANITIZE_EMAIL);
+        $user->nickname = filter_var($dati['nickname'], FILTER_SANITIZE_STRING);
+        $user->password_hash = $dati['password']; // Sarà hashata nel metodo register()
+        $user->nome = filter_var($dati['nome'], FILTER_SANITIZE_STRING);
+        $user->cognome = filter_var($dati['cognome'], FILTER_SANITIZE_STRING);
+        $user->anno_nascita = filter_var($dati['anno_nascita'], FILTER_SANITIZE_NUMBER_INT);
+        $user->luogo_nascita = filter_var($dati['luogo_nascita'], FILTER_SANITIZE_STRING);
+        $user->tipo_utente = $dati['tipo_utente'] ?? 'standard';
+        
+        $result = $user->register();
+        
+        if ($result['status'] === 'success') {
+            Logger::info('Nuovo utente registrato: ' . $user->email);
+        } else {
+            Logger::warning('Registrazione fallita: ' . $result['message']);
+        }
+        
+        return [
+            'success' => ($result['status'] === 'success'),
+            'message' => $result['message'],
+            'user_id' => $result['user_id']
+        ];
+    } catch (Exception $e) {
+        Logger::error('Errore durante la registrazione: ' . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Si è verificato un errore durante la registrazione'
+        ];
+    }
 }
 
 /**
@@ -53,26 +88,76 @@ function registraUtente($dati) {
  * @return array Risultato dell'operazione
  */
 function loginUtente($email, $password, $ricordami = false) {
-    global $db;
-    $user = new User($db);
-    
-    $result = $user->login($email, $password, $ricordami);
-    
-    // Converti il formato della risposta per compatibilità
-    return [
-        'success' => ($result['status'] === 'success'),
-        'message' => $result['message'],
-        'user' => $result['user_data']
-    ];
+    try {
+        // Verifica tentativi di login
+        if (isset($_SESSION['login_attempts']) && $_SESSION['login_attempts'] >= MAX_LOGIN_ATTEMPTS) {
+            if (time() - $_SESSION['last_attempt'] < LOGIN_TIMEOUT) {
+                return [
+                    'success' => false,
+                    'message' => 'Troppi tentativi di login. Riprova tra ' . 
+                                ceil((LOGIN_TIMEOUT - (time() - $_SESSION['last_attempt'])) / 60) . ' minuti'
+                ];
+            }
+            // Reset tentativi dopo il timeout
+            $_SESSION['login_attempts'] = 0;
+        }
+        
+        // Validazione input
+        $validator = new Validator();
+        $validator->validateLogin($email, $password);
+        
+        global $db;
+        $user = new User($db);
+        
+        $result = $user->login($email, $password, $ricordami);
+        
+        if ($result['status'] === 'success') {
+            // Reset tentativi di login
+            $_SESSION['login_attempts'] = 0;
+            Logger::info('Login effettuato: ' . $email);
+        } else {
+            // Incrementa tentativi di login
+            $_SESSION['login_attempts'] = ($_SESSION['login_attempts'] ?? 0) + 1;
+            $_SESSION['last_attempt'] = time();
+            Logger::warning('Login fallito: ' . $email);
+        }
+        
+        return [
+            'success' => ($result['status'] === 'success'),
+            'message' => $result['message'],
+            'user' => $result['user_data']
+        ];
+    } catch (Exception $e) {
+        Logger::error('Errore durante il login: ' . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Si è verificato un errore durante il login'
+        ];
+    }
 }
 
 /**
  * Funzione wrapper per effettuare il logout
  */
 function logoutUtente() {
-    global $db;
-    $user = new User($db);
-    $user->logout();
+    try {
+        global $db;
+        $user = new User($db);
+        $user->logout();
+        
+        // Distruggi la sessione
+        session_unset();
+        session_destroy();
+        
+        // Elimina il cookie di sessione
+        if (isset($_COOKIE[session_name()])) {
+            setcookie(session_name(), '', time() - 3600, '/');
+        }
+        
+        Logger::info('Logout effettuato');
+    } catch (Exception $e) {
+        Logger::error('Errore durante il logout: ' . $e->getMessage());
+    }
 }
 
 /**
@@ -96,9 +181,14 @@ function getCurrentUserId() {
  * @return array|null Dati dell'utente o null se non loggato
  */
 function getCurrentUser() {
-    global $db;
-    $user = new User($db);
-    return $user->getCurrentUser();
+    try {
+        global $db;
+        $user = new User($db);
+        return $user->getCurrentUser();
+    } catch (Exception $e) {
+        Logger::error('Errore nel recupero dati utente: ' . $e->getMessage());
+        return null;
+    }
 }
 
 /**
@@ -133,25 +223,43 @@ function isCreatore() {
  * @return array Risultato dell'operazione
  */
 function aggiornaProfiloUtente($utenteId, $dati) {
-    global $db;
-    $user = new User($db);
-    
-    $user->id = $utenteId;
-    $user->nickname = $dati['nickname'] ?? null;
-    $user->nome = $dati['nome'] ?? null;
-    $user->cognome = $dati['cognome'] ?? null;
-    $user->anno_nascita = $dati['anno_nascita'] ?? null;
-    $user->luogo_nascita = $dati['luogo_nascita'] ?? null;
-    $user->bio = $dati['bio'] ?? null;
-    $user->avatar = $dati['avatar'] ?? null;
-    
-    $result = $user->updateProfile();
-    
-    // Converti il formato della risposta per compatibilità
-    return [
-        'success' => ($result['status'] === 'success'),
-        'message' => $result['message']
-    ];
+    try {
+        // Validazione input
+        $validator = new Validator();
+        $validator->validateProfileUpdate($dati);
+        
+        global $db;
+        $user = new User($db);
+        
+        // Sanitizzazione input
+        $user->id = filter_var($utenteId, FILTER_SANITIZE_NUMBER_INT);
+        $user->nickname = filter_var($dati['nickname'] ?? null, FILTER_SANITIZE_STRING);
+        $user->nome = filter_var($dati['nome'] ?? null, FILTER_SANITIZE_STRING);
+        $user->cognome = filter_var($dati['cognome'] ?? null, FILTER_SANITIZE_STRING);
+        $user->anno_nascita = filter_var($dati['anno_nascita'] ?? null, FILTER_SANITIZE_NUMBER_INT);
+        $user->luogo_nascita = filter_var($dati['luogo_nascita'] ?? null, FILTER_SANITIZE_STRING);
+        $user->bio = filter_var($dati['bio'] ?? null, FILTER_SANITIZE_STRING);
+        $user->avatar = filter_var($dati['avatar'] ?? null, FILTER_SANITIZE_URL);
+        
+        $result = $user->updateProfile();
+        
+        if ($result['status'] === 'success') {
+            Logger::info('Profilo aggiornato per utente ID: ' . $utenteId);
+        } else {
+            Logger::warning('Aggiornamento profilo fallito: ' . $result['message']);
+        }
+        
+        return [
+            'success' => ($result['status'] === 'success'),
+            'message' => $result['message']
+        ];
+    } catch (Exception $e) {
+        Logger::error('Errore durante l\'aggiornamento del profilo: ' . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Si è verificato un errore durante l\'aggiornamento del profilo'
+        ];
+    }
 }
 
 /**
@@ -162,16 +270,33 @@ function aggiornaProfiloUtente($utenteId, $dati) {
  * @return array Risultato dell'operazione
  */
 function cambiaPassword($utenteId, $passwordAttuale, $nuovaPassword) {
-    global $db;
-    $user = new User($db);
-    
-    $result = $user->changePassword($utenteId, $passwordAttuale, $nuovaPassword);
-    
-    // Converti il formato della risposta per compatibilità
-    return [
-        'success' => ($result['status'] === 'success'),
-        'message' => $result['message']
-    ];
+    try {
+        // Validazione password
+        $validator = new Validator();
+        $validator->validatePassword($nuovaPassword);
+        
+        global $db;
+        $user = new User($db);
+        
+        $result = $user->changePassword($utenteId, $passwordAttuale, $nuovaPassword);
+        
+        if ($result['status'] === 'success') {
+            Logger::info('Password cambiata per utente ID: ' . $utenteId);
+        } else {
+            Logger::warning('Cambio password fallito: ' . $result['message']);
+        }
+        
+        return [
+            'success' => ($result['status'] === 'success'),
+            'message' => $result['message']
+        ];
+    } catch (Exception $e) {
+        Logger::error('Errore durante il cambio password: ' . $e->getMessage());
+        return [
+            'success' => false,
+            'message' => 'Si è verificato un errore durante il cambio password'
+        ];
+    }
 }
 
 /**
@@ -180,9 +305,14 @@ function cambiaPassword($utenteId, $passwordAttuale, $nuovaPassword) {
  * @return bool True se l'email esiste, false altrimenti
  */
 function emailExists($email) {
-    global $db;
-    $user = new User($db);
-    return $user->emailExists($email);
+    try {
+        global $db;
+        $user = new User($db);
+        return $user->emailExists($email);
+    } catch (Exception $e) {
+        Logger::error('Errore nella verifica email: ' . $e->getMessage());
+        return false;
+    }
 }
 
 /**
@@ -191,9 +321,14 @@ function emailExists($email) {
  * @return bool True se il nickname esiste, false altrimenti
  */
 function nicknameExists($nickname) {
-    global $db;
-    $user = new User($db);
-    return $user->nicknameExists($nickname);
+    try {
+        global $db;
+        $user = new User($db);
+        return $user->nicknameExists($nickname);
+    } catch (Exception $e) {
+        Logger::error('Errore nella verifica nickname: ' . $e->getMessage());
+        return false;
+    }
 }
 
 /**
@@ -202,42 +337,51 @@ function nicknameExists($nickname) {
  * @return array Risultato dell'operazione
  */
 function promuoviCreatore($utenteId) {
-    global $db;
-    $user = new User($db);
-    
-    // Verifica se l'utente esiste
-    $userData = $user->getUserById($utenteId);
-    
-    if (!$userData) {
-        return ['success' => false, 'message' => 'Utente non trovato'];
-    }
-    
-    if ($userData['tipo_utente'] === 'creatore') {
-        return ['success' => false, 'message' => "L'utente è già un creatore"];
-    }
-    
-    // Aggiorna il tipo di utente
-    $updateQuery = "UPDATE {$user->table_name} SET tipo_utente = ? WHERE id = ?";
-    $stmt = $db->prepare($updateQuery);
-    $result = $stmt->execute(['creatore', $utenteId]);
-    
-    if ($result) {
-        // Registra l'attività
-        $user->logActivity(User::getCurrentUserId(), 'promozione_creatore', "Promozione utente ID $utenteId a creatore");
+    try {
+        global $db;
+        $user = new User($db);
         
-        // Invia notifica all'utente
-        $notificaQuery = "INSERT INTO notifiche (utente_id, tipo, messaggio, link) VALUES (?, ?, ?, ?)";
-        $notificaStmt = $db->prepare($notificaQuery);
-        $notificaStmt->execute([
-            $utenteId,
-            'promozione',
-            'Sei stato promosso a creatore! Ora puoi pubblicare progetti sulla piattaforma.',
-            '/frontend/creatori/creatori_dashboard.html'
-        ]);
+        // Verifica se l'utente esiste
+        $userData = $user->getUserById($utenteId);
         
-        return ['success' => true, 'message' => 'Utente promosso a creatore con successo'];
-    } else {
-        return ['success' => false, 'message' => "Errore durante la promozione dell'utente"];
+        if (!$userData) {
+            Logger::warning('Tentativo di promozione utente non esistente: ' . $utenteId);
+            return ['success' => false, 'message' => 'Utente non trovato'];
+        }
+        
+        if ($userData['tipo_utente'] === 'creatore') {
+            Logger::warning('Tentativo di promozione utente già creatore: ' . $utenteId);
+            return ['success' => false, 'message' => "L'utente è già un creatore"];
+        }
+        
+        // Aggiorna il tipo di utente
+        $updateQuery = "UPDATE utenti SET tipo_utente = ? WHERE id = ?";
+        $stmt = $db->prepare($updateQuery);
+        $result = $stmt->execute(['creatore', $utenteId]);
+        
+        if ($result) {
+            // Registra l'attività
+            $user->logActivity(User::getCurrentUserId(), 'promozione_creatore', "Promozione utente ID $utenteId a creatore");
+            
+            // Invia notifica all'utente
+            $notificaQuery = "INSERT INTO notifiche (utente_id, tipo, messaggio, link) VALUES (?, ?, ?, ?)";
+            $notificaStmt = $db->prepare($notificaQuery);
+            $notificaStmt->execute([
+                $utenteId,
+                'promozione',
+                'Sei stato promosso a creatore! Ora puoi pubblicare progetti sulla piattaforma.',
+                '/frontend/creatori/creatori_dashboard.html'
+            ]);
+            
+            Logger::info('Utente promosso a creatore: ' . $utenteId);
+            return ['success' => true, 'message' => 'Utente promosso a creatore con successo'];
+        } else {
+            Logger::error('Errore durante la promozione dell\'utente: ' . $utenteId);
+            return ['success' => false, 'message' => "Errore durante la promozione dell'utente"];
+        }
+    } catch (Exception $e) {
+        Logger::error('Errore durante la promozione a creatore: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Si è verificato un errore durante la promozione'];
     }
 }
 
@@ -247,23 +391,27 @@ function promuoviCreatore($utenteId) {
  * @return bool True se l'utente può modificare il progetto, false altrimenti
  */
 function canEditProject($progettoId) {
-    if (!User::isLogged()) {
+    try {
+        if (!User::isLogged()) {
+            return false;
+        }
+        
+        // Gli amministratori possono modificare qualsiasi progetto
+        if (User::isAdmin()) {
+            return true;
+        }
+        
+        global $db;
+        // Verifica se l'utente è il creatore del progetto
+        $query = "SELECT creatore_id FROM progetti WHERE id = ?";
+        $stmt = $db->prepare($query);
+        $stmt->execute([$progettoId]);
+        $progetto = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $progetto && $progetto['creatore_id'] == User::getCurrentUserId();
+    } catch (Exception $e) {
+        Logger::error('Errore nella verifica permessi progetto: ' . $e->getMessage());
         return false;
     }
-    
-    // Gli amministratori possono modificare qualsiasi progetto
-    if (User::isAdmin()) {
-        return true;
-    }
-    
-    global $db;
-    // Verifica se l'utente è il creatore del progetto
-    $query = "SELECT creatore_id 
-    FROM progetti WHERE id = ?";
-    $stmt = $db->prepare($query);
-    $stmt->execute([$progettoId]);
-    $progetto = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    return $progetto && $progetto['creatore_id'] == User::getCurrentUserId();
 }
 ?>

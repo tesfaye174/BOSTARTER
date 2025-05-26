@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sfondo circolare -->
+  <circle cx="100" cy="100" r="100" fill="#E5E7EB"/>
+  
+  <!-- Testa -->
+  <circle cx="100" cy="85" r="35" fill="#9CA3AF"/>
+  
+  <!-- Corpo -->
+  <path d="M100 130 C 60 130, 60 180, 100 180 C 140 180, 140 130, 100 130" fill="#9CA3AF"/>
+  
+  <!-- Dettagli viso -->
+  <circle cx="85" cy="75" r="5" fill="#4B5563"/>
+  <circle cx="115" cy="75" r="5" fill="#4B5563"/>
+  <path d="M85 95 Q 100 105 115 95" stroke="#4B5563" stroke-width="3" fill="none"/>
+</svg> 

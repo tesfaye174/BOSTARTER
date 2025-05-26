@@ -75,5 +75,96 @@ class Validator {
 
         return empty($errors) ? true : $errors;
     }
+
+    public function validateRegistration($data) {
+        $errors = [];
+        
+        // Validazione email
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Email non valida';
+        }
+        
+        // Validazione password
+        if (strlen($data['password']) < 8) {
+            $errors['password'] = 'La password deve essere di almeno 8 caratteri';
+        }
+        
+        // Validazione nickname
+        if (strlen($data['nickname']) < 3) {
+            $errors['nickname'] = 'Il nickname deve essere di almeno 3 caratteri';
+        }
+        
+        // Validazione nome e cognome
+        if (empty($data['nome']) || empty($data['cognome'])) {
+            $errors['nome_cognome'] = 'Nome e cognome sono obbligatori';
+        }
+        
+        if (!empty($errors)) {
+            throw new ValidationException('Dati di registrazione non validi', $errors);
+        }
+    }
+    
+    public function validateLogin($email, $password) {
+        $errors = [];
+        
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Email non valida';
+        }
+        
+        if (empty($password)) {
+            $errors['password'] = 'Password obbligatoria';
+        }
+        
+        if (!empty($errors)) {
+            throw new ValidationException('Dati di login non validi', $errors);
+        }
+    }
+    
+    public function validateProfileUpdate($data) {
+        $errors = [];
+        
+        if (isset($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Email non valida';
+        }
+        
+        if (isset($data['nickname']) && strlen($data['nickname']) < 3) {
+            $errors['nickname'] = 'Il nickname deve essere di almeno 3 caratteri';
+        }
+        
+        if (!empty($errors)) {
+            throw new ValidationException('Dati profilo non validi', $errors);
+        }
+    }
+    
+    public function validatePassword($password) {
+        if (strlen($password) < 8) {
+            throw new ValidationException('La password deve essere di almeno 8 caratteri');
+        }
+        
+        if (!preg_match('/[A-Z]/', $password)) {
+            throw new ValidationException('La password deve contenere almeno una lettera maiuscola');
+        }
+        
+        if (!preg_match('/[a-z]/', $password)) {
+            throw new ValidationException('La password deve contenere almeno una lettera minuscola');
+        }
+        
+        if (!preg_match('/[0-9]/', $password)) {
+            throw new ValidationException('La password deve contenere almeno un numero');
+        }
+    }
+}
+
+class ValidationException extends Exception {
+    private $errors;
+    
+    public function __construct($message, $errors = []) {
+        parent::__construct($message);
+        $this->errors = $errors;
+    }
+    
+    public function getErrors() {
+        return $this->errors;
+    }
 }
 ?>

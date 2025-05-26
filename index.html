@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BOSTARTER - Piattaforma di Crowdfunding per Progetti Creativi</title>
+    
+    <!-- SEO e Meta Tags -->
     <meta name="description" content="BOSTARTER è la piattaforma leader per il crowdfunding di progetti creativi in Italia. Scopri, supporta o lancia la tua idea e trasformala in realtà.">
     <meta name="keywords" content="crowdfunding, progetti creativi, finanziamento collettivo, startup, innovazione, arte, design, tecnologia">
     <meta name="author" content="BOSTARTER">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Italian">
     
     <!-- Open Graph / Social Media -->
     <meta property="og:title" content="BOSTARTER - Piattaforma di Crowdfunding">
     <meta property="og:description" content="Scopri e supporta progetti creativi innovativi sulla principale piattaforma di crowdfunding italiana.">
     <meta property="og:image" content="frontend/images/hero-left.svg">
     <meta property="og:url" content="https://www.bostarter.it">
+    <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@bostarter">
     
     <!-- Performance e Accessibilità -->
     <meta name="theme-color" content="#3176FF">
@@ -23,27 +29,40 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="canonical" href="https://www.bostarter.it">
     
+    <!-- PWA Support -->
+    <link rel="manifest" href="/frontend/manifest.json">
+    <link rel="apple-touch-icon" href="/frontend/images/icon-192x192.png">
+    <meta name="apple-mobile-web-app-title" content="BOSTARTER">
+    
     <!-- Preload risorse critiche -->
     <link rel="preload" href="frontend/css/main.css" as="style">
     <link rel="preload" href="frontend/js/main.js" as="script">
     <link rel="preload" href="frontend/images/logo1.svg" as="image">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
     
     <!-- Preconnect a domini esterni -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS con configurazione ottimizzata -->
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: { 
-                        primary: "#3176FF",
-                        'primary-dark': "#2563eb",
-                        secondary: "#FF6B35",
-                        'secondary-dark': "#ea580c"
+                        primary: {
+                            DEFAULT: "#3176FF",
+                            dark: "#2563eb",
+                            light: "#60A5FA"
+                        },
+                        secondary: {
+                            DEFAULT: "#FF6B35",
+                            dark: "#ea580c",
+                            light: "#FB923C"
+                        }
                     },
                     borderRadius: {
                         none: "0px",
@@ -60,7 +79,9 @@
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-out',
                         'slide-up': 'slideUp 0.5s ease-out',
-                        'slide-in': 'slideIn 0.5s ease-out'
+                        'slide-in': 'slideIn 0.5s ease-out',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 2s infinite'
                     },
                     keyframes: {
                         fadeIn: {
@@ -75,17 +96,37 @@
                             '0%': { transform: 'translateX(-20px)', opacity: '0' },
                             '100%': { transform: 'translateX(0)', opacity: '1' }
                         }
-                    }
+                    },
+                    typography: {
+                        DEFAULT: {
+                            css: {
+                                maxWidth: '65ch',
+                                color: 'inherit',
+                                a: {
+                                    color: '#3176FF',
+                                    '&:hover': {
+                                        color: '#2563eb',
+                                    },
+                                },
+                            },
+                        },
+                    },
                 },
             },
+            plugins: [
+                require('@tailwindcss/typography'),
+                require('@tailwindcss/forms'),
+                require('@tailwindcss/aspect-ratio'),
+            ],
         };
     </script>
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <!-- Fonts con display swap -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     
-    <!-- Icons -->
+    <!-- Icons con preload -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" as="style">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
     
     <!-- Favicon -->
@@ -95,14 +136,21 @@
     <!-- CSS -->
     <link rel="stylesheet" href="frontend/css/main.css">
     
-    <!-- Scripts -->
+    <!-- Scripts con defer -->
     <script src="frontend/js/projects.js" defer></script>
     <script src="frontend/js/main.js" defer></script>
     <script src="frontend/js/accessibility.js" type="module"></script>
     <script src="frontend/js/performance.js" type="module"></script>
     
-    <!-- Inline styles -->
+    <!-- Inline styles ottimizzati -->
     <style>
+        :root {
+            --color-primary: #3176FF;
+            --color-primary-dark: #2563eb;
+            --color-secondary: #FF6B35;
+            --color-secondary-dark: #ea580c;
+        }
+        
         .progress-bar {
             @apply h-2 bg-gray-200 rounded-full overflow-hidden;
         }
@@ -116,11 +164,13 @@
             @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
         }
         
-        /* Animazioni */
+        /* Animazioni ottimizzate */
         .animate-on-scroll {
             opacity: 0;
             transform: translateY(20px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                        transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: opacity, transform;
         }
         
         .animate-on-scroll.visible {
@@ -128,331 +178,615 @@
             transform: translateY(0);
         }
         
-        /* Dark mode */
+        /* Dark mode ottimizzata */
         @media (prefers-color-scheme: dark) {
             :root {
                 --color-bg: #1a1a1a;
                 --color-text: #ffffff;
             }
         }
+        
+        /* Ottimizzazioni performance */
+        .will-change-transform {
+            will-change: transform;
+        }
+        
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        
+        /* Ottimizzazioni accessibilità */
+        .focus-visible:focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+        
+        /* Ottimizzazioni responsive */
+        @media (max-width: 640px) {
+            .mobile-menu {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            
+            .mobile-menu.active {
+                transform: translateX(0);
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen dark:bg-gray-900">
+<body class="bg-gray-50 min-h-screen dark:bg-gray-900 transition-colors duration-300">
     <!-- Skip link per accessibilità -->
-    <a href="#main-content" class="skip-link">Vai al contenuto principale</a>
+    <a href="#main-content" class="skip-link" tabindex="0">Vai al contenuto principale</a>
 
     <div id="notifications-container" class="fixed top-0 right-0 p-4 z-50 space-y-2" style="max-width: 400px;"></div>
 
+    <!-- HEADER -->
     <header class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-40 transition-colors duration-300">
-        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center">
-                <a href="index.html" class="font-['Pacifico'] text-2xl text-primary hover:text-primary-dark transition-colors duration-300" aria-label="BOSTARTER Homepage">
-                    <img src="frontend/images/logo1.svg" alt="BOSTARTER Logo" class="h-8 w-auto mr-2 inline-block">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="index.html" class="flex items-center font-['Pacifico'] text-2xl text-primary hover:text-primary-dark transition-colors" aria-label="Homepage BOSTARTER">
+                    <img src="frontend/images/logo1.svg" alt="Logo BOSTARTER" class="h-8 w-auto mr-2" width="32" height="32">
                     BOSTARTER
                 </a>
-                <nav class="hidden md:flex ml-10" aria-label="Navigazione principale">
-                    <a href="index.html" class="px-4 py-2 text-gray-800 dark:text-gray-200 font-medium hover:text-primary dark:hover:text-primary transition-colors duration-300">Home</a>
-                    <a href="frontend/dashboard.html" class="px-4 py-2 text-gray-800 dark:text-gray-200 font-medium hover:text-primary dark:hover:text-primary transition-colors duration-300">Progetti</a>
-                    <a href="frontend/explore.html" class="px-4 py-2 text-gray-800 dark:text-gray-200 font-medium hover:text-primary dark:hover:text-primary transition-colors duration-300">Esplora</a>
-                </nav>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="relative mr-4 hidden md:block w-64">
-                    <input type="text" id="search-projects" placeholder="Cerca progetti..." 
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                           aria-label="Cerca progetti">
-                    <div class="absolute right-3 top-2.5 w-5 h-5 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                        <i class="ri-search-line"></i>
-                    </div>
-                    <div id="search-results" class="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg hidden z-50" role="listbox"></div>
-                </div>
-                
-                <!-- Tema toggle -->
-                <button id="theme-toggle" class="p-2 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors duration-300" aria-label="Cambia tema">
-                    <i class="ri-sun-line dark:hidden"></i>
-                    <i class="ri-moon-line hidden dark:block"></i>
-                </button>
 
-                <!-- Menu utente -->
-                <div id="user-menu" class="relative hidden">
-                    <button id="user-menu-button" class="flex items-center space-x-2 focus:outline-none" aria-expanded="false" aria-label="Menu utente">
-                        <img id="user-avatar" src="frontend/images/default-avatar.png" alt="Avatar utente" class="w-8 h-8 rounded-full">
-                        <span id="user-name" class="text-gray-700 dark:text-gray-300">Nome Utente</span>
-                        <i class="ri-arrow-down-s-line"></i>
+                <!-- Ricerca -->
+                <div class="flex-1 mx-8 max-w-xl relative">
+                    <div class="relative">
+                        <input type="text" 
+                               placeholder="Cerca progetti, creatori o categorie..." 
+                               class="w-full px-5 py-3 border border-gray-300 dark:border-gray-600 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-base bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors" 
+                               aria-label="Cerca progetti, creatori o categorie">
+                        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary transition-colors" aria-label="Cerca">
+                            <i class="ri-search-line text-xl"></i>
+                        </button>
+                    </div>
+                    <!-- Risultati ricerca (nascosto di default) -->
+                    <div class="search-results absolute w-full mt-2 bg-white dark:bg-gray-700 rounded-xl shadow-lg hidden">
+                        <div class="p-4">
+                            <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Risultati recenti</div>
+                            <div class="space-y-2">
+                                <!-- Risultati dinamici qui -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pulsanti -->
+                <div class="flex gap-3">
+                    <a href="frontend/creatori/creatori_dashboard.html" 
+                       class="border border-gray-300 dark:border-gray-600 rounded-full px-5 py-2 font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center">
+                        <i class="ri-user-line mr-2"></i>
+                        Per i creatori
+                    </a>
+                    <button id="login-link" 
+                            class="border border-gray-300 dark:border-gray-600 rounded-full px-5 py-2 font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center">
+                        <i class="ri-login-box-line mr-2"></i>
+                        Accedi
                     </button>
-                    <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 hidden" role="menu">
-                        <a href="frontend/dashboard.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Dashboard</a>
-                        <a href="frontend/profile.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Profilo</a>
-                        <a href="frontend/settings.html" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Impostazioni</a>
-                        <div class="border-t border-gray-200 dark:border-gray-700"></div>
-                        <button id="logout-button" class="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Esci</button>
-                    </div>
+                    <button id="theme-toggle" 
+                            class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" 
+                            aria-label="Cambia tema">
+                        <i class="ri-sun-line dark:hidden text-xl"></i>
+                        <i class="ri-moon-line hidden dark:block text-xl"></i>
+                    </button>
+                    <button id="notifications-toggle"
+                            class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative"
+                            aria-label="Notifiche">
+                        <i class="ri-notification-3-line text-xl"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-primary rounded-full"></span>
+                    </button>
                 </div>
-
-                <!-- Pulsanti auth -->
-                <div id="auth-buttons" class="flex items-center space-x-4">
-                    <a href="#" id="login-link" class="text-gray-700 dark:text-gray-300 font-medium hover:text-primary dark:hover:text-primary transition-colors duration-300">Accedi</a>
-                    <a href="#" id="register-link" class="bg-primary text-white px-4 py-2 rounded-button font-medium hover:bg-primary-dark transition-colors duration-300">Registrati</a>
-                </div>
-
-                <!-- Menu mobile -->
-                <button id="mobile-menu-button" class="md:hidden text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors duration-300" aria-label="Menu" aria-expanded="false">
-                    <i class="ri-menu-line text-2xl"></i>
-                </button>
             </div>
         </div>
+
+        <!-- Navbar categorie -->
+        <nav class="bg-white dark:bg-gray-800 border-t border-b border-gray-200 dark:border-gray-700 py-2 transition-colors">
+            <div class="container mx-auto px-4">
+                <div class="relative">
+                    <div class="overflow-x-auto scrollbar-hide">
+                        <ul class="flex flex-nowrap gap-6 font-medium text-lg text-gray-900 dark:text-white">
+                            <li><a href="frontend/assets/arte/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-brush-line mr-2"></i>Arte
+                            </a></li>
+                            <li><a href="frontend/assets/fumetti/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-book-line mr-2"></i>Fumetti
+                            </a></li>
+                            <li><a href="frontend/assets/artigianato/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-hammer-line mr-2"></i>Artigianato
+                            </a></li>
+                            <li><a href="frontend/assets/danza/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-dance-line mr-2"></i>Danza
+                            </a></li>
+                            <li><a href="frontend/assets/design/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-palette-line mr-2"></i>Design
+                            </a></li>
+                            <li><a href="frontend/assets/moda/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-shirt-line mr-2"></i>Moda
+                            </a></li>
+                            <li><a href="frontend/assets/film/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-film-line mr-2"></i>Film
+                            </a></li>
+                            <li><a href="frontend/assets/cibo/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-restaurant-line mr-2"></i>Cibo
+                            </a></li>
+                            <li><a href="frontend/assets/giochi/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-game-line mr-2"></i>Giochi
+                            </a></li>
+                            <li><a href="frontend/assets/giornalismo/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-newspaper-line mr-2"></i>Giornalismo
+                            </a></li>
+                            <li><a href="frontend/assets/musica/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-music-line mr-2"></i>Musica
+                            </a></li>
+                            <li><a href="frontend/assets/fotografia/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-camera-line mr-2"></i>Fotografia
+                            </a></li>
+                            <li><a href="frontend/assets/editoriale/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-book-open-line mr-2"></i>Editoriale
+                            </a></li>
+                            <li><a href="frontend/assets/tecnologia/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-computer-line mr-2"></i>Tecnologia
+                            </a></li>
+                            <li><a href="frontend/assets/teatro/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-theater-line mr-2"></i>Teatro
+                            </a></li>
+                            <li><a href="frontend/assets/scopritutti/index.html" class="hover:text-primary transition-colors flex items-center">
+                                <i class="ri-compass-3-line mr-2"></i>Scopri
+                            </a></li>
+                        </ul>
+                    </div>
+                    <div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-gray-800 pointer-events-none"></div>
+                </div>
+            </div>
+        </nav>
     </header>
 
-    <nav class="bg-white shadow-sm py-4 mb-8" aria-label="Navigazione categorie">
-        <div class="container mx-auto px-4 overflow-x-auto">
-            <ul class="flex space-x-6 whitespace-nowrap" id="categories-list">
-                <li><a href="frontend/assets/arte/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-brush-line mr-2"></i> Arte</a></li>
-                <li><a href="frontend/assets/design/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-palette-fill mr-2"></i> Design</a></li>
-                <li><a href="frontend/assets/film/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-film-line mr-2"></i> Film</a></li>
-                <li><a href="frontend/assets/musica/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-music-2-fill mr-2"></i> Musica</a></li>
-                <li><a href="frontend/assets/giochi/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-game-fill mr-2"></i> Giochi</a></li>
-                <li><a href="frontend/assets/fumetti/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-book-line mr-2"></i> Fumetti</a></li>
-                <li><a href="frontend/assets/fotografia/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-camera-line mr-2"></i> Fotografia</a></li>
-                <li><a href="frontend/assets/tecnologia/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-code-line mr-2"></i> Tecnologia</a></li>
-                <li><a href="frontend/assets/moda/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-shirt-line mr-2"></i> Moda</a></li>
-                <li><a href="frontend/assets/teatro/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-emotion-line mr-2"></i> Teatro</a></li>
-                <li><a href="frontend/assets/danza/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-walk-line mr-2"></i> Danza</a></li>
-                <li><a href="frontend/assets/artigianato/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-tools-line mr-2"></i> Artigianato</a></li>
-                <li><a href="frontend/assets/cibo/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-restaurant-line mr-2"></i> Cibo</a></li>
-                <li><a href="frontend/assets/giornalismo/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-newspaper-line mr-2"></i> Giornalismo</a></li>
-                <li><a href="frontend/assets/editoriale/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-book-open-line mr-2"></i> Editoriale</a></li>
-                <li><a href="frontend/assets/scopritutti/index.html" class="flex items-center text-gray-700 hover:text-primary transition-colors duration-200"><i class="ri-more-line mr-2"></i> Scopri tutti</a></li>
-            </ul>
-        </div>
-    </nav>
+    <!-- HERO SECTION -->
+    <section class="hero-section flex flex-col md:flex-row items-center justify-between bg-white rounded-3xl shadow-lg p-8 md:p-16 mb-12 mt-8 relative overflow-hidden">
+      <!-- Immagine creativa a sinistra -->
+      <div class="relative w-full md:w-1/2 flex justify-center items-center mb-8 md:mb-0">
+        <img src="frontend/images/hero-creative.jpg" alt="Creatrice con progetto" class="rounded-3xl shadow-lg object-cover w-80 h-80" style="clip-path: ellipse(70% 60% at 50% 40%);">
+        <!-- Decorazione -->
+        <svg class="absolute -left-8 -top-8 w-64 h-64 z-0" viewBox="0 0 200 200" fill="none"><ellipse cx="100" cy="100" rx="100" ry="100" fill="#FDE68A"/></svg>
+      </div>
+      <!-- Testo a destra -->
+      <div class="w-full md:w-1/2 z-10 text-center md:text-left">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
+          <span class="block">Sfrutta il</span>
+          <span class="text-primary">potenziale</span>
+          <span class="block">del finanziamento</span>
+        </h1>
+        <p class="text-lg text-gray-700 mb-6">
+          Qualunque sia il tuo sogno, su BOSTARTER puoi trovare le risorse per realizzarlo. Entra a far parte della community di sostenitori per trasformare le tue idee in realtà.
+        </p>
+        <a href="frontend/creatori/creatori_dashboard.html" class="inline-block bg-primary text-white px-8 py-3 rounded-button font-semibold text-lg shadow-lg hover:bg-primary-dark transition">
+          Inizia
+        </a>
+      </div>
+      <!-- Decorazioni SVG -->
+      <svg class="absolute right-0 top-0 w-32 h-32 z-0" viewBox="0 0 100 100" fill="none"><polygon points="50,0 61,35 98,35 68,57 79,91 50,70 21,91 32,57 2,35 39,35" fill="#FDBA74"/></svg>
+      <svg class="absolute left-1/2 bottom-0 w-40 h-20 z-0" viewBox="0 0 160 80" fill="none"><ellipse cx="80" cy="40" rx="80" ry="40" fill="#DDD6FE"/></svg>
+    </section>
 
-    <main id="main-content" class="container mx-auto px-4 py-8">
-        <!-- Hero Section -->
-        <section class="relative bg-gradient-to-r from-blue-50 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl overflow-hidden mb-16 p-8 md:p-12 animate-on-scroll" aria-label="Sezione principale">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                <div class="space-y-6">
-                    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 dark:text-white mb-4 animate-slide-up">
-                        Trasforma le tue idee in realtà
-                    </h1>
-                    <p class="text-lg text-gray-600 dark:text-gray-300 mb-6 animate-slide-up" style="animation-delay: 0.2s">
-                        BOSTARTER è la piattaforma di crowdfunding che connette creatori innovativi con sostenitori appassionati. Lancia il tuo progetto o sostieni le idee che ami.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4 animate-slide-up" style="animation-delay: 0.4s">
-                        <a href="frontend/creatori/creatori_dashboard.html" 
-                           class="bg-primary text-white px-6 py-3 rounded-button font-medium hover:bg-primary-dark transition-all duration-300 text-center transform hover:-translate-y-1 hover:shadow-lg">
-                            Lancia il tuo progetto
-                        </a>
-                        <a href="frontend/explore.html" 
-                           class="bg-white dark:bg-gray-800 text-primary border border-primary px-6 py-3 rounded-button font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 text-center transform hover:-translate-y-1 hover:shadow-lg">
-                            Esplora i progetti
-                        </a>
-                    </div>
-                    <div class="mt-8 flex items-center space-x-4 animate-slide-up" style="animation-delay: 0.6s">
-                        <div class="flex -space-x-2">
-                            <img src="frontend/images/avatar-1.jpg" alt="Avatar utente" class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800">
-                            <img src="frontend/images/avatar-2.jpg" alt="Avatar utente" class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800">
-                            <img src="frontend/images/avatar-3.jpg" alt="Avatar utente" class="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800">
-                        </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            Unisciti a <span class="font-semibold text-primary">+10.000</span> creatori e sostenitori
-                        </p>
-                    </div>
-                </div>
-                <div class="relative animate-slide-in">
-                    <img src="frontend/images/man.svg" alt="Progetti creativi su BOSTARTER" class="rounded-xl shadow-lg w-full">
-                    <div class="absolute -bottom-5 -right-5 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 max-w-xs hidden md:block animate-fade-in" style="animation-delay: 0.8s">
-                        <div class="flex items-center space-x-3 mb-2">
-                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <p class="text-sm font-medium text-gray-800 dark:text-gray-200">Progetto finanziato con successo</p>
-                        </div>
-                        <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-                            <span>€24.500 raccolti</span>
-                            <span>120% dell'obiettivo</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Come funziona -->
-        <section class="py-12 bg-gray-50 dark:bg-gray-800 how-it-works rounded-3xl mb-16 p-8 animate-on-scroll" role="region" aria-labelledby="how-it-works-title">
-            <h2 id="how-it-works-title" class="text-2xl font-bold text-gray-800 dark:text-white text-center mb-12">Come funziona BOSTARTER</h2>
+    <!-- COME FUNZIONA -->
+    <section id="how-it-works" class="how-it-works py-16 bg-gray-50 dark:bg-gray-800 rounded-3xl mb-16 p-8 transition-colors">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-white text-center mb-12 animate-fade-in">
+                Come funziona BOSTARTER
+            </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-sm text-center transform hover:-translate-y-1 transition-all duration-300 animate-slide-up" style="animation-delay: 0.2s">
-                    <div class="w-16 h-16 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <!-- Step 1 -->
+                <div class="bg-white dark:bg-gray-700 rounded-xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 animate-slide-up">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                         <i class="ri-lightbulb-line text-2xl text-primary"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-gray-800 dark:text-white">1. Crea il tuo progetto</h3>
-                    <p class="text-gray-600 dark:text-gray-300">Definisci la tua idea, imposta un obiettivo di finanziamento e crea ricompense accattivanti per i tuoi sostenitori.</p>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white text-center">1. Crea il tuo progetto</h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-center">Definisci la tua idea, imposta un obiettivo di finanziamento e crea ricompense accattivanti per i tuoi sostenitori.</p>
                 </div>
-                <div class="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-sm text-center transform hover:-translate-y-1 transition-all duration-300 animate-slide-up" style="animation-delay: 0.4s">
-                    <div class="w-16 h-16 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+
+                <!-- Step 2 -->
+                <div class="bg-white dark:bg-gray-700 rounded-xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 animate-slide-up" style="animation-delay: 0.2s">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                         <i class="ri-share-line text-2xl text-primary"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-gray-800 dark:text-white">2. Condividi con il mondo</h3>
-                    <p class="text-gray-600 dark:text-gray-300">Pubblica il tuo progetto e condividilo con la tua rete. Utilizza i social media per raggiungere più persone.</p>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white text-center">2. Condividi con il mondo</h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-center">Pubblica il tuo progetto e condividilo con la tua rete. Utilizza i social media per raggiungere più persone.</p>
                 </div>
-                <div class="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-sm text-center transform hover:-translate-y-1 transition-all duration-300 animate-slide-up" style="animation-delay: 0.6s">
-                    <div class="w-16 h-16 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+
+                <!-- Step 3 -->
+                <div class="bg-white dark:bg-gray-700 rounded-xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 animate-slide-up" style="animation-delay: 0.4s">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                         <i class="ri-funds-line text-2xl text-primary"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-3 text-gray-800 dark:text-white">3. Raccogli fondi</h3>
-                    <p class="text-gray-600 dark:text-gray-300">Ricevi finanziamenti dai sostenitori, mantienili aggiornati sui progressi e realizza il tuo progetto.</p>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white text-center">3. Raccogli fondi</h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-center">Ricevi finanziamenti dai sostenitori, mantienili aggiornati sui progressi e realizza il tuo progetto.</p>
                 </div>
-            </div>
-            <div class="text-center mt-10 animate-slide-up" style="animation-delay: 0.8s">
-                <a href="frontend/creatori/creatori_dashboard.html" class="inline-block bg-primary text-white px-6 py-3 rounded-button font-medium hover:bg-primary-dark transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg">
-                    Inizia ora
-                </a>
-            </div>
-        </section>
-
-        <section class="bg-white rounded-3xl shadow-sm p-8 mb-16" aria-label="Categorie principali">
-            <!-- Categories section content remains the same -->
-        </section>
-
-        <section id="statistics-section" class="bg-white rounded-3xl shadow-sm p-8 mb-16" aria-label="Statistiche della Community">
-            <!-- Statistics section with data attributes for dynamic updates -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="bg-gradient-to-br from-blue-50 to-gray-50 rounded-2xl p-6" id="top-creators" data-update="creators">
-                    <!-- Top creators content -->
-                </div>
-                <div class="bg-gradient-to-br from-blue-50 to-gray-50 rounded-2xl p-6" id="top-projects" data-update="projects">
-                    <!-- Top projects content -->
-                </div>
-                <div class="bg-gradient-to-br from-blue-50 to-gray-50 rounded-2xl p-6" id="top-funders" data-update="funders">
-                    <!-- Top funders content -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Progetti in evidenza -->
-        <section id="featured-projects" class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-8 mb-16 animate-on-scroll" aria-label="Progetti in evidenza">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Progetti in Evidenza</h2>
-                <a href="frontend/explore.html" class="text-primary hover:text-primary-dark font-medium flex items-center group">
-                    Vedi tutti <i class="ri-arrow-right-line ml-2 group-hover:translate-x-1 transition-transform duration-300"></i>
-                </a>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="featured-projects-list" data-load="featured">
-                <!-- Projects loaded dynamically via JavaScript -->
-            </div>
-        </section>
-
-        <!-- Storie di Successo -->
-        <section class="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-8 mb-16 animate-on-scroll" aria-label="Storie di successo">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Storie di Successo</h2>
-                <a href="frontend/success-stories.html" class="text-primary hover:text-primary-dark font-medium flex items-center group">
-                    Tutte le storie <i class="ri-arrow-right-line ml-2 group-hover:translate-x-1 transition-transform duration-300"></i>
-                </a>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="success-stories">
-                <!-- Storie di successo caricate dinamicamente -->
-            </div>
-        </section>
-
-        <!-- Testimonial -->
-        <section class="bg-gradient-to-r from-primary/5 to-secondary/5 dark:from-primary/10 dark:to-secondary/10 rounded-3xl p-8 mb-16 animate-on-scroll" aria-label="Testimonial">
-            <h2 class="text-2xl font-bold text-gray-800 dark:text-white text-center mb-8">Cosa Dicono di Noi</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="testimonials-list">
-                <!-- Testimonial caricati dinamicamente -->
-            </div>
-        </section>
-
-        <!-- Call to Action -->
-        <section class="bg-gradient-to-r from-primary to-primary-dark rounded-3xl overflow-hidden mb-16 animate-on-scroll" aria-label="Call to action finale">
-            <div class="container mx-auto px-4 py-16 text-center">
-                <h2 class="text-3xl font-bold text-white mb-6">Pronto a lanciare il tuo progetto?</h2>
-                <p class="text-white/90 mb-8 max-w-2xl mx-auto">Unisciti a migliaia di creatori che hanno già realizzato i loro sogni grazie a BOSTARTER.</p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="frontend/creatori/creatori_dashboard.html" class="bg-white text-primary px-8 py-3 rounded-button font-medium hover:bg-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg">
-                        Inizia ora
-                    </a>
-                    <a href="frontend/explore.html" class="bg-transparent text-white border-2 border-white px-8 py-3 rounded-button font-medium hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-1">
-                        Esplora progetti
-                    </a>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Newsletter -->
-    <section class="py-12 bg-primary bg-opacity-5 dark:bg-primary/10" aria-labelledby="newsletter-title">
-        <div class="container mx-auto px-4">
-            <div class="max-w-2xl mx-auto text-center">
-                <h2 id="newsletter-title" class="text-2xl font-bold text-gray-800 dark:text-white mb-3">Resta aggiornato</h2>
-                <p class="text-gray-600 dark:text-gray-300 mb-6">
-                    Iscriviti alla nostra newsletter per ricevere aggiornamenti sui nuovi progetti e le storie di successo.
-                </p>
-                <form class="newsletter-form flex flex-col sm:flex-row gap-3" aria-label="Form iscrizione newsletter">
-                    <input
-                        type="email"
-                        class="newsletter-email flex-grow px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-button focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                        placeholder="Il tuo indirizzo email"
-                        aria-label="Inserisci il tuo indirizzo email"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        class="newsletter-subscribe px-6 py-3 bg-primary text-white font-medium rounded-button whitespace-nowrap hover:bg-primary-dark transition-all duration-300 transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                        aria-label="Iscriviti alla newsletter"
-                    >
-                        Iscriviti
-                    </button>
-                </form>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12" role="contentinfo">
+    <!-- CATEGORIE PRINCIPALI -->
+    <section class="main-categories bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-8 mb-16 transition-colors">
+        <div class="container mx-auto">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-8">Categorie principali</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <a href="frontend/assets/arte/index.html" class="category-card group">
+                    <div class="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-primary/5 transition-all duration-300">
+                        <i class="ri-brush-line text-3xl text-primary mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Arte</span>
+                    </div>
+                </a>
+                <a href="frontend/assets/design/index.html" class="category-card group">
+                    <div class="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-primary/5 transition-all duration-300">
+                        <i class="ri-palette-fill text-3xl text-primary mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Design</span>
+                    </div>
+                </a>
+                <a href="frontend/assets/film/index.html" class="category-card group">
+                    <div class="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-primary/5 transition-all duration-300">
+                        <i class="ri-film-line text-3xl text-primary mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Film</span>
+                    </div>
+                </a>
+                <a href="frontend/assets/musica/index.html" class="category-card group">
+                    <div class="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-primary/5 transition-all duration-300">
+                        <i class="ri-music-2-fill text-3xl text-primary mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Musica</span>
+                    </div>
+                </a>
+                <a href="frontend/assets/giochi/index.html" class="category-card group">
+                    <div class="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-primary/5 transition-all duration-300">
+                        <i class="ri-game-fill text-3xl text-primary mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Giochi</span>
+                    </div>
+                </a>
+                <a href="frontend/assets/fumetti/index.html" class="category-card group">
+                    <div class="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-primary/5 transition-all duration-300">
+                        <i class="ri-book-line text-3xl text-primary mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">Fumetti</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROGETTI IN EVIDENZA -->
+    <section class="featured-projects bg-gray-50 dark:bg-gray-800 py-16">
         <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                <div class="text-center md:text-left">
-                    <a href="#" class="font-['Pacifico'] text-2xl text-white inline-block mb-4 hover:text-primary transition-colors duration-300" aria-label="BOSTARTER Homepage">BOSTARTER</a>
-                    <p class="text-gray-400">La piattaforma leader per il crowdfunding di progetti creativi.</p>
-                </div>
-                <div class="md:col-span-2">
-                    <div class="grid grid-cols-2 gap-8">
-                        <div>
-                            <h3 class="text-lg font-semibold mb-4">Piattaforma</h3>
-                            <ul class="space-y-2">
-                                <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Chi siamo</a></li>
-                                <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contatti</a></li>
-                                <li><a href="#" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-semibold mb-4">Legale</h3>
-                            <ul class="space-y-2">
-                                <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Termini di Servizio</a></li>
-                                <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                                <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Cookie Policy</a></li>
-                            </ul>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white animate-fade-in">Progetti in Evidenza</h2>
+                <a href="frontend/explore.html" class="text-primary hover:text-primary-dark transition-colors duration-300 flex items-center gap-2">
+                    Vedi tutti
+                    <i class="ri-arrow-right-line"></i>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Progetto 1 -->
+                <div class="project-card bg-white dark:bg-gray-700 rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                    <div class="relative">
+                        <img src="frontend/assets/placeholder-tech.jpg" alt="Progetto Tecnologia" class="w-full h-48 object-cover">
+                        <div class="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-sm">
+                            Tecnologia
                         </div>
                     </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Smart Home Hub</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Un hub intelligente per la gestione della casa con AI integrata.</p>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600 dark:text-gray-300">Raccolto</span>
+                                <span class="text-primary font-medium">€45,000</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        <a href="#" class="btn-primary w-full text-center py-2 rounded-lg hover:bg-primary-dark transition-colors duration-300" aria-label="Scopri Smart Home Hub">
+                            Scopri
+                        </a>
+                    </div>
                 </div>
-                <div class="text-center md:text-right">
-                    <h3 class="text-lg font-semibold mb-4">Seguici</h3>
-                    <div class="flex justify-center md:justify-end space-x-4" aria-label="Social media links">
-                        <a href="https://facebook.com/bostarter" target="_blank" rel="noopener noreferrer" aria-label="Seguici su Facebook" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary transition-all duration-300 transform hover:-translate-y-1">
-                            <i class="ri-facebook-fill text-xl"></i>
+
+                <!-- Progetto 2 -->
+                <div class="project-card bg-white dark:bg-gray-700 rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                    <div class="relative">
+                        <img src="frontend/assets/placeholder-tech2.jpg" alt="Progetto Design" class="w-full h-48 object-cover">
+                        <div class="absolute top-4 right-4 bg-secondary text-white px-3 py-1 rounded-full text-sm">
+                            Design
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Mobili Sostenibili</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Collezione di mobili eco-friendly realizzati con materiali riciclati.</p>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600 dark:text-gray-300">Raccolto</span>
+                                <span class="text-primary font-medium">€28,500</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full" style="width: 60%"></div>
+                            </div>
+                        </div>
+                        <a href="#" class="btn-primary w-full text-center py-2 rounded-lg hover:bg-primary-dark transition-colors duration-300" aria-label="Scopri Mobili Sostenibili">
+                            Scopri
                         </a>
-                        <a href="https://twitter.com/bostarter" target="_blank" rel="noopener noreferrer" aria-label="Seguici su Twitter" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary transition-all duration-300 transform hover:-translate-y-1">
-                            <i class="ri-twitter-x-fill text-xl"></i>
-                        </a>
-                        <a href="https://instagram.com/bostarter" target="_blank" rel="noopener noreferrer" aria-label="Seguici su Instagram" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary transition-all duration-300 transform hover:-translate-y-1">
-                            <i class="ri-instagram-line text-xl"></i>
-                        </a>
-                        <a href="https://linkedin.com/company/bostarter" target="_blank" rel="noopener noreferrer" aria-label="Seguici su LinkedIn" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary transition-all duration-300 transform hover:-translate-y-1">
-                            <i class="ri-linkedin-fill text-xl"></i>
+                    </div>
+                </div>
+
+                <!-- Progetto 3 -->
+                <div class="project-card bg-white dark:bg-gray-700 rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                    <div class="relative">
+                        <img src="frontend/assets/placeholder-tech3.jpg" alt="Progetto Musica" class="w-full h-48 object-cover">
+                        <div class="absolute top-4 right-4 bg-success text-white px-3 py-1 rounded-full text-sm">
+                            Musica
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Album Indie</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Nuovo album di musica indie con sonorità innovative.</p>
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600 dark:text-gray-300">Raccolto</span>
+                                <span class="text-primary font-medium">€15,000</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                <div class="bg-primary h-2 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <a href="#" class="btn-primary w-full text-center py-2 rounded-lg hover:bg-primary-dark transition-colors duration-300" aria-label="Scopri Album Indie">
+                            Scopri
                         </a>
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-800 pt-8 text-center">
-                <p class="text-gray-400">&copy; <span id="current-year">2024</span> BOSTARTER. Tutti i diritti riservati.</p>
+        </div>
+    </section>
+
+    <!-- TESTIMONIANZE -->
+    <section class="testimonials bg-gradient-to-r from-primary/5 to-secondary/5 dark:from-primary/10 dark:to-secondary/10 rounded-3xl p-8 mb-16">
+        <div class="container mx-auto">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white text-center mb-8">Cosa dicono di noi</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-white dark:bg-gray-700 rounded-xl shadow p-6 flex flex-col items-center transform hover:-translate-y-1 transition-all duration-300 animate-slide-up">
+                    <div class="relative mb-4">
+                        <img src="frontend/images/avatar-1.svg" 
+                             alt="Testimonial 1" 
+                             class="w-16 h-16 rounded-full"
+                             width="64"
+                             height="64">
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                            <i class="ri-double-quotes-l text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <blockquote class="italic text-gray-700 dark:text-gray-300 mb-4 text-center">"BOSTARTER mi ha permesso di realizzare il mio sogno creativo!"</blockquote>
+                    <div class="flex items-center">
+                        <span class="font-semibold text-primary">Giulia R.</span>
+                        <span class="mx-2 text-gray-400">•</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Artista</span>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="bg-white dark:bg-gray-700 rounded-xl shadow p-6 flex flex-col items-center transform hover:-translate-y-1 transition-all duration-300 animate-slide-up" style="animation-delay: 0.2s">
+                    <div class="relative mb-4">
+                        <img src="frontend/images/avatar-2.svg" 
+                             alt="Testimonial 2" 
+                             class="w-16 h-16 rounded-full"
+                             width="64"
+                             height="64">
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                            <i class="ri-double-quotes-l text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <blockquote class="italic text-gray-700 dark:text-gray-300 mb-4 text-center">"Una community fantastica e un supporto costante."</blockquote>
+                    <div class="flex items-center">
+                        <span class="font-semibold text-primary">Luca B.</span>
+                        <span class="mx-2 text-gray-400">•</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Designer</span>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="bg-white dark:bg-gray-700 rounded-xl shadow p-6 flex flex-col items-center transform hover:-translate-y-1 transition-all duration-300 animate-slide-up" style="animation-delay: 0.4s">
+                    <div class="relative mb-4">
+                        <img src="frontend/images/avatar-3.svg" 
+                             alt="Testimonial 3" 
+                             class="w-16 h-16 rounded-full"
+                             width="64"
+                             height="64">
+                        <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                            <i class="ri-double-quotes-l text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <blockquote class="italic text-gray-700 dark:text-gray-300 mb-4 text-center">"Ho trovato progetti innovativi e ispirazione ogni giorno."</blockquote>
+                    <div class="flex items-center">
+                        <span class="font-semibold text-primary">Sara M.</span>
+                        <span class="mx-2 text-gray-400">•</span>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">Fotografa</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CALL TO ACTION -->
+    <section class="cta-final bg-gradient-to-r from-primary to-primary-dark rounded-3xl overflow-hidden mb-16">
+        <div class="container mx-auto px-4 py-16">
+            <div class="text-center max-w-3xl mx-auto">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 animate-fade-in">
+                    Pronto a lanciare il tuo progetto?
+                </h2>
+                <p class="text-white/90 mb-8 text-lg animate-slide-up">
+                    Unisciti a migliaia di creatori che hanno già realizzato i loro sogni grazie a BOSTARTER.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style="animation-delay: 0.2s">
+                    <a href="frontend/creatori/creatori_dashboard.html" 
+                       class="bg-white text-primary px-8 py-3 rounded-button font-medium hover:bg-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg flex items-center justify-center">
+                        Inizia ora
+                        <i class="ri-arrow-right-line ml-2"></i>
+                    </a>
+                    <a href="frontend/explore.html" 
+                       class="bg-transparent text-white border-2 border-white px-8 py-3 rounded-button font-medium hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center">
+                        Esplora progetti
+                        <i class="ri-search-line ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- Decorazioni SVG -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <svg class="absolute -right-20 -top-20 w-64 h-64 opacity-20" viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="100" fill="white"/>
+            </svg>
+            <svg class="absolute -left-20 -bottom-20 w-64 h-64 opacity-20" viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="100" fill="white"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <!-- Logo e Social -->
+            <div class="flex flex-col md:flex-row justify-between items-center mb-12 pb-8 border-b border-gray-800">
+                <div class="flex items-center mb-6 md:mb-0">
+                    <img src="frontend/images/logo1.svg" alt="Logo BOSTARTER" class="h-10 w-auto mr-3" width="40" height="40">
+                    <span class="font-['Pacifico'] text-2xl text-white">BOSTARTER</span>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Facebook">
+                        <i class="ri-facebook-fill text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Instagram">
+                        <i class="ri-instagram-line text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="Twitter">
+                        <i class="ri-twitter-x-fill text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="YouTube">
+                        <i class="ri-youtube-fill text-2xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors" aria-label="LinkedIn">
+                        <i class="ri-linkedin-fill text-2xl"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Link principali -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-white">INFORMAZIONI</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-information-line mr-2"></i>Chi siamo
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-file-list-line mr-2"></i>Statuto
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-bar-chart-line mr-2"></i>Statistiche
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-newspaper-line mr-2"></i>Stampa
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-briefcase-line mr-2"></i>Carriera
+                        </a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-white">SOSTIENI</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-customer-service-2-line mr-2"></i>Centro assistenza
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-book-open-line mr-2"></i>Regole
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-user-star-line mr-2"></i>Risorse creatori
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-funds-line mr-2"></i>Forward Fund
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-trademark-line mr-2"></i>Risorse marchio
+                        </a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-white">RISORSE</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-mail-line mr-2"></i>Newsletter
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-notification-3-line mr-2"></i>Aggiornamenti
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-book-2-line mr-2"></i>Creative Independent
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-smartphone-line mr-2"></i>App mobile
+                        </a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors flex items-center">
+                            <i class="ri-search-line mr-2"></i>Ricerca
+                        </a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4 text-white">NEWSLETTER</h3>
+                    <p class="text-gray-400 mb-4">Iscriviti per ricevere aggiornamenti sui progetti più interessanti.</p>
+                    <form class="space-y-3">
+                        <div class="relative">
+                            <input type="email" 
+                                   placeholder="La tua email" 
+                                   class="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-white placeholder-gray-500">
+                            <button type="submit" 
+                                    class="absolute right-2 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-light transition-colors"
+                                    aria-label="Iscriviti alla newsletter">
+                                <i class="ri-send-plane-fill text-xl"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="newsletter-consent" class="h-4 w-4 text-primary focus:ring-primary border-gray-700 rounded">
+                            <label for="newsletter-consent" class="ml-2 text-sm text-gray-400">
+                                Accetto di ricevere comunicazioni marketing
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Impostazioni e Copyright -->
+            <div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-800">
+                <div class="flex gap-4 mb-4 md:mb-0">
+                    <select class="bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" aria-label="Seleziona lingua">
+                        <option>Italiano</option>
+                        <option>English</option>
+                        <option>Español</option>
+                        <option>Français</option>
+                        <option>Deutsch</option>
+                    </select>
+                    <select class="bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" aria-label="Seleziona valuta">
+                        <option>€ Euro (EUR)</option>
+                        <option>$ Dollar (USD)</option>
+                        <option>£ Pound (GBP)</option>
+                    </select>
+                </div>
+                <div class="text-center text-gray-400 text-sm">
+                    <p class="mb-2">&copy; 2024 BOSTARTER. Tutti i diritti riservati.</p>
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <a href="#" class="hover:text-white transition-colors">Affidabilità e Sicurezza</a>
+                        <a href="#" class="hover:text-white transition-colors">Termini di utilizzo</a>
+                        <a href="#" class="hover:text-white transition-colors">Privacy</a>
+                        <a href="#" class="hover:text-white transition-colors">Cookie</a>
+                        <a href="#" class="hover:text-white transition-colors">Accessibilità</a>
+                    </div>
+                </div>
             </div>
         </div>
     </footer>
@@ -461,7 +795,7 @@
     <!-- Modal Login -->
     <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative">
-            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-700" onclick="closeModal('login-modal')">
+            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-700" onclick="closeModal('login-modal')" aria-label="Chiudi">
                 <i class="ri-close-line text-2xl"></i>
             </button>
             <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Accedi a BOSTARTER</h2>
@@ -498,7 +832,7 @@
     <!-- Modal Registrazione -->
     <div id="register-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative">
-            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-700" onclick="closeModal('register-modal')">
+            <button class="absolute top-4 right-4 text-gray-500 hover:text-gray-700" onclick="closeModal('register-modal')" aria-label="Chiudi">
                 <i class="ri-close-line text-2xl"></i>
             </button>
             <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Registrati su BOSTARTER</h2>
@@ -544,7 +878,7 @@
         <div class="p-4 border-b border-gray-200">
             <div class="flex justify-between items-center">
                 <h3 class="text-lg font-semibold text-gray-800">Notifiche</h3>
-                <button id="close-notifications" class="text-gray-400 hover:text-gray-600">
+                <button id="close-notifications" class="text-gray-400 hover:text-gray-600" tabindex="0" aria-label="Chiudi notifiche">
                     <i class="ri-close-line text-xl"></i>
                 </button>
             </div>
@@ -559,6 +893,20 @@
     <script src="frontend/js/main.js"></script>
     <script src="frontend/js/auth.js"></script>
     <script src="frontend/js/notifications.js"></script>
+    <script>
+        // Registrazione Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/frontend/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registrato:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Errore nella registrazione del ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
     <script type="module">
         import accessibility from '/frontend/js/accessibility.js';
         import performance from '/frontend/js/performance.js';

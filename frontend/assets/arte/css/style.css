@@ -17,6 +17,28 @@
     --transition-slow: all 0.4s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
+body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #222; }
+.header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #fff; box-shadow: 0 2px 8px #0001; }
+.logo { display: flex; align-items: center; font-size: 1.5rem; color: #3176FF; text-decoration: none; }
+.logo-img { height: 2rem; margin-right: 0.5rem; }
+nav a { margin-left: 1.5rem; color: #3176FF; text-decoration: none; font-weight: 500; }
+.banner { text-align: center; margin: 2rem 0; }
+.banner h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.filter-section { text-align: center; margin-bottom: 2rem; }
+.filter-btn { margin: 0 0.5rem; padding: 0.5rem 1.5rem; border: none; border-radius: 999px; background: #eee; color: #3176FF; cursor: pointer; }
+.filter-btn.active, .filter-btn:hover { background: #3176FF; color: #fff; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+.card { background: #fff; border-radius: 1rem; box-shadow: 0 2px 8px #0001; padding: 1rem; display: flex; flex-direction: column; align-items: center; }
+.card img { width: 100%; height: 180px; object-fit: cover; border-radius: 0.5rem; }
+.card h3 { margin: 1rem 0 0.5rem; }
+.card p { color: #666; margin-bottom: 1rem; }
+.btn { background: #3176FF; color: #fff; padding: 0.5rem 1.5rem; border-radius: 999px; text-decoration: none; }
+.team-section { margin: 3rem 0 1rem; }
+.team-grid { display: flex; gap: 2rem; justify-content: center; }
+.team-card { text-align: center; }
+.team-card img { width: 64px; height: 64px; border-radius: 50%; margin-bottom: 0.5rem; }
+footer { background: #222; color: #fff; text-align: center; padding: 2rem 0; margin-top: 3rem; }
+
 /* Galleria */
 .gallery {
     display: grid;

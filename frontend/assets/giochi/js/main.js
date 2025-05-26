@@ -116,21 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
         eventsContainer.innerHTML += createEventCard(event);
     });
 
-    // Gestione dei filtri
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Rimuovi la classe active da tutti i bottoni
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            // Aggiungi la classe active al bottone cliccato
-            button.classList.add('active');
-
-            const filterValue = button.getAttribute('data-filter');
-            const gameCards = document.querySelectorAll('.game-card');
-
-            gameCards.forEach(card => {
-                if (filterValue === 'tutti' || card.getAttribute('data-category') === filterValue) {
-                    card.style.display = 'block';
+    // Filtro progetti
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const filter = this.dataset.filter;
+            document.querySelectorAll('.card').forEach(card => {
+                if (filter === 'tutti' || card.dataset.category === filter) {
+                    card.style.display = '';
                 } else {
                     card.style.display = 'none';
                 }

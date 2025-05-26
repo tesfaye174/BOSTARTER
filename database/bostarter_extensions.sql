@@ -232,6 +232,88 @@ BEGIN
         COMMIT; 
     END IF; 
 END$$ 
+
+-- Procedura per registrare un nuovo finanziamento
+CREATE PROCEDURE sp_registra_finanziamento(
+    IN p_progetto_id INT,
+    IN p_utente_id INT,
+    IN p_reward_id INT,
+    IN p_importo DECIMAL(10,2),
+    IN p_metodo_pagamento VARCHAR(50),
+    OUT p_success BOOLEAN,
+    OUT p_message VARCHAR(255)
+)
+BEGIN
+    DECLARE v_stato_progetto VARCHAR(20);
+    DECLARE v_budget_raccolto DECIMAL(10,2);
+    DECLARE v_budget_richiesto DECIMAL(10,2);
+    
+    -- Verifica stato progetto
+    SELECT stato, budget_raccolto, budget_richiesto 
+    INTO v_stato_progetto, v_budget_raccolto, v_budget_richiesto
+    FROM progetti 
+    WHERE id = p_progetto_id;
+    
+    IF v_stato_progetto != 'aperto' THEN
+        SET p_success = FALSE;
+        SET p_message = 'Il progetto non accetta finanziamenti';
+    ELSE
+        START TRANSACTION;
+        
+        -- Inserisci finanziamento
+        INSERT INTO finanziamenti (
+            progetto_id, utente_id, reward_id, importo, 
+            metodo_pagamento, stato_pagamento
+        ) VALUES (
+            p_progetto_id, p_utente_id, p_reward_id, p_importo,
+            p_metodo_pagamento, 'completato'
+        );
+        
+        -- Aggiorna budget raccolto
+        UPDATE progetti 
+        SET budget_raccolto = budget_raccolto + p_importo
+        WHERE id = p_progetto_id;
+        
+        -- Verifica se il progetto è completato
+        IF (v_budget_raccolto + p_importo) >= v_budget_richiesto THEN
+            UPDATE progetti 
+            SET stato = 'completato'
+            WHERE id = p_progetto_id;
+        END IF;
+        
+        SET p_success = TRUE;
+        SET p_message = 'Finanziamento registrato con successo';
+        
+        COMMIT;
+    END IF;
+END$$
+
+-- Procedura per aggiornare lo stato dei progetti scaduti
+CREATE PROCEDURE sp_aggiorna_progetti_scaduti()
+BEGIN
+    UPDATE progetti 
+    SET stato = 'chiuso'
+    WHERE stato = 'aperto' 
+    AND data_scadenza < NOW();
+END$$
+
+-- Procedura per cercare progetti per competenze
+CREATE PROCEDURE sp_cerca_progetti_per_skill(
+    IN p_skill_id INT,
+    IN p_livello_minimo TINYINT
+)
+BEGIN
+    SELECT DISTINCT p.*, u.nickname as creatore
+    FROM progetti p
+    JOIN utenti u ON p.creatore_id = u.id
+    JOIN profili_software ps ON p.id = ps.progetto_id
+    JOIN profili_skill_richieste psr ON ps.id = psr.profilo_id
+    WHERE psr.competenza_id = p_skill_id
+    AND psr.livello_minimo <= p_livello_minimo
+    AND p.stato = 'aperto'
+    ORDER BY p.data_inserimento DESC;
+END$$
+
 DELIMITER ;
 
 -- Commento finale

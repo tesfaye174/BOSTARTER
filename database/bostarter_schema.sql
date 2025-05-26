@@ -11,7 +11,8 @@ CREATE TABLE competenze (
     nome VARCHAR(100) NOT NULL UNIQUE, 
     descrizione TEXT, 
     categoria VARCHAR(50), 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_categoria (categoria)
 ); 
 
 -- Tabella utenti base 
@@ -32,7 +33,11 @@ CREATE TABLE utenti (
     bio TEXT, 
     data_registrazione TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     ultimo_accesso TIMESTAMP NULL, 
-    stato ENUM('attivo', 'sospeso', 'eliminato') DEFAULT 'attivo' 
+    stato ENUM('attivo', 'sospeso', 'eliminato') DEFAULT 'attivo',
+    INDEX idx_tipo_utente (tipo_utente),
+    INDEX idx_stato (stato),
+    INDEX idx_data_registrazione (data_registrazione),
+    INDEX idx_affidabilita (affidabilita)
 ); 
 
 -- Tabella skill degli utenti 
@@ -43,7 +48,8 @@ CREATE TABLE utenti_skill (
     livello TINYINT NOT NULL CHECK (livello BETWEEN 0 AND 5), 
     FOREIGN KEY (utente_id) REFERENCES utenti(id) ON DELETE CASCADE, 
     FOREIGN KEY (competenza_id) REFERENCES competenze(id) ON DELETE CASCADE, 
-    UNIQUE KEY unique_utente_competenza (utente_id, competenza_id) 
+    UNIQUE KEY unique_utente_competenza (utente_id, competenza_id),
+    INDEX idx_livello (livello)
 ); 
 
 -- Tabella progetti 
@@ -63,7 +69,9 @@ CREATE TABLE progetti (
     FOREIGN KEY (creatore_id) REFERENCES utenti(id) ON DELETE CASCADE, 
     INDEX idx_stato (stato), 
     INDEX idx_categoria (categoria), 
-    INDEX idx_scadenza (data_scadenza) 
+    INDEX idx_scadenza (data_scadenza),
+    INDEX idx_budget (budget_richiesto, budget_raccolto),
+    INDEX idx_data_inserimento (data_inserimento)
 ); 
 
 -- Tabella immagini progetti 
@@ -142,7 +150,10 @@ CREATE TABLE finanziamenti (
     FOREIGN KEY (reward_id) REFERENCES reward(id) ON DELETE CASCADE, 
     INDEX idx_progetto (progetto_id), 
     INDEX idx_utente (utente_id), 
-    INDEX idx_data (data_finanziamento) 
+    INDEX idx_data (data_finanziamento),
+    INDEX idx_stato_pagamento (stato_pagamento),
+    INDEX idx_importo (importo),
+    INDEX idx_progetto_stato (progetto_id, stato_pagamento)
 ); 
 
 -- Tabella commenti 
@@ -159,7 +170,10 @@ CREATE TABLE commenti (
     FOREIGN KEY (risposta_id) REFERENCES commenti(id) ON DELETE SET NULL, 
     INDEX idx_progetto (progetto_id), 
     INDEX idx_utente (utente_id), 
-    INDEX idx_risposta (risposta_id) 
+    INDEX idx_risposta (risposta_id),
+    INDEX idx_stato (stato),
+    INDEX idx_data_commento (data_commento),
+    INDEX idx_progetto_stato (progetto_id, stato)
 ); 
 
 -- Tabella aggiornamenti progetto 
@@ -172,7 +186,9 @@ CREATE TABLE aggiornamenti_progetto (
     visibile BOOLEAN DEFAULT TRUE, 
     FOREIGN KEY (progetto_id) REFERENCES progetti(id) ON DELETE CASCADE, 
     INDEX idx_progetto (progetto_id), 
-    INDEX idx_data (data_pubblicazione) 
+    INDEX idx_data (data_pubblicazione),
+    INDEX idx_visibile (visibile),
+    INDEX idx_progetto_visibile (progetto_id, visibile)
 ); 
 
 -- Tabella notifiche 
@@ -186,7 +202,10 @@ CREATE TABLE notifiche (
     letta BOOLEAN DEFAULT FALSE, 
     FOREIGN KEY (utente_id) REFERENCES utenti(id) ON DELETE CASCADE, 
     INDEX idx_utente (utente_id), 
-    INDEX idx_data (data_creazione) 
+    INDEX idx_data (data_creazione),
+    INDEX idx_tipo (tipo),
+    INDEX idx_letta (letta),
+    INDEX idx_utente_letta (utente_id, letta)
 ); 
 
 -- Tabella preferiti 
@@ -197,7 +216,8 @@ CREATE TABLE preferiti (
     data_aggiunta TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     FOREIGN KEY (utente_id) REFERENCES utenti(id) ON DELETE CASCADE, 
     FOREIGN KEY (progetto_id) REFERENCES progetti(id) ON DELETE CASCADE, 
-    UNIQUE KEY unique_utente_progetto (utente_id, progetto_id) 
+    UNIQUE KEY unique_utente_progetto (utente_id, progetto_id),
+    INDEX idx_data_aggiunta (data_aggiunta)
 ); 
 
 -- Tabella sessioni 

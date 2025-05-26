@@ -2,34 +2,52 @@
 // Funzioni per generare e validare JWT
 require_once __DIR__ . '/../vendor/autoload.php'; // Se usi firebase/php-jwt
 
-use Firebase\JWT\JWT;
+use Firebase\JWT\JWT as FirebaseJWT;
 use Firebase\JWT\Key;
 
-function generate_jwt($user) {
-    $key = 'TUO_SECRET_KEY';
-    $payload = [
-        'id' => $user['id'],
-        'ruolo' => $user['ruolo'],
-        'exp' => time() + 3600
-    ];
-    return JWT::encode($payload, $key, 'HS256');
+class JWT {
+    private static $key;
+    
+    public static function init($key) {
+        self::$key = $key;
+    }
+    
+    public static function encode($payload, $key = null, $alg = 'HS256') {
+        $key = $key ?? self::$key;
+        if (!$key) {
+            throw new Exception('JWT key non configurata');
+        }
+        
+        return FirebaseJWT::encode($payload, $key, $alg);
+    }
+    
+    public static function decode($token, $key = null) {
+        $key = $key ?? self::$key;
+        if (!$key) {
+            throw new Exception('JWT key non configurata');
+        }
+        
+        try {
+            return (array)FirebaseJWT::decode($token, new Key($key, 'HS256'));
+        } catch (Exception $e) {
+            throw new Exception('Token non valido: ' . $e->getMessage());
+        }
+    }
+    
+    public static function validateToken($token) {
+        try {
+            $decoded = self::decode($token);
+            
+            if (isset($decoded['exp']) && $decoded['exp'] < time()) {
+                throw new Exception('Token scaduto');
+            }
+            
+            return $decoded;
+        } catch (Exception $e) {
+            throw new Exception('Validazione token fallita: ' . $e->getMessage());
+        }
+    }
 }
 
-function check_jwt_token() {
-    $headers = getallheaders();
-    if (!isset($headers['Authorization'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Token mancante']);
-        exit;
-    }
-    $token = str_replace('Bearer ', '', $headers['Authorization']);
-    try {
-        $decoded = JWT::decode($token, new Key('TUO_SECRET_KEY', 'HS256'));
-        return (array)$decoded;
-    } catch (Exception $e) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Token non valido']);
-        exit;
-    }
-}
+JWT::init(getenv('JWT_SECRET'));
 ?>

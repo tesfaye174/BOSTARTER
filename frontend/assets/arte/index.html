@@ -4,44 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arte - BOSTARTER</title>
+    <meta name="description" content="Scopri i migliori progetti creativi nel mondo dell'arte su BOSTARTER.">
+    <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <link rel="icon" href="../../images/logo1.svg" type="image/x-icon">
 </head>
 <body>
-    <!-- Banner Interattivo -->
-    <div class="interactive-banner">
-        <h1>Scopri l'Arte Contemporanea</h1>
-        <p>Esplora opere uniche di artisti emergenti e affermati</p>
-    </div>
+    <!-- Header -->
+    <header class="header">
+        <a href="../../index.html" class="logo"><img src="../../images/logo1.svg" alt="Logo" class="logo-img"> BOSTARTER</a>
+        <nav>
+            <a href="../../index.html"><i class="ri-home-line"></i> Home</a>
+            <a href="../../frontend/explore.html"><i class="ri-compass-line"></i> Esplora</a>
+        </nav>
+    </header>
 
-    <!-- Sezione Filtri -->
-    <div class="filter-section">
-        <button class="filter-btn active" data-filter="tutti">Tutti</button>
-        <button class="filter-btn" data-filter="pittura">Pittura</button>
-        <button class="filter-btn" data-filter="scultura">Scultura</button>
-        <button class="filter-btn" data-filter="digitale">Arte Digitale</button>
-    </div>
+    <main>
+        <!-- Banner -->
+        <section class="banner">
+            <h1><i class="ri-brush-line text-primary"></i> Arte</h1>
+            <p>Scopri i migliori progetti creativi nel mondo dell'arte: pittura, scultura, installazioni e molto altro.</p>
+        </section>
 
-    <!-- Galleria Arte -->
-    <div class="gallery" id="art-gallery">
-        <!-- Le card delle opere d'arte verranno inserite dinamicamente via JavaScript -->
-    </div>
+        <!-- Filtri -->
+        <section class="filter-section">
+            <button class="filter-btn active" data-filter="tutti">Tutti</button>
+            <button class="filter-btn" data-filter="pittura">Pittura</button>
+            <button class="filter-btn" data-filter="scultura">Scultura</button>
+            <button class="filter-btn" data-filter="installazioni">Installazioni</button>
+        </section>
 
-    <!-- Sezione Artisti -->
-    <section class="artists-section">
-        <h2>Artisti in Evidenza</h2>
-        <div class="artist-grid" id="featured-artists">
-            <!-- Le card degli artisti verranno inserite dinamicamente via JavaScript -->
-        </div>
-    </section>
+        <!-- Griglia progetti -->
+        <section class="gallery-section">
+            <div class="gallery" id="gallery">
+                <div class="card" data-category="pittura">
+                    <img src="../../images/placeholder-art.jpg" alt="Progetto Arte">
+                    <h3>Titolo Progetto Arte 1</h3>
+                    <p>Breve descrizione del progetto artistico.</p>
+                    <a href="#" class="btn">Scopri</a>
+                </div>
+            </div>
+        </section>
 
-    <!-- Sezione Eventi -->
-    <section class="events-section">
-        <h2>Eventi e Mostre</h2>
-        <div id="art-events">
-            <!-- Gli eventi verranno inseriti dinamicamente via JavaScript -->
-        </div>
-    </section>
+        <!-- Sezione team/eventi -->
+        <section class="team-section">
+            <h2>Artisti in Evidenza</h2>
+            <div class="team-grid" id="team-grid">
+                <div class="team-card">
+                    <img src="../../images/avatar-1.jpg" alt="Artista">
+                    <span>Giulia Rossi</span>
+                </div>
+            </div>
+        </section>
+    </main>
 
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 BOSTARTER. Tutti i diritti riservati.</p>
+    </footer>
     <script src="js/main.js"></script>
 </body>
 </html>
