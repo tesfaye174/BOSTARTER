@@ -1,105 +1,94 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const newsletterForm = document.querySelector('.newsletter-form');
-    const emailInput = document.querySelector('.newsletter-email');
-    const subscribeButton = document.querySelector('.newsletter-subscribe');
-    const feedbackMessage = document.createElement('p');
-    feedbackMessage.className = 'mt-3 text-sm';
-    let isSubmitting = false;
+// Gestione della newsletter
+class NewsletterManager {
+    constructor() {
+        this.form = document.getElementById('newsletter-form');
+        this.emailInput = document.getElementById('newsletter-email');
+        this.submitButton = document.getElementById('newsletter-submit');
+        this.statusMessage = document.getElementById('newsletter-status');
 
-    // Aggiunge il messaggio di feedback dopo il form
-    newsletterForm.appendChild(feedbackMessage);
-
-    // Validazione email avanzata in tempo reale
-    emailInput.addEventListener('input', () => {
-        const email = emailInput.value.trim();
-        const isValid = validateEmail(email);
-        const isEmpty = email === '';
-
-        emailInput.classList.toggle('border-red-500', !isValid && !isEmpty);
-        emailInput.classList.toggle('border-green-500', isValid && !isEmpty);
-        subscribeButton.disabled = !isValid || isEmpty;
-        subscribeButton.classList.toggle('opacity-50', !isValid || isEmpty);
-
-        if (!isEmpty) {
-            showFeedback(
-                isValid ? 'Email valido!' : 'Inserisci un indirizzo email valido',
-                isValid ? 'success' : 'error'
-            );
-        } else {
-            feedbackMessage.textContent = '';
+        if (this.form) {
+            this.initializeEventListeners();
         }
-    });
+    }
 
-    // Gestione sottoscrizione avanzata con feedback visivi
-    newsletterForm.addEventListener('submit', async (e) => {
+    initializeEventListeners() {
+        this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+        this.emailInput?.addEventListener('input', () => this.validateEmail());
+    }
+
+    validateEmail() {
+        const email = this.emailInput.value;
+        const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+        this.emailInput.classList.toggle('border-red-500', !isValid);
+        this.submitButton.disabled = !isValid;
+
+        return isValid;
+    }
+
+    showStatus(message, isError = false) {
+        if (!this.statusMessage) return;
+
+        this.statusMessage.textContent = message;
+        this.statusMessage.classList.remove('text-green-600', 'text-red-600');
+        this.statusMessage.classList.add(isError ? 'text-red-600' : 'text-green-600');
+        this.statusMessage.classList.remove('hidden');
+
+        // Nascondi il messaggio dopo 5 secondi
+        setTimeout(() => {
+            this.statusMessage.classList.add('hidden');
+        }, 5000);
+    }
+
+    async handleSubmit(e) {
         e.preventDefault();
-        if (isSubmitting) return;
 
-        const email = emailInput.value.trim();
-        if (!validateEmail(email)) {
-            showFeedback('Inserisci un indirizzo email valido', 'error');
-            emailInput.focus();
+        if (!this.validateEmail()) {
+            this.showStatus('Inserisci un indirizzo email valido', true);
             return;
         }
 
-        try {
-            isSubmitting = true;
-            subscribeButton.classList.add('btn-loading');
-            subscribeButton.disabled = true;
+        const email = this.emailInput.value;
 
-            // Chiamata API per l'iscrizione alla newsletter
-            const response = await fetch(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.NEWSLETTER.SUBSCRIBE, {
+        try {
+            this.submitButton.disabled = true;
+            this.submitButton.innerHTML = `
+                <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Iscrizione in corso...
+            `;
+
+            const response = await fetch('/api/newsletter/subscribe', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ email })
             });
 
-            const data = await response.json();
-            
-            if (data.success) {
-                showFeedback('Iscrizione completata con successo! Ti invieremo una email di conferma.', 'success');
-            } else {
-                throw new Error(data.error || 'Errore durante l\'iscrizione');
+            if (!response.ok) {
+                throw new Error('Errore durante l\'iscrizione');
             }
-            emailInput.value = '';
-            subscribeButton.classList.add('success');
-            
-            // Tracciamento evento con dati aggiuntivi
-            trackEvent('newsletter_subscription', { 
-                email,
-                timestamp: new Date().toISOString(),
-                source: 'website'
-            });
+
+            const data = await response.json();
+            this.showStatus('Iscrizione completata con successo!');
+            this.emailInput.value = '';
+            this.submitButton.disabled = true;
+
         } catch (error) {
-            showFeedback('Si è verificato un errore. Per favore riprova più tardi.', 'error');
-            console.error('Errore durante l\'iscrizione:', error);
+            console.error('Errore newsletter:', error);
+            this.showStatus('Si è verificato un errore durante l\'iscrizione. Riprova più tardi.', true);
+
         } finally {
-            isSubmitting = false;
-            subscribeButton.classList.remove('btn-loading');
-            subscribeButton.disabled = false;
+            this.submitButton.disabled = false;
+            this.submitButton.innerHTML = 'Iscriviti';
         }
-    });
-
-    // Funzione di validazione email migliorata
-    function validateEmail(email) {
-        if (!email) return false;
-        const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        return re.test(email) && email.length <= 254 && !email.startsWith('.') && !email.endsWith('.');
     }
+}
 
-    // Funzione per mostrare feedback
-    function showFeedback(message, type) {
-        feedbackMessage.textContent = message;
-        feedbackMessage.className = `mt-3 text-sm ${
-            type === 'success' ? 'text-green-600' : 'text-red-600'
-        }`;
-    }
-
-    // Funzione per il tracciamento eventi (placeholder)
-    function trackEvent(eventName, data) {
-        console.log('Event tracked:', eventName, data);
-        // Implementare con il sistema di analytics scelto
-    }
-}));
+// Inizializzazione
+document.addEventListener('DOMContentLoaded', () => {
+    new NewsletterManager();
+});

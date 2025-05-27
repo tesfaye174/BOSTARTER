@@ -1,6 +1,17 @@
 /* Logica dashboard creatore BOSTARTER - Versione migliorata per UI/UX */
 
-document.addEventListener('DOMContentLoaded', function () {
+// Importa le dipendenze necessarie
+import { auth } from '../js/auth.js';
+import { notifications } from '../js/notifications.js';
+import { api } from '../js/api.js';
+
+document.addEventListener('DOMContentLoaded', async function () {
+    // Verifica autenticazione
+    const userSession = await auth.checkSession();
+    if (!userSession || userSession.tipo_utente !== 'creatore') {
+        window.location.href = '../index.html';
+        return;
+    }
     // Animazione di caricamento iniziale con effetto di fade e slide
     const mainContent = document.getElementById('main-content');
     const sections = document.querySelectorAll('section');
