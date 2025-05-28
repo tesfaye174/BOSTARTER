@@ -5,126 +5,484 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Dashboard personale BOSTARTER - Gestisci i tuoi progetti e il tuo profilo">
     <title>Dashboard Utente - BOSTARTER</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+    
+    <!-- Preload risorse critiche -->
+    <link rel="preload" href="/frontend/js/main.js" as="script">
+    <link rel="preload" href="/frontend/js/api.js" as="script">
+    <link rel="preload" href="/frontend/js/auth.js" as="script">
+    <link rel="preload" href="/frontend/css/main.css" as="style">
+    
+    <!-- Fonts ottimizzati -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    
+    <!-- Icons ottimizzati -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: { 
+                        primary: {
+                            DEFAULT: "#3176FF",
+                            50: "#EBF2FF",
+                            100: "#D6E4FF",
+                            200: "#B3CCFF",
+                            300: "#80AAFF",
+                            400: "#4D88FF",
+                            500: "#3176FF",
+                            600: "#1A5EFF",
+                            700: "#0A47E6",
+                            800: "#0837B8",
+                            900: "#062A8A",
+                            950: "#041C5C"
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                        'brand': ['Pacifico', 'cursive']
+                    }
+                }
+            }
+        };
+    </script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/frontend/css/main.css">
+    <link rel="stylesheet" href="/frontend/css/animations.css">
+    <link rel="stylesheet" href="/frontend/css/components.css">
 </head>
-<body>
-    <header class="main-header sticky" role="banner">
-        <div class="header-content">
-            <div class="logo">
-                <a href="../index.html" aria-label="Homepage BOSTARTER">
-                    <img src="images/logo1.svg" alt="Logo BOSTARTER" class="logo-img" loading="lazy">
-                    <span class="logo-text">BOSTARTER</span>
+<body class="bg-gray-50 dark:bg-gray-900">
+    <!-- Skip link -->
+    <a href="#main-content" class="skip-link" tabindex="0">Vai al contenuto principale</a>
+
+    <!-- Notifications container -->
+    <div id="notifications-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm" role="alert" aria-live="polite"></div>
+
+    <header class="bg-white/80 dark:bg-gray-800/80 shadow-sm sticky top-0 z-50 transition-colors duration-300">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="/index.html" class="flex items-center font-brand text-2xl text-primary hover:text-primary-dark transition-colors focus-visible" aria-label="Homepage BOSTARTER">
+                    <img src="/frontend/images/logo1.svg" alt="" class="h-8 w-auto mr-2" width="32" height="32" aria-hidden="true">
+                    BOSTARTER
                 </a>
+
+                <!-- Actions -->
+                <div class="flex gap-3 items-center">
+                    <!-- Notifications -->
+                    <div id="notification-center" class="relative"></div>
+
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" 
+                            class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus-visible" 
+                            aria-label="Cambia tema">
+                        <i class="ri-sun-line dark:hidden text-xl" aria-hidden="true"></i>
+                        <i class="ri-moon-line hidden dark:block text-xl" aria-hidden="true"></i>
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="user-menu-btn" 
+                                class="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus-visible"
+                                aria-label="Menu utente"
+                                aria-expanded="false"
+                                aria-controls="user-menu">
+                            <img id="user-avatar" src="/frontend/images/default-avatar.png" alt="" class="w-8 h-8 rounded-full">
+                            <span id="user-name" class="text-gray-700 dark:text-gray-300">Caricamento...</span>
+                            <i class="ri-arrow-down-s-line text-sm" aria-hidden="true"></i>
+                        </button>
+                        <div id="user-menu" 
+                             class="dropdown hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1"
+                             role="menu">
+                            <a href="/frontend/profile.html" class="dropdown-item" role="menuitem">
+                                <i class="ri-user-line mr-2" aria-hidden="true"></i>
+                                Profilo
+                            </a>
+                            <a href="/frontend/settings.html" class="dropdown-item" role="menuitem">
+                                <i class="ri-settings-line mr-2" aria-hidden="true"></i>
+                                Impostazioni
+                            </a>
+                            <hr class="my-1 border-gray-200 dark:border-gray-700">
+                            <button id="logout-btn" class="dropdown-item text-red-600 dark:text-red-400 w-full text-left" role="menuitem">
+                                <i class="ri-logout-box-line mr-2" aria-hidden="true"></i>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <nav class="user-nav" aria-label="Navigazione utente">
-                <ul>
-                    <li><a href="../index.html">Home</a></li>
-                    <li><a href="#" id="logout-link">Logout</a></li>
-                </ul>
-            </nav>
-            <button class="mobile-menu-btn" aria-label="Menu mobile" aria-expanded="false">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
-        <div class="mobile-menu">
-            <ul>
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="#" id="mobile-logout-link">Logout</a></li>
-            </ul>
         </div>
     </header>
-    <main id="main-content">
-        <section class="dashboard-hero" aria-label="Benvenuto in Dashboard">
-            <div class="hero-content">
-                <h1 id="dashboard-title">Benvenuto nella tua Dashboard</h1>
-                <p id="dashboard-description">Gestisci i tuoi progetti, supporti e profilo da qui.</p>
+
+    <main id="main-content" class="container mx-auto px-4 py-8">
+        <section class="dashboard-hero mb-8" aria-label="Benvenuto in Dashboard">
+            <div class="hero-content bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h1 id="dashboard-title" class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Benvenuto nella tua Dashboard</h1>
+                <p id="dashboard-description" class="text-gray-600 dark:text-gray-300">Gestisci i tuoi progetti, supporti e profilo da qui.</p>
             </div>
         </section>
-        <section id="dashboard-content" class="dashboard-section container">
+
+        <section id="dashboard-content" class="dashboard-section grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Contenuto dinamico: differenziato tra utente e creatore -->
         </section>
+
+        <!-- Sezione Statistiche -->
+        <section id="dashboard-stats" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Statistiche dinamiche -->
+        </section>
     </main>
-    <footer class="modern-footer" role="contentinfo">
-        <div class="footer-content">
-            <div class="footer-logo">
-                <img src="images/logo1.svg" alt="BOSTARTER Logo Footer" class="footer-logo-img" loading="lazy">
-                <span>BOSTARTER</span>
+
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="footer-logo flex items-center space-x-2">
+                    <img src="/frontend/images/logo1.svg" alt="BOSTARTER Logo Footer" class="h-8 w-auto" loading="lazy">
+                    <span class="text-xl font-bold text-gray-900 dark:text-white">BOSTARTER</span>
+                </div>
+                <div class="footer-links grid grid-cols-2 gap-4">
+                    <a href="/about" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Chi siamo</a>
+                    <a href="/contact" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Contatti</a>
+                    <a href="/faq" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">FAQ</a>
+                    <a href="/terms" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Termini di Servizio</a>
+                    <a href="/privacy" class="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Privacy Policy</a>
+                </div>
+                <div class="footer-social flex space-x-4">
+                    <a href="https://twitter.com/bostarter" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition-colors">
+                        <span class="sr-only">Twitter</span>
+                        <i class="ri-twitter-fill text-2xl" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://facebook.com/bostarter" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition-colors">
+                        <span class="sr-only">Facebook</span>
+                        <i class="ri-facebook-fill text-2xl" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://instagram.com/bostarter" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition-colors">
+                        <span class="sr-only">Instagram</span>
+                        <i class="ri-instagram-fill text-2xl" aria-hidden="true"></i>
+                    </a>
+                    <a href="https://linkedin.com/company/bostarter" target="_blank" rel="noopener noreferrer" class="text-gray-400 hover:text-primary transition-colors">
+                        <span class="sr-only">LinkedIn</span>
+                        <i class="ri-linkedin-fill text-2xl" aria-hidden="true"></i>
+                    </a>
+                </div>
             </div>
-            <div class="footer-links">
-                <a href="#">Chi siamo</a>
-                <a href="#">Contatti</a>
-                <a href="#">FAQ</a>
-                <a href="#">Termini di Servizio</a>
-                <a href="#">Privacy Policy</a>
-            </div>
-            <div class="footer-social">
-                <a href="#" aria-label="Facebook BOSTARTER"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" aria-label="Twitter BOSTARTER"><i class="fab fa-twitter"></i></a>
-                <a href="#" aria-label="Instagram BOSTARTER"><i class="fab fa-instagram"></i></a>
-                <a href="#" aria-label="LinkedIn BOSTARTER"><i class="fab fa-linkedin-in"></i></a>
-            </div>
+            <p class="copyright-text text-center text-gray-600 dark:text-gray-300 mt-8">
+                &copy; <span id="current-year">2024</span> BOSTARTER. Tutti i diritti riservati.
+            </p>
         </div>
-        <p class="copyright-text">&copy; <span id="current-year">2024</span> BOSTARTER. Tutti i diritti riservati.</p>
     </footer>
-    <script src="js/main.js"></script>
+
+    <!-- Scripts -->
+    <script type="module" src="/frontend/js/main.js"></script>
+    <script type="module" src="/frontend/js/api.js"></script>
+    <script type="module" src="/frontend/js/auth.js"></script>
+    <script type="module" src="/frontend/js/theme.js"></script>
+    <script type="module" src="/frontend/js/notifications.js"></script>
     <script>
-        document.getElementById('current-year').textContent = new Date().getFullYear();
+        // Configurazione Tailwind
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        };
+
+        // Gestione tema scuro
+        const themeToggle = document.getElementById('theme-toggle');
         
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Imposta il tema iniziale
+        if (localStorage.getItem('theme') === 'dark' || 
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Gestione menu utente
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenu = document.getElementById('user-menu');
+
+        userMenuBtn.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+            userMenuBtn.setAttribute('aria-expanded', 
+                userMenuBtn.getAttribute('aria-expanded') === 'false' ? 'true' : 'false'
+            );
+        });
+
+        // Chiudi il menu quando si clicca fuori
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+                userMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
         // Verifica sessione utente
-        fetch('../backend/user.php')
+        fetch('/backend/user.php')
         .then(response => {
             if(!response.ok) throw new Error('Sessione scaduta');
             return response.json();
         })
         .then(userData => {
             sessionStorage.setItem('userRole', userData.role);
+            document.getElementById('user-name').textContent = userData.name;
+            if (userData.avatar) {
+                document.getElementById('user-avatar').src = userData.avatar;
+            }
             renderDashboard(userData);
         })
         .catch(error => {
             alert(`${error}. Reindirizzamento al login...`);
-            window.location.href = '../index.html';
+            window.location.href = '/index.html';
         });
 
         function renderDashboard(userData) {
             const dashboardContent = document.getElementById('dashboard-content');
-            // Utilizza userData.role per differenziare utente e creatore
+            const dashboardStats = document.getElementById('dashboard-stats');
+            
             if (userData.role === 'creator') {
                 document.getElementById('dashboard-title').textContent = 'Dashboard Creatore';
-                document.getElementById('dashboard-description').textContent = 'Gestisci i tuoi progetti, crea nuove campagne e monitora i tuoi sostenitori.';
+                document.getElementById('dashboard-description').textContent = 
+                    'Gestisci i tuoi progetti, crea nuove campagne e monitora i tuoi sostenitori.';
+                
                 dashboardContent.innerHTML = `
-                    <div class="dashboard-cards">
-                        <div class="dashboard-card"><i class="fas fa-lightbulb"></i><h3>I tuoi Progetti</h3><p>Visualizza e modifica i tuoi progetti creativi.</p><a href="#" class="cta-button-outline">Gestisci</a></div>
-                        <div class="dashboard-card"><i class="fas fa-plus-circle"></i><h3>Crea Nuovo Progetto</h3><p>Lancia una nuova campagna di crowdfunding.</p><a href="#" class="cta-button-outline">Inizia</a></div>
-                        <div class="dashboard-card"><i class="fas fa-users"></i><h3>Sostenitori</h3><p>Monitora chi ha supportato le tue idee.</p><a href="#" class="cta-button-outline">Visualizza</a></div>
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-lightbulb-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">I tuoi Progetti</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Visualizza e modifica i tuoi progetti creativi.</p>
+                        <a href="/frontend/projects.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Gestisci
+                        </a>
+                    </div>
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-add-circle-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Crea Nuovo Progetto</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Lancia una nuova campagna di crowdfunding.</p>
+                        <a href="/frontend/create-project.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Inizia
+                        </a>
+                    </div>
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-team-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Sostenitori</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Monitora chi ha supportato le tue idee.</p>
+                        <a href="/frontend/backers.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Visualizza
+                        </a>
+                    </div>
+                `;
+
+                dashboardStats.innerHTML = `
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-primary-100 dark:bg-primary-900">
+                                <i class="ri-projector-line text-primary-600 dark:text-primary-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Progetti Attivi</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">3</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                                <i class="ri-money-euro-circle-line text-green-600 dark:text-green-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Totale Raccolto</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">€2,500</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                                <i class="ri-team-line text-blue-600 dark:text-blue-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Sostenitori</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">45</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
+                                <i class="ri-line-chart-line text-purple-600 dark:text-purple-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Tasso di Successo</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">85%</p>
+                            </div>
+                        </div>
                     </div>
                 `;
             } else {
                 document.getElementById('dashboard-title').textContent = 'Dashboard Utente';
-                document.getElementById('dashboard-description').textContent = 'Gestisci i progetti che hai supportato e aggiorna il tuo profilo.';
+                document.getElementById('dashboard-description').textContent = 
+                    'Gestisci i progetti che hai supportato e aggiorna il tuo profilo.';
+                
                 dashboardContent.innerHTML = `
-                    <div class="dashboard-cards">
-                        <div class="dashboard-card"><i class="fas fa-heart"></i><h3>Progetti Supportati</h3><p>Visualizza i progetti che hai sostenuto.</p><a href="#" class="cta-button-outline">Visualizza</a></div>
-                        <div class="dashboard-card"><i class="fas fa-user"></i><h3>Profilo</h3><p>Gestisci le tue informazioni personali.</p><a href="#" class="cta-button-outline">Modifica</a></div>
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-heart-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Progetti Supportati</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Visualizza i progetti che hai sostenuto.</p>
+                        <a href="/frontend/backed-projects.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Visualizza
+                        </a>
+                    </div>
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-user-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Profilo</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Gestisci le tue informazioni personali.</p>
+                        <a href="/frontend/profile.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Modifica
+                        </a>
+                    </div>
+                `;
+
+                dashboardStats.innerHTML = `
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-primary-100 dark:bg-primary-900">
+                                <i class="ri-heart-line text-primary-600 dark:text-primary-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Progetti Supportati</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">5</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                                <i class="ri-money-euro-circle-line text-green-600 dark:text-green-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Totale Donato</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">€150</p>
+                            </div>
+                        </div>
                     </div>
                 `;
             }
         }
-        // Non chiamare renderDashboard() qui, verrà chiamata dopo il fetch
-        
-        // Aggiungi classe per animazioni
+
+        // Aggiorna l'anno corrente
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // Aggiungi animazioni
         document.addEventListener('DOMContentLoaded', function() {
             const dashboardCards = document.querySelectorAll('.dashboard-card');
-            setTimeout(() => {
-                dashboardCards.forEach((card, index) => {
-                    setTimeout(() => {
-                        card.classList.add('visible');
-                    }, index * 150);
+            const statCards = document.querySelectorAll('.stat-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-fade-in');
+                        observer.unobserve(entry.target);
+                    }
                 });
-            }, 300);
+            }, {
+                threshold: 0.1
+            });
+
+            dashboardCards.forEach(card => observer.observe(card));
+            statCards.forEach(card => observer.observe(card));
+        });
+
+        // Gestione logout
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/backend/auth/logout.php', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/index.html';
+                } else {
+                    throw new Error('Errore durante il logout');
+                }
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('Si è verificato un errore durante il logout. Riprova più tardi.');
+            }
         });
     </script>
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .dashboard-card {
+            opacity: 0;
+        }
+
+        .stat-card {
+            opacity: 0;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: var(--color-primary);
+            color: white;
+            padding: 8px;
+            z-index: 100;
+            transition: top 0.2s;
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+    </style>
 </body>
 </html>

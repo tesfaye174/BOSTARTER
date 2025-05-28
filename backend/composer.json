@@ -1,0 +1,25 @@
+{
+    "name": "bostarter/backend",
+    "description": "Backend per la piattaforma di crowdfunding BOSTARTER",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "cboden/ratchet": "^0.4.4",
+        "firebase/php-jwt": "^6.0",
+        "vlucas/phpdotenv": "^5.5",
+        "monolog/monolog": "^2.0",
+        "phpmailer/phpmailer": "^6.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "BOSTARTER\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "BOSTARTER Team",
+            "email": "team@bostarter.com"
+        }
+    ],
+    "minimum-stability": "stable"
+} 

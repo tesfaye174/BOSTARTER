@@ -1,302 +1,169 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/database.php';
+namespace BOSTARTER\Models;
 
 class Notification {
     private $db;
-    private $conn;
-    
-    public function __construct() {
-        $this->db = new Database();
-        $this->conn = $this->db->getConnection();
+    private $table = 'notifications';
+
+    public function __construct($db) {
+        $this->db = $db;
     }
-    
+
     /**
      * Crea una nuova notifica
+     * @param array $data Dati della notifica
+     * @return array Risultato dell'operazione
      */
     public function create($data) {
         try {
-            $stmt = $this->conn->prepare("
-                INSERT INTO notifiche (
-                    utente_id, tipo, titolo, messaggio,
-                    link, data_creazione, letta
-                ) VALUES (?, ?, ?, ?, ?, NOW(), false)
+            $stmt = $this->db->prepare("
+                INSERT INTO notifications (
+                    user_id, 
+                    type, 
+                    title, 
+                    message, 
+                    link, 
+                    is_read, 
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, 0, NOW())
             ");
-            
+
             $stmt->execute([
-                $data['utente_id'],
-                $data['tipo'],
-                $data['titolo'],
-                $data['messaggio'],
+                $data['user_id'],
+                $data['type'],
+                $data['title'],
+                $data['message'],
                 $data['link'] ?? null
             ]);
-            
+
             return [
-                'success' => true,
-                'notification_id' => $this->conn->lastInsertId(),
-                'message' => 'Notifica creata con successo'
+                'status' => 'success',
+                'message' => 'Notifica creata con successo',
+                'notification_id' => $this->db->lastInsertId()
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+        } catch (\PDOException $e) {
             return [
-                'success' => false,
-                'message' => 'Errore durante la creazione della notifica'
+                'status' => 'error',
+                'message' => 'Errore durante la creazione della notifica: ' . $e->getMessage()
             ];
         }
     }
-    
+
     /**
-     * Ottiene le notifiche di un utente
+     * Ottiene le notifiche non lette di un utente
+     * @param int $userId ID dell'utente
+     * @return array Lista delle notifiche
      */
-    public function getUserNotifications($userId, $page = 1, $perPage = 10, $unreadOnly = false) {
+    public function getUnread($userId) {
         try {
-            $offset = ($page - 1) * $perPage;
-            $where = $unreadOnly ? "WHERE utente_id = ? AND letta = false" : "WHERE utente_id = ?";
-            
-            $stmt = $this->conn->prepare("
-                SELECT *
-                FROM notifiche
-                $where
-                ORDER BY data_creazione DESC
-                LIMIT ? OFFSET ?
+            $stmt = $this->db->prepare("
+                SELECT * FROM notifications 
+                WHERE user_id = ? AND is_read = 0 
+                ORDER BY created_at DESC
             ");
-            $stmt->execute([$userId, $perPage, $offset]);
-            $notifications = $stmt->fetchAll();
             
-            $stmt = $this->conn->prepare("
-                SELECT COUNT(*)
-                FROM notifiche
-                $where
-            ");
             $stmt->execute([$userId]);
-            $total = $stmt->fetchColumn();
-            
-            return [
-                'notifications' => $notifications,
-                'total' => $total,
-                'page' => $page,
-                'per_page' => $perPage,
-                'total_pages' => ceil($total / $perPage)
-            ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-            return null;
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            return [];
         }
     }
-    
+
     /**
      * Marca una notifica come letta
+     * @param int $notificationId ID della notifica
+     * @return array Risultato dell'operazione
      */
-    public function markAsRead($notificationId, $userId) {
+    public function markAsRead($notificationId) {
         try {
-            $stmt = $this->conn->prepare("
-                UPDATE notifiche
-                SET letta = true
-                WHERE id = ? AND utente_id = ?
+            $stmt = $this->db->prepare("
+                UPDATE notifications 
+                SET is_read = 1, read_at = NOW() 
+                WHERE id = ?
             ");
-            $stmt->execute([$notificationId, $userId]);
+            
+            $stmt->execute([$notificationId]);
             
             return [
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Notifica marcata come letta'
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+        } catch (\PDOException $e) {
             return [
-                'success' => false,
-                'message' => 'Errore durante l\'aggiornamento della notifica'
+                'status' => 'error',
+                'message' => 'Errore durante l\'aggiornamento della notifica: ' . $e->getMessage()
             ];
         }
     }
-    
+
     /**
      * Marca tutte le notifiche di un utente come lette
+     * @param int $userId ID dell'utente
+     * @return array Risultato dell'operazione
      */
     public function markAllAsRead($userId) {
         try {
-            $stmt = $this->conn->prepare("
-                UPDATE notifiche
-                SET letta = true
-                WHERE utente_id = ? AND letta = false
+            $stmt = $this->db->prepare("
+                UPDATE notifications 
+                SET is_read = 1, read_at = NOW() 
+                WHERE user_id = ? AND is_read = 0
             ");
+            
             $stmt->execute([$userId]);
             
             return [
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Tutte le notifiche sono state marcate come lette'
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+        } catch (\PDOException $e) {
             return [
-                'success' => false,
-                'message' => 'Errore durante l\'aggiornamento delle notifiche'
+                'status' => 'error',
+                'message' => 'Errore durante l\'aggiornamento delle notifiche: ' . $e->getMessage()
             ];
         }
     }
-    
+
     /**
      * Elimina una notifica
+     * @param int $notificationId ID della notifica
+     * @return array Risultato dell'operazione
      */
-    public function delete($notificationId, $userId) {
+    public function delete($notificationId) {
         try {
-            $stmt = $this->conn->prepare("
-                DELETE FROM notifiche
-                WHERE id = ? AND utente_id = ?
-            ");
-            $stmt->execute([$notificationId, $userId]);
+            $stmt = $this->db->prepare("DELETE FROM notifications WHERE id = ?");
+            $stmt->execute([$notificationId]);
             
             return [
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Notifica eliminata con successo'
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+        } catch (\PDOException $e) {
             return [
-                'success' => false,
-                'message' => 'Errore durante l\'eliminazione della notifica'
+                'status' => 'error',
+                'message' => 'Errore durante l\'eliminazione della notifica: ' . $e->getMessage()
             ];
         }
     }
-    
+
     /**
-     * Elimina tutte le notifiche di un utente
-     */
-    public function deleteAll($userId) {
-        try {
-            $stmt = $this->conn->prepare("
-                DELETE FROM notifiche
-                WHERE utente_id = ?
-            ");
-            $stmt->execute([$userId]);
-            
-            return [
-                'success' => true,
-                'message' => 'Tutte le notifiche sono state eliminate'
-            ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-            return [
-                'success' => false,
-                'message' => 'Errore durante l\'eliminazione delle notifiche'
-            ];
-        }
-    }
-    
-    /**
-     * Ottiene il numero di notifiche non lette
+     * Ottiene il conteggio delle notifiche non lette
+     * @param int $userId ID dell'utente
+     * @return int Numero di notifiche non lette
      */
     public function getUnreadCount($userId) {
         try {
-            $stmt = $this->conn->prepare("
-                SELECT COUNT(*)
-                FROM notifiche
-                WHERE utente_id = ? AND letta = false
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*) as count 
+                FROM notifications 
+                WHERE user_id = ? AND is_read = 0
             ");
+            
             $stmt->execute([$userId]);
-            return $stmt->fetchColumn();
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            
+            return $result['count'] ?? 0;
+        } catch (\PDOException $e) {
             return 0;
         }
-    }
-    
-    /**
-     * Crea notifiche per eventi specifici
-     */
-    public function createProjectNotification($projectId, $type, $data = []) {
-        try {
-            $this->conn->beginTransaction();
-            
-            // Ottiene i dettagli del progetto
-            $stmt = $this->conn->prepare("
-                SELECT titolo, creatore_id
-                FROM progetti
-                WHERE id = ?
-            ");
-            $stmt->execute([$projectId]);
-            $project = $stmt->fetch();
-            
-            if (!$project) {
-                throw new Exception('Progetto non trovato');
-            }
-            
-            // Crea la notifica per il creatore
-            $notification = [
-                'utente_id' => $project['creatore_id'],
-                'tipo' => $type,
-                'titolo' => $this->getNotificationTitle($type, $project['titolo']),
-                'messaggio' => $this->getNotificationMessage($type, $data),
-                'link' => "/progetti/{$projectId}"
-            ];
-            
-            $this->create($notification);
-            
-            // Se necessario, crea notifiche per i donatori
-            if (in_array($type, ['aggiornamento', 'completato', 'fallito'])) {
-                $stmt = $this->conn->prepare("
-                    SELECT DISTINCT utente_id
-                    FROM donazioni
-                    WHERE progetto_id = ?
-                ");
-                $stmt->execute([$projectId]);
-                $donors = $stmt->fetchAll(PDO::FETCH_COLUMN);
-                
-                foreach ($donors as $donorId) {
-                    if ($donorId != $project['creatore_id']) {
-                        $notification['utente_id'] = $donorId;
-                        $this->create($notification);
-                    }
-                }
-            }
-            
-            $this->conn->commit();
-            return [
-                'success' => true,
-                'message' => 'Notifiche create con successo'
-            ];
-        } catch (Exception $e) {
-            $this->conn->rollBack();
-            error_log($e->getMessage());
-            return [
-                'success' => false,
-                'message' => $e->getMessage()
-            ];
-        }
-    }
-    
-    /**
-     * Ottiene il titolo della notifica in base al tipo
-     */
-    private function getNotificationTitle($type, $projectTitle) {
-        $titles = [
-            'nuovo_progetto' => "Nuovo progetto: {$projectTitle}",
-            'aggiornamento' => "Aggiornamento progetto: {$projectTitle}",
-            'nuova_donazione' => "Nuova donazione al progetto: {$projectTitle}",
-            'obiettivo_raggiunto' => "Obiettivo raggiunto: {$projectTitle}",
-            'completato' => "Progetto completato: {$projectTitle}",
-            'fallito' => "Progetto fallito: {$projectTitle}",
-            'nuovo_commento' => "Nuovo commento al progetto: {$projectTitle}",
-            'ricompensa_disponibile' => "Ricompensa disponibile: {$projectTitle}"
-        ];
-        
-        return $titles[$type] ?? "Notifica: {$projectTitle}";
-    }
-    
-    /**
-     * Ottiene il messaggio della notifica in base al tipo
-     */
-    private function getNotificationMessage($type, $data) {
-        $messages = [
-            'nuovo_progetto' => "Il tuo progetto è stato creato con successo!",
-            'aggiornamento' => "È stato pubblicato un nuovo aggiornamento per il tuo progetto.",
-            'nuova_donazione' => "Hai ricevuto una nuova donazione di {$data['importo']}€.",
-            'obiettivo_raggiunto' => "Congratulazioni! Il tuo progetto ha raggiunto l'obiettivo!",
-            'completato' => "Il progetto è stato completato con successo!",
-            'fallito' => "Il progetto non ha raggiunto l'obiettivo entro la scadenza.",
-            'nuovo_commento' => "Hai ricevuto un nuovo commento sul tuo progetto.",
-            'ricompensa_disponibile' => "Una nuova ricompensa è disponibile per il tuo progetto."
-        ];
-        
-        return $messages[$type] ?? "Nuova notifica";
     }
 } 
