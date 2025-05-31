@@ -64,9 +64,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             
             $result = $conn->query("SELECT @p_user_id as user_id, @p_success as success, @p_message as message")->fetch(PDO::FETCH_ASSOC);
-            
-            if ($result['success']) {
+              if ($result['success']) {
                 $success = 'Registrazione completata con successo! Ora puoi accedere.';
+                
+                // MongoDB logging
+                try {
+                    require_once '../../backend/services/MongoLogger.php';
+                    $mongoLogger = new MongoLogger();
+                    $mongoLogger->logSystem('user_registered', [
+                        'user_id' => $result['user_id'],
+                        'email' => $formData['email'],
+                        'nickname' => $formData['nickname'],
+                        'tipo_utente' => $formData['tipo_utente'],
+                        'registration_time' => date('Y-m-d H:i:s')
+                    ]);
+                } catch (Exception $e) {
+                    error_log("MongoDB logging failed: " . $e->getMessage());
+                }
+                
                 $formData = array_fill_keys(array_keys($formData), ''); // Reset form
             } else {
                 $error = $result['message'];

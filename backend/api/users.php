@@ -1,0 +1,524 @@
+<?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
+require_once '../config/database.php';
+require_once '../services/MongoLogger.php';
+
+$database = new Database();
+$db = $database->getConnection();
+$mongoLogger = new MongoLogger();
+
+session_start();
+
+// Check if user is authenticated
+function requireAuth() {
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Authentication required']);
+        exit;
+    }
+}
+
+// Check if user can access profile (own profile or admin)
+function canAccessProfile($db, $targetUserId) {
+    if (!isset($_SESSION['user_id'])) {
+        return false;
+    }
+    
+    if ($_SESSION['user_id'] == $targetUserId) {
+        return true;
+    }
+    
+    // Check if current user is admin
+    $stmt = $db->prepare("SELECT role FROM USERS WHERE user_id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    return $user && $user['role'] === 'admin';
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+$request = json_decode(file_get_contents('php://input'), true);
+
+switch ($method) {
+    case 'GET':
+        if (isset($_GET['user_id'])) {
+            getUserProfile($db, $mongoLogger, $_GET['user_id']);
+        } else {
+            getUserList($db, $mongoLogger);
+        }
+        break;
+    case 'PUT':
+        updateUserProfile($db, $mongoLogger, $request);
+        break;
+    case 'DELETE':
+        deleteUser($db, $mongoLogger);
+        break;
+    default:
+        http_response_code(405);
+        echo json_encode(['error' => 'Method not allowed']);
+        break;
+}
+
+function getUserProfile($db, $mongoLogger, $userId) {
+    try {
+        if (!canAccessProfile($db, $userId)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Access denied']);
+            return;
+        }
+
+        // Get user basic info
+        $userStmt = $db->prepare("
+            SELECT user_id, username, email, full_name, bio, location, 
+                   avatar_url, website_url, status, role, created_at, last_login
+            FROM USERS 
+            WHERE user_id = ?
+        ");
+        $userStmt->execute([$userId]);
+        $user = $userStmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            http_response_code(404);
+            echo json_encode(['error' => 'User not found']);
+            return;
+        }
+
+        // Get user's projects
+        $projectsStmt = $db->prepare("
+            SELECT p.*, 
+                   COALESCE(pf.total_funded, 0) as total_funded,
+                   COALESCE(pf.funding_percentage, 0) as funding_percentage,
+                   COALESCE(pf.backers_count, 0) as backers_count,
+                   DATEDIFF(p.deadline, NOW()) as days_left
+            FROM PROJECTS p
+            LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.project_id = pf.project_id
+            WHERE p.creator_id = ?
+            ORDER BY p.created_at DESC
+        ");
+        $projectsStmt->execute([$userId]);
+        $projects = $projectsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get user's funding history (if viewing own profile or admin)
+        $fundings = [];
+        if ($_SESSION['user_id'] == $userId || canAccessProfile($db, $userId)) {
+            $fundingStmt = $db->prepare("
+                SELECT f.*, p.title as project_title, p.project_type,
+                       u.username as creator_name
+                FROM FUNDINGS f
+                JOIN PROJECTS p ON f.project_id = p.project_id
+                JOIN USERS u ON p.creator_id = u.user_id
+                WHERE f.user_id = ?
+                ORDER BY f.created_at DESC
+                LIMIT 50
+            ");
+            $fundingStmt->execute([$userId]);
+            $fundings = $fundingStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        // Get user's skills
+        $skillsStmt = $db->prepare("
+            SELECT s.skill_id, s.name, s.description, us.proficiency_level, us.years_experience
+            FROM USER_SKILLS us
+            JOIN SKILLS s ON us.skill_id = s.skill_id
+            WHERE us.user_id = ? AND s.status = 'active'
+            ORDER BY us.proficiency_level DESC, s.name ASC
+        ");
+        $skillsStmt->execute([$userId]);
+        $skills = $skillsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Calculate user statistics
+        $statsStmt = $db->prepare("
+            SELECT 
+                COUNT(DISTINCT p.project_id) as projects_created,
+                COUNT(DISTINCT CASE WHEN p.status = 'funded' THEN p.project_id END) as successful_projects,
+                COALESCE(SUM(CASE WHEN p.status = 'funded' THEN p.funding_goal END), 0) as total_raised,
+                COUNT(DISTINCT f.funding_id) as projects_backed,
+                COALESCE(SUM(f.amount), 0) as total_backed
+            FROM USERS u
+            LEFT JOIN PROJECTS p ON u.user_id = p.creator_id
+            LEFT JOIN FUNDINGS f ON u.user_id = f.user_id
+            WHERE u.user_id = ?
+        ");
+        $statsStmt->execute([$userId]);
+        $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
+
+        // Log activity
+        if (isset($_SESSION['user_id'])) {
+            $mongoLogger->logActivity($_SESSION['user_id'], 'user_profile_viewed', [
+                'viewed_user_id' => $userId,
+                'viewed_username' => $user['username']
+            ]);
+        }
+
+        // Prepare response (hide sensitive data for non-owners)
+        $isOwnProfile = ($_SESSION['user_id'] ?? null) == $userId;
+        $isAdmin = canAccessProfile($db, $userId) && ($_SESSION['user_id'] ?? null) != $userId;
+
+        if (!$isOwnProfile && !$isAdmin) {
+            unset($user['email']);
+            $fundings = []; // Don't show funding history to others
+        }
+
+        echo json_encode([
+            'success' => true,
+            'user' => $user,
+            'projects' => $projects,
+            'fundings' => $fundings,
+            'skills' => $skills,
+            'stats' => $stats,
+            'is_own_profile' => $isOwnProfile
+        ]);
+
+    } catch (Exception $e) {
+        $mongoLogger->logError('user_profile_error', [
+            'error' => $e->getMessage(),
+            'user_id' => $userId,
+            'viewer_id' => $_SESSION['user_id'] ?? null
+        ]);
+        
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to fetch user profile']);
+    }
+}
+
+function getUserList($db, $mongoLogger) {
+    try {
+        // Only allow admins to see user list
+        requireAuth();
+        
+        $stmt = $db->prepare("SELECT role FROM USERS WHERE user_id = ?");
+        $stmt->execute([$_SESSION['user_id']]);
+        $currentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$currentUser || $currentUser['role'] !== 'admin') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Admin access required']);
+            return;
+        }
+
+        $search = $_GET['search'] ?? '';
+        $status = $_GET['status'] ?? 'all';
+        $role = $_GET['role'] ?? 'all';
+        $limit = min(100, max(1, intval($_GET['limit'] ?? 20)));
+        $offset = max(0, intval($_GET['offset'] ?? 0));
+
+        $baseQuery = "
+            SELECT u.user_id, u.username, u.email, u.full_name, u.status, u.role, 
+                   u.created_at, u.last_login,
+                   COUNT(DISTINCT p.project_id) as projects_count,
+                   COUNT(DISTINCT f.funding_id) as fundings_count
+            FROM USERS u
+            LEFT JOIN PROJECTS p ON u.user_id = p.creator_id
+            LEFT JOIN FUNDINGS f ON u.user_id = f.user_id
+            WHERE 1=1
+        ";
+
+        $params = [];
+
+        // Add search filter
+        if (!empty($search)) {
+            $baseQuery .= " AND (u.username LIKE ? OR u.email LIKE ? OR u.full_name LIKE ?)";
+            $searchTerm = '%' . $search . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        // Add status filter
+        if ($status !== 'all') {
+            $baseQuery .= " AND u.status = ?";
+            $params[] = $status;
+        }
+
+        // Add role filter
+        if ($role !== 'all') {
+            $baseQuery .= " AND u.role = ?";
+            $params[] = $role;
+        }
+
+        $baseQuery .= " GROUP BY u.user_id ORDER BY u.created_at DESC LIMIT ? OFFSET ?";
+        $params[] = $limit;
+        $params[] = $offset;
+
+        $stmt = $db->prepare($baseQuery);
+        $stmt->execute($params);
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Get total count
+        $countQuery = "SELECT COUNT(*) as total FROM USERS u WHERE 1=1";
+        $countParams = [];
+
+        if (!empty($search)) {
+            $countQuery .= " AND (u.username LIKE ? OR u.email LIKE ? OR u.full_name LIKE ?)";
+            $searchTerm = '%' . $search . '%';
+            $countParams[] = $searchTerm;
+            $countParams[] = $searchTerm;
+            $countParams[] = $searchTerm;
+        }
+
+        if ($status !== 'all') {
+            $countQuery .= " AND u.status = ?";
+            $countParams[] = $status;
+        }
+
+        if ($role !== 'all') {
+            $countQuery .= " AND u.role = ?";
+            $countParams[] = $role;
+        }
+
+        $countStmt = $db->prepare($countQuery);
+        $countStmt->execute($countParams);
+        $totalCount = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+        $mongoLogger->logActivity($_SESSION['user_id'], 'user_list_viewed', [
+            'search' => $search,
+            'status' => $status,
+            'role' => $role,
+            'result_count' => count($users)
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'users' => $users,
+            'pagination' => [
+                'total' => intval($totalCount),
+                'limit' => $limit,
+                'offset' => $offset,
+                'has_more' => ($offset + $limit) < $totalCount
+            ]
+        ]);
+
+    } catch (Exception $e) {
+        $mongoLogger->logError('user_list_error', [
+            'error' => $e->getMessage(),
+            'user_id' => $_SESSION['user_id'] ?? null
+        ]);
+        
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to fetch user list']);
+    }
+}
+
+function updateUserProfile($db, $mongoLogger, $request) {
+    requireAuth();
+    
+    try {
+        $userId = $request['user_id'] ?? $_SESSION['user_id'];
+        
+        if (!canAccessProfile($db, $userId)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Access denied']);
+            return;
+        }
+
+        // Check if user exists
+        $checkStmt = $db->prepare("SELECT username FROM USERS WHERE user_id = ?");
+        $checkStmt->execute([$userId]);
+        if (!$checkStmt->fetch()) {
+            http_response_code(404);
+            echo json_encode(['error' => 'User not found']);
+            return;
+        }
+
+        // Prepare update fields
+        $updateFields = [];
+        $params = [];
+
+        $allowedFields = ['full_name', 'bio', 'location', 'website_url'];
+        
+        // Only admins can update role and status
+        if ($_SESSION['user_id'] != $userId) {
+            $stmt = $db->prepare("SELECT role FROM USERS WHERE user_id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $currentUser = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($currentUser && $currentUser['role'] === 'admin') {
+                $allowedFields[] = 'role';
+                $allowedFields[] = 'status';
+            }
+        }
+
+        foreach ($allowedFields as $field) {
+            if (isset($request[$field])) {
+                $updateFields[] = "$field = ?";
+                $params[] = $request[$field];
+            }
+        }
+
+        // Handle password update separately
+        if (isset($request['password']) && $_SESSION['user_id'] == $userId) {
+            if (!isset($request['current_password'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Current password required']);
+                return;
+            }
+
+            // Verify current password
+            $pwStmt = $db->prepare("SELECT password_hash FROM USERS WHERE user_id = ?");
+            $pwStmt->execute([$userId]);
+            $currentHash = $pwStmt->fetch(PDO::FETCH_ASSOC)['password_hash'];
+
+            if (!password_verify($request['current_password'], $currentHash)) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Current password is incorrect']);
+                return;
+            }
+
+            if (strlen($request['password']) < 8) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Password must be at least 8 characters long']);
+                return;
+            }
+
+            $updateFields[] = "password_hash = ?";
+            $params[] = password_hash($request['password'], PASSWORD_DEFAULT);
+        }
+
+        if (empty($updateFields)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'No valid fields to update']);
+            return;
+        }
+
+        $params[] = $userId;
+        
+        $updateStmt = $db->prepare("UPDATE USERS SET " . implode(', ', $updateFields) . " WHERE user_id = ?");
+        $updateStmt->execute($params);
+
+        $mongoLogger->logActivity($_SESSION['user_id'], 'user_profile_updated', [
+            'updated_user_id' => $userId,
+            'updated_fields' => array_keys($request),
+            'is_self_update' => $_SESSION['user_id'] == $userId
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Profile updated successfully'
+        ]);
+
+    } catch (Exception $e) {
+        $mongoLogger->logError('user_update_error', [
+            'error' => $e->getMessage(),
+            'user_id' => $request['user_id'] ?? $_SESSION['user_id'],
+            'updater_id' => $_SESSION['user_id']
+        ]);
+        
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to update profile']);
+    }
+}
+
+function deleteUser($db, $mongoLogger) {
+    requireAuth();
+    
+    try {
+        $userId = $_GET['user_id'] ?? $_SESSION['user_id'];
+        
+        if (!canAccessProfile($db, $userId)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Access denied']);
+            return;
+        }
+
+        // Check if user has active projects
+        $projectStmt = $db->prepare("SELECT COUNT(*) as count FROM PROJECTS WHERE creator_id = ? AND status = 'open'");
+        $projectStmt->execute([$userId]);
+        $activeProjects = $projectStmt->fetch(PDO::FETCH_ASSOC)['count'];
+
+        if ($activeProjects > 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Cannot delete user with active projects']);
+            return;
+        }
+
+        // Soft delete - mark as inactive
+        $deleteStmt = $db->prepare("UPDATE USERS SET status = 'deleted', email = CONCAT(email, '_deleted_', UNIX_TIMESTAMP()) WHERE user_id = ?");
+        $deleteStmt->execute([$userId]);
+
+        $mongoLogger->logActivity($_SESSION['user_id'], 'user_deleted', [
+            'deleted_user_id' => $userId,
+            'is_self_delete' => $_SESSION['user_id'] == $userId
+        ]);
+
+        // If user deleted their own account, destroy session
+        if ($_SESSION['user_id'] == $userId) {
+            session_destroy();
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'User account deleted successfully'
+        ]);
+
+    } catch (Exception $e) {
+        $mongoLogger->logError('user_delete_error', [
+            'error' => $e->getMessage(),
+            'user_id' => $_GET['user_id'] ?? $_SESSION['user_id'],
+            'deleter_id' => $_SESSION['user_id']
+        ]);
+        
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to delete user']);
+    }
+}
+
+// Handle user skills endpoint
+if (isset($_GET['skills']) && isset($_GET['user_id'])) {
+    try {
+        $userId = $_GET['user_id'];
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Add user skill
+            requireAuth();
+            if ($_SESSION['user_id'] != $userId) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Can only add skills to your own profile']);
+                exit;
+            }
+
+            $skillData = json_decode(file_get_contents('php://input'), true);
+            
+            $insertStmt = $db->prepare("
+                INSERT INTO USER_SKILLS (user_id, skill_id, proficiency_level, years_experience, created_at) 
+                VALUES (?, ?, ?, ?, NOW())
+                ON DUPLICATE KEY UPDATE 
+                proficiency_level = VALUES(proficiency_level), 
+                years_experience = VALUES(years_experience)
+            ");
+            $insertStmt->execute([
+                $userId,
+                $skillData['skill_id'],
+                $skillData['proficiency_level'] ?? 1,
+                $skillData['years_experience'] ?? 0
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Skill added successfully']);
+        } else {
+            // Get user skills
+            $stmt = $db->prepare("
+                SELECT s.skill_id, s.name, s.description, us.proficiency_level, us.years_experience
+                FROM USER_SKILLS us
+                JOIN SKILLS s ON us.skill_id = s.skill_id
+                WHERE us.user_id = ? AND s.status = 'active'
+                ORDER BY us.proficiency_level DESC, s.name ASC
+            ");
+            $stmt->execute([$userId]);
+            $skills = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode(['success' => true, 'skills' => $skills]);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to handle user skills']);
+    }
+    exit;
+}
+?>

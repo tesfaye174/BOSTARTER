@@ -7,7 +7,7 @@ session_start();
 
 // Se l'utente è già loggato, redirect alla dashboard
 if (isset($_SESSION['user_id'])) {
-    header('Location: /dashboard');
+    header('Location: ../dashboard.php');
     exit;
 }
 
@@ -29,16 +29,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email, $password]);
             
             $result = $conn->query("SELECT @p_user_id as user_id, @p_user_data as user_data, @p_success as success, @p_message as message")->fetch(PDO::FETCH_ASSOC);
-            
-            if ($result['success']) {
+              if ($result['success']) {
                 $_SESSION['user_id'] = $result['user_id'];
                 $_SESSION['user'] = json_decode($result['user_data'], true);
                 
+                // MongoDB logging
+                try {
+                    require_once '../../backend/services/MongoLogger.php';
+                    $mongoLogger = new MongoLogger();
+                    $mongoLogger->logActivity($result['user_id'], 'user_login', [
+                        'email' => $email,
+                        'login_time' => date('Y-m-d H:i:s')
+                    ]);
+                } catch (Exception $e) {
+                    error_log("MongoDB logging failed: " . $e->getMessage());
+                }
+                
                 // Redirect alla dashboard
-                header('Location: /dashboard');
+                header('Location: ../dashboard.php');
                 exit;
             } else {
                 $error = $result['message'];
+                
+                // Log failed login attempt
+                try {
+                    require_once '../../backend/services/MongoLogger.php';
+                    $mongoLogger = new MongoLogger();
+                    $mongoLogger->logSystem('failed_login_attempt', [
+                        'email' => $email,
+                        'error_message' => $result['message'],
+                        'attempt_time' => date('Y-m-d H:i:s')
+                    ], 'warning');
+                } catch (Exception $e) {
+                    error_log("MongoDB logging failed: " . $e->getMessage());
+                }
             }
         } catch (PDOException $e) {
             $error = 'Errore durante il login. Riprova più tardi.';

@@ -156,6 +156,35 @@
             >
           </nav>
         </div>
+        <!-- User Menu -->
+                    <div class="relative">
+                        <button id="user-menu-btn" 
+                                class="flex items-center gap-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus-visible"
+                                aria-label="Menu utente"
+                                aria-expanded="false"
+                                aria-controls="user-menu">
+                            <img id="user-avatar" src="/frontend/images/default-avatar.png" alt="" class="w-8 h-8 rounded-full">
+                            <span id="user-name" class="text-gray-700 dark:text-gray-300">Caricamento...</span>
+                            <i class="ri-arrow-down-s-line text-sm" aria-hidden="true"></i>
+                        </button>
+                        <div id="user-menu" 
+                             class="dropdown hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1"
+                             role="menu">
+                            <a href="/frontend/profile.html" class="dropdown-item" role="menuitem">
+                                <i class="ri-user-line mr-2" aria-hidden="true"></i>
+                                Profilo
+                            </a>
+                            <a href="/frontend/settings.html" class="dropdown-item" role="menuitem">
+                                <i class="ri-settings-line mr-2" aria-hidden="true"></i>
+                                Impostazioni
+                            </a>
+                            <hr class="my-1 border-gray-200 dark:border-gray-700">
+                            <button id="logout-btn" class="dropdown-item text-red-600 dark:text-red-400 w-full text-left" role="menuitem">
+                                <i class="ri-logout-box-line mr-2" aria-hidden="true"></i>
+                                Logout
+                            </button>
+                        </div>
+                    </div>
         <div class="flex items-center">
           <div class="relative mr-4 hidden md:block w-64">
             <input
@@ -413,6 +442,158 @@
                   </p>
                 </div>
               </div>
+
+        // Verifica sessione utente
+        fetch('/backend/user.php')
+        .then(response => {
+            if(!response.ok) throw new Error('Sessione scaduta');
+            return response.json();
+        })
+        .then(userData => {
+            sessionStorage.setItem('userRole', userData.role);
+            document.getElementById('user-name').textContent = userData.name;
+            if (userData.avatar) {
+                document.getElementById('user-avatar').src = userData.avatar;
+            }
+            renderDashboard(userData);
+        })
+        .catch(error => {
+            alert(`${error}. Reindirizzamento al login...`);
+            window.location.href = '/index.html';
+        });
+
+        function renderDashboard(userData) {
+            const dashboardContent = document.getElementById('dashboard-content');
+            const dashboardStats = document.getElementById('dashboard-stats');
+            
+            if (userData.role === 'creator') {
+                document.getElementById('dashboard-title').textContent = 'Dashboard Creatore';
+                document.getElementById('dashboard-description').textContent = 
+                    'Gestisci i tuoi progetti, crea nuove campagne e monitora i tuoi sostenitori.';
+                
+                dashboardContent.innerHTML = `
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-lightbulb-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">I tuoi Progetti</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Visualizza e modifica i tuoi progetti creativi.</p>
+                        <a href="/frontend/projects.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Gestisci
+                        </a>
+                    </div>
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-add-circle-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Crea Nuovo Progetto</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Lancia una nuova campagna di crowdfunding.</p>
+                        <a href="/frontend/create-project.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Inizia
+                        </a>
+                    </div>
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-team-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Sostenitori</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Monitora chi ha supportato le tue idee.</p>
+                        <a href="/frontend/backers.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Visualizza
+                        </a>
+                    </div>
+                `;
+
+                dashboardStats.innerHTML = `
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-primary-100 dark:bg-primary-900">
+                                <i class="ri-projector-line text-primary-600 dark:text-primary-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Progetti Attivi</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">3</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                                <i class="ri-money-euro-circle-line text-green-600 dark:text-green-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Totale Raccolto</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">€2,500</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                                <i class="ri-team-line text-blue-600 dark:text-blue-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Sostenitori</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">45</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
+                                <i class="ri-line-chart-line text-purple-600 dark:text-purple-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Tasso di Successo</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">85%</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('dashboard-title').textContent = 'Dashboard Utente';
+                document.getElementById('dashboard-description').textContent = 
+                    'Gestisci i progetti che hai supportato e aggiorna il tuo profilo.';
+                
+                dashboardContent.innerHTML = `
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-heart-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Progetti Supportati</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Visualizza i progetti che hai sostenuto.</p>
+                        <a href="/frontend/backed-projects.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Visualizza
+                        </a>
+                    </div>
+                    <div class="dashboard-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+                        <i class="ri-user-line text-3xl text-primary-500 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Profilo</h3>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">Gestisci le tue informazioni personali.</p>
+                        <a href="/frontend/profile.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                            Modifica
+                        </a>
+                    </div>
+                `;
+
+                dashboardStats.innerHTML = `
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-primary-100 dark:bg-primary-900">
+                                <i class="ri-heart-line text-primary-600 dark:text-primary-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Progetti Supportati</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">5</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                                <i class="ri-money-euro-circle-line text-green-600 dark:text-green-300"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Totale Donato</p>
+                                <p class="text-2xl font-semibold text-gray-900 dark:text-white">€150</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
 
               <!-- Progress Chart -->
               <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
