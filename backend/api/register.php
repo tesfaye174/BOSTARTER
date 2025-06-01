@@ -1,0 +1,94 @@
+<?php
+// filepath: c:\xampp\htdocs\BOSTARTER\backend\api\register.php
+
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Gestione preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Metodo non consentito']);
+    exit;
+}
+
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../services/MongoLogger.php';
+require_once __DIR__ . '/../utils/ApiResponse.php';
+require_once __DIR__ . '/../utils/Validator.php';
+
+try {
+    // Leggi input JSON
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!$input) {
+        ApiResponse::error('Formato JSON non valido');
+    }
+    
+    // Validazione input
+    $validator = new Validator();
+    $validator->required('email', $input['email'] ?? '')->email();
+    $validator->required('nickname', $input['nickname'] ?? '')->minLength(3)->maxLength(50)->alphanumeric();
+    $validator->required('password', $input['password'] ?? '')->minLength(8);
+    $validator->required('nome', $input['nome'] ?? '')->maxLength(100);
+    $validator->required('cognome', $input['cognome'] ?? '')->maxLength(100);
+    $validator->required('anno_nascita', $input['anno_nascita'] ?? '')->integer()->min(1900)->max(date('Y') - 13);
+    $validator->required('luogo_nascita', $input['luogo_nascita'] ?? '')->maxLength(100);
+    
+    if (!$validator->isValid()) {
+        ApiResponse::invalidInput($validator->getErrors());
+    }
+    
+    // Connessione database
+    $db = Database::getInstance()->getConnection();
+    
+    // Hash password
+    $password_hash = password_hash($input['password'], PASSWORD_DEFAULT);
+    
+    // Chiama stored procedure per registrazione
+    $stmt = $db->prepare("CALL sp_registra_utente(?, ?, ?, ?, ?, ?, ?, @user_id, @result)");
+    $stmt->execute([
+        $input['email'],
+        $input['nickname'],
+        $password_hash,
+        $input['nome'],
+        $input['cognome'],
+        $input['anno_nascita'],
+        $input['luogo_nascita']
+    ]);
+    
+    // Recupera risultato
+    $result = $db->query("SELECT @user_id as user_id, @result as result")->fetch();
+    
+    if ($result['result'] !== 'SUCCESS') {
+        ApiResponse::error($result['result'], 400);
+    }
+    
+    // Log su MongoDB
+    $mongoLogger = new MongoLogger();
+    $mongoLogger->logUserRegistration(
+        $result['user_id'],
+        $input['email'],
+        $input['nickname'],
+        $_SERVER['REMOTE_ADDR'] ?? null
+    );
+    
+    // Risposta di successo
+    ApiResponse::success([
+        'user_id' => (int)$result['user_id'],
+        'email' => $input['email'],
+        'nickname' => $input['nickname']
+    ], 'Registrazione completata con successo');
+    
+} catch (PDOException $e) {
+    error_log("Database error in register.php: " . $e->getMessage());
+    ApiResponse::serverError('Errore durante la registrazione');
+} catch (Exception $e) {
+    error_log("Error in register.php: " . $e->getMessage());
+    ApiResponse::serverError('Errore interno del server');
+}

@@ -1,13 +1,14 @@
 <?php
 session_start();
-require_once '../backend/config/database.php';
-require_once '../backend/services/MongoLogger.php';
+require_once __DIR__ . '/backend/config/database.php';
+require_once __DIR__ . '/backend/services/MongoLogger.php';
 
+// Initialize database and logger
 $database = new Database();
 $db = $database->getConnection();
 $mongoLogger = new MongoLogger();
 
-// Log page visit
+// Log homepage visit
 if (isset($_SESSION['user_id'])) {
     $mongoLogger->logActivity($_SESSION['user_id'], 'homepage_visit', [
         'timestamp' => date('Y-m-d H:i:s')
@@ -15,663 +16,557 @@ if (isset($_SESSION['user_id'])) {
 } else {
     $mongoLogger->logSystem('anonymous_homepage_visit', [
         'timestamp' => date('Y-m-d H:i:s'),
-        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
     ]);
 }
 
-// Get featured projects (newest and most funded)
-$featured_query = "SELECT p.*, u.username as creator_name,
-                          COALESCE(pf.total_funded, 0) as total_funded,
-                          COALESCE(pf.funding_percentage, 0) as funding_percentage,
-                          COALESCE(pf.backers_count, 0) as backers_count,
-                          DATEDIFF(p.deadline, NOW()) as days_left
-                   FROM PROJECTS p
-                   JOIN USERS u ON p.creator_id = u.user_id
-                   LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.project_id = pf.project_id
-                   WHERE p.status = 'open'
-                   ORDER BY p.created_at DESC, pf.funding_percentage DESC
-                   LIMIT 6";
-$featured_stmt = $db->prepare($featured_query);
-$featured_stmt->execute();
-$featured_projects = $featured_stmt->fetchAll(PDO::FETCH_ASSOC);
+// Get top 3 most funded projects using the view
+try {
+    $top_projects_query = "
+        SELECT 
+            p.id,
+            p.nome as title,
+            p.descrizione as description,
+            p.budget_richiesto as funding_goal,
+            p.budget_raccolto as current_funding,
+            p.immagine_principale as image,
+            p.categoria as category,
+            p.tipo_progetto as project_type,
+            p.data_scadenza as deadline,
+            u.nickname as creator_name,
+            u.avatar as creator_avatar,
+            ROUND((p.budget_raccolto / p.budget_richiesto) * 100, 1) as funding_percentage,
+            DATEDIFF(p.data_scadenza, NOW()) as days_left,
+            (SELECT COUNT(*) FROM finanziamenti f WHERE f.progetto_id = p.id AND f.stato_pagamento = 'completato') as backers_count
+        FROM progetti p
+        JOIN utenti u ON p.creatore_id = u.id
+        WHERE p.stato = 'aperto' AND p.data_scadenza > NOW()
+        ORDER BY p.budget_raccolto DESC
+        LIMIT 3
+    ";
+    
+    $stmt = $db->prepare($top_projects_query);
+    $stmt->execute();
+    $featured_projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $featured_projects = [];
+    error_log("Error fetching featured projects: " . $e->getMessage());
+}
 
 // Get platform statistics
-$stats_query = "SELECT 
-                    COUNT(DISTINCT p.project_id) as total_projects,
-                    COUNT(DISTINCT CASE WHEN p.status = 'open' THEN p.project_id END) as active_projects,
-                    COUNT(DISTINCT u.user_id) as total_users,
-                    COALESCE(SUM(f.amount), 0) as total_funded
-                FROM PROJECTS p
-                LEFT JOIN USERS u ON p.creator_id = u.user_id
-                LEFT JOIN FUNDINGS f ON p.project_id = f.project_id";
-$stats_stmt = $db->prepare($stats_query);
-$stats_stmt->execute();
-$stats = $stats_stmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $stats_query = "
+        SELECT 
+            (SELECT COUNT(*) FROM progetti WHERE stato IN ('completato', 'aperto')) as total_projects,
+            (SELECT COUNT(DISTINCT creatore_id) FROM progetti WHERE stato IN ('completato', 'aperto')) as total_creators,
+            (SELECT COUNT(DISTINCT utente_id) FROM finanziamenti WHERE stato_pagamento = 'completato') as total_backers,
+            (SELECT COALESCE(SUM(importo), 0) FROM finanziamenti WHERE stato_pagamento = 'completato') as total_funded
+    ";
+    
+    $stmt = $db->prepare($stats_query);
+    $stmt->execute();
+    $platform_stats = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    $platform_stats = [
+        'total_projects' => 0,
+        'total_creators' => 0, 
+        'total_backers' => 0,
+        'total_funded' => 0
+    ];
+    error_log("Error fetching platform stats: " . $e->getMessage());
+}
 
-// Check if user is logged in
-$isLoggedIn = isset($_SESSION['user_id']);
+// Get project categories
+$categories = [
+    ['id' => 'arte', 'name' => 'Arte', 'icon' => 'ri-brush-line', 'color' => 'bg-pink-500'],
+    ['id' => 'design', 'name' => 'Design', 'icon' => 'ri-palette-line', 'color' => 'bg-purple-500'],
+    ['id' => 'musica', 'name' => 'Musica', 'icon' => 'ri-music-line', 'color' => 'bg-blue-500'],
+    ['id' => 'tecnologia', 'name' => 'Tecnologia', 'icon' => 'ri-computer-line', 'color' => 'bg-green-500'],
+    ['id' => 'fumetti', 'name' => 'Fumetti', 'icon' => 'ri-book-line', 'color' => 'bg-yellow-500'],
+    ['id' => 'altro', 'name' => 'Altro', 'icon' => 'ri-more-line', 'color' => 'bg-gray-500']
+];
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOSTARTER - Crowdfunding Platform for Hardware & Software Projects</title>
-    <meta name="description" content="BOSTARTER is the leading crowdfunding platform for hardware and software projects. Discover innovative projects, support creators, or launch your own idea.">
-    <meta name="keywords" content="crowdfunding, hardware projects, software projects, startup funding, innovation">
+    <title>BOSTARTER - Piattaforma di Crowdfunding</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="BOSTARTER è la piattaforma leader per il crowdfunding di progetti creativi in Italia. Scopri, supporta o lancia la tua idea e trasformala in realtà.">
+    <meta name="keywords" content="crowdfunding, progetti creativi, finanziamento collettivo, startup, innovazione, arte, design, tecnologia">
+    
+    <!-- CSS Framework -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    
+    <!-- Custom CSS -->
     <style>
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --accent-color: #f093fb;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-        }
-        
-        .hero-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 100px 0;
-            min-height: 80vh;
-            display: flex;
-            align-items: center;
-        }
-        
-        .hero-title {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-        }
-        
-        .hero-subtitle {
-            font-size: 1.25rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        
-        .btn-hero {
-            padding: 15px 30px;
-            font-size: 1.1rem;
-            border-radius: 50px;
-            text-decoration: none;
+        .card-hover {
             transition: all 0.3s ease;
-            display: inline-block;
-            margin: 0 10px 10px 0;
         }
-        
-        .btn-primary-hero {
-            background: white;
-            color: var(--primary-color);
-            border: 2px solid white;
-        }
-        
-        .btn-primary-hero:hover {
-            background: transparent;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-        
-        .btn-outline-hero {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-        
-        .btn-outline-hero:hover {
-            background: white;
-            color: var(--primary-color);
-            transform: translateY(-2px);
-        }
-        
-        .stats-section {
-            background: #f8f9fa;
-            padding: 80px 0;
-        }
-        
-        .stat-card {
-            text-align: center;
-            padding: 30px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card:hover {
+        .card-hover:hover {
             transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        
-        .stat-number {
-            font-size: 3rem;
+        .stat-counter {
+            font-family: 'Inter', sans-serif;
             font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 10px;
         }
-        
-        .stat-label {
-            font-size: 1.1rem;
-            color: #6c757d;
-            font-weight: 500;
-        }
-        
-        .section-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 3rem;
-            color: #2c3e50;
-        }
-        
-        .project-card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             transition: all 0.3s ease;
-            margin-bottom: 30px;
-            height: 100%;
         }
-        
-        .project-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-        }
-        
-        .project-image {
-            height: 200px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 4rem;
-            position: relative;
-        }
-        
-        .project-type-badge {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(255,255,255,0.9);
-            color: var(--primary-color);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .project-card-body {
-            padding: 25px;
-        }
-        
-        .project-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-        
-        .project-creator {
-            color: #6c757d;
-            margin-bottom: 15px;
-        }
-        
-        .funding-progress {
-            margin-bottom: 20px;
-        }
-        
-        .progress {
-            height: 8px;
-            border-radius: 10px;
-        }
-        
-        .progress-bar {
-            border-radius: 10px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-        }
-        
-        .funding-stats {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-        
-        .funding-amount {
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-        
-        .days-left {
-            color: #6c757d;
-        }
-        
-        .cta-section {
-            background: linear-gradient(135deg, var(--accent-color) 0%, #f5576c 100%);
-            color: white;
-            padding: 100px 0;
-            text-align: center;
-        }
-        
-        .feature-section {
-            padding: 80px 0;
-        }
-        
-        .feature-icon {
-            font-size: 3rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-        }
-        
-        .feature-card {
-            text-align: center;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-        }
-        
-        .navbar {
-            padding: 1rem 0;
-            background: white !important;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .nav-link {
-            font-weight: 500;
-            margin: 0 10px;
-            transition: color 0.3s ease;
-        }
-        
-        .nav-link:hover {
-            color: var(--primary-color) !important;
-        }
-        
-        .btn-nav {
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-weight: 500;
-            margin-left: 10px;
-        }
-        
-        footer {
-            background: #2c3e50;
-            color: white;
-            padding: 50px 0 30px 0;
-        }
-        
-        .footer-links a {
-            color: #bdc3c7;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-links a:hover {
-            color: white;
-        }
-        
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .stat-number {
-                font-size: 2rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
     </style>
 </head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="index.php">
-                <i class="fas fa-rocket text-primary me-2"></i>
-                BOSTARTER
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="projects/list_open.php">Browse Projects</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="stats/top_creators.php">Top Creators</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#how-it-works">How It Works</a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <?php if ($isLoggedIn): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="dashboard.php">
-                                <i class="fas fa-tachometer-alt me-1"></i>
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="projects/create.php">
-                                <i class="fas fa-plus me-1"></i>
-                                Start Project
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="auth/logout.php">Logout</a>
-                        </li>
+
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="index.php" class="text-2xl font-bold text-indigo-600">
+                        <i class="ri-rocket-line mr-2"></i>BOSTARTER
+                    </a>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="flex-1 max-w-lg mx-8">
+                    <form action="frontend/projects/list_open.php" method="GET" class="relative">
+                        <input type="text" 
+                               name="search" 
+                               placeholder="Cerca progetti..." 
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <i class="ri-search-line absolute left-3 top-3 text-gray-400"></i>
+                    </form>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="flex items-center space-x-4">
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <!-- Logged in user menu -->
+                        <a href="frontend/dashboard.php" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md">
+                            <i class="ri-dashboard-line mr-1"></i>Dashboard
+                        </a>
+                        <a href="frontend/projects/create.php" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                            <i class="ri-add-line mr-1"></i>Crea Progetto
+                        </a>
+                        <div class="relative group">
+                            <button class="flex items-center text-gray-700 hover:text-indigo-600">
+                                <i class="ri-user-line mr-1"></i>
+                                <?php echo htmlspecialchars($_SESSION['user']['nickname'] ?? 'Utente'); ?>
+                                <i class="ri-arrow-down-s-line ml-1"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <a href="frontend/profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="ri-user-line mr-2"></i>Profilo
+                                </a>
+                                <a href="frontend/projects/list_open.php?creator=<?php echo $_SESSION['user_id']; ?>" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="ri-folder-line mr-2"></i>I miei progetti
+                                </a>
+                                <hr class="my-1">
+                                <a href="frontend/auth/logout.php" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    <i class="ri-logout-box-line mr-2"></i>Esci
+                                </a>
+                            </div>
+                        </div>
                     <?php else: ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="auth/login.php">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-primary btn-nav text-white" href="auth/register.php">Get Started</a>
-                        </li>
+                        <!-- Guest menu -->
+                        <a href="frontend/auth/login.php" class="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md">
+                            Accedi
+                        </a>
+                        <a href="frontend/auth/register.php" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                            Registrati
+                        </a>
                     <?php endif; ?>
-                </ul>
+                </nav>
             </div>
         </div>
-    </nav>
+    </header>
 
     <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="hero-title">
-                        Bring Your <span style="color: #f093fb;">Ideas</span> to Life
-                    </h1>
-                    <p class="hero-subtitle">
-                        The premier crowdfunding platform for innovative hardware and software projects. 
-                        Connect with supporters who believe in your vision and make it happen.
-                    </p>
-                    
-                    <?php if (!$isLoggedIn): ?>
-                    <div class="mt-4">
-                        <a href="auth/register.php" class="btn-hero btn-primary-hero">
-                            <i class="fas fa-rocket me-2"></i>
-                            Start Your Project
-                        </a>
-                        <a href="projects/list_open.php" class="btn-hero btn-outline-hero">
-                            <i class="fas fa-search me-2"></i>
-                            Explore Projects
-                        </a>
-                    </div>
-                    <?php else: ?>
-                    <div class="mt-4">
-                        <a href="projects/create.php" class="btn-hero btn-primary-hero">
-                            <i class="fas fa-plus me-2"></i>
-                            Create Project
-                        </a>
-                        <a href="dashboard.php" class="btn-hero btn-outline-hero">
-                            <i class="fas fa-tachometer-alt me-2"></i>
-                            Go to Dashboard
-                        </a>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                <div class="col-lg-6 text-center">
-                    <div style="font-size: 15rem; opacity: 0.1;">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Platform Statistics -->
-    <section class="stats-section">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card">
-                        <div class="stat-number"><?php echo number_format($stats['total_projects']); ?></div>
-                        <div class="stat-label">Total Projects</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card">
-                        <div class="stat-number"><?php echo number_format($stats['active_projects']); ?></div>
-                        <div class="stat-label">Active Projects</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card">
-                        <div class="stat-number"><?php echo number_format($stats['total_users']); ?></div>
-                        <div class="stat-label">Community Members</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stat-card">
-                        <div class="stat-number">€<?php echo number_format($stats['total_funded'], 0); ?></div>
-                        <div class="stat-label">Total Funded</div>
-                    </div>
-                </div>
+    <section class="hero-gradient text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                Trasforma le tue <span class="text-yellow-300">idee creative</span> in realtà
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
+                Scopri, sostieni e lancia progetti innovativi sulla piattaforma di crowdfunding più dinamica d'Italia
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="frontend/projects/list_open.php" class="inline-flex items-center px-8 py-4 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300">
+                    <i class="ri-compass-3-line mr-2"></i>
+                    Esplora Progetti
+                </a>
+                <?php if (!isset($_SESSION['user_id'])): ?>
+                <a href="frontend/auth/register.php" class="inline-flex items-center px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300">
+                    <i class="ri-rocket-line mr-2"></i>
+                    Lancia il tuo progetto
+                </a>
+                <?php else: ?>
+                <a href="frontend/projects/create.php" class="inline-flex items-center px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-all duration-300">
+                    <i class="ri-rocket-line mr-2"></i>
+                    Crea un progetto
+                </a>
+                <?php endif; ?>
             </div>
         </div>
     </section>
 
     <!-- Featured Projects -->
-    <section class="py-5">
-        <div class="container">
-            <h2 class="section-title">Featured Projects</h2>
-            <div class="row">
-                <?php if (empty($featured_projects)): ?>
-                    <div class="col-12 text-center">
-                        <p class="text-muted">No projects available yet. Be the first to create one!</p>
-                        <?php if ($isLoggedIn): ?>
-                            <a href="projects/create.php" class="btn btn-primary btn-lg mt-3">
-                                <i class="fas fa-plus me-2"></i>Create First Project
-                            </a>
+    <?php if (!empty($featured_projects)): ?>
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Progetti in Evidenza</h2>
+                <p class="text-xl text-gray-600">I progetti più finanziati del momento</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <?php foreach ($featured_projects as $project): ?>
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- Project Image -->
+                    <div class="relative h-48 bg-gradient-to-br from-indigo-400 to-purple-500">
+                        <?php if ($project['image']): ?>
+                            <img src="<?php echo htmlspecialchars($project['image']); ?>" 
+                                 alt="<?php echo htmlspecialchars($project['title']); ?>"
+                                 class="w-full h-full object-cover">
+                        <?php else: ?>
+                            <div class="w-full h-full flex items-center justify-center text-white">
+                                <i class="ri-image-line text-4xl"></i>
+                            </div>
                         <?php endif; ?>
+                        
+                        <!-- Category Badge -->
+                        <div class="absolute top-4 left-4">
+                            <span class="px-3 py-1 bg-white/90 text-indigo-600 rounded-full text-sm font-medium">
+                                <?php echo ucfirst(htmlspecialchars($project['category'])); ?>
+                            </span>
+                        </div>
                     </div>
-                <?php else: ?>
-                    <?php foreach ($featured_projects as $project): ?>
-                        <div class="col-lg-4 col-md-6">
-                            <div class="project-card">
-                                <div class="project-image">
-                                    <div class="project-type-badge">
-                                        <?php echo ucfirst(htmlspecialchars($project['project_type'])); ?>
-                                    </div>
-                                    <i class="<?php echo $project['project_type'] == 'hardware' ? 'fas fa-microchip' : 'fas fa-code'; ?>"></i>
-                                </div>
-                                <div class="project-card-body">
-                                    <h5 class="project-title"><?php echo htmlspecialchars($project['title']); ?></h5>
-                                    <p class="project-creator">
-                                        <i class="fas fa-user me-1"></i>
-                                        by <?php echo htmlspecialchars($project['creator_name']); ?>
-                                    </p>
-                                    <p class="text-muted mb-3">
-                                        <?php echo htmlspecialchars(substr($project['description'], 0, 100)); ?>...
-                                    </p>
-                                    
-                                    <div class="funding-progress">
-                                        <div class="progress">
-                                            <div class="progress-bar" style="width: <?php echo min(100, $project['funding_percentage']); ?>%"></div>
-                                        </div>
-                                        <div class="funding-stats">
-                                            <span class="funding-amount">€<?php echo number_format($project['total_funded'], 0); ?></span>
-                                            <span class="days-left">
-                                                <?php 
-                                                if ($project['days_left'] > 0) {
-                                                    echo $project['days_left'] . ' days left';
-                                                } else {
-                                                    echo 'Ended';
-                                                }
-                                                ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <a href="projects/detail.php?id=<?php echo $project['project_id']; ?>" class="btn btn-outline-primary w-100">
-                                        View Details
-                                    </a>
-                                </div>
+
+                    <!-- Project Info -->
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">
+                            <?php echo htmlspecialchars($project['title']); ?>
+                        </h3>
+                        
+                        <p class="text-gray-600 mb-4 line-clamp-2">
+                            <?php echo htmlspecialchars(substr($project['description'], 0, 120)); ?>...
+                        </p>
+
+                        <!-- Creator Info -->
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-3">
+                                <i class="ri-user-line text-gray-600"></i>
+                            </div>
+                            <span class="text-gray-700 font-medium">
+                                <?php echo htmlspecialchars($project['creator_name']); ?>
+                            </span>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                <span><?php echo number_format($project['funding_percentage'], 1); ?>% finanziato</span>
+                                <span><?php echo $project['days_left']; ?> giorni rimasti</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500" 
+                                     style="width: <?php echo min($project['funding_percentage'], 100); ?>%"></div>
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+
+                        <!-- Funding Info -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <div class="text-2xl font-bold text-gray-900">
+                                    €<?php echo number_format($project['current_funding'], 0, ',', '.'); ?>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    di €<?php echo number_format($project['funding_goal'], 0, ',', '.'); ?>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-lg font-semibold text-gray-900">
+                                    <?php echo $project['backers_count']; ?>
+                                </div>
+                                <div class="text-sm text-gray-600">sostenitori</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <a href="frontend/projects/detail.php?id=<?php echo $project['id']; ?>" 
+                           class="w-full inline-flex items-center justify-center px-4 py-3 btn-primary text-white rounded-lg font-medium">
+                            <i class="ri-eye-line mr-2"></i>
+                            Scopri di più
+                        </a>
+                    </div>
+                </div>
+                <?php endforeach; ?>
             </div>
-            
-            <div class="text-center mt-5">
-                <a href="projects/list_open.php" class="btn btn-primary btn-lg">
-                    <i class="fas fa-search me-2"></i>
-                    Browse All Projects
+
+            <div class="text-center mt-12">
+                <a href="frontend/projects/list_open.php" 
+                   class="inline-flex items-center px-6 py-3 border-2 border-indigo-600 text-indigo-600 rounded-lg font-medium hover:bg-indigo-600 hover:text-white transition-all duration-300">
+                    <i class="ri-grid-line mr-2"></i>
+                    Vedi tutti i progetti
                 </a>
             </div>
         </div>
     </section>
+    <?php endif; ?>
 
-    <!-- How It Works -->
-    <section id="how-it-works" class="feature-section bg-light">
-        <div class="container">
-            <h2 class="section-title">How BOSTARTER Works</h2>
-            <div class="row">
-                <div class="col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-lightbulb"></i>
-                        </div>
-                        <h4>1. Share Your Idea</h4>
-                        <p>Create a compelling project page with your vision, goals, and rewards for supporters.</p>
+    <!-- Categories Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Esplora per Categoria</h2>
+                <p class="text-xl text-gray-600">Trova progetti che ti appassionano</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                <?php foreach ($categories as $category): ?>
+                <a href="frontend/projects/list_open.php?category=<?php echo $category['id']; ?>" 
+                   class="group bg-white rounded-xl p-6 text-center card-hover">
+                    <div class="w-16 h-16 <?php echo $category['color']; ?> rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <i class="<?php echo $category['icon']; ?> text-2xl text-white"></i>
                     </div>
+                    <h3 class="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                        <?php echo $category['name']; ?>
+                    </h3>
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">I numeri di BOSTARTER</h2>
+                <p class="text-xl text-gray-600">La community che fa la differenza</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold text-indigo-600 mb-2 stat-counter">
+                        <?php echo number_format($platform_stats['total_projects']); ?>
+                    </div>
+                    <div class="text-gray-600 font-medium">Progetti Finanziati</div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h4>2. Build Community</h4>
-                        <p>Connect with backers who share your passion and want to see your project succeed.</p>
+                
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold text-indigo-600 mb-2 stat-counter">
+                        <?php echo number_format($platform_stats['total_creators']); ?>
                     </div>
+                    <div class="text-gray-600 font-medium">Creatori Attivi</div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-rocket"></i>
-                        </div>
-                        <h4>3. Launch & Deliver</h4>
-                        <p>Reach your funding goal and bring your innovative hardware or software project to life.</p>
+                
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold text-indigo-600 mb-2 stat-counter">
+                        <?php echo number_format($platform_stats['total_backers']); ?>
                     </div>
+                    <div class="text-gray-600 font-medium">Sostenitori</div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-4xl md:text-5xl font-bold text-indigo-600 mb-2 stat-counter">
+                        €<?php echo number_format($platform_stats['total_funded'], 0, ',', '.'); ?>
+                    </div>
+                    <div class="text-gray-600 font-medium">Fondi Raccolti</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Call to Action -->
-    <section class="cta-section">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8 text-center">
-                    <h2 class="mb-4">Ready to Launch Your Project?</h2>
-                    <p class="mb-4 fs-5">
-                        Join thousands of creators who have successfully funded their innovative projects on BOSTARTER.
+    <!-- How it Works Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Come Funziona</h2>
+                <p class="text-xl text-gray-600">Tre semplici passi per trasformare la tua idea in realtà</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Step 1 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                        1
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Presenta il tuo progetto</h3>
+                    <p class="text-gray-600">
+                        Crea una pagina accattivante per il tuo progetto con descrizioni, immagini e video.
                     </p>
-                    <?php if (!$isLoggedIn): ?>
-                    <a href="auth/register.php" class="btn btn-light btn-lg me-3">
-                        <i class="fas fa-user-plus me-2"></i>
-                        Sign Up Now
-                    </a>
-                    <a href="projects/list_open.php" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-search me-2"></i>
-                        Explore Projects
-                    </a>
-                    <?php else: ?>
-                    <a href="projects/create.php" class="btn btn-light btn-lg me-3">
-                        <i class="fas fa-plus me-2"></i>
-                        Start Your Project
-                    </a>
-                    <a href="dashboard.php" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-tachometer-alt me-2"></i>
-                        View Dashboard
-                    </a>
-                    <?php endif; ?>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                        2
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Raccogli fondi</h3>
+                    <p class="text-gray-600">
+                        Condividi il tuo progetto e raccogli finanziamenti dalla community interessata.
+                    </p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="text-center">
+                    <div class="w-20 h-20 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                        3
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Realizza il progetto</h3>
+                    <p class="text-gray-600">
+                        Una volta raggiunto l'obiettivo, utilizza i fondi per realizzare la tua idea.
+                    </p>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="hero-gradient text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                Pronto a realizzare il tuo progetto?
+            </h2>
+            <p class="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+                Unisciti a migliaia di creatori che hanno trasformato le loro idee in realtà
+            </p>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="frontend/projects/create.php" 
+                   class="inline-flex items-center px-8 py-4 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300">
+                    <i class="ri-rocket-line mr-2"></i>
+                    Crea il tuo progetto
+                </a>
+            <?php else: ?>
+                <a href="frontend/auth/register.php" 
+                   class="inline-flex items-center px-8 py-4 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300">
+                    <i class="ri-rocket-line mr-2"></i>
+                    Inizia ora
+                </a>
+            <?php endif; ?>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4">
-                    <h5 class="mb-3">BOSTARTER</h5>
-                    <p>The premier platform for funding innovative hardware and software projects. Turning ideas into reality through community support.</p>
-                </div>
-                <div class="col-lg-2">
-                    <h6 class="mb-3">Platform</h6>
-                    <div class="footer-links">
-                        <a href="projects/list_open.php" class="d-block mb-2">Browse Projects</a>
-                        <a href="projects/create.php" class="d-block mb-2">Start Project</a>
-                        <a href="stats/top_creators.php" class="d-block mb-2">Top Creators</a>
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div>
+                    <div class="text-2xl font-bold mb-4">
+                        <i class="ri-rocket-line mr-2"></i>BOSTARTER
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        La piattaforma italiana di crowdfunding per progetti creativi e innovativi.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-facebook-fill text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-twitter-fill text-xl"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white"><i class="ri-instagram-line text-xl"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-2">
-                    <h6 class="mb-3">Support</h6>
-                    <div class="footer-links">
-                        <a href="#" class="d-block mb-2">Help Center</a>
-                        <a href="#" class="d-block mb-2">Guidelines</a>
-                        <a href="#" class="d-block mb-2">Contact Us</a>
-                    </div>
+
+                <!-- Platform -->
+                <div>
+                    <h3 class="font-semibold mb-4">Piattaforma</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="frontend/projects/list_open.php" class="hover:text-white">Esplora progetti</a></li>
+                        <li><a href="frontend/projects/create.php" class="hover:text-white">Crea progetto</a></li>
+                        <li><a href="frontend/stats/" class="hover:text-white">Statistiche</a></li>
+                    </ul>
                 </div>
-                <div class="col-lg-2">
-                    <h6 class="mb-3">Company</h6>
-                    <div class="footer-links">
-                        <a href="#" class="d-block mb-2">About Us</a>
-                        <a href="#" class="d-block mb-2">Privacy Policy</a>
-                        <a href="#" class="d-block mb-2">Terms of Service</a>
-                    </div>
+
+                <!-- Support -->
+                <div>
+                    <h3 class="font-semibold mb-4">Supporto</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">Centro assistenza</a></li>
+                        <li><a href="#" class="hover:text-white">Contattaci</a></li>
+                        <li><a href="#" class="hover:text-white">FAQ</a></li>
+                    </ul>
                 </div>
-                <div class="col-lg-2">
-                    <h6 class="mb-3">Connect</h6>
-                    <div>
-                        <a href="#" class="text-light me-3"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-light me-3"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="text-light me-3"><i class="fab fa-linkedin"></i></a>
-                        <a href="#" class="text-light"><i class="fab fa-instagram"></i></a>
-                    </div>
+
+                <!-- Legal -->
+                <div>
+                    <h3 class="font-semibold mb-4">Legale</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white">Termini di servizio</a></li>
+                        <li><a href="#" class="hover:text-white">Privacy policy</a></li>
+                        <li><a href="#" class="hover:text-white">Cookie policy</a></li>
+                    </ul>
                 </div>
             </div>
-            <hr class="my-4">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="mb-0">&copy; 2024 BOSTARTER. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <p class="mb-0">Made with <i class="fas fa-heart text-danger"></i> for innovators</p>
-                </div>
+
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 BOSTARTER. Tutti i diritti riservati.</p>
             </div>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript for enhanced functionality -->
+    <script>
+        // Counter animation for statistics
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.textContent.replace(/[^\d]/g, ''));
+                let current = 0;
+                const increment = target / 100;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = counter.textContent.replace(/\d+/, target.toLocaleString());
+                        clearInterval(timer);
+                    } else {
+                        counter.textContent = counter.textContent.replace(/\d+/, Math.floor(current).toLocaleString());
+                    }
+                }, 20);
+            });
+        }
+
+        // Trigger counter animation when section comes into view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    observer.unobserve(entry.target);
+                }
+            });
+        });
+
+        const statsSection = document.querySelector('.stat-counter').closest('section');
+        if (statsSection) {
+            observer.observe(statsSection);
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

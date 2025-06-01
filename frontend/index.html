@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOSTARTER - Piattaforma di Crowdfunding</title>
+    <meta name="description"
+        content="BOSTARTER è la piattaforma leader per il crowdfunding di progetti creativi in Italia. Scopri, supporta o lancia la tua idea e trasformala in realtà.">
+    <meta name="keywords"
+        content="crowdfunding, progetti creativi, finanziamento collettivo, startup, innovazione, arte, design, tecnologia">
+    <meta name="author" content="BOSTARTER">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#3176FF">
+    <link rel="canonical" href="https://www.bostarter.it">
+    <link rel="manifest" href="/frontend/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/frontend/images/logo1.svg">
+    <link rel="stylesheet" href="/frontend/css/main.css">
+    <link rel="stylesheet" href="/frontend/css/animations.css">
+    <link rel="stylesheet" href="/frontend/css/components.css">
+    <link rel="stylesheet" href="/frontend/css/enhanced-styles.css">
+    <link rel="stylesheet" href="/frontend/css/utilities.css">
+    <link rel="stylesheet" href="/frontend/css/critical.css">
+    <script src="https://cdn.tailwindcss.com/3.4.16" defer></script>
+    <script src="/frontend/js/tailwind-config.js" defer></script>
+</head>
+
+<body class="bg-gray-50 min-h-screen dark:bg-gray-900 transition-colors duration-300">
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div id="loading-overlay" class="loading-overlay" aria-hidden="true">
+        <div class="loading-spinner" aria-label="Caricamento in corso"></div>
+    </div>
+
+    <!-- ===== SKIP LINK PER ACCESSIBILITÀ ===== -->
+    <a href="#main-content" class="skip-link" tabindex="0">Vai al contenuto principale</a>
+
+    <!-- ===== CONTAINER NOTIFICHE ===== -->
+    <div id="notifications-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm" role="alert"
+        aria-live="polite" aria-label="Notifiche"></div>
+
+    <!-- ===== NETWORK STATUS INDICATOR ===== -->
+    <div class="network-status online" role="status" aria-live="polite">Online</div>
+
+    <!-- ===== PERFORMANCE MONITOR (DEV MODE) ===== -->
+    <div id="perf-monitor" class="perf-indicator" role="status" aria-live="polite">
+        Performance: <span id="perf-time">--</span>ms
+    </div>
+
+    <!-- ===== HEADER PRINCIPALE ===== -->
+    <header class="bg-white/80 dark:bg-gray-800/80 shadow-sm header-sticky transition-colors duration-300">
+        <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <!-- Logo e Brand -->
+            <a href="/frontend/index.html"
+                class="flex items-center font-brand text-2xl text-primary hover:text-primary-dark transition-colors focus-visible:outline-none"
+                aria-label="Homepage BOSTARTER">
+                <img src="/frontend/images/logo1.svg" alt="Logo BOSTARTER" class="h-8 w-auto mr-2" width="32"
+                    height="32">
+                BOSTARTER
+            </a>
+            <!-- Hamburger menu mobile -->
+            <button id="mobile-menu-toggle"
+                class="md:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
+                aria-label="Apri menu di navigazione" aria-expanded="false" aria-controls="mobile-menu">
+                <i class="ri-menu-line text-2xl"></i>
+            </button>
+            <!-- Menu Desktop -->
+            <ul class="hidden md:flex gap-6 font-medium text-lg text-gray-900 dark:text-white" role="menubar">
+                <li><a href="/frontend/assets/arte/index.html"
+                        class="hover:text-primary transition-colors focus-visible:outline-none" role="menuitem">Arte</a>
+                </li>
+                <li><a href="/frontend/assets/fumetti/index.html"
+                        class="hover:text-primary transition-colors focus-visible:outline-none"
+                        role="menuitem">Fumetti</a></li>
+                <li><a href="/frontend/assets/design/index.html"
+                        class="hover:text-primary transition-colors focus-visible:outline-none"
+                        role="menuitem">Design</a></li>
+                <li><a href="/frontend/assets/musica/index.html"
+                        class="hover:text-primary transition-colors focus-visible:outline-none"
+                        role="menuitem">Musica</a></li>
+                <li><a href="/frontend/assets/tecnologia/index.html"
+                        class="hover:text-primary transition-colors focus-visible:outline-none"
+                        role="menuitem">Tecnologia</a></li>
+                <li><a href="/frontend/assets/scopritutti/index.html"
+                        class="hover:text-primary transition-colors focus-visible:outline-none" role="menuitem">Scopri
+                        tutto</a></li>
+            </ul>
+            <!-- Azioni utente -->
+            <div class="flex gap-3 items-center">
+                <!-- Lingua -->
+                <button id="language-toggle"
+                    class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 focus-visible:outline-none"
+                    aria-label="Cambia lingua" aria-expanded="false" aria-controls="language-dropdown">
+                    <span id="current-flag" aria-hidden="true">🇮🇹</span>
+                    <span class="sr-only">Italiano</span>
+                    <i class="ri-arrow-down-s-line text-sm" aria-hidden="true"></i>
+                </button>
+                <!-- Per i creatori -->
+                <a href="/frontend/dashboard.html"
+                    class="border border-gray-300 dark:border-gray-600 rounded-full px-5 py-2 font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center focus-visible:outline-none">
+                    <i class="ri-user-line mr-2" aria-hidden="true"></i>Per i creatori
+                </a>
+                <!-- Auth -->
+                <button id="auth-btn"
+                    class="border border-gray-300 dark:border-gray-600 rounded-full px-5 py-2 font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center focus-visible:outline-none"
+                    aria-expanded="false" aria-controls="auth-dropdown">
+                    <i id="auth-icon" class="ri-login-box-line mr-2" aria-hidden="true"></i>
+                    <span id="auth-text">Accedi</span>
+                </button>
+                <!-- Tema -->
+                <button id="theme-toggle"
+                    class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus-visible:outline-none"
+                    aria-label="Cambia tema">
+                    <i class="ri-sun-line dark:hidden text-xl" aria-hidden="true"></i>
+                    <i class="ri-moon-line hidden dark:block text-xl" aria-hidden="true"></i>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile menu -->
+        <div id="mobile-menu"
+            class="md:hidden hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-4">
+            <ul class="flex flex-col gap-4">
+                <li><a href="/frontend/assets/arte/index.html" class="hover:text-primary transition-colors">Arte</a>
+                </li>
+                <li><a href="/frontend/assets/fumetti/index.html"
+                        class="hover:text-primary transition-colors">Fumetti</a></li>
+                <li><a href="/frontend/assets/design/index.html" class="hover:text-primary transition-colors">Design</a>
+                </li>
+                <li><a href="/frontend/assets/musica/index.html" class="hover:text-primary transition-colors">Musica</a>
+                </li>
+                <li><a href="/frontend/assets/tecnologia/index.html"
+                        class="hover:text-primary transition-colors">Tecnologia</a></li>
+                <li><a href="/frontend/assets/scopritutti/index.html"
+                        class="hover:text-primary transition-colors">Scopri tutto</a></li>
+            </ul>
+        </div>
+    </header>
+    <script>
+        // Hamburger menu mobile accessibility
+        const menuBtn = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (menuBtn && mobileMenu) {
+            menuBtn.addEventListener('click', () => {
+                const expanded = menuBtn.getAttribute('aria-expanded') === 'true';
+                menuBtn.setAttribute('aria-expanded', !expanded);
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+
+    <!-- ===== LOGIN MODAL ===== -->
+    <!-- Miglioramento accessibilità e UX modale login -->
+    <div id="login-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden opacity-0 transition-opacity duration-300" role="dialog"
+        aria-modal="true" aria-labelledby="login-modal-title">
+        <div class="min-h-screen px-4 flex items-center justify-center" tabindex="-1">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 transform scale-95 transition-transform duration-300"
+                id="login-modal-content">
+                <div class="absolute top-4 right-4">
+                    <button type="button" id="close-login-modal"
+                        class="text-gray-400 hover:text-gray-500 focus:outline-none p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        aria-label="Chiudi modale login">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-8">
+                    <div class="text-center mb-8">
+                        <div class="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                            <i class="ri-user-line text-2xl text-primary"></i>
+                        </div>
+                        <h3 id="login-modal-title" class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                            Bentornato!</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Accedi per accedere alla tua dashboard</p>
+                    </div>
+                    <!-- Login Form -->
+                    <form id="login-form" class="space-y-6" autocomplete="on">
+                        <div>
+                            <label for="login-email"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                            <input type="email" id="login-email" name="email" required autocomplete="username"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                                placeholder="inserisci la tua email">
+                        </div>
+                        <div>
+                            <label for="login-password"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                            <div class="relative">
+                                <input type="password" id="login-password" name="password" required
+                                    autocomplete="current-password"
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                                    placeholder="inserisci la password">
+                                <button type="button" id="toggle-login-password"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-500 transition-colors"
+                                    aria-label="Mostra/nascondi password">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="remember-me" name="remember"
+                                    class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                <label for="remember-me"
+                                    class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Ricordami</label>
+                            </div>
+                            <a href="#" class="text-sm text-primary hover:text-primary-dark transition-colors">Password
+                                dimenticata?</a>
+                        </div>
+                        <div id="login-error"
+                            class="text-red-500 text-sm hidden bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800"
+                            role="alert" aria-live="assertive">
+                            <i class="ri-error-warning-line mr-2"></i>
+                            <span class="error-message"></span>
+                        </div>
+                        <button type="submit" id="login-submit-btn"
+                            class="w-full bg-gradient-to-r from-primary to-primary-dark text-white py-3 px-4 rounded-lg hover:from-primary-dark hover:to-primary font-semibold transition-all duration-200 transform hover:scale-[1.02] focus:ring-4 focus:ring-primary/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            <span class="flex items-center justify-center">
+                                <i id="login-btn-icon" class="ri-login-circle-line mr-2"></i>
+                                <span id="login-btn-text">Accedi</span>
+                                <svg id="login-spinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
+                    <div class="mt-8">
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white dark:bg-gray-800 text-gray-500">Non hai un account?</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button type="button" id="show-register-modal"
+                            class="text-primary hover:text-primary-dark font-medium transition-colors">Registrati
+                            gratuitamente</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Miglioramento accessibilità modale login
+        (function () {
+            const loginModal = document.getElementById('login-modal');
+            const closeBtn = document.getElementById('close-login-modal');
+            const loginContent = document.getElementById('login-modal-content');
+            // Chiudi con ESC
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !loginModal.classList.contains('hidden')) {
+                    loginModal.classList.add('hidden');
+                    loginModal.classList.add('opacity-0');
+                }
+            });
+            // Chiudi cliccando fuori
+            loginModal.addEventListener('mousedown', function (e) {
+                if (e.target === loginModal) {
+                    loginModal.classList.add('hidden');
+                    loginModal.classList.add('opacity-0');
+                }
+            });
+            // Focus trap
+            loginModal.addEventListener('transitionend', function () {
+                if (!loginModal.classList.contains('hidden')) {
+                    loginContent.querySelector('input, button, select, textarea, [tabindex]:not([tabindex="-1"])').focus();
+                }
+            });
+            // Chiudi con bottone
+            closeBtn.addEventListener('click', function () {
+                loginModal.classList.add('hidden');
+                loginModal.classList.add('opacity-0');
+            });
+        })();
+    </script>
+
+    <!-- ===== REGISTER MODAL ===== -->
+    <div id="register-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden opacity-0 transition-opacity duration-300" role="dialog"
+        aria-modal="true" aria-labelledby="register-modal-title">
+        <div class="min-h-screen px-4 flex items-center justify-center">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 transform scale-95 transition-transform duration-300"
+                id="register-modal-content">
+                <div class="absolute top-4 right-4">
+                    <button type="button" id="close-register-modal"
+                        class="text-gray-400 hover:text-gray-500 focus:outline-none p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        aria-label="Chiudi modale registrazione">
+                        <i class="ri-close-line text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-8">
+                    <div class="text-center mb-8">
+                        <div class="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                            <i class="ri-user-add-line text-2xl text-primary"></i>
+                        </div>
+                        <h3 id="register-modal-title" class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                            Inizia ora!</h3>
+                        <p class="text-gray-600 dark:text-gray-300">Crea il tuo account e accedi alla dashboard</p>
+                    </div>
+                    <!-- Register Form -->
+                    <form id="register-form" class="space-y-6" autocomplete="on">
+                        <div>
+                            <label for="register-name"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome</label>
+                            <input type="text" id="register-name" name="name" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                                placeholder="inserisci il tuo nome">
+                        </div>
+                        <div>
+                            <label for="register-email"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                            <input type="email" id="register-email" name="email" required autocomplete="username"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                                placeholder="inserisci la tua email">
+                        </div>
+                        <div>
+                            <label for="register-password"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                            <div class="relative">
+                                <input type="password" id="register-password" name="password" required
+                                    autocomplete="new-password"
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                                    placeholder="inserisci una password">
+                                <button type="button" id="toggle-register-password"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-500 transition-colors"
+                                    aria-label="Mostra/nascondi password">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="register-password-confirm"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Conferma
+                                Password</label>
+                            <div class="relative">
+                                <input type="password" id="register-password-confirm" name="password_confirm" required
+                                    autocomplete="new-password"
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                                    placeholder="conferma la tua password">
+                                <button type="button" id="toggle-register-password-confirm"
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-500 transition-colors"
+                                    aria-label="Mostra/nascondi password">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="register-error"
+                            class="text-red-500 text-sm hidden bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800"
+                            role="alert">
+                            <i class="ri-error-warning-line mr-2"></i>
+                            <span class="error-message"></span>
+                        </div>
+                        <button type="submit" id="register-submit-btn"
+                            class="w-full bg-gradient-to-r from-primary to-primary-dark text-white py-3 px-4 rounded-lg hover:from-primary-dark hover:to-primary font-semibold transition-all duration-200 transform hover:scale-[1.02] focus:ring-4 focus:ring-primary/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            <span class="flex items-center justify-center">
+                                <i id="register-btn-icon" class="ri-user-add-line mr-2"></i>
+                                <span id="register-btn-text">Registrati</span>
+                                <svg id="register-spinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
+                    <div class="mt-8">
+                        <div class="relative">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-white dark:bg-gray-800 text-gray-500">Hai già un account?</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button type="button" id="show-login-modal"
+                            class="text-primary hover:text-primary-dark font-medium transition-colors">Accedi
+                            invece</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main id="main-content" class="main-content">
+        <!-- ===== PROGETTI IN EVIDENZA stile Kickstarter ===== -->
+        <section class="py-16 bg-white dark:bg-gray-800">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Progetti in Evidenza</h2>
+                    <a href="/frontend/explore.html"
+                        class="text-primary hover:text-primary-dark transition-colors flex items-center gap-2 focus-visible">
+                        Vedi tutti <i class="ri-arrow-right-line" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div id="featured-projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Template card progetto Kickstarter (per JS rendering dinamico) -->
+                    <article
+                        class="group bg-white dark:bg-gray-900 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col focus-within:ring-4 focus-within:ring-primary/30 animate-fadeIn"
+                        tabindex="0" aria-label="Progetto: Titolo del Progetto">
+                        <div class="relative">
+                            <img src="/frontend/assets/placeholder-tech.jpg" alt="Immagine di Titolo del Progetto"
+                                loading="lazy" decoding="async" fetchpriority="low"
+                                class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <span
+                                class="absolute top-4 left-4 bg-primary text-white text-xs px-3 py-1 rounded-full font-semibold shadow">Tecnologia</span>
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col">
+                            <h3
+                                class="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
+                                Titolo del Progetto</h3>
+                            <p class="text-gray-600 dark:text-gray-300 mb-4 flex-1">
+                                Breve descrizione del progetto in stile Kickstarter, coinvolgente e chiara.</p>
+                            <div class="mb-4">
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                                    <div class="bg-primary h-3 rounded-full transition-all duration-500"
+                                        style="width: 68%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs mt-2 text-gray-500 dark:text-gray-400">
+                                    <span><strong>€6.800</strong> raccolti</span>
+                                    <span>di €10.000</span>
+                                    <span>21 giorni rimasti</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center mt-4">
+                                <img src="/frontend/images/logo1.svg" alt="Avatar del creatore Mario Rossi"
+                                    loading="lazy" decoding="async" fetchpriority="low"
+                                    class="w-8 h-8 rounded-full mr-2">
+                                <span class="text-sm text-gray-700 dark:text-gray-300">di <strong>Mario Rossi</strong>
+                                </span>
+                            </div>
+                        </div>
+                        <button
+                            class="w-full py-3 bg-gradient-to-r from-primary via-blue-500 to-primary-dark text-white font-semibold rounded-b-2xl hover:from-primary-dark hover:via-primary hover:to-blue-600 transition-all duration-200 text-lg mt-auto focus-visible:ring-2 focus-visible:ring-primary/60 ripple shadow-md hover:shadow-xl"
+                            aria-label="Sostieni il progetto Titolo del Progetto" type="button" tabindex="0"
+                            onkeydown="if(event.key==='Enter'||event.key===' '){this.click();}"
+                            onfocus="this.classList.add('ring', 'ring-primary', 'ring-offset-2')"
+                            onblur="this.classList.remove('ring', 'ring-primary', 'ring-offset-2')"
+                            onmouseover="this.classList.add('scale-[1.03]')"
+                            onmouseout="this.classList.remove('scale-[1.03]')">
+                            Sostieni
+                        </button>
+                    </article>
+                    <!-- /Template card progetto -->
+                    <!-- Altre card verranno caricate dinamicamente da projects.js -->
+                </div>
+            </div>
+        </section>
+        <!-- CATEGORIE POPOLARI stile Kickstarter -->
+        <section class="py-16 bg-gray-50 dark:bg-gray-900">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-white text-center mb-12">Categorie Popolari</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                    <a href="/frontend/assets/arte/index.html"
+                        class="group block rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-lg transition-all duration-300 p-6 text-center border border-gray-100 dark:border-gray-800">
+                        <div class="flex flex-col items-center">
+                            <i class="ri-brush-line text-3xl text-pink-500 mb-3 group-hover:scale-110 transition-transform"
+                                aria-hidden="true"></i>
+                            <span
+                                class="text-gray-700 dark:text-gray-300 group-hover:text-pink-500 font-medium transition-colors">Arte</span>
+                        </div>
+                    </a>
+                    <a href="/frontend/assets/design/index.html"
+                        class="group block rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-lg transition-all duration-300 p-6 text-center border border-gray-100 dark:border-gray-800">
+                        <div class="flex flex-col items-center">
+                            <i class="ri-palette-line text-3xl text-purple-500 mb-3 group-hover:scale-110 transition-transform"
+                                aria-hidden="true"></i>
+                            <span
+                                class="text-gray-700 dark:text-gray-300 group-hover:text-purple-500 font-medium transition-colors">Design</span>
+                        </div>
+                    </a>
+                    <a href="/frontend/assets/musica/index.html"
+                        class="group block rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-lg transition-all duration-300 p-6 text-center border border-gray-100 dark:border-gray-800">
+                        <div class="flex flex-col items-center">
+                            <i class="ri-music-line text-3xl text-blue-500 mb-3 group-hover:scale-110 transition-transform"
+                                aria-hidden="true"></i>
+                            <span
+                                class="text-gray-700 dark:text-gray-300 group-hover:text-blue-500 font-medium transition-colors">Musica</span>
+                        </div>
+                    </a>
+                    <a href="/frontend/assets/tecnologia/index.html"
+                        class="group block rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-lg transition-all duration-300 p-6 text-center border border-gray-100 dark:border-gray-800">
+                        <div class="flex flex-col items-center">
+                            <i class="ri-computer-line text-3xl text-green-500 mb-3 group-hover:scale-110 transition-transform"
+                                aria-hidden="true"></i>
+                            <span
+                                class="text-gray-700 dark:text-gray-300 group-hover:text-green-500 font-medium transition-colors">Tecnologia</span>
+                        </div>
+                    </a>
+                    <a href="/frontend/assets/fumetti/index.html"
+                        class="group block rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-lg transition-all duration-300 p-6 text-center border border-gray-100 dark:border-gray-800">
+                        <div class="flex flex-col items-center">
+                            <i class="ri-book-line text-3xl text-yellow-500 mb-3 group-hover:scale-110 transition-transform"
+                                aria-hidden="true"></i>
+                            <span
+                                class="text-gray-700 dark:text-gray-300 group-hover:text-yellow-500 font-medium transition-colors">Fumetti</span>
+                        </div>
+                    </a>
+                    <a href="/frontend/assets/scopritutti/index.html"
+                        class="group block rounded-xl bg-white dark:bg-gray-800 shadow hover:shadow-lg transition-all duration-300 p-6 text-center border border-gray-100 dark:border-gray-800">
+                        <div class="flex flex-col items-center">
+                            <i class="ri-compass-3-line text-3xl text-gray-500 mb-3 group-hover:scale-110 transition-transform"
+                                aria-hidden="true"></i>
+                            <span
+                                class="text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white font-medium transition-colors">Altro</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATISTICHE stile Kickstarter -->
+        <section class="py-16 bg-white dark:bg-gray-800">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-primary mb-2 counter" data-target="1200">0</div>
+                        <div class="text-gray-600 dark:text-gray-400">Progetti Finanziati</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-primary mb-2 counter" data-target="350">0</div>
+                        <div class="text-gray-600 dark:text-gray-400">Creatori Attivi</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-primary mb-2 counter" data-target="5400">0</div>
+                        <div class="text-gray-600 dark:text-gray-400">Sostenitori</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-primary mb-2 counter" data-target="980000">0€</div>
+                        <div class="text-gray-600 dark:text-gray-400">Fondi Raccolti</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <script>
+            // Animazione contatori statistiche stile Kickstarter
+            function animateCounters() {
+                document.querySelectorAll('.counter').forEach(counter => {
+                    const target = +counter.getAttribute('data-target');
+                    const isEuro = counter.textContent.includes('€');
+                    let count = 0;
+                    const increment = Math.max(1, Math.floor(target / 100));
+                    function update() {
+                        count += increment;
+                        if (count >= target) {
+                            counter.textContent = isEuro ? target.toLocaleString('it-IT') + '€' : target.toLocaleString('it-IT');
+                        } else {
+                            counter.textContent = isEuro ? count.toLocaleString('it-IT') + '€' : count.toLocaleString('it-IT');
+                            requestAnimationFrame(update);
+                        }
+                    }
+                    update();
+                });
+            }
+            window.addEventListener('DOMContentLoaded', animateCounters);
+        </script>
+
+        <!-- CTA stile Kickstarter -->
+        <section class="py-20 bg-gradient-to-br from-primary/5 via-primary-600 to-primary-800 text-white">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="text-4xl font-bold mb-6">Pronto a realizzare il tuo progetto?</h2>
+                <p class="text-xl mb-8 text-white/90">Unisciti a migliaia di creatori che hanno trasformato le loro idee
+                    in realtà.</p>
+                <a href="/frontend/dashboard.html"
+                    class="inline-flex items-center px-8 py-4 bg-white text-primary rounded-full font-medium hover:bg-gray-100 transition-colors focus-visible">
+                    <i class="ri-rocket-line mr-2" aria-hidden="true"></i>Inizia ora
+                </a>
+            </div>
+        </section>
+
+        <!-- NEWSLETTER stile Kickstarter -->
+        <section class="py-16 bg-gray-50 dark:bg-gray-900">
+            <div class="container mx-auto px-4">
+                <div class="max-w-2xl mx-auto text-center">
+                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Resta aggiornato</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mb-8">Iscriviti alla nostra newsletter per ricevere
+                        aggiornamenti sui progetti più interessanti e le ultime novità.</p>
+                    <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <div class="flex-1 max-w-md">
+                            <label for="newsletter-email" class="sr-only">Indirizzo email</label>
+                            <input type="email" id="newsletter-email"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+                                placeholder="Il tuo indirizzo email" required>
+                        </div>
+                        <button type="submit" id="newsletter-submit"
+                            class="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors focus-visible disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled>Iscriviti</button>
+                    </form>
+                    <p id="newsletter-status" class="mt-4 text-sm hidden"></p>
+                    <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">Iscrivendoti accetti la nostra <a
+                            href="/privacy-policy" class="text-primary hover:underline">Privacy Policy</a>. Non
+                        condivideremo mai il tuo indirizzo email.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER stile Kickstarter -->
+        <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            <div class="container mx-auto px-4 py-12">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div>
+                        <h3 class="text-gray-900 dark:text-white font-semibold mb-4">Piattaforma</h3>
+                        <ul class="space-y-2">
+                            <li><a href="/about"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Chi
+                                    siamo</a></li>
+                            <li><a href="/how-it-works"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Come
+                                    funziona</a></li>
+                            <li><a href="/pricing"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Prezzi</a>
+                            </li>
+                            <li><a href="/contact"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Contatti</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-gray-900 dark:text-white font-semibold mb-4">Risorse</h3>
+                        <ul class="space-y-2">
+                            <li><a href="/blog"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Blog</a>
+                            </li>
+                            <li><a href="/guides"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Guide</a>
+                            </li>
+                            <li><a href="/faq"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">FAQ</a>
+                            </li>
+                            <li><a href="/support"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Supporto</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-gray-900 dark:text-white font-semibold mb-4">Legale</h3>
+                        <ul class="space-y-2">
+                            <li><a href="/terms"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Termini
+                                    di servizio</a></li>
+                            <li><a href="/privacy"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Privacy
+                                    Policy</a></li>
+                            <li><a href="/cookies"
+                                    class="text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">Cookie
+                                    Policy</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-gray-900 dark:text-white font-semibold mb-4">Social</h3>
+                        <div class="flex space-x-4">
+                            <a href="https://twitter.com/bostarter" target="_blank" rel="noopener noreferrer"
+                                class="text-gray-400 hover:text-primary transition-colors"><span
+                                    class="sr-only">Twitter</span><i class="ri-twitter-fill text-2xl"
+                                    aria-hidden="true"></i></a>
+                            <a href="https://facebook.com/bostarter" target="_blank" rel="noopener noreferrer"
+                                class="text-gray-400 hover:text-primary transition-colors"><span
+                                    class="sr-only">Facebook</span><i class="ri-facebook-fill text-2xl"
+                                    aria-hidden="true"></i></a>
+                            <a href="https://instagram.com/bostarter" target="_blank" rel="noopener noreferrer"
+                                class="text-gray-400 hover:text-primary transition-colors"><span
+                                    class="sr-only">Instagram</span><i class="ri-instagram-fill text-2xl"
+                                    aria-hidden="true"></i></a>
+                            <a href="https://linkedin.com/company/bostarter" target="_blank" rel="noopener noreferrer"
+                                class="text-gray-400 hover:text-primary transition-colors"><span
+                                    class="sr-only">LinkedIn</span><i class="ri-linkedin-fill text-2xl"
+                                    aria-hidden="true"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+                    <p class="text-center text-gray-500 dark:text-gray-400">© 2025 BOSTARTER. Tutti i diritti riservati.
+                    </p>
+                </div>
+            </div>
+        </footer>
+
+        <!-- SCRIPTS -->
+        <script type="module" src="/frontend/js/main.js" defer></script>
+        <script type="module" src="/frontend/js/api.js" defer></script>
+        <script type="module" src="/frontend/js/auth.js" defer></script>
+        <script type="module" src="/frontend/js/header.js" defer></script>
+        <script type="module" src="/frontend/js/i18n.js" defer></script>
+        <script type="module" src="/frontend/js/theme.js" defer></script>
+        <script type="module" src="/frontend/js/animations.js" defer></script>
+        <script type="module" src="/frontend/js/newsletter.js" defer></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+        <script src="/frontend/js/analytics-config.js" defer></script>
+        <script src="/frontend/js/structured-data.js" defer></script>
+        <script src="/frontend/js/enhanced-features.js" defer></script>
+</body>
+
+</html>

@@ -56,7 +56,7 @@ composer install
 
 3. Configura il database:
 - Crea un database MySQL
-- Importa lo schema da `database/bostarter_schema.sql`
+- Importa lo schema da `database/bostarter_schema_fixed.sql` o usa `database/complete_setup.sql` per un'installazione completa
 - Importa le estensioni da `database/bostarter_extensions.sql`
 - Configura le credenziali in `backend/config/database.php`
 

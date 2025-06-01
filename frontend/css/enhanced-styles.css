@@ -1,0 +1,709 @@
+/* ===== BOSTARTER ENHANCED STYLES ===== */
+/* Advanced animations and enhanced UI components */
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOutRight {
+    to { 
+        transform: translateX(100%); 
+        opacity: 0; 
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+}
+
+/* ===== ANIMATION CLASSES ===== */
+.animate-in {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animate-fade-in {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideUp 0.8s ease-out forwards;
+}
+
+.notification-enter {
+    animation: slideInRight 0.3s ease-out;
+}
+
+.notification-exit {
+    animation: slideOutRight 0.3s ease-in;
+}
+
+.modal-enter {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-exit {
+    animation: modalFadeOut 0.3s ease-in;
+}
+
+.error-message {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* ===== COLOR PALETTE AND UI MODERNIZATION ===== */
+:root {
+  --primary: #31456A;
+  --accent: #DD3838;
+  --bg: #F3F3F3;
+  --text-main: #222222;
+  --text-light: #31456A;
+  --card-shadow: 6px 6px 12px 0 #B9BCC140, -6px -6px 12px 0 #FFFFFFB3;
+  --card-bg: #F3F3F3;
+}
+
+body.bg-gray-50 {
+  background: var(--bg) !important;
+  color: var(--text-main);
+  font-family: 'Roboto', Arial, sans-serif;
+}
+body.dark.bg-gray-900 {
+  background: #222 !important;
+  color: #F3F3F3;
+}
+
+header, .header-sticky {
+  background: #fff !important;
+  border-bottom: 1.5px solid #E0E3EA;
+  box-shadow: 0 2px 12px 0 #B9BCC140;
+}
+header.dark, .header-sticky.dark {
+  background: #222 !important;
+  border-bottom: 1.5px solid #222;
+}
+
+#featured-projects article {
+  background: var(--card-bg);
+  border-radius: 1.5rem;
+  box-shadow: var(--card-shadow);
+  border: none;
+  color: var(--text-main);
+}
+.dark #featured-projects article {
+  background: #232323;
+  color: #F3F3F3;
+}
+
+#featured-projects article .progress-bar {
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+}
+
+#featured-projects article .category-badge {
+  background: var(--primary);
+  color: #fff;
+}
+
+#featured-projects article h3 {
+  color: var(--primary);
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+#featured-projects article p {
+  color: var(--text-light);
+}
+
+#featured-projects article .ripple {
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+#featured-projects article .ripple:hover {
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  color: #fff;
+}
+
+/* Categorie Popolari modern look */
+section.bg-gray-50 {
+  background: #F3F3F3 !important;
+}
+.dark section.bg-gray-50 {
+  background: #222 !important;
+}
+
+.grid-cols-2 .group, .grid-cols-3 .group, .grid-cols-6 .group {
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  border: none;
+  color: var(--text-main);
+}
+.dark .grid-cols-2 .group, .dark .grid-cols-3 .group, .dark .grid-cols-6 .group {
+  background: #232323;
+  color: #F3F3F3;
+}
+
+/* Statistiche modern look */
+.counter {
+  color: var(--accent);
+  text-shadow: 0 2px 8px #B9BCC140;
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* CTA modern look */
+section.bg-gradient-to-br {
+  background: linear-gradient(120deg, var(--primary) 0%, var(--accent) 100%) !important;
+  color: #fff;
+}
+
+/* Footer modern look */
+footer {
+  background: #F3F3F3 !important;
+  border-top: 1.5px solid #E0E3EA;
+  color: var(--text-main);
+}
+footer.dark {
+  background: #222 !important;
+  border-top: 1.5px solid #222;
+  color: #F3F3F3;
+}
+
+footer a:hover {
+  color: var(--accent) !important;
+}
+
+/* Migliora focus visibile */
+:focus-visible {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 2px;
+  transition: outline 0.2s;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6, .font-brand {
+  font-family: 'Roboto', Arial, sans-serif !important;
+}
+
+/* ===== ENHANCED DROPDOWN STYLES ===== */
+.dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    min-width: 200px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.2s ease-out;
+}
+
+.dropdown:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dark .dropdown {
+    background: #374151;
+    border-color: #4b5563;
+}
+
+/* ===== ENHANCED USER DROPDOWN ===== */
+#user-dropdown {
+    right: 0;
+    left: auto;
+    min-width: 220px;
+}
+
+#user-dropdown .dropdown-item {
+    padding: 12px 16px;
+    font-weight: 500;
+}
+
+#user-dropdown .dropdown-item:hover {
+    background-color: #f8fafc;
+    transform: translateX(2px);
+}
+
+.dark #user-dropdown .dropdown-item:hover {
+    background-color: #4b5563;
+}
+
+/* ===== ENHANCED MODAL STYLES ===== */
+.modal-overlay {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* ===== ENHANCED FORM STYLES ===== */
+.form-input {
+    transition: all 0.2s ease-out;
+}
+
+.form-input:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(49, 118, 255, 0.15);
+}
+
+.form-input.error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-input.success {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* ===== PASSWORD STRENGTH INDICATOR ===== */
+.password-strength {
+    height: 3px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.password-strength-bar {
+    height: 100%;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.password-strength-weak { 
+    background: #ef4444; 
+    width: 25%; 
+}
+
+.password-strength-medium { 
+    background: #f59e0b; 
+    width: 50%; 
+}
+
+.password-strength-strong { 
+    background: #10b981; 
+    width: 75%; 
+}
+
+.password-strength-very-strong { 
+    background: #059669; 
+    width: 100%; 
+}
+
+/* ===== LOADING ANIMATIONS ===== */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* ===== SCREEN READER ONLY ===== */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ===== ENHANCED BUTTON EFFECTS ===== */
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ===== SMOOTH TRANSITIONS ===== */
+button, a, input, select, textarea {
+    transition: all 0.2s ease-out;
+}
+
+/* ===== ENHANCED FOCUS STYLES ===== */
+.focus-visible:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ===== NETWORK STATUS INDICATOR ===== */
+.network-status {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    display: none;
+}
+
+.network-status.offline {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    display: block;
+}
+
+.network-status.online {
+    background: #dcfce7;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+    display: block;
+}
+
+/* ===== PERFORMANCE MONITOR ===== */
+.performance-monitor {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: monospace;
+    z-index: 1000;
+    display: none;
+}
+
+.performance-monitor.show {
+    display: block;
+}
+
+/* ===== RESPONSIVE IMPROVEMENTS ===== */
+@media (max-width: 768px) {
+    .dropdown {
+        position: fixed;
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        min-width: auto;
+    }
+
+    #user-dropdown {
+        right: 1rem;
+        left: auto;
+        width: auto;
+        min-width: 200px;
+    }
+
+    .hero-title {
+        font-size: 2.25rem;
+        line-height: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+    }
+
+    .modal-content {
+        margin: 1rem;
+        max-height: calc(100vh - 2rem);
+    }
+
+    .network-status {
+        top: 10px;
+        right: 10px;
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    .performance-monitor {
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+        padding: 6px 8px;
+    }
+}
+
+/* ===== ACCESSIBILITY ENHANCEMENTS ===== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ===== HIGH CONTRAST MODE SUPPORT ===== */
+@media (prefers-contrast: high) {
+    .dropdown {
+        border-width: 2px;
+    }
+    
+    .btn {
+        border-width: 2px;
+    }
+    
+    .form-input {
+        border-width: 2px;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .no-print, 
+    .modal-overlay, 
+    .dropdown, 
+    .notification,
+    .network-status,
+    .performance-monitor {
+        display: none !important;
+    }
+
+    .print-friendly {
+        color: black !important;
+        background: white !important;
+    }
+}
+
+/* ===== DARK MODE ENHANCEMENTS ===== */
+.dark .network-status.offline {
+    background: #7f1d1d;
+    color: #fca5a5;
+    border-color: #991b1b;
+}
+
+.dark .network-status.online {
+    background: #14532d;
+    color: #86efac;
+    border-color: #166534;
+}
+
+/* ===== NOTIFICATION ENHANCEMENTS ===== */
+.notification {
+    min-width: 300px;
+    max-width: 500px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.notification.success {
+    background: rgba(240, 253, 244, 0.95);
+    border-left-color: #10b981;
+    color: #065f46;
+}
+
+.notification.error {
+    background: rgba(254, 242, 242, 0.95);
+    border-left-color: #ef4444;
+    color: #7f1d1d;
+}
+
+.notification.warning {
+    background: rgba(255, 251, 235, 0.95);
+    border-left-color: #f59e0b;
+    color: #78350f;
+}
+
+.notification.info {
+    background: rgba(239, 246, 255, 0.95);
+    border-left-color: #3b82f6;
+    color: #1e3a8a;
+}
+
+.dark .notification.success {
+    background: rgba(6, 95, 70, 0.95);
+    color: #86efac;
+}
+
+.dark .notification.error {
+    background: rgba(127, 29, 29, 0.95);
+    color: #fca5a5;
+}
+
+.dark .notification.warning {
+    background: rgba(120, 53, 15, 0.95);
+    color: #fcd34d;
+}
+
+.dark .notification.info {
+    background: rgba(30, 58, 138, 0.95);
+    color: #93c5fd;
+}
+
+/* ===== ENHANCED HOVER EFFECTS ===== */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.icon-hover {
+    transition: all 0.2s ease;
+}
+
+.icon-hover:hover {
+    transform: scale(1.1);
+}
+
+/* ===== PROGRESS INDICATORS ===== */
+.progress-ring {
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.progress-bar {
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* ===== ENHANCED TOOLTIPS ===== */
+.tooltip {
+    position: relative;
+}
+
+.tooltip::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+.tooltip:hover::before {
+    opacity: 1;
+}
+
+/* ===== RIPPLE EFFECT FOR BUTTONS ===== */
+.ripple {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ripple-effect {
+  position: absolute;
+  border-radius: 9999px;
+  transform: scale(0);
+  animation: ripple-animate 0.5s linear;
+  background: rgba(255,255,255,0.5);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes ripple-animate {
+  to {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
