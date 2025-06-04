@@ -252,9 +252,8 @@ function truncateText($text, $length = 100) {
     <header class="bg-secondary/90 backdrop-blur-md shadow-sm border-b sticky top-0 z-30">
         <nav class="container mx-auto px-4 py-3 flex items-center justify-between">
             <!-- Logo and Brand -->
-            <a href="/frontend/index.html" class="flex items-center font-brand text-2xl text-brand hover:text-brand-dark transition-colors">
-                <img src="/frontend/images/logo1.svg" alt="BOSTARTER Logo" class="h-8 w-auto mr-2">
-                BOSTARTER
+            <a href="/frontend/img/logo1.svg" class="flex items-center font-brand text-2xl text-brand hover:text-brand-dark transition-colors">
+                <img src="frontend/images/logo1.svg" alt="" class="h-8 w-auto mr-2">
             </a>
 
             <!-- Mobile Menu Toggle -->

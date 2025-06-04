@@ -22,12 +22,11 @@ function initializeAuthSystem() {
 // Authentication status check
 async function checkAuthStatus() {
     try {
-        const formData = new FormData();
-        formData.append('action', 'check_auth');
-
-        const response = await fetch('/backend/auth_api.php', {
-            method: 'POST',
-            body: formData
+        const response = await fetch('/backend/api/login.php', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
 
         const data = await response.json();
@@ -182,9 +181,15 @@ async function handleLogin(e) {
     setButtonLoading(submitBtn, btnText, btnIcon, spinner, 'Accesso in corso...');
 
     try {
-        const response = await fetch('/backend/auth_api.php', {
+        const response = await fetch('/backend/api/login.php', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: formData.get('email'),
+                password: formData.get('password')
+            })
         });
 
         const data = await response.json();
@@ -231,15 +236,25 @@ async function handleRegister(e) {
 
     // Get form data
     const formData = new FormData(form);
-    formData.append('action', 'register');
 
     // Update button state
     setButtonLoading(submitBtn, btnText, btnIcon, spinner, 'Registrazione in corso...');
 
     try {
-        const response = await fetch('/backend/auth_api.php', {
+        const response = await fetch('/backend/api/register.php', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nome: formData.get('nome'),
+                cognome: formData.get('cognome'),
+                email: formData.get('email'),
+                password: formData.get('password'),
+                data_nascita: formData.get('data_nascita'),
+                luogo_nascita: formData.get('luogo_nascita'),
+                tipo_utente: formData.get('tipo_utente')
+            })
         });
 
         const data = await response.json();
@@ -565,12 +580,11 @@ function setupCreatorLinkHandler() {
             e.preventDefault();
 
             try {
-                const formData = new FormData();
-                formData.append('action', 'check_auth');
-
-                const response = await fetch('/backend/auth_api.php', {
-                    method: 'POST',
-                    body: formData
+                const response = await fetch('/backend/api/login.php', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 });
 
                 const data = await response.json();
@@ -604,11 +618,11 @@ function setupCreatorLinkHandler() {
 async function handleLogout() {
     try {
         const formData = new FormData();
-        formData.append('action', 'logout');
-
-        const response = await fetch('/backend/auth_api.php', {
-            method: 'POST',
-            body: formData
+        const response = await fetch('/backend/api/login.php', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
 
         const data = await response.json();

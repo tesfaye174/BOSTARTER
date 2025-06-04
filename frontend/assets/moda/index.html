@@ -1,76 +1,173 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" class="no-js">
+
 <head>
+    <!-- ===== META TAGS ESSENZIALI ===== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moda - BOSTARTER</title>
-    <meta name="description" content="Scopri il mondo della moda su BOSTARTER. Collezioni esclusive, designer emergenti e tendenze innovative.">
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <title>Progetti Moda - BOSTARTER</title>
+
+    <!-- ===== SEO E META TAGS OTTIMIZZATI ===== -->
+    <meta name="description" content="Vesti l'innovazione italiana su BOSTARTER, la principale piattaforma di crowdfunding italiana.">
+    <meta name="keywords" content="moda, progetti, crowdfunding, italia, innovazione, finanziamento">
+    <meta name="author" content="BOSTARTER">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Italian">
+
+    <!-- ===== OPEN GRAPH / SOCIAL MEDIA ===== -->
+    <meta property="og:title" content="Progetti Moda - BOSTARTER">
+    <meta property="og:description" content="Vesti l'innovazione italiana su BOSTARTER.">
+    <meta property="og:image" content="/frontend/images/category-moda-og.jpg">
+    <meta property="og:url" content="https://www.bostarter.it/frontend/assets/moda/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- ===== PERFORMANCE E ACCESSIBILITÀ ===== -->
+    <meta name="theme-color" content="#E91E63" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#AD1457" media="(prefers-color-scheme: dark)">
+    <meta name="color-scheme" content="light dark">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="canonical" href="https://www.bostarter.it/frontend/assets/moda/">
+
+    <!-- ===== PWA SUPPORT ===== -->
+    <link rel="manifest" href="/frontend/manifest.json">
+    <link rel="apple-touch-icon" href="/frontend/images/icon-192x192.png">
+    <link rel="icon" type="image/svg+xml" href="/frontend/images/logo1.svg">
+
+    <!-- ===== PRELOAD RISORSE CRITICHE ===== -->
+    <link rel="preload" href="/frontend/css/main.css" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="/frontend/js/main.js" as="script">
+
+    <!-- ===== PRECONNECT OTTIMIZZATO ===== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
-    <link rel="icon" href="../../frontend/images/logo1.svg" type="image/x-icon">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://api.bostarter.it" crossorigin>
+
+    <!-- ===== TAILWIND CSS CONFIGURAZIONE ===== -->
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+
+    <!-- ===== FONTS OTTIMIZZATI ===== -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ===== ICONS OTTIMIZZATI ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+        integrity="sha512-RH2hkEMzWgbBVQT9ZvYTwP9cEZyNI7Pz0w9dSrAHkRYiNnwrK9i8WLOc6MKQ8lktL4Y1K4LjRyQ+y7UtIIo1yg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- ===== CSS OTTIMIZZATO - COMPONENTI COMUNI INTEGRATI ===== -->
+    <link rel="stylesheet" href="/frontend/css/main.css">
+    <link rel="stylesheet" href="/frontend/css/animations.css">
+    <link rel="stylesheet" href="/frontend/assets/shared/css/common-styles.css">
+    <link rel="stylesheet" href="css/moda.css">
 </head>
-<body>
-    <header>
-        <h1><a href="../../index.html">BOSTARTER</a> <span>/ Moda</span></h1>
-        <nav>
-            <a href="../../index.html"><i class="ri-home-line"></i> Home</a>
-            <a href="../../frontend/explore.html"><i class="ri-compass-line"></i> Esplora</a>
-            <a href="../../frontend/dashboard.html"><i class="ri-dashboard-line"></i> Dashboard</a>
-        </nav>
+
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <!-- ===== SKIP LINK ACCESSIBILITÀ ===== -->
+    <a href="#main-content" class="skip-link">Salta al contenuto principale</a>
+
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-500" aria-hidden="true">
+        <div class="text-center">
+            <div class="relative mb-4">
+                <div class="w-16 h-16 border-4 border-primary-200 dark:border-gray-700 border-t-primary-500 rounded-full animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i class="ri-shirt-line text-2xl text-primary-500 animate-pulse"></i>
+                </div>
+            </div>
+            <p class="text-lg font-medium text-gray-900 dark:text-white">Caricando progetti moda...</p>
+            <div class="mt-2 flex justify-center space-x-1">
+                <div class="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                <div class="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                <div class="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== NOTIFICATION SYSTEM ===== -->
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2" aria-live="polite" aria-label="Notifiche"></div>
+
+    <!-- ===== HEADER MODERNIZZATO ===== -->
+    <header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
+        <!-- Header content will be loaded by common functions -->
     </header>
-    
-    <main>
-        <!-- Banner fashion -->
-        <section class="fashion-banner">
-            <h1>Moda & Stile</h1>
-            <p>Dove l'eleganza incontra l'innovazione. Scopri collezioni esclusive e designer emergenti che ridefiniscono il concetto di moda.</p>
-        </section>
-        
-        <!-- Sezione filtri fashion -->
-        <section class="fashion-filters">
-            <h2>Esplora per Categoria</h2>
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-filter="tutti">Tutti</button>
-                <button class="filter-btn" data-filter="alta-moda">Alta Moda</button>
-                <button class="filter-btn" data-filter="streetwear">Streetwear</button>
-                <button class="filter-btn" data-filter="accessori">Accessori</button>
-                <button class="filter-btn" data-filter="sostenibile">Sostenibile</button>
-                <button class="filter-btn" data-filter="vintage">Vintage</button>
-                <button class="filter-btn" data-filter="sera">Abiti da Sera</button>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="main-content" class="pt-20">
+        <!-- Hero Section -->
+        <section class="relative bg-gradient-to-br from-rose-50 to-rose-100 dark:from-gray-800 dark:to-gray-700 py-16">
+            <div class="container mx-auto px-4">
+                <div class="text-center max-w-4xl mx-auto">
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+                        <span class="text-rose-500">Progetti Moda</span>
+                    </h1>
+                    <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
+                        Vesti l'innovazione italiana
+                    </p>
+                    
+                    <!-- Search and Filters using common components -->
+                    <div class="category-search-filters" data-category="moda">
+                        <!-- Will be populated by common functions -->
+                    </div>
+                </div>
             </div>
         </section>
-        
-        <!-- Galleria fashion -->
-        <section class="gallery-section">
-            <h2>Collezioni in Evidenza</h2>
-            <div class="fashion-gallery" id="fashion-gallery">
-                <!-- Gli articoli fashion verranno caricati dinamicamente via JavaScript -->
+
+        <!-- Projects Grid -->
+        <section class="py-12">
+            <div class="container mx-auto px-4">
+                <div id="projectsGrid" class="category-projects-grid" data-category="moda">
+                    <!-- Projects will be loaded by common functions -->
+                </div>
+                
+                <!-- Load More Button -->
+                <div class="text-center mt-12">
+                    <button id="loadMoreBtn" class="category-load-more-btn" data-category="moda">
+                        Carica altri progetti
+                    </button>
+                </div>
             </div>
         </section>
-        
-        <!-- Sezione designer -->
-        <section class="designers-section">
-            <h2>I Nostri Designer</h2>
-            <p>Incontra i talenti creativi che danno vita alle collezioni più innovative e ricercate del panorama fashion contemporaneo.</p>
-            <div class="designer-grid" id="designers-grid">
-                <!-- I designer verranno caricati dinamicamente via JavaScript -->
-            </div>
-        </section>
-        
-        <!-- Sezione eventi fashion -->
-        <section class="fashion-events">
-            <h2>Eventi & Sfilate</h2>
-            <p>Non perdere gli appuntamenti più importanti del mondo della moda. Sfilate, presentazioni e eventi esclusivi.</p>
-            <div id="fashion-events-container">
-                <!-- Gli eventi verranno caricati dinamicamente via JavaScript -->
+
+        <!-- Statistics Section -->
+        <section class="py-12 bg-gray-50 dark:bg-gray-800">
+            <div class="container mx-auto px-4">
+                <div class="category-stats" data-category="moda">
+                    <!-- Stats will be populated by common functions -->
+                </div>
             </div>
         </section>
     </main>
-    
-    <script src="js/main.js"></script>
+
+    <!-- ===== FOOTER ===== -->
+    <footer id="main-footer" class="bg-gray-900 text-white">
+        <!-- Footer content will be loaded by common functions -->
+    </footer>
+
+    <!-- ===== SCRIPTS OTTIMIZZATI - COMPONENTI COMUNI INTEGRATI ===== -->
+    <script src="/frontend/assets/shared/js/category-config.js"></script>
+    <script src="/frontend/assets/shared/js/common-functions.js"></script>
+
+    <script>
+        // Inizializza la pagina con componenti comuni
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inizializza le funzioni comuni per la categoria
+            initializeCommonFunctions('moda');
+        });
+
+        // Global error handling
+        window.addEventListener('error', (e) => {
+            console.error('Moda Page Error:', e.error);
+        });
+
+        // Service Worker registration for PWA support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/frontend/sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+    </script>
 </body>
+
 </html>

@@ -6,12 +6,10 @@ use BOSTARTER\Models\Notification;
 class NotificationService {
     private $notificationModel;
     private $db;
-    private $wsEndpoint;
 
     public function __construct($db) {
         $this->db = $db;
         $this->notificationModel = new Notification($db);
-        $this->wsEndpoint = 'http://localhost:8080/api/send'; // WebSocket API endpoint
     }
 
     /**
@@ -28,14 +26,9 @@ class NotificationService {
                 'metadata' => json_encode($metadata),
                 'is_read' => false,
                 'created_at' => date('Y-m-d H:i:s')
-            ];
-
-            $notification = $this->notificationModel->create($notificationData);
+            ];            $notification = $this->notificationModel->create($notificationData);
 
             if ($notification) {
-                // Send real-time notification via WebSocket
-                $this->sendRealTimeNotification($userId, $notification);
-                
                 // Log the notification
                 $this->logNotification($userId, $type, $message);
             }
@@ -44,48 +37,7 @@ class NotificationService {
         } catch (\Exception $e) {
             error_log("Error creating notification: " . $e->getMessage());
             return false;
-        }
-    }
-
-    /**
-     * Send real-time notification via WebSocket
-     */
-    private function sendRealTimeNotification($userId, $notification) {
-        try {
-            // This would connect to the WebSocket server to send real-time notification
-            // For now, we'll use a simple HTTP request to a webhook endpoint
-            $data = [
-                'type' => 'notification',
-                'user_id' => $userId,
-                'notification' => $notification
-            ];
-
-            // In a production environment, you'd use a proper message queue
-            // or direct WebSocket connection here
-            $this->sendWebSocketMessage($data);
-            
-        } catch (\Exception $e) {
-            error_log("Error sending real-time notification: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Send message to WebSocket server
-     */
-    private function sendWebSocketMessage($data) {
-        // This is a simplified implementation
-        // In production, you'd use a proper WebSocket client or message queue
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => 'Content-Type: application/json',
-                'content' => json_encode($data),
-                'timeout' => 5
-            ]
-        ]);
-
-        @file_get_contents($this->wsEndpoint, false, $context);
-    }
+        }    }
 
     /**
      * Log notification for analytics

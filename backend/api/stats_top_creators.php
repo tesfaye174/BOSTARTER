@@ -4,12 +4,13 @@
  * BOSTARTER - Crowdfunding Platform
  */
 
-require_once '../config/db_config.php';
+require_once '../config/database.php';
 
 header('Content-Type: application/json');
 
 try {
-    $pdo = getDbConnection();
+    $database = new Database();
+    $pdo = $database->getConnection();
     
     // Get parameters
     $limit = (int)($_GET['limit'] ?? 10);

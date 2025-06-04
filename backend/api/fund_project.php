@@ -5,7 +5,7 @@
  */
 
 session_start();
-require_once '../config/db_config.php';
+require_once '../config/database.php';
 require_once '../utils/Auth.php';
 
 // Check if user is logged in
@@ -26,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
-        $pdo = getDbConnection();
+        $database = new Database();
+        $pdo = $database->getConnection();
         
         // Start transaction
         $pdo->beginTransaction();

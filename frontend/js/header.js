@@ -308,16 +308,13 @@ class HeaderManager {
         if (loginModal) {
             this.showModal(loginModal);
         }
-    }
-
-    async handleLogout() {
+    } async handleLogout() {
         try {
-            const response = await fetch('/backend/auth_api.php', {
-                method: 'POST',
+            const response = await fetch('/backend/api/login.php', {
+                method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=logout'
+                    'Content-Type': 'application/json'
+                }
             });
 
             const data = await response.json();
@@ -407,12 +404,11 @@ class HeaderManager {
     // ===== USER STATE =====
     async loadUserState() {
         try {
-            const response = await fetch('/backend/auth_api.php', {
-                method: 'POST',
+            const response = await fetch('/backend/api/login.php', {
+                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=check_auth'
+                    'Content-Type': 'application/json'
+                }
             });
 
             const data = await response.json();

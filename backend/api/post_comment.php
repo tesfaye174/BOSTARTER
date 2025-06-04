@@ -5,7 +5,7 @@
  */
 
 session_start();
-require_once '../config/db_config.php';
+require_once '../config/database.php';
 require_once '../utils/Auth.php';
 
 header('Content-Type: application/json');
@@ -50,7 +50,8 @@ if (strlen($comment_text) > 1000) {
 }
 
 try {
-    $pdo = getDbConnection();
+    $database = new Database();
+    $pdo = $database->getConnection();
     
     // Check if project exists
     $stmt = $pdo->prepare("SELECT id, titolo, creatore_id FROM progetti WHERE id = ?");

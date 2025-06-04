@@ -4,7 +4,7 @@
  * BOSTARTER - Crowdfunding Platform
  */
 
-require_once '../../backend/config/db_config.php';
+require_once '../../backend/config/database.php';
 require_once '../components/header.php';
 
 // Get filter parameters
@@ -17,7 +17,8 @@ $per_page = 12;
 $offset = ($page - 1) * $per_page;
 
 try {
-    $pdo = getDbConnection();
+    $database = Database::getInstance();
+    $pdo = $database->getConnection();
     
     // Build WHERE clause
     $where_conditions = [];

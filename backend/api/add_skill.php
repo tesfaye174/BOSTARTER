@@ -1,7 +1,7 @@
 <?php
 // Header includes session_start() and navigation logic
 require_once '../../frontend/components/header.php';
-require_once '../config/db_config.php'; // Ensure this is present and no placeholder logic before it
+require_once '../config/database.php'; // Modern database configuration
 
 // --- Homepage Specific Content ---
 ?>

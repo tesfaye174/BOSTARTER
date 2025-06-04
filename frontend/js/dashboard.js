@@ -1,3 +1,4 @@
+
 /**
  * Enhanced Dashboard JavaScript functionality for BOSTARTER
  * Handles dynamic content loading, real-time updates, and user interactions
@@ -61,10 +62,8 @@ class Dashboard {
                 e.preventDefault();
                 this.refreshDashboard();
             }
-        });
-
-        // Real-time updates
-        this.setupWebSocket();
+        });        // Real-time updates via polling
+        this.setupNotifications();
 
         // Online/offline status
         window.addEventListener('online', () => {

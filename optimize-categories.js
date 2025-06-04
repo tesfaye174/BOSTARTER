@@ -1,24 +1,143 @@
-<!DOCTYPE html>
+#!/usr/bin/env node
+
+/**
+ * Script di ottimizzazione per tutte le categorie BOSTARTER
+ * Integra i componenti comuni e rimuove il codice duplicato
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+// Configurazione categorie
+const categories = [
+    'arte', 'artigianato', 'cibo', 'danza', 'design', 'editoriale',
+    'film', 'fotografia', 'fumetti', 'giochi', 'giornalismo',
+    'moda', 'musica', 'teatro', 'tecnologia'
+];
+
+// Template HTML ottimizzato
+const createOptimizedTemplate = (category) => {
+    const categoryConfig = {
+        arte: {
+            title: 'Progetti Arte',
+            description: 'Scopri e supporta progetti artistici innovativi',
+            icon: 'ri-brush-line',
+            color: 'pink'
+        },
+        artigianato: {
+            title: 'Progetti Artigianato',
+            description: 'Supporta l\'eccellenza artigianale italiana',
+            icon: 'ri-hammer-line',
+            color: 'amber'
+        },
+        cibo: {
+            title: 'Progetti Food',
+            description: 'Gusta l\'innovazione culinaria italiana',
+            icon: 'ri-restaurant-line',
+            color: 'orange'
+        },
+        danza: {
+            title: 'Progetti Danza',
+            description: 'Sostieni l\'arte del movimento',
+            icon: 'ri-music-2-line',
+            color: 'purple'
+        },
+        design: {
+            title: 'Progetti Design',
+            description: 'Finanzia l\'innovazione nel design',
+            icon: 'ri-palette-line',
+            color: 'blue'
+        },
+        editoriale: {
+            title: 'Progetti Editoriali',
+            description: 'Sostieni la cultura letteraria',
+            icon: 'ri-book-line',
+            color: 'green'
+        },
+        film: {
+            title: 'Progetti Film',
+            description: 'Supporta il cinema indipendente',
+            icon: 'ri-film-line',
+            color: 'red'
+        },
+        fotografia: {
+            title: 'Progetti Fotografia',
+            description: 'Cattura momenti attraverso l\'obiettivo',
+            icon: 'ri-camera-line',
+            color: 'indigo'
+        },
+        fumetti: {
+            title: 'Progetti Fumetti',
+            description: 'Sostieni l\'arte sequenziale italiana',
+            icon: 'ri-book-2-line',
+            color: 'yellow'
+        },
+        giochi: {
+            title: 'Progetti Giochi',
+            description: 'Finanzia l\'innovazione ludica',
+            icon: 'ri-gamepad-line',
+            color: 'emerald'
+        },
+        giornalismo: {
+            title: 'Progetti Giornalismo',
+            description: 'Supporta l\'informazione indipendente',
+            icon: 'ri-newspaper-line',
+            color: 'slate'
+        },
+        moda: {
+            title: 'Progetti Moda',
+            description: 'Vesti l\'innovazione italiana',
+            icon: 'ri-shirt-line',
+            color: 'rose'
+        },
+        musica: {
+            title: 'Progetti Musica',
+            description: 'Sostieni l\'arte musicale',
+            icon: 'ri-music-line',
+            color: 'violet'
+        },
+        teatro: {
+            title: 'Progetti Teatro',
+            description: 'Supporta l\'arte teatrale',
+            icon: 'ri-mask-line',
+            color: 'teal'
+        },
+        tecnologia: {
+            title: 'Progetti Tecnologia',
+            description: 'Finanzia l\'innovazione tecnologica',
+            icon: 'ri-computer-line',
+            color: 'cyan'
+        }
+    };
+
+    const config = categoryConfig[category] || {
+        title: `Progetti ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+        description: `Scopri progetti innovativi di ${category}`,
+        icon: 'ri-star-line',
+        color: 'gray'
+    };
+
+    return `<!DOCTYPE html>
 <html lang="it" class="no-js">
 
 <head>
     <!-- ===== META TAGS ESSENZIALI ===== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progetti Musica - BOSTARTER</title>
+    <title>${config.title} - BOSTARTER</title>
 
     <!-- ===== SEO E META TAGS OTTIMIZZATI ===== -->
-    <meta name="description" content="Sostieni l'arte musicale su BOSTARTER, la principale piattaforma di crowdfunding italiana.">
-    <meta name="keywords" content="musica, progetti, crowdfunding, italia, innovazione, finanziamento">
+    <meta name="description" content="${config.description} su BOSTARTER, la principale piattaforma di crowdfunding italiana.">
+    <meta name="keywords" content="${category}, progetti, crowdfunding, italia, innovazione, finanziamento">
     <meta name="author" content="BOSTARTER">
     <meta name="robots" content="index, follow">
     <meta name="language" content="Italian">
 
     <!-- ===== OPEN GRAPH / SOCIAL MEDIA ===== -->
-    <meta property="og:title" content="Progetti Musica - BOSTARTER">
-    <meta property="og:description" content="Sostieni l'arte musicale su BOSTARTER.">
-    <meta property="og:image" content="/frontend/images/category-musica-og.jpg">
-    <meta property="og:url" content="https://www.bostarter.it/frontend/assets/musica/">
+    <meta property="og:title" content="${config.title} - BOSTARTER">
+    <meta property="og:description" content="${config.description} su BOSTARTER.">
+    <meta property="og:image" content="/frontend/images/category-${category}-og.jpg">
+    <meta property="og:url" content="https://www.bostarter.it/frontend/assets/${category}/">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
 
@@ -27,7 +146,7 @@
     <meta name="theme-color" content="#AD1457" media="(prefers-color-scheme: dark)">
     <meta name="color-scheme" content="light dark">
     <meta name="format-detection" content="telephone=no">
-    <link rel="canonical" href="https://www.bostarter.it/frontend/assets/musica/">
+    <link rel="canonical" href="https://www.bostarter.it/frontend/assets/${category}/">
 
     <!-- ===== PWA SUPPORT ===== -->
     <link rel="manifest" href="/frontend/manifest.json">
@@ -60,7 +179,7 @@
     <link rel="stylesheet" href="/frontend/css/main.css">
     <link rel="stylesheet" href="/frontend/css/animations.css">
     <link rel="stylesheet" href="/frontend/assets/shared/css/common-styles.css">
-    <link rel="stylesheet" href="css/musica.css">
+    <link rel="stylesheet" href="css/${category}.css">
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -73,10 +192,10 @@
             <div class="relative mb-4">
                 <div class="w-16 h-16 border-4 border-primary-200 dark:border-gray-700 border-t-primary-500 rounded-full animate-spin"></div>
                 <div class="absolute inset-0 flex items-center justify-center">
-                    <i class="ri-music-line text-2xl text-primary-500 animate-pulse"></i>
+                    <i class="${config.icon} text-2xl text-primary-500 animate-pulse"></i>
                 </div>
             </div>
-            <p class="text-lg font-medium text-gray-900 dark:text-white">Caricando progetti musica...</p>
+            <p class="text-lg font-medium text-gray-900 dark:text-white">Caricando progetti ${category}...</p>
             <div class="mt-2 flex justify-center space-x-1">
                 <div class="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
                 <div class="w-2 h-2 bg-primary-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
@@ -96,18 +215,18 @@
     <!-- ===== MAIN CONTENT ===== -->
     <main id="main-content" class="pt-20">
         <!-- Hero Section -->
-        <section class="relative bg-gradient-to-br from-violet-50 to-violet-100 dark:from-gray-800 dark:to-gray-700 py-16">
+        <section class="relative bg-gradient-to-br from-${config.color}-50 to-${config.color}-100 dark:from-gray-800 dark:to-gray-700 py-16">
             <div class="container mx-auto px-4">
                 <div class="text-center max-w-4xl mx-auto">
                     <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                        <span class="text-violet-500">Progetti Musica</span>
+                        <span class="text-${config.color}-500">${config.title}</span>
                     </h1>
                     <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
-                        Sostieni l'arte musicale
+                        ${config.description}
                     </p>
                     
                     <!-- Search and Filters using common components -->
-                    <div class="category-search-filters" data-category="musica">
+                    <div class="category-search-filters" data-category="${category}">
                         <!-- Will be populated by common functions -->
                     </div>
                 </div>
@@ -117,13 +236,13 @@
         <!-- Projects Grid -->
         <section class="py-12">
             <div class="container mx-auto px-4">
-                <div id="projectsGrid" class="category-projects-grid" data-category="musica">
+                <div id="projectsGrid" class="category-projects-grid" data-category="${category}">
                     <!-- Projects will be loaded by common functions -->
                 </div>
                 
                 <!-- Load More Button -->
                 <div class="text-center mt-12">
-                    <button id="loadMoreBtn" class="category-load-more-btn" data-category="musica">
+                    <button id="loadMoreBtn" class="category-load-more-btn" data-category="${category}">
                         Carica altri progetti
                     </button>
                 </div>
@@ -133,7 +252,7 @@
         <!-- Statistics Section -->
         <section class="py-12 bg-gray-50 dark:bg-gray-800">
             <div class="container mx-auto px-4">
-                <div class="category-stats" data-category="musica">
+                <div class="category-stats" data-category="${category}">
                     <!-- Stats will be populated by common functions -->
                 </div>
             </div>
@@ -153,12 +272,12 @@
         // Inizializza la pagina con componenti comuni
         document.addEventListener('DOMContentLoaded', () => {
             // Inizializza le funzioni comuni per la categoria
-            initializeCommonFunctions('musica');
+            initializeCommonFunctions('${category}');
         });
 
         // Global error handling
         window.addEventListener('error', (e) => {
-            console.error('Musica Page Error:', e.error);
+            console.error('${category.charAt(0).toUpperCase() + category.slice(1)} Page Error:', e.error);
         });
 
         // Service Worker registration for PWA support
@@ -170,4 +289,22 @@
     </script>
 </body>
 
-</html>
+</html>`;
+};
+
+// Genera i file ottimizzati per tutte le categorie
+categories.forEach(category => {
+    const template = createOptimizedTemplate(category);
+    const categoryPath = path.join(__dirname, 'frontend', 'assets', category);
+
+    if (!fs.existsSync(categoryPath)) {
+        fs.mkdirSync(categoryPath, { recursive: true });
+    }
+
+    const filePath = path.join(categoryPath, 'index.html');
+    fs.writeFileSync(filePath, template, 'utf8');
+
+    console.log(`✅ Ottimizzato: ${category}/index.html`);
+});
+
+console.log('🎉 Ottimizzazione completata per tutte le categorie!');
