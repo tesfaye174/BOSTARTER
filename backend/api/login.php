@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
-require_once __DIR__ . '/../utils/Validator.php';
+require_once __DIR__ . '/../utils/FluentValidator.php';
 require_once __DIR__ . '/../utils/Auth.php';
 
 try {
@@ -35,7 +35,7 @@ try {
     }
     
     // Validazione input
-    $validator = new Validator();
+    $validator = new FluentValidator();
     $validator->required('email', $input['email'] ?? '')->email();
     $validator->required('password', $input['password'] ?? '');
     
@@ -74,13 +74,12 @@ try {
     // Effettua login
     $auth = Auth::getInstance();
     $auth->login($user_data);
-    
-    // Log su MongoDB
+      // Log su MongoDB
     $mongoLogger = new MongoLogger();
     $mongoLogger->logUserLogin(
         $user_data['id'],
         $user_data['email'],
-        $_SERVER['REMOTE_ADDR'] ?? null
+        ['ip_address' => $_SERVER['REMOTE_ADDR'] ?? null]
     );
     
     // Risposta di successo

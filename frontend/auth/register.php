@@ -46,8 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Le password non coincidono';
     } elseif (strlen($password) < 8) {
         $error = 'La password deve essere di almeno 8 caratteri';
-    } else {
-        $db = new Database();
+    } else {        $db = Database::getInstance();
         $conn = $db->getConnection();
         
         try {

@@ -148,6 +148,53 @@ composer test:integration
 - Rate limiting per le API
 - Logging eventi di sicurezza
 
+## 📁 Struttura del Progetto
+
+```
+BOSTARTER/
+├── backend/                    # Backend PHP
+│   ├── api/                   # API endpoints (RESTful)
+│   │   ├── login.php         # Autenticazione utente
+│   │   ├── register.php      # Registrazione utente
+│   │   ├── projects_modern.php # API progetti (RESTful)
+│   │   └── ...               # Altri endpoints
+│   ├── config/               # Configurazioni
+│   │   ├── database.php      # Configurazione database
+│   │   └── config.php        # Configurazioni generali
+│   ├── models/               # Modelli dati
+│   │   ├── Project.php       # Modello progetti
+│   │   └── Notification.php  # Modello notifiche
+│   ├── utils/                # Utility e helper
+│   │   ├── ApiResponse.php   # Gestione risposte API
+│   │   ├── Auth.php          # Sistema autenticazione
+│   │   └── FluentValidator.php # Validazione input
+│   ├── services/             # Servizi business logic
+│   └── legacy/               # File legacy (da migrare)
+├── database/                  # Database e setup
+│   ├── bostarter_schema.sql  # Schema principale
+│   ├── setup_database.php    # Script setup
+│   └── README.md             # Documentazione database
+├── frontend/                  # Frontend web
+│   ├── assets/               # Asset statici
+│   ├── js/                   # JavaScript
+│   ├── css/                  # Fogli di stile
+│   └── components/           # Componenti riutilizzabili
+├── tests/                     # Test e debug
+│   ├── test_*.php            # File di test
+│   └── README.md             # Documentazione test
+├── docs/                      # Documentazione
+├── logs/                      # File di log
+└── README.md                  # Questo file
+```
+
+### Principi di Organizzazione
+
+- **API RESTful**: Endpoints organizzati in `backend/api/`
+- **Separazione di responsabilità**: Modelli, servizi e utility separati
+- **Test isolati**: Tutti i test in directory dedicata
+- **Database centralizzato**: Script e schema in `database/`
+- **Documentazione**: README in ogni directory importante
+
 ## 📈 Performance
 
 - Caching implementato per query frequenti

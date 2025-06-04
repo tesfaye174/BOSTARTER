@@ -27,17 +27,17 @@ class NotificationServer implements MessageComponentInterface {
         $data = json_decode($msg, true);
         
         if ($data['type'] === 'auth') {
-            // Autentica la connessione
+            // Authenticate the connection
             $userId = $data['user_id'];
             $this->userConnections[$userId] = $from;
-            echo "Utente {$userId} autenticato\n";
+            echo "User {$userId} authenticated\n";
         }
     }
 
     public function onClose(ConnectionInterface $conn) {
         $this->clients->detach($conn);
         
-        // Rimuovi la connessione dall'array userConnections
+        // Remove the connection from userConnections array
         foreach ($this->userConnections as $userId => $connection) {
             if ($connection === $conn) {
                 unset($this->userConnections[$userId]);
@@ -63,7 +63,7 @@ class NotificationServer implements MessageComponentInterface {
     }
 }
 
-// Avvia il server WebSocket
+// Start the WebSocket server
 $server = IoServer::factory(
     new HttpServer(
         new WsServer(
@@ -73,5 +73,5 @@ $server = IoServer::factory(
     8080
 );
 
-echo "Server WebSocket avviato sulla porta 8080\n";
+echo "WebSocket server started on port 8080\n";
 $server->run(); 

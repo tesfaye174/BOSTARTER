@@ -112,11 +112,10 @@ class Database {
         $sql = "DELETE FROM {$table} WHERE {$where}";
         return $this->execute($sql, $params);
     }
-    
-    // Previene la clonazione dell'istanza
+      // Previene la clonazione dell'istanza
     private function __clone() {}
     
     // Previene la deserializzazione dell'istanza
-    private function __wakeup() {}
+    public function __wakeup() {}
 }
 ?>

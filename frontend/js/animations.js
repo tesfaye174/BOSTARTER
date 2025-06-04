@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Configurazione Intersection Observer con performance ottimizzate
+    // Intersection Observer configuration with optimized performance
     const observerOptions = {
         threshold: [0.1, 0.2, 0.5],
         rootMargin: '100px'
     };
 
-    // Animazioni per la sezione 'Come funziona'
+    // Animations for 'How it works' section
     const howItWorksSteps = document.querySelectorAll('.how-it-works .bg-gradient-to-br');
     const howItWorksObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const icon = step.querySelector('.w-16');
         if (icon) {
             icon.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            
+
             step.addEventListener('mouseenter', () => {
                 icon.style.transform = 'scale(1.15) rotate(8deg)';
             });
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Effetti hover avanzati per le card dei progetti con transizioni migliorate
     projectCards.forEach(card => {
         card.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
-        
+
         card.addEventListener('mouseenter', () => {
             card.style.transform = 'translateY(-8px) scale(1.02)';
             card.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.15)';
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Gestione accessibilità per focus
+    // Accessibility handling for focus
     const interactiveElements = document.querySelectorAll('.how-it-works .bg-gradient-to-br, .project-card');
     interactiveElements.forEach(element => {
         element.addEventListener('focus', () => {
@@ -106,10 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Gestione delle animazioni al caricamento
+    // Loading animations handling
     const animateOnScroll = () => {
         const elements = document.querySelectorAll('.animate-on-scroll');
-        
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -125,15 +125,15 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.forEach(element => observer.observe(element));
     };
 
-    // Gestione delle animazioni hover
+    // Hover animations handling
     const initHoverAnimations = () => {
         const cards = document.querySelectorAll('.card');
-        
+
         cards.forEach(card => {
             card.addEventListener('mouseenter', () => {
                 card.classList.add('hover-lift');
             });
-            
+
             card.addEventListener('mouseleave', () => {
                 card.classList.remove('hover-lift');
             });
@@ -143,16 +143,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gestione delle animazioni di transizione
     const initTransitionAnimations = () => {
         const links = document.querySelectorAll('a[href^="#"]');
-        
+
         links.forEach(link => {
             link.addEventListener('click', (e) => {
                 const targetId = link.getAttribute('href');
                 if (targetId === '#') return;
-                
+
                 e.preventDefault();
                 const targetElement = document.querySelector(targetId);
                 if (!targetElement) return;
-                
+
                 targetElement.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gestione delle animazioni di caricamento
     const initLoadingAnimations = () => {
         const loadingElements = document.querySelectorAll('.loading');
-        
+
         loadingElements.forEach(element => {
             const spinner = document.createElement('div');
             spinner.className = 'loading-spinner';
@@ -175,10 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gestione delle animazioni di notifica
     const initNotificationAnimations = () => {
         const notifications = document.querySelectorAll('.notification');
-        
+
         notifications.forEach(notification => {
             notification.classList.add('notification-slide-in');
-            
+
             const closeButton = notification.querySelector('.notification-close');
             if (closeButton) {
                 closeButton.addEventListener('click', () => {
@@ -192,16 +192,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gestione delle animazioni di modale
     const initModalAnimations = () => {
         const modals = document.querySelectorAll('.modal');
-        
+
         modals.forEach(modal => {
             const content = modal.querySelector('.modal-content');
             if (!content) return;
-            
+
             modal.addEventListener('show', () => {
                 modal.classList.add('active');
                 content.classList.add('modal-fade');
             });
-            
+
             modal.addEventListener('hide', () => {
                 modal.classList.remove('active');
                 content.classList.remove('modal-fade');
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gestione delle animazioni di testo
     const initTextAnimations = () => {
         const textElements = document.querySelectorAll('.text-reveal');
-        
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -230,19 +230,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Gestione delle animazioni di immagine
     const initImageAnimations = () => {
         const images = document.querySelectorAll('.image-zoom');
-        
+
         images.forEach(image => {
             image.addEventListener('mouseenter', () => {
                 image.style.transform = 'scale(1.1)';
             });
-            
+
             image.addEventListener('mouseleave', () => {
                 image.style.transform = 'scale(1)';
             });
         });
     };
 
-    // Inizializzazione di tutte le animazioni
+    // Initialization of all animations
     const initAnimations = () => {
         animateOnScroll();
         initHoverAnimations();

@@ -204,20 +204,27 @@ class HeaderManager {
 
         // Load saved language
         this.loadLanguage();
-    }
-
-    changeLanguage(lang) {
+    } changeLanguage(lang) {
         this.currentLanguage = lang;
         localStorage.setItem('bostarter-language', lang);
 
         // Update UI
         const currentFlag = document.getElementById('current-flag');
         const flags = { it: '🇮🇹', en: '🇬🇧' };
-        currentFlag.textContent = flags[lang];
+        if (currentFlag) {
+            currentFlag.textContent = flags[lang];
+        }
 
-        // Update active state
+        // Update active state and check marks
         document.querySelectorAll('[data-lang]').forEach(item => {
-            item.classList.toggle('active', item.dataset.lang === lang);
+            const isActive = item.dataset.lang === lang;
+            item.classList.toggle('active', isActive);
+
+            // Update check mark visibility
+            const checkMark = item.querySelector('.ri-check-line');
+            if (checkMark) {
+                checkMark.style.opacity = isActive ? '1' : '0';
+            }
         });
 
         // Close dropdown
@@ -431,16 +438,26 @@ class HeaderManager {
         } else {
             this.openDropdown(dropdown, toggle);
         }
-    }
-
-    openDropdown(dropdown, toggle) {
+    } openDropdown(dropdown, toggle) {
         dropdown.classList.remove('hidden');
         toggle.setAttribute('aria-expanded', 'true');
+
+        // Trigger animation
+        setTimeout(() => {
+            dropdown.classList.remove('opacity-0', 'translate-y-2');
+            dropdown.classList.add('opacity-100', 'translate-y-0');
+        }, 10);
     }
 
     closeDropdown(dropdown, toggle) {
-        dropdown.classList.add('hidden');
+        dropdown.classList.remove('opacity-100', 'translate-y-0');
+        dropdown.classList.add('opacity-0', 'translate-y-2');
         toggle.setAttribute('aria-expanded', 'false');
+
+        // Hide after animation
+        setTimeout(() => {
+            dropdown.classList.add('hidden');
+        }, 200);
     }
 
     showModal(modal) {

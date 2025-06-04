@@ -15,14 +15,14 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Gestione delle richieste OPTIONS per CORS
+// Handle OPTIONS requests for CORS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
-// Inizializza servizi
-$database = new Database();
+// Initialize services
+$database = Database::getInstance();
 $db = $database->getConnection();
 $performanceService = new PerformanceService($db);
 $securityService = new SecurityService($db, $performanceService);

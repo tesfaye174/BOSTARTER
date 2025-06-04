@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../config/database.php';
 require_once '../services/MongoLogger.php';
 
-$database = new Database();
+$database = Database::getInstance();
 $db = $database->getConnection();
 $mongoLogger = new MongoLogger();
 

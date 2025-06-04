@@ -61,6 +61,40 @@
         "travel": "Viaggi",
         "comics": "Fumetti"
     },
+    "hero": {
+        "title": "BOSTARTER",
+        "subtitle": "La piattaforma italiana di crowdfunding che trasforma le tue idee creative in realtà",
+        "description": "Scopri progetti innovativi, supporta i creatori che ami o lancia la tua campagna e raggiungi migliaia di sostenitori pronti a credere nel tuo sogno.",
+        "stats": {
+            "projects": "Progetti Finanziati",
+            "funds": "Fondi Raccolti",
+            "backers": "Sostenitori Attivi",
+            "success": "Tasso di Successo"
+        },
+        "buttons": {
+            "launch": "Lancia il tuo Progetto",
+            "explore": "Esplora Progetti"
+        }
+    },
+    "howItWorks": {
+        "title": "Come Funziona BOSTARTER",
+        "subtitle": "Il crowdfunding reso semplice: dalla tua idea al successo in tre semplici passi",
+        "steps": {
+            "create": {
+                "title": "Crea il tuo Progetto",
+                "description": "Presenta la tua idea con video, immagini e descrizioni dettagliate. Imposta il tuo obiettivo di finanziamento e le ricompense per i sostenitori."
+            },
+            "promote": {
+                "title": "Condividi e Promuovi",
+                "description": "Utilizza i nostri strumenti di marketing per raggiungere la tua community. Condividi sui social e coinvolgi i tuoi sostenitori."
+            },
+            "realize": {
+                "title": "Realizza il tuo Sogno",
+                "description": "Raggiungi il tuo obiettivo, ricevi i fondi e realizza il tuo progetto. Mantieni aggiornati i tuoi sostenitori durante tutto il processo."
+            }
+        },
+        "learnMore": "Scopri di più su BOSTARTER"
+    },
     "profile": {
         "settings": "Impostazioni",
         "myProjects": "I miei progetti",

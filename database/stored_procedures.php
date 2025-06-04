@@ -22,7 +22,7 @@ require_once __DIR__ . '/../backend/config/database.php';
  * @return array Risultato dell'operazione con chiavi 'success', 'message' e 'progetto_id' se successo
  */
 function creaProgetto($nome, $descrizione, $creatore_id, $tipo_progetto, $budget_richiesto, $data_scadenza, $categoria) {
-    $db = new Database();
+    $db = Database::getInstance();
     $conn = $db->getConnection();
     
     // Prepara la chiamata alla stored procedure
@@ -56,7 +56,7 @@ function creaProgetto($nome, $descrizione, $creatore_id, $tipo_progetto, $budget
  * @return array Array di creatori con le loro statistiche
  */
 function getTopCreatori() {
-    $db = new Database();
+    $db = Database::getInstance();
     $conn = $db->getConnection();
     $stmt = $conn->query("SELECT * FROM v_top_creatori");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -68,7 +68,7 @@ function getTopCreatori() {
  * @return array Array di progetti vicini al completamento
  */
 function getProgettiNearCompletion() {
-    $db = new Database();
+    $db = Database::getInstance();
     $conn = $db->getConnection();
     $stmt = $conn->query("SELECT * FROM v_progetti_near_completion");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -80,7 +80,7 @@ function getProgettiNearCompletion() {
  * @return array Array di finanziatori con le loro statistiche
  */
 function getTopFinanziatori() {
-    $db = new Database();
+    $db = Database::getInstance();
     $conn = $db->getConnection();
     $stmt = $conn->query("SELECT * FROM v_top_finanziatori");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -93,7 +93,7 @@ function getTopFinanziatori() {
  * @return bool True se l'operazione è riuscita, false altrimenti
  */
 function chiudiProgettiScaduti() {
-    $db = new Database();
+    $db = Database::getInstance();
     $conn = $db->getConnection();
     
     try {

@@ -9,9 +9,7 @@ class Reward {
     public function __construct() {
         $this->db = new Database();
         $this->conn = $this->db->getConnection();
-    }
-    
-    /**
+    }    /**
      * Ottiene la lista delle ricompense di un progetto
      */
     public function getList($projectId) {
@@ -47,9 +45,7 @@ class Reward {
             
             if (!$reward) {
                 return null;
-            }
-            
-            // Ottiene il numero di donazioni per questa ricompensa
+            }            // Ottiene il numero di donazioni per questa ricompensa
             $stmt = $this->conn->prepare("
                 SELECT COUNT(*) as num_donazioni
                 FROM donazioni
@@ -98,9 +94,7 @@ class Reward {
                 'message' => 'Errore durante la creazione della ricompensa'
             ];
         }
-    }
-    
-    /**
+    }    /**
      * Aggiorna una ricompensa
      */
     public function update($rewardId, $data) {

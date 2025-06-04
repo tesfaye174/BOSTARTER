@@ -10,50 +10,48 @@ class Skill {
         $this->db = new Database();
         $this->conn = $this->db->getConnection();
     }
-    
-    /**
-     * Ottiene la lista delle competenze
+      /**
+     * Gets list of skills
      */
     public function getList($filters = [], $page = 1, $perPage = 10) {
         try {
             $where = [];
             $params = [];
             
-            // Applica i filtri
-            if (!empty($filters['categoria'])) {
-                $where[] = "categoria = ?";
-                $params[] = $filters['categoria'];
+            // Apply filters
+            if (!empty($filters['category'])) {
+                $where[] = "category = ?";
+                $params[] = $filters['category'];
             }
             
             if (!empty($filters['search'])) {
-                $where[] = "(nome LIKE ? OR descrizione LIKE ?)";
+                $where[] = "(name LIKE ? OR description LIKE ?)";
                 $params[] = "%{$filters['search']}%";
                 $params[] = "%{$filters['search']}%";
             }
             
-            // Costruisce la query
-            $sql = "SELECT * FROM competenze";
+            // Build query
+            $sql = "SELECT * FROM skills";
             
             if (!empty($where)) {
                 $sql .= " WHERE " . implode(" AND ", $where);
             }
             
-            // Aggiunge l'ordinamento
-            $sql .= " ORDER BY nome ASC";
+            // Add ordering
+            $sql .= " ORDER BY name ASC";
             
-            // Aggiunge la paginazione
+            // Add pagination
             $offset = ($page - 1) * $perPage;
             $sql .= " LIMIT ? OFFSET ?";
             $params[] = $perPage;
             $params[] = $offset;
             
-            // Esegue la query
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute($params);
+            // Execute query
+            $stmt = $this->conn->prepare($sql);            $stmt->execute($params);
             $skills = $stmt->fetchAll();
             
-            // Ottiene il totale delle competenze
-            $sql = "SELECT COUNT(*) FROM competenze";
+            // Get total skills count
+            $sql = "SELECT COUNT(*) FROM skills";
             
             if (!empty($where)) {
                 $sql .= " WHERE " . implode(" AND ", $where);
@@ -77,16 +75,16 @@ class Skill {
     }
     
     /**
-     * Ottiene i dettagli di una competenza
+     * Gets skill details
      */
     public function getDetails($skillId) {
         try {
             $stmt = $this->conn->prepare("
-                SELECT c.*, COUNT(DISTINCT cp.progetto_id) as num_progetti
-                FROM competenze c
-                LEFT JOIN competenze_progetti cp ON c.id = cp.competenza_id
-                WHERE c.id = ?
-                GROUP BY c.id
+                SELECT s.*, COUNT(DISTINCT ps.project_id) as num_projects
+                FROM skills s
+                LEFT JOIN project_skills ps ON s.id = ps.skill_id
+                WHERE s.id = ?
+                GROUP BY s.id
             ");
             $stmt->execute([$skillId]);
             $skill = $stmt->fetch();
@@ -95,19 +93,18 @@ class Skill {
                 return null;
             }
             
-            // Ottiene i progetti che richiedono questa competenza
+            // Get projects that require this skill
             $stmt = $this->conn->prepare("
-                SELECT p.*, u.nickname as creatore_nickname
-                FROM progetti p
-                JOIN competenze_progetti cp ON p.id = cp.progetto_id
-                JOIN utenti u ON p.creatore_id = u.id
-                WHERE cp.competenza_id = ?
-                AND p.data_fine > NOW()
-                ORDER BY p.data_inizio DESC
+                SELECT p.*, u.username as creator_username
+                FROM projects p
+                JOIN project_skills ps ON p.id = ps.project_id                JOIN users u ON p.creator_id = u.id
+                WHERE ps.skill_id = ?
+                AND p.end_date > NOW()
+                ORDER BY p.start_date DESC
                 LIMIT 5
             ");
             $stmt->execute([$skillId]);
-            $skill['progetti'] = $stmt->fetchAll();
+            $skill['projects'] = $stmt->fetchAll();
             
             return $skill;
         } catch (PDOException $e) {
@@ -117,41 +114,40 @@ class Skill {
     }
     
     /**
-     * Crea una nuova competenza
+     * Creates a new skill
      */
     public function create($data) {
         try {
             $stmt = $this->conn->prepare("
-                INSERT INTO competenze (nome, descrizione, categoria)
+                INSERT INTO skills (name, description, category)
                 VALUES (?, ?, ?)
             ");
             
             $stmt->execute([
-                $data['nome'],
-                $data['descrizione'],
-                $data['categoria']
+                $data['name'],
+                $data['description'],
+                $data['category']
             ]);
             
             return [
                 'success' => true,
                 'skill_id' => $this->conn->lastInsertId(),
-                'message' => 'Competenza creata con successo'
+                'message' => 'Skill created successfully'
             ];
         } catch (PDOException $e) {
             error_log($e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Errore durante la creazione della competenza'
+                'message' => 'Error creating skill'
             ];
         }
     }
     
     /**
-     * Aggiorna una competenza
-     */
-    public function update($skillId, $data) {
+     * Updates a skill
+     */    public function update($skillId, $data) {
         try {
-            $allowedFields = ['nome', 'descrizione', 'categoria'];
+            $allowedFields = ['name', 'description', 'category'];
             $updates = [];
             $params = [];
             
@@ -165,42 +161,42 @@ class Skill {
             if (empty($updates)) {
                 return [
                     'success' => false,
-                    'message' => 'Nessun campo da aggiornare'
+                    'message' => 'No fields to update'
                 ];
             }
             
             $params[] = $skillId;
-            $sql = "UPDATE competenze SET " . implode(', ', $updates) . " WHERE id = ?";
+            $sql = "UPDATE skills SET " . implode(', ', $updates) . " WHERE id = ?";
             
             $stmt = $this->conn->prepare($sql);
             $stmt->execute($params);
             
             return [
                 'success' => true,
-                'message' => 'Competenza aggiornata con successo'
+                'message' => 'Skill updated successfully'
             ];
         } catch (PDOException $e) {
             error_log($e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Errore durante l\'aggiornamento della competenza'
+                'message' => 'Error updating skill'
             ];
         }
     }
     
     /**
-     * Elimina una competenza
+     * Deletes a skill
      */
     public function delete($skillId) {
         try {
             $this->conn->beginTransaction();
             
-            // Elimina le associazioni con i progetti
-            $stmt = $this->conn->prepare("DELETE FROM competenze_progetti WHERE competenza_id = ?");
+            // Delete associations with projects
+            $stmt = $this->conn->prepare("DELETE FROM project_skills WHERE skill_id = ?");
             $stmt->execute([$skillId]);
             
-            // Elimina la competenza
-            $stmt = $this->conn->prepare("DELETE FROM competenze WHERE id = ?");
+            // Delete skill
+            $stmt = $this->conn->prepare("DELETE FROM skills WHERE id = ?");
             $stmt->execute([$skillId]);
             
             $this->conn->commit();
@@ -324,9 +320,7 @@ class Skill {
                 ORDER BY num_competenze DESC
             ");
             $stmt->execute();
-            $skillsByCategory = $stmt->fetchAll();
-            
-            // Ottiene le competenze più richieste
+            $skillsByCategory = $stmt->fetchAll();            // Ottiene le competenze più richieste
             $stmt = $this->conn->prepare("
                 SELECT c.*, COUNT(cp.progetto_id) as num_progetti
                 FROM competenze c

@@ -5,13 +5,15 @@ import Config from './config.js';
 const I18n = {
     currentLocale: Config.i18n.defaultLocale,
     translations: {},
+    isInitialized: false,
 
-    // Carica le traduzioni per una specifica lingua
+    // Load translations for a specific language
     async loadTranslations(locale) {
         try {
             const response = await fetch(`/BOSTARTER/frontend/locales/${locale}.json`);
             if (!response.ok) throw new Error(`Errore nel caricamento delle traduzioni per ${locale}`);
             this.translations[locale] = await response.json();
+            console.log(`Traduzioni caricate per ${locale}`);
         } catch (error) {
             console.error('Errore nel caricamento delle traduzioni:', error);
             // Fallback alle traduzioni di default se disponibili
@@ -93,7 +95,7 @@ const I18n = {
         }).format(amount);
     },
 
-    // Aggiorna tutte le traduzioni nella pagina
+    // Update all translations on the page
     updatePageTranslations() {
         // Aggiorna elementi con attributo data-i18n
         document.querySelectorAll('[data-i18n]').forEach(element => {
@@ -114,12 +116,12 @@ const I18n = {
         });
     },
 
-    // Inizializza il sistema di internazionalizzazione
+    // Initialize the internationalization system
     async initialize() {
         // Carica la lingua salvata o usa quella di default
         const savedLocale = localStorage.getItem(Config.storage.keys.language);
         const browserLocale = navigator.language.split('-')[0];
-        const initialLocale = savedLocale || 
+        const initialLocale = savedLocale ||
             (Config.i18n.supportedLocales.includes(browserLocale) ? browserLocale : Config.i18n.defaultLocale);
 
         await this.setLocale(initialLocale);

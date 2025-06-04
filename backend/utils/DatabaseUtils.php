@@ -15,7 +15,7 @@ require_once __DIR__ . '/../config/database.php'; // Assicura che la classe Data
  */
 function tableExists($table) {
     try {
-        $db = new Database();
+        $db = Database::getInstance();
         $conn = $db->getConnection();
         
         // La query varia leggermente a seconda del RDBMS, questa è per MySQL

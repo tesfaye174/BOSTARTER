@@ -20,8 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($email) || empty($password)) {
         $error = 'Tutti i campi sono obbligatori';
-    } else {
-        $db = new Database();
+    } else {        $db = Database::getInstance();
         $conn = $db->getConnection();
         
         try {

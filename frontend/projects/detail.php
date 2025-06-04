@@ -3,7 +3,7 @@ session_start();
 require_once '../../backend/config/database.php';
 require_once '../../backend/services/MongoLogger.php';
 
-$database = new Database();
+$database = Database::getInstance();
 $db = $database->getConnection();
 $mongoLogger = new MongoLogger();
 

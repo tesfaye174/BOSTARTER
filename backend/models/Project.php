@@ -5,45 +5,41 @@ require_once __DIR__ . '/../config/database.php';
 class Project {
     private $db;
     private $conn;
-    
-    public function __construct() {
-        $this->db = new Database();
+      public function __construct() {
+        $this->db = Database::getInstance();
         $this->conn = $this->db->getConnection();
     }
-    
-    /**
-     * Crea un nuovo progetto
+      /**
+     * Creates a new project
      */
     public function create($data) {
         try {
             $this->conn->beginTransaction();
-            
-            // Inserisce il progetto
+              // Insert the project
             $stmt = $this->conn->prepare("
                 INSERT INTO progetti (
-                    titolo, descrizione, obiettivo, data_inizio, data_fine,
-                    categoria, immagine_copertina, video_presentazione, creatore_id
+                    nome, descrizione, budget_richiesto, data_lancio, data_scadenza,
+                    categoria_id, immagine_principale, video_presentazione, creatore_id
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
             $stmt->execute([
-                $data['titolo'],
+                $data['nome'],
                 $data['descrizione'],
-                $data['obiettivo'],
-                $data['data_inizio'],
-                $data['data_fine'],
-                $data['categoria'],
-                $data['immagine_copertina'] ?? null,
+                $data['budget_richiesto'],
+                $data['data_lancio'],
+                $data['data_scadenza'],
+                $data['categoria_id'],
+                $data['immagine_principale'] ?? null,
                 $data['video_presentazione'] ?? null,
                 $data['creatore_id']
             ]);
             
             $projectId = $this->conn->lastInsertId();
-            
-            // Inserisce le competenze richieste
+              // Insert required skills
             if (!empty($data['competenze'])) {
                 $stmt = $this->conn->prepare("
-                    INSERT INTO competenze_progetti (progetto_id, competenza_id)
+                    INSERT INTO progetti_competenze (progetto_id, competenza_id)
                     VALUES (?, ?)
                 ");
                 
@@ -51,8 +47,7 @@ class Project {
                     $stmt->execute([$projectId, $competenzaId]);
                 }
             }
-            
-            // Inserisce le ricompense
+              // Insert rewards
             if (!empty($data['ricompense'])) {
                 $stmt = $this->conn->prepare("
                     INSERT INTO ricompense (
@@ -73,16 +68,14 @@ class Project {
                 }
             }
             
-            $this->conn->commit();
-            return [
+            $this->conn->commit();            return [
                 'success' => true,
-                'project_id' => $projectId,
+                'progetto_id' => $projectId,
                 'message' => 'Progetto creato con successo'
             ];
         } catch (PDOException $e) {
             $this->conn->rollBack();
-            error_log($e->getMessage());
-            return [
+            error_log($e->getMessage());            return [
                 'success' => false,
                 'message' => 'Errore durante la creazione del progetto'
             ];
@@ -90,15 +83,16 @@ class Project {
     }
     
     /**
-     * Ottiene i dettagli di un progetto
-     */
-    public function getDetails($projectId) {
+     * Gets project details
+     */    public function getDetails($projectId) {
         try {
-            // Ottiene i dettagli del progetto
+            // Get project details
             $stmt = $this->conn->prepare("
-                SELECT p.*, u.nickname as creatore_nickname, u.avatar as creatore_avatar
+                SELECT p.*, u.nickname as creatore_nickname, u.avatar as creatore_avatar,
+                       c.nome as categoria_nome
                 FROM progetti p
                 JOIN utenti u ON p.creatore_id = u.id
+                JOIN categorie_progetti c ON p.categoria_id = c.id
                 WHERE p.id = ?
             ");
             $stmt->execute([$projectId]);
@@ -108,17 +102,17 @@ class Project {
                 return null;
             }
             
-            // Ottiene le competenze richieste
+            // Get required skills
             $stmt = $this->conn->prepare("
                 SELECT c.*
                 FROM competenze c
-                JOIN competenze_progetti cp ON c.id = cp.competenza_id
-                WHERE cp.progetto_id = ?
+                JOIN progetti_competenze pc ON c.id = pc.competenza_id
+                WHERE pc.progetto_id = ?
             ");
             $stmt->execute([$projectId]);
             $project['competenze'] = $stmt->fetchAll();
             
-            // Ottiene le ricompense
+            // Get rewards
             $stmt = $this->conn->prepare("
                 SELECT *
                 FROM ricompense
@@ -128,20 +122,20 @@ class Project {
             $stmt->execute([$projectId]);
             $project['ricompense'] = $stmt->fetchAll();
             
-            // Ottiene il totale delle donazioni
+            // Get total fundings
             $stmt = $this->conn->prepare("
-                SELECT COALESCE(SUM(importo), 0) as totale_donazioni
-                FROM donazioni
+                SELECT COALESCE(SUM(importo), 0) as totale_finanziamenti
+                FROM finanziamenti
                 WHERE progetto_id = ?
             ");
             $stmt->execute([$projectId]);
-            $project['totale_donazioni'] = $stmt->fetchColumn();
+            $project['totale_finanziamenti'] = $stmt->fetchColumn();
             
-            // Calcola la percentuale di completamento
-            $project['percentuale_completamento'] = ($project['totale_donazioni'] / $project['obiettivo']) * 100;
+            // Calculate completion percentage
+            $project['percentuale_completamento'] = ($project['totale_finanziamenti'] / $project['budget_richiesto']) * 100;
             
-            // Calcola i giorni rimanenti
-            $project['giorni_rimanenti'] = max(0, (strtotime($project['data_fine']) - time()) / (60 * 60 * 24));
+            // Calculate remaining days
+            $project['giorni_rimanenti'] = max(0, (strtotime($project['data_scadenza']) - time()) / (60 * 60 * 24));
             
             return $project;
         } catch (PDOException $e) {
@@ -149,99 +143,92 @@ class Project {
             return null;
         }
     }
-    
-    /**
-     * Ottiene la lista dei progetti
-     */
-    public function getList($filters = [], $page = 1, $perPage = 10) {
+      /**
+     * Gets list of projects
+     */    public function getList($filters = [], $page = 1, $perPage = 10) {
         try {
             $where = [];
             $params = [];
             
-            // Applica i filtri
+            // Apply filters
             if (!empty($filters['categoria'])) {
-                $where[] = "p.categoria = ?";
+                $where[] = "p.categoria_id = ?";
                 $params[] = $filters['categoria'];
             }
             
             if (!empty($filters['stato'])) {
                 switch ($filters['stato']) {
-                    case 'attivi':
-                        $where[] = "p.data_fine > NOW()";
+                    case 'attivo':
+                        $where[] = "p.data_scadenza > NOW() AND p.stato = 'aperto'";
                         break;
-                    case 'completati':
-                        $where[] = "p.data_fine <= NOW()";
+                    case 'completato':
+                        $where[] = "p.data_scadenza <= NOW() AND p.stato = 'completato'";
                         break;
-                    case 'successo':
-                        $where[] = "EXISTS (
-                            SELECT 1 FROM donazioni d
-                            WHERE d.progetto_id = p.id
-                            GROUP BY d.progetto_id
-                            HAVING SUM(d.importo) >= p.obiettivo
-                        )";
+                    case 'finanziato':
+                        $where[] = "p.budget_raccolto >= p.budget_richiesto";
                         break;
                 }
             }
             
             if (!empty($filters['competenza'])) {
                 $where[] = "EXISTS (
-                    SELECT 1 FROM competenze_progetti cp
-                    WHERE cp.progetto_id = p.id
-                    AND cp.competenza_id = ?
+                    SELECT 1 FROM progetti_competenze pc
+                    WHERE pc.progetto_id = p.id
+                    AND pc.competenza_id = ?
                 )";
                 $params[] = $filters['competenza'];
             }
             
-            // Costruisce la query
+            // Build query
             $sql = "
                 SELECT p.*, u.nickname as creatore_nickname,
-                (
-                    SELECT COALESCE(SUM(importo), 0)
-                    FROM donazioni
-                    WHERE progetto_id = p.id
-                ) as totale_donazioni
+                       c.nome as categoria_nome,
+                       p.budget_raccolto as totale_finanziamenti
                 FROM progetti p
                 JOIN utenti u ON p.creatore_id = u.id
+                JOIN categorie_progetti c ON p.categoria_id = c.id
             ";
             
             if (!empty($where)) {
                 $sql .= " WHERE " . implode(" AND ", $where);
             }
             
-            // Aggiunge l'ordinamento
-            $sql .= " ORDER BY p.data_inizio DESC";
+            // Add ordering
+            $sql .= " ORDER BY p.data_creazione DESC";
             
-            // Aggiunge la paginazione
+            // Add pagination
             $offset = ($page - 1) * $perPage;
             $sql .= " LIMIT ? OFFSET ?";
             $params[] = $perPage;
             $params[] = $offset;
             
-            // Esegue la query
+            // Execute query
             $stmt = $this->conn->prepare($sql);
             $stmt->execute($params);
             $projects = $stmt->fetchAll();
             
-            // Ottiene il totale dei progetti
-            $sql = "
+            // Get total projects count
+            $countSql = "
                 SELECT COUNT(*)
                 FROM progetti p
+                JOIN utenti u ON p.creatore_id = u.id
+                JOIN categorie_progetti c ON p.categoria_id = c.id
             ";
             
             if (!empty($where)) {
-                $sql .= " WHERE " . implode(" AND ", $where);
+                $countSql .= " WHERE " . implode(" AND ", $where);
             }
             
-            $stmt = $this->conn->prepare($sql);
+            $stmt = $this->conn->prepare($countSql);
             $stmt->execute(array_slice($params, 0, -2));
             $total = $stmt->fetchColumn();
             
             return [
-                'projects' => $projects,
-                'total' => $total,
-                'page' => $page,
-                'per_page' => $perPage,
-                'total_pages' => ceil($total / $perPage)
+                'progetti' => $projects,
+                'totale' => $total,
+                'pagina' => $page,
+                'per_pagina' => $perPage,
+                'totale_pagine' => ceil($total / $perPage)
             ];
         } catch (PDOException $e) {
             error_log($e->getMessage());
@@ -250,16 +237,15 @@ class Project {
     }
     
     /**
-     * Aggiorna un progetto
-     */
-    public function update($projectId, $data) {
+     * Updates a project
+     */    public function update($projectId, $data) {
         try {
             $this->conn->beginTransaction();
             
-            // Aggiorna i dettagli del progetto
+            // Update project details
             $allowedFields = [
-                'titolo', 'descrizione', 'obiettivo', 'data_fine',
-                'categoria', 'immagine_copertina', 'video_presentazione'
+                'nome', 'descrizione', 'budget_richiesto', 'data_scadenza',
+                'categoria_id', 'immagine_principale', 'video_presentazione'
             ];
             
             $updates = [];
@@ -280,16 +266,16 @@ class Project {
                 $stmt->execute($params);
             }
             
-            // Aggiorna le competenze
+            // Update skills
             if (isset($data['competenze'])) {
-                // Rimuove le competenze esistenti
-                $stmt = $this->conn->prepare("DELETE FROM competenze_progetti WHERE progetto_id = ?");
+                // Remove existing skills
+                $stmt = $this->conn->prepare("DELETE FROM progetti_competenze WHERE progetto_id = ?");
                 $stmt->execute([$projectId]);
                 
-                // Inserisce le nuove competenze
+                // Insert new skills
                 if (!empty($data['competenze'])) {
                     $stmt = $this->conn->prepare("
-                        INSERT INTO competenze_progetti (progetto_id, competenza_id)
+                        INSERT INTO progetti_competenze (progetto_id, competenza_id)
                         VALUES (?, ?)
                     ");
                     
@@ -299,13 +285,13 @@ class Project {
                 }
             }
             
-            // Aggiorna le ricompense
+            // Update rewards
             if (isset($data['ricompense'])) {
-                // Rimuove le ricompense esistenti
+                // Remove existing rewards
                 $stmt = $this->conn->prepare("DELETE FROM ricompense WHERE progetto_id = ?");
                 $stmt->execute([$projectId]);
                 
-                // Inserisce le nuove ricompense
+                // Insert new rewards
                 if (!empty($data['ricompense'])) {
                     $stmt = $this->conn->prepare("
                         INSERT INTO ricompense (
@@ -343,25 +329,24 @@ class Project {
     }
     
     /**
-     * Elimina un progetto
-     */
-    public function delete($projectId) {
+     * Deletes a project
+     */    public function delete($projectId) {
         try {
             $this->conn->beginTransaction();
             
-            // Elimina le ricompense
+            // Delete rewards
             $stmt = $this->conn->prepare("DELETE FROM ricompense WHERE progetto_id = ?");
             $stmt->execute([$projectId]);
             
-            // Elimina le competenze
-            $stmt = $this->conn->prepare("DELETE FROM competenze_progetti WHERE progetto_id = ?");
+            // Delete skills
+            $stmt = $this->conn->prepare("DELETE FROM progetti_competenze WHERE progetto_id = ?");
             $stmt->execute([$projectId]);
             
-            // Elimina le donazioni
-            $stmt = $this->conn->prepare("DELETE FROM donazioni WHERE progetto_id = ?");
+            // Delete fundings
+            $stmt = $this->conn->prepare("DELETE FROM finanziamenti WHERE progetto_id = ?");
             $stmt->execute([$projectId]);
             
-            // Elimina il progetto
+            // Delete project
             $stmt = $this->conn->prepare("DELETE FROM progetti WHERE id = ?");
             $stmt->execute([$projectId]);
             
@@ -381,17 +366,16 @@ class Project {
     }
     
     /**
-     * Effettua una donazione
-     */
-    public function donate($projectId, $userId, $amount, $rewardId = null) {
+     * Makes a funding contribution
+     */    public function donate($projectId, $userId, $amount, $rewardId = null) {
         try {
             $this->conn->beginTransaction();
             
-            // Verifica se il progetto esiste ed è attivo
+            // Check if project exists and is active
             $stmt = $this->conn->prepare("
-                SELECT id, obiettivo
+                SELECT id, budget_richiesto
                 FROM progetti
-                WHERE id = ? AND data_fine > NOW()
+                WHERE id = ? AND data_scadenza > NOW() AND stato = 'aperto'
             ");
             $stmt->execute([$projectId]);
             $project = $stmt->fetch();
@@ -400,7 +384,7 @@ class Project {
                 throw new Exception('Progetto non trovato o non più attivo');
             }
             
-            // Verifica la ricompensa se specificata
+            // Verify reward if specified
             if ($rewardId) {
                 $stmt = $this->conn->prepare("
                     SELECT *
@@ -418,7 +402,7 @@ class Project {
                     throw new Exception('Importo insufficiente per la ricompensa selezionata');
                 }
                 
-                // Aggiorna la quantità disponibile
+                // Update available quantity
                 $stmt = $this->conn->prepare("
                     UPDATE ricompense
                     SET quantita_disponibile = quantita_disponibile - 1
@@ -427,17 +411,25 @@ class Project {
                 $stmt->execute([$rewardId]);
             }
             
-            // Inserisce la donazione
+            // Insert funding
             $stmt = $this->conn->prepare("
-                INSERT INTO donazioni (progetto_id, utente_id, ricompensa_id, importo)
+                INSERT INTO finanziamenti (progetto_id, utente_id, ricompensa_id, importo)
                 VALUES (?, ?, ?, ?)
             ");
             $stmt->execute([$projectId, $userId, $rewardId, $amount]);
             
+            // Update project total funding
+            $stmt = $this->conn->prepare("
+                UPDATE progetti 
+                SET budget_raccolto = budget_raccolto + ?
+                WHERE id = ?
+            ");
+            $stmt->execute([$amount, $projectId]);
+            
             $this->conn->commit();
             return [
                 'success' => true,
-                'message' => 'Donazione effettuata con successo'
+                'message' => 'Finanziamento completato con successo'
             ];
         } catch (Exception $e) {
             $this->conn->rollBack();
@@ -450,42 +442,41 @@ class Project {
     }
     
     /**
-     * Ottiene le donazioni di un progetto
-     */
-    public function getDonations($projectId, $page = 1, $perPage = 10) {
+     * Gets project fundings
+     */    public function getDonations($projectId, $page = 1, $perPage = 10) {
         try {
             $offset = ($page - 1) * $perPage;
             
             $stmt = $this->conn->prepare("
-                SELECT d.*, u.nickname, u.avatar, r.titolo as ricompensa_titolo
-                FROM donazioni d
-                JOIN utenti u ON d.utente_id = u.id
-                LEFT JOIN ricompense r ON d.ricompensa_id = r.id
-                WHERE d.progetto_id = ?
-                ORDER BY d.data_donazione DESC
+                SELECT f.*, u.nickname, u.avatar, r.titolo as ricompensa_titolo
+                FROM finanziamenti f
+                JOIN utenti u ON f.utente_id = u.id
+                LEFT JOIN ricompense r ON f.ricompensa_id = r.id
+                WHERE f.progetto_id = ?
+                ORDER BY f.data_finanziamento DESC
                 LIMIT ? OFFSET ?
             ");
             $stmt->execute([$projectId, $perPage, $offset]);
-            $donations = $stmt->fetchAll();
+            $fundings = $stmt->fetchAll();
             
             $stmt = $this->conn->prepare("
                 SELECT COUNT(*)
-                FROM donazioni
+                FROM finanziamenti
                 WHERE progetto_id = ?
             ");
             $stmt->execute([$projectId]);
             $total = $stmt->fetchColumn();
             
             return [
-                'donations' => $donations,
-                'total' => $total,
-                'page' => $page,
-                'per_page' => $perPage,
-                'total_pages' => ceil($total / $perPage)
+                'finanziamenti' => $fundings,
+                'totale' => $total,
+                'pagina' => $page,
+                'per_pagina' => $perPage,
+                'totale_pagine' => ceil($total / $perPage)
             ];
         } catch (PDOException $e) {
             error_log($e->getMessage());
             return null;
         }
     }
-} 
+}

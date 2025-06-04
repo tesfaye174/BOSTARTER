@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
-require_once __DIR__ . '/../utils/Validator.php';
+require_once __DIR__ . '/../utils/FluentValidator.php';
 
 try {
     // Leggi input JSON
@@ -31,9 +31,9 @@ try {
     }
     
     // Validazione input
-    $validator = new Validator();
+    $validator = new FluentValidator();
     $validator->required('email', $input['email'] ?? '')->email();
-    $validator->required('nickname', $input['nickname'] ?? '')->minLength(3)->maxLength(50)->alphanumeric();
+    $validator->required('nickname', $input['nickname'] ?? '')->minLength(3)->maxLength(50);
     $validator->required('password', $input['password'] ?? '')->minLength(8);
     $validator->required('nome', $input['nome'] ?? '')->maxLength(100);
     $validator->required('cognome', $input['cognome'] ?? '')->maxLength(100);
@@ -68,14 +68,15 @@ try {
     if ($result['result'] !== 'SUCCESS') {
         ApiResponse::error($result['result'], 400);
     }
-    
-    // Log su MongoDB
+      // Log su MongoDB
     $mongoLogger = new MongoLogger();
     $mongoLogger->logUserRegistration(
         $result['user_id'],
         $input['email'],
-        $input['nickname'],
-        $_SERVER['REMOTE_ADDR'] ?? null
+        [
+            'nickname' => $input['nickname'],
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+        ]
     );
     
     // Risposta di successo

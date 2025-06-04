@@ -3,6 +3,13 @@
  * API di autenticazione per BOSTARTER
  * Gestisce le richieste API per login, registrazione e logout
  * Utilizza il sistema di autenticazione unificato
+ * 
+ * @deprecated This file should be migrated to use the newer API structure in backend/api/
+ * Currently still in use by frontend JavaScript files:
+ * - frontend/js/auth.js
+ * - frontend/js/header.js
+ * 
+ * TODO: Update frontend to use backend/api/login.php and backend/api/register.php instead
  */
 
 session_start();

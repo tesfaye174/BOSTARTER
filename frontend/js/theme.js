@@ -1,90 +1,199 @@
-// Configurazione del tema
+// Enhanced Theme Configuration for BOSTARTER
 const themeConfig = {
     light: {
-        '--color-primary': '#3176FF',
-        '--color-secondary': '#6C63FF',
-        '--color-background': '#FFFFFF',
-        '--color-text': '#1F2937',
-        '--color-text-secondary': '#4B5563',
-        '--color-border': '#E5E7EB',
-        '--color-shadow': 'rgba(0, 0, 0, 0.1)'
+        name: 'light',
+        colors: {
+            // Primary colors remain the same for consistency
+            '--primary': '#3176FF',
+            '--primary-dark': '#1E4FCC',
+            '--primary-light': '#60A5FA',
+
+            // Background colors
+            '--bg-primary': '#F9FAFB',
+            '--bg-secondary': '#FFFFFF',
+            '--bg-tertiary': '#F3F4F6',
+
+            // Text colors
+            '--text-primary': '#111827',
+            '--text-secondary': '#374151',
+            '--text-tertiary': '#6B7280',
+
+            // Border colors
+            '--border-primary': '#E5E7EB',
+            '--border-secondary': '#D1D5DB',
+
+            // Glass effect
+            '--glass-bg': 'rgba(255, 255, 255, 0.8)',
+            '--glass-border': 'rgba(255, 255, 255, 0.2)',
+
+            // Shadows
+            '--shadow-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+            '--shadow-md': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            '--shadow-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            '--shadow-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+        }
     },
     dark: {
-        '--color-primary': '#60A5FA',
-        '--color-secondary': '#818CF8',
-        '--color-background': '#1F2937',
-        '--color-text': '#F9FAFB',
-        '--color-text-secondary': '#D1D5DB',
-        '--color-border': '#374151',
-        '--color-shadow': 'rgba(0, 0, 0, 0.3)'
+        name: 'dark',
+        colors: {
+            // Adjusted primary colors for better dark mode visibility
+            '--primary': '#60A5FA',
+            '--primary-dark': '#3B82F6',
+            '--primary-light': '#93C5FD',
+
+            // Dark background colors
+            '--bg-primary': '#111827',
+            '--bg-secondary': '#1F2937',
+            '--bg-tertiary': '#374151',
+
+            // Dark text colors
+            '--text-primary': '#F9FAFB',
+            '--text-secondary': '#D1D5DB',
+            '--text-tertiary': '#9CA3AF',
+
+            // Dark border colors
+            '--border-primary': '#374151',
+            '--border-secondary': '#4B5563',
+
+            // Dark glass effect
+            '--glass-bg': 'rgba(31, 41, 55, 0.8)',
+            '--glass-border': 'rgba(75, 85, 99, 0.3)',
+
+            // Enhanced shadows for dark mode
+            '--shadow-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
+            '--shadow-md': '0 4px 6px -1px rgba(0, 0, 0, 0.4)',
+            '--shadow-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+            '--shadow-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.6)'
+        }
     }
 };
 
-// Classe per la gestione del tema
+// Enhanced Theme Manager
 class ThemeManager {
     constructor() {
         this.theme = this.getStoredTheme() || this.getSystemTheme();
+        this.observers = [];
         this.init();
     }
 
-    // Inizializzazione del gestore tema
+    // Initialize theme manager
     init() {
         this.applyTheme(this.theme);
         this.setupThemeToggle();
         this.setupSystemThemeListener();
+        this.addTransitionClasses();
+        this.notifyObservers();
     }
 
-    // Ottiene il tema memorizzato
+    // Add smooth transitions for theme switching
+    addTransitionClasses() {
+        const style = document.createElement('style');
+        style.textContent = `
+            *, *::before, *::after {
+                transition: background-color 0.3s ease, 
+                           border-color 0.3s ease, 
+                           color 0.3s ease, 
+                           box-shadow 0.3s ease !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Get stored theme from localStorage
     getStoredTheme() {
-        return localStorage.getItem('theme');
+        return localStorage.getItem('bostarter-theme');
     }
 
-    // Ottiene il tema del sistema
+    // Get system theme preference
     getSystemTheme() {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
-    // Applica il tema
+    }    // Apply theme to document
     applyTheme(theme) {
         const root = document.documentElement;
-        const themeColors = themeConfig[theme];
-        
-        Object.entries(themeColors).forEach(([property, value]) => {
+        const config = themeConfig[theme];
+
+        if (!config) {
+            console.warn(`Theme "${theme}" not found. Falling back to light theme.`);
+            theme = 'light';
+        }
+
+        // Apply CSS custom properties
+        Object.entries(themeConfig[theme].colors).forEach(([property, value]) => {
             root.style.setProperty(property, value);
         });
-        
+
+        // Update HTML attributes
+        root.setAttribute('data-theme', theme);
+
+        // Update body class for Tailwind compatibility
         document.body.classList.toggle('dark', theme === 'dark');
-        localStorage.setItem('theme', theme);
+
+        // Update theme meta tag
+        this.updateThemeMetaTag(theme);
+
+        // Store theme preference
+        localStorage.setItem('bostarter-theme', theme);
         this.theme = theme;
+
+        // Notify observers
+        this.notifyObservers();
     }
 
-    // Configura il toggle del tema
+    // Update theme meta tag for PWA support
+    updateThemeMetaTag(theme) {
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) {
+            const primaryColor = themeConfig[theme].colors['--primary'];
+            metaThemeColor.setAttribute('content', primaryColor);
+        }
+    }
+
+    // Observer pattern for theme changes
+    addObserver(callback) {
+        this.observers.push(callback);
+    }
+
+    removeObserver(callback) {
+        this.observers = this.observers.filter(obs => obs !== callback);
+    }
+
+    notifyObservers() {
+        this.observers.forEach(callback => {
+            try {
+                callback(this.theme, themeConfig[this.theme]);
+            } catch (error) {
+                console.warn('Theme observer error:', error);
+            }
+        });
+    }
+
+    // Setup theme toggle functionality
     setupThemeToggle() {
         const toggle = document.querySelector('.theme-toggle');
         if (!toggle) return;
-        
+
         toggle.addEventListener('click', () => {
             const newTheme = this.theme === 'light' ? 'dark' : 'light';
             this.applyTheme(newTheme);
             this.updateToggleIcon(toggle);
         });
-        
+
         this.updateToggleIcon(toggle);
     }
 
-    // Aggiorna l'icona del toggle
+    // Update theme toggle icon
     updateToggleIcon(toggle) {
         const icon = toggle.querySelector('i');
         if (!icon) return;
-        
+
         icon.className = this.theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-        toggle.setAttribute('aria-label', `Passa al tema ${this.theme === 'light' ? 'scuro' : 'chiaro'}`);
+        toggle.setAttribute('aria-label', `Switch to ${this.theme === 'light' ? 'dark' : 'light'} theme`);
     }
 
-    // Configura il listener per il tema di sistema
+    // Setup system theme preference listener
     setupSystemThemeListener() {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        
+
         mediaQuery.addEventListener('change', (e) => {
             if (!this.getStoredTheme()) {
                 this.applyTheme(e.matches ? 'dark' : 'light');
@@ -92,12 +201,12 @@ class ThemeManager {
         });
     }
 
-    // Ottiene il tema corrente
+    // Get current theme
     getCurrentTheme() {
         return this.theme;
     }
 
-    // Imposta il tema
+    // Set theme programmatically
     setTheme(theme) {
         if (themeConfig[theme]) {
             this.applyTheme(theme);
@@ -105,8 +214,13 @@ class ThemeManager {
     }
 }
 
-// Crea un'istanza globale del gestore tema
+// Create global theme manager instance
 const themeManager = new ThemeManager();
 
-// Esporta l'istanza e la classe
-export { themeManager, ThemeManager }; 
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { themeManager, ThemeManager, themeConfig };
+}
+
+// Global access
+window.themeManager = themeManager;

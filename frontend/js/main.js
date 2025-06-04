@@ -1,10 +1,10 @@
-// Utilizzo di moduli ES6 per una migliore organizzazione
+// Using ES6 modules for better organization
 import { ApiManager } from './api.js';
 import { AuthSystem } from './auth.js';
 import { UIManager } from './ui/UIManager.js';
 import { EventBus } from './utils/EventBus.js';
 
-// Configurazione centralizzata
+// Centralized configuration
 const config = {
     apiUrl: 'http://localhost:8080/api',
     theme: {
@@ -24,14 +24,14 @@ const config = {
     currencyKey: 'bostarter-currency'
 };
 
-// Inizializzazione dell'applicazione
+// Application initialization
 class App {
     constructor() {
         this.api = new ApiManager(config.apiUrl);
         this.auth = new AuthSystem(this.api);
         this.ui = new UIManager();
         this.eventBus = new EventBus();
-        
+
         this.init();
     }
 

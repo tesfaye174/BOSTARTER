@@ -67,9 +67,10 @@ class Auth {
     
     /**
      * Effettua il login dell'utente
-     */
-    public function login($user_data) {
-        session_start();
+     */    public function login($user_data) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         $_SESSION['user_id'] = $user_data['id'];
         $_SESSION['user_email'] = $user_data['email'];
         $_SESSION['user_tipo'] = $user_data['tipo_utente'];
