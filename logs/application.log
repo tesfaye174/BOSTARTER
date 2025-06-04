@@ -36,3 +36,6 @@
 [2025-06-04 03:22:12] ACTIVITY: User 5: user_login {"email":"simpletest1748999782@example.com","login_time":"2025-06-04 03:22:12","ip_address":"::1"}
 [2025-06-04 03:22:29] ACTIVITY: User 10: user_registration {"email":"fulltest1749000148@example.com","registration_time":"2025-06-04 03:22:29","nickname":"fulltest1749000148","ip_address":"::1"}
 [2025-06-04 03:22:29] ACTIVITY: User 10: user_login {"email":"fulltest1749000148@example.com","login_time":"2025-06-04 03:22:29","ip_address":"::1"}
+[2025-06-04 03:34:29] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:34:29","ip_address":"::1"}
+[2025-06-04 03:34:36] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:34:36","ip_address":"::1"}
+[2025-06-04 03:34:41] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:34:41","ip_address":"::1"}
