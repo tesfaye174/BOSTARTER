@@ -1,3 +1,11 @@
+/**
+ * ThemeManager for BOSTARTER
+ * Provides theme management functionality integrated with the core systems
+ * 
+ * Note: This will be moved to the core directory in future updates
+ * and integrated more deeply with the centralized systems
+ */
+
 // Enhanced Theme Configuration for BOSTARTER
 const themeConfig = {
     light: {
@@ -68,7 +76,7 @@ const themeConfig = {
     }
 };
 
-// Enhanced Theme Manager
+// Enhanced Theme Manager - CONSOLIDATED VERSION
 class ThemeManager {
     constructor() {
         this.theme = this.getStoredTheme() || this.getSystemTheme();
@@ -87,7 +95,10 @@ class ThemeManager {
 
     // Add smooth transitions for theme switching
     addTransitionClasses() {
+        if (document.getElementById('theme-transitions')) return;
+
         const style = document.createElement('style');
+        style.id = 'theme-transitions';
         style.textContent = `
             *, *::before, *::after {
                 transition: background-color 0.3s ease, 
@@ -101,19 +112,19 @@ class ThemeManager {
 
     // Get stored theme from localStorage
     getStoredTheme() {
-        return localStorage.getItem('bostarter-theme');
+        return localStorage.getItem('theme') || localStorage.getItem('bostarter-theme');
     }
 
     // Get system theme preference
     getSystemTheme() {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }    // Apply theme to document
+    }
+
+    // Apply theme to document
     applyTheme(theme) {
-        const root = document.documentElement;
-        const config = themeConfig[theme];
+        const root = document.documentElement; const config = themeConfig[theme];
 
         if (!config) {
-            console.warn(`Theme "${theme}" not found. Falling back to light theme.`);
             theme = 'light';
         }
 
@@ -125,15 +136,23 @@ class ThemeManager {
         // Update HTML attributes
         root.setAttribute('data-theme', theme);
 
-        // Update body class for Tailwind compatibility
+        // Update body and document classes for compatibility
+        document.documentElement.classList.toggle('dark', theme === 'dark');
         document.body.classList.toggle('dark', theme === 'dark');
 
         // Update theme meta tag
         this.updateThemeMetaTag(theme);
 
         // Store theme preference
+        localStorage.setItem('theme', theme);
         localStorage.setItem('bostarter-theme', theme);
         this.theme = theme;
+
+        // Update all toggle icons
+        this.updateAllToggleIcons();
+
+        // Announce theme change for accessibility
+        this.announceThemeChange();
 
         // Notify observers
         this.notifyObservers();
@@ -145,6 +164,102 @@ class ThemeManager {
         if (metaThemeColor) {
             const primaryColor = themeConfig[theme].colors['--primary'];
             metaThemeColor.setAttribute('content', primaryColor);
+        }
+    }
+
+    // Setup theme toggle functionality - CONSOLIDATED FOR ALL SELECTORS
+    setupThemeToggle() {
+        // Support multiple theme toggle selectors used across the app
+        const toggleSelectors = [
+            '#themeToggle',
+            '#theme-toggle',
+            '.theme-toggle',
+            '[data-theme-toggle]'
+        ];
+
+        toggleSelectors.forEach(selector => {
+            const toggles = document.querySelectorAll(selector);
+            toggles.forEach(toggle => {
+                if (toggle && !toggle.hasAttribute('data-theme-initialized')) {
+                    toggle.setAttribute('data-theme-initialized', 'true');
+
+                    toggle.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const newTheme = this.theme === 'light' ? 'dark' : 'light';
+                        this.applyTheme(newTheme);
+                    });
+
+                    this.updateToggleIcon(toggle);
+                }
+            });
+        });
+    }
+
+    // Update all theme toggle icons across the app
+    updateAllToggleIcons() {
+        const toggleSelectors = [
+            '#themeToggle',
+            '#theme-toggle',
+            '.theme-toggle',
+            '[data-theme-toggle]'
+        ];
+
+        toggleSelectors.forEach(selector => {
+            const toggles = document.querySelectorAll(selector);
+            toggles.forEach(toggle => this.updateToggleIcon(toggle));
+        });
+    }
+
+    // Update theme toggle icon - supports multiple icon libraries
+    updateToggleIcon(toggle) {
+        if (!toggle) return;
+
+        const icon = toggle.querySelector('i');
+        if (icon) {
+            // Support both Font Awesome and Remix icons
+            if (icon.className.includes('fa-')) {
+                icon.className = this.theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            } else if (icon.className.includes('ri-')) {
+                icon.className = this.theme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
+            }
+        }
+
+        toggle.setAttribute('aria-label', `Switch to ${this.theme === 'light' ? 'dark' : 'light'} theme`);
+        toggle.setAttribute('title', `Switch to ${this.theme === 'light' ? 'dark' : 'light'} mode`);
+    }
+
+    // Announce theme change for accessibility
+    announceThemeChange() {
+        const announcement = document.createElement('div');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.setAttribute('aria-atomic', 'true');
+        announcement.className = 'sr-only';
+        announcement.style.cssText = 'position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;';
+        announcement.textContent = `Tema cambiato in modalità ${this.theme === 'dark' ? 'scura' : 'chiara'}`;
+
+        document.body.appendChild(announcement);
+        setTimeout(() => {
+            if (document.body.contains(announcement)) {
+                document.body.removeChild(announcement);
+            }
+        }, 1000);
+    }
+
+    // Setup system theme preference listener
+    setupSystemThemeListener() {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+        const handleSystemThemeChange = (e) => {
+            if (!this.getStoredTheme()) {
+                this.applyTheme(e.matches ? 'dark' : 'light');
+            }
+        };
+
+        // Use both addEventListener and addListener for compatibility
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', handleSystemThemeChange);
+        } else if (mediaQuery.addListener) {
+            mediaQuery.addListener(handleSystemThemeChange);
         }
     }
 
@@ -162,65 +277,46 @@ class ThemeManager {
             try {
                 callback(this.theme, themeConfig[this.theme]);
             } catch (error) {
-                console.warn('Theme observer error:', error);
+                // Silent error handling for theme observers
             }
         });
     }
 
-    // Setup theme toggle functionality
-    setupThemeToggle() {
-        const toggle = document.querySelector('.theme-toggle');
-        if (!toggle) return;
-
-        toggle.addEventListener('click', () => {
-            const newTheme = this.theme === 'light' ? 'dark' : 'light';
-            this.applyTheme(newTheme);
-            this.updateToggleIcon(toggle);
-        });
-
-        this.updateToggleIcon(toggle);
+    // Public API methods
+    toggle() {
+        const newTheme = this.theme === 'light' ? 'dark' : 'light';
+        this.applyTheme(newTheme);
     }
 
-    // Update theme toggle icon
-    updateToggleIcon(toggle) {
-        const icon = toggle.querySelector('i');
-        if (!icon) return;
-
-        icon.className = this.theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-        toggle.setAttribute('aria-label', `Switch to ${this.theme === 'light' ? 'dark' : 'light'} theme`);
-    }
-
-    // Setup system theme preference listener
-    setupSystemThemeListener() {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-        mediaQuery.addEventListener('change', (e) => {
-            if (!this.getStoredTheme()) {
-                this.applyTheme(e.matches ? 'dark' : 'light');
-            }
-        });
-    }
-
-    // Get current theme
-    getCurrentTheme() {
-        return this.theme;
-    }
-
-    // Set theme programmatically
     setTheme(theme) {
         if (themeConfig[theme]) {
             this.applyTheme(theme);
         }
     }
+
+    getTheme() {
+        return this.theme;
+    }
+
+    // Static method to get theme config
+    static getConfig() {
+        return themeConfig;
+    }
 }
 
-// Create global theme manager instance
-const themeManager = new ThemeManager();
+// Create global instance
+window.ThemeManager = new ThemeManager();
 
-// Export for module usage
+// Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { themeManager, ThemeManager, themeConfig };
+    module.exports = { ThemeManager, themeConfig };
 }
 
-// Global access
-window.themeManager = themeManager;
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.ThemeManager.setupThemeToggle();
+    });
+} else {
+    window.ThemeManager.setupThemeToggle();
+}

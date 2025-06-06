@@ -78,7 +78,7 @@ class NewsletterManager {
             this.submitButton.disabled = true;
 
         } catch (error) {
-            console.error('Errore newsletter:', error);
+            // Silent error handling for newsletter
             this.showStatus('Si è verificato un errore durante l\'iscrizione. Riprova più tardi.', true);
 
         } finally {

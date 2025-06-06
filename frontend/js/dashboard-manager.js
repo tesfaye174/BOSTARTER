@@ -8,7 +8,6 @@ class DashboardManager {
 
     init() {
         this.setupEventListeners();
-        this.setupTheme();
         this.loadUserData();
         this.hideLoadingOverlay();
 
@@ -26,15 +25,6 @@ class DashboardManager {
                 this.showSection(section);
                 window.location.hash = section;
             });
-        });
-
-        // Theme toggles
-        document.getElementById('theme-toggle')?.addEventListener('click', () => {
-            this.toggleTheme();
-        });
-
-        document.getElementById('theme-toggle-mobile')?.addEventListener('click', () => {
-            this.toggleTheme();
         });
 
         // Mobile menu
@@ -82,64 +72,9 @@ class DashboardManager {
             const hash = window.location.hash.substring(1) || 'overview';
             this.showSection(hash);
         });
-    }
-
-    setupTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-            document.documentElement.classList.add('dark');
-        }
-
-        // Listen for system theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (!localStorage.getItem('theme')) {
-                document.documentElement.classList.toggle('dark', e.matches);
-            }
-        });
-    }
-
-    showSection(sectionName) {
-        // Hide all sections
-        document.querySelectorAll('.dashboard-section').forEach(section => {
-            section.classList.add('hidden');
-        });
-
-        // Show target section
-        const targetSection = document.getElementById(`${sectionName}-section`);
-        if (targetSection) {
-            targetSection.classList.remove('hidden');
-        }
-
-        // Update navigation state
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.remove('text-primary', 'bg-primary/5');
-            link.classList.add('text-gray-700', 'dark:text-gray-300');
-        });
-
-        const activeNavLink = document.getElementById(`nav-${sectionName}`);
-        if (activeNavLink) {
-            activeNavLink.classList.remove('text-gray-700', 'dark:text-gray-300');
-            activeNavLink.classList.add('text-primary', 'bg-primary/5');
-        }
-
-        this.currentSection = sectionName;
-        this.loadSectionData(sectionName);
-    }
-
-    toggleMobileMenu() {
-        const sidebar = document.querySelector('.dashboard-sidebar');
-        if (sidebar) {
-            sidebar.classList.toggle('open');
-        }
-    }
-
-    toggleTheme() {
-        const isDark = document.documentElement.classList.contains('dark');
-        document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', !isDark ? 'dark' : 'light');
-    }
+    }    // ===== THEME FUNCTIONALITY =====
+    // Theme functionality has been consolidated into ThemeManager (theme.js)
+    // Use: window.ThemeManager.toggle() instead of local theme methods
 
     async loadUserData() {
         try {
@@ -164,10 +99,8 @@ class DashboardManager {
             this.updateUserInterface(userData);
             this.loadDashboardStats(userData.stats);
             this.loadRecentActivity();
-
         } catch (error) {
-            console.error('Error loading user data:', error);
-            this.showNotification('Errore nel caricamento dei dati utente', 'error');
+            showNotification('Errore nel caricamento dei dati utente', 'error');
         }
     }
 
@@ -237,9 +170,7 @@ class DashboardManager {
             ];
 
             projectsGrid.innerHTML = projects.map(project => this.createProjectCard(project)).join('');
-
         } catch (error) {
-            console.error('Error loading projects:', error);
             const projectsGrid = document.getElementById('projects-grid');
             if (projectsGrid) {
                 projectsGrid.innerHTML = '<p class="text-center text-gray-500">Errore nel caricamento dei progetti</p>';
@@ -326,9 +257,12 @@ class DashboardManager {
                     </div>
                 </div>
             `).join('');
-
         } catch (error) {
-            console.error('Error loading backed projects:', error);
+            // Silent error handling - show empty state or error message to user
+            const backedContainer = document.getElementById('backed-projects');
+            if (backedContainer) {
+                backedContainer.innerHTML = '<p class="text-center text-gray-500">Errore nel caricamento dei progetti supportati</p>';
+            }
         }
     }
 
@@ -374,9 +308,12 @@ class DashboardManager {
                     <div class="text-xs text-gray-400">${activity.time}</div>
                 </div>
             `).join('');
-
         } catch (error) {
-            console.error('Error loading recent activity:', error);
+            // Silent error handling - show empty state or error message to user
+            const activityContainer = document.getElementById('recent-activity');
+            if (activityContainer) {
+                activityContainer.innerHTML = '<p class="text-center text-gray-500">Errore nel caricamento delle attività recenti</p>';
+            }
         }
     }
 
@@ -393,36 +330,11 @@ class DashboardManager {
 
             // Redirect to login
             window.location.href = '/frontend/auth/login.php';
-
         } catch (error) {
-            console.error('Error during logout:', error);
+            // Silent error handling for logout
+            // Still redirect even if cleanup fails
+            window.location.href = '/frontend/auth/login.php';
         }
-    }
-
-    showNotification(message, type = 'info') {
-        const container = document.getElementById('notifications-container');
-        if (!container) return;
-
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <div class="flex items-center">
-                <i class="ri-information-line mr-2"></i>
-                <span>${message}</span>
-                <button class="ml-auto text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.remove()">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-        `;
-
-        container.appendChild(notification);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
-            }
-        }, 5000);
     }
 
     hideLoadingOverlay() {
@@ -449,9 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global error handling
 window.addEventListener('error', (event) => {
-    console.error('Global error:', event.error);
+    // Silent error handling for production
     if (window.dashboardManager) {
-        window.dashboardManager.showNotification('Si è verificato un errore. Ricarica la pagina.', 'error');
+        window.showNotification('Si è verificato un errore. Ricarica la pagina.', 'error');
     }
 });
 

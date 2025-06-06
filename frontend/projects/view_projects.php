@@ -5,6 +5,7 @@
  */
 
 require_once '../../backend/config/database.php';
+require_once '../../backend/utils/NavigationHelper.php';
 require_once '../components/header.php';
 
 // Get filter parameters
@@ -15,6 +16,9 @@ $search = $_GET['search'] ?? '';
 $page = max(1, (int)($_GET['page'] ?? 1));
 $per_page = 12;
 $offset = ($page - 1) * $per_page;
+
+// Base URL for filters to maintain state
+$base_filter_url = NavigationHelper::url('projects');
 
 try {
     $database = Database::getInstance();
@@ -176,15 +180,20 @@ try {
     <div class="container mt-4">
         <!-- Page Header -->
         <div class="row mb-4">
-            <div class="col-12">
-                <h1 class="display-4 text-center mb-3">Esplora i Progetti</h1>
+            <div class="col-12 text-center">
+                <h1 class="display-4 mb-3">Esplora i Progetti</h1>
                 <p class="text-center text-muted">Scopri progetti innovativi e supporta le idee che ti ispirano</p>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="<?php echo NavigationHelper::url('create_project'); ?>" class="btn btn-success btn-lg">
+                        <i class="fas fa-plus"></i> Crea un Nuovo Progetto
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
         <!-- Filters Section -->
         <div class="filter-section">
-            <form method="GET" class="row g-3">
+            <form method="GET" action="<?php echo NavigationHelper::url('projects'); ?>" class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label">Categoria</label>
                     <select name="category" class="form-select">
@@ -264,7 +273,7 @@ try {
                             
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">
-                                    <a href="view_project.php?id=<?= $project['id'] ?>" 
+                                    <a href="<?php echo NavigationHelper::url('project_detail', ['id' => $project['id']]); ?>" 
                                        class="text-decoration-none text-dark">
                                         <?= htmlspecialchars($project['titolo']) ?>
                                     </a>
@@ -298,14 +307,16 @@ try {
                                     </small>
                                 </div>
                                 
-                                <!-- Stats -->
-                                <div class="row text-center mb-3">
+                                <!-- Stats Row -->
+                                <div class="row text-center small mb-3">
                                     <div class="col-6">
                                         <small class="text-muted">Sostenitori</small>
-                                        <div class="fw-bold"><?= $project['numero_finanziatori'] ?></div>
+                                        <div class="fw-bold">
+                                            <?= $project['numero_finanziatori'] ?>
+                                        </div>
                                     </div>
                                     <div class="col-6">
-                                        <small class="text-muted">Giorni rimasti</small>
+                                        <small class="text-muted">Giorni</small>
                                         <div class="fw-bold <?= $project['giorni_rimanenti'] <= 7 ? 'text-danger' : '' ?>">
                                             <?= max(0, $project['giorni_rimanenti']) ?>
                                         </div>
@@ -339,7 +350,7 @@ try {
                 <ul class="pagination justify-content-center">
                     <!-- Previous -->
                     <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>">
+                        <a class="page-link" href="<?= NavigationHelper::url('projects', array_merge($_GET, ['page' => $page - 1])) ?>">
                             Precedente
                         </a>
                     </li>
@@ -352,7 +363,7 @@ try {
                     
                     <?php if ($start_page > 1): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => 1])) ?>">1</a>
+                            <a class="page-link" href="<?= NavigationHelper::url('projects', array_merge($_GET, ['page' => 1])) ?>">1</a>
                         </li>
                         <?php if ($start_page > 2): ?>
                             <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -361,7 +372,7 @@ try {
                     
                     <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
                         <li class="page-item <?= $i === $page ? 'active' : '' ?>">
-                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>">
+                            <a class="page-link" href="<?= NavigationHelper::url('projects', array_merge($_GET, ['page' => $i])) ?>">
                                 <?= $i ?>
                             </a>
                         </li>
@@ -372,7 +383,7 @@ try {
                             <li class="page-item disabled"><span class="page-link">...</span></li>
                         <?php endif; ?>
                         <li class="page-item">
-                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $total_pages])) ?>">
+                            <a class="page-link" href="<?= NavigationHelper::url('projects', array_merge($_GET, ['page' => $total_pages])) ?>">
                                 <?= $total_pages ?>
                             </a>
                         </li>
@@ -380,7 +391,7 @@ try {
                     
                     <!-- Next -->
                     <li class="page-item <?= $page >= $total_pages ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>">
+                        <a class="page-link" href="<?= NavigationHelper::url('projects', array_merge($_GET, ['page' => $page + 1])) ?>">
                             Successivo
                         </a>
                     </li>
@@ -388,7 +399,7 @@ try {
             </nav>
         <?php endif; ?>
     </div>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+    <!-- Font Awesome already included in main layout -->
 </body>
 </html>
 

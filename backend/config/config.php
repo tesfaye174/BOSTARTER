@@ -1,93 +1,70 @@
 <?php
-// Configurazione Database
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'bostarter');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_CHARSET', 'utf8mb4');
+// Previene la ridefinizione delle costanti
+if (!defined('CONFIG_LOADED')) {
 
-// Configurazione Applicazione
-define('APP_NAME', 'BOSTARTER');
-define('APP_URL', 'http://localhost/BOSTARTER');
-define('APP_VERSION', '1.0.0');
+    // Configurazione Database
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'bostarter_compliant');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+    define('DB_CHARSET', 'utf8mb4');
 
-// Configurazione Email
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587);
-define('SMTP_USER', 'your-email@gmail.com');
-define('SMTP_PASS', 'your-app-password');
-define('SMTP_FROM', 'noreply@bostarter.it');
-define('SMTP_FROM_NAME', 'BOSTARTER');
+    // Configurazione Applicazione
+    define('APP_NAME', 'BOSTARTER');
+    define('APP_URL', 'http://localhost/BOSTARTER');
+    define('APP_VERSION', '1.0.0');
 
-// Configurazione Upload
-define('UPLOAD_DIR', __DIR__ . '/../../uploads');
-define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
-define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/gif']);
+    // Configurazione Email
+    define('EMAIL_CONFIG', [
+        'smtp' => [
+            'host' => 'smtp.gmail.com',
+            'port' => 587,
+            'secure' => 'tls',
+            'auth' => true,
+            'username' => 'your-email@gmail.com',
+            'password' => 'your-app-password',
+            'from' => [
+                'email' => 'noreply@bostarter.it',
+                'name' => 'BOSTARTER'
+            ]
+        ],
+        'templates' => [
+            'base_path' => __DIR__ . '/../../templates/email/',
+            'welcome' => 'welcome.html',
+            'reset_password' => 'reset_password.html',
+            'project_approved' => 'project_approved.html',
+            'funding_received' => 'funding_received.html'
+        ],
+        'queue' => [
+            'enabled' => true,
+            'path' => __DIR__ . '/../../storage/email_queue',
+            'batch_size' => 50,
+            'retry_attempts' => 3,
+            'retry_delay' => 300 // 5 minuti
+        ],
+        'debug' => false
+    ]);
 
-// Configurazione Sessione
-define('SESSION_LIFETIME', 3600); // 1 ora
-define('SESSION_NAME', 'bostarter_session');
-define('SESSION_PATH', '/');
-define('SESSION_DOMAIN', '');
-define('SESSION_SECURE', false);
-define('SESSION_HTTP_ONLY', true);
+    // Configurazione Sicurezza
+    define('HASH_COST', 12);
+    define('JWT_SECRET', 'your-secret-key');
+    define('SESSION_LIFETIME', 3600);
+    define('TOKEN_LIFETIME', 86400);
 
-// Configurazione Sicurezza
-define('HASH_COST', 12); // Per password_hash()
-define('TOKEN_LIFETIME', 3600); // 1 ora
-define('MAX_LOGIN_ATTEMPTS', 5);
-define('LOGIN_TIMEOUT', 900); // 15 minuti
+    // Configurazione MongoDB
+    define('MONGO_URI', 'mongodb://localhost:27017');
+    define('MONGO_DB', 'bostarter');
+    define('MONGO_COLLECTION', 'logs');
 
-// Configurazione Progetti
-define('MIN_PROJECT_GOAL', 1000); // €1000
-define('MAX_PROJECT_DURATION', 90); // 90 giorni
-define('PLATFORM_FEE', 5); // 5%
+    // Configurazione Upload
+    define('UPLOAD_DIR', __DIR__ . '/../../uploads');
+    define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
+    define('ALLOWED_IMAGE_TYPES', ['jpg', 'jpeg', 'png', 'gif']);
 
-// Configurazione Cache
-define('CACHE_ENABLED', true);
-define('CACHE_DIR', __DIR__ . '/../../cache');
-define('CACHE_LIFETIME', 3600); // 1 ora
+    // Configurazione Progetti
+    define('MIN_PROJECT_GOAL', 1000); // €1000
+    define('MAX_PROJECT_DURATION', 90); // 90 giorni
+    define('PLATFORM_FEE', 5); // 5%
 
-// Configurazione Log
-define('LOG_DIR', __DIR__ . '/../../logs');
-define('LOG_LEVEL', 'debug'); // debug, info, warning, error
-
-// Configurazione API
-define('API_VERSION', 'v1');
-define('API_KEY', 'your-api-key');
-define('API_RATE_LIMIT', 100); // richieste per ora
-
-// Configurazione Social
-define('FACEBOOK_APP_ID', '');
-define('FACEBOOK_APP_SECRET', '');
-define('GOOGLE_CLIENT_ID', '');
-define('GOOGLE_CLIENT_SECRET', '');
-
-// Configurazione Pagamenti
-define('STRIPE_PUBLIC_KEY', '');
-define('STRIPE_SECRET_KEY', '');
-define('STRIPE_WEBHOOK_SECRET', '');
-
-// Configurazione Ambiente
-define('ENVIRONMENT', 'development'); // development, production
-define('DEBUG_MODE', true);
-
-// Configurazione Timezone
-date_default_timezone_set('Europe/Rome');
-
-// Configurazione Error Reporting
-if (DEBUG_MODE) {
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-} else {
-    error_reporting(0);
-    ini_set('display_errors', 0);
+    define('CONFIG_LOADED', true);
 }
-
-// Configurazione Autoload
-spl_autoload_register(function ($class) {
-    $file = __DIR__ . '/../classes/' . str_replace('\\', '/', $class) . '.php';
-    if (file_exists($file)) {
-        require $file;
-    }
-}); 

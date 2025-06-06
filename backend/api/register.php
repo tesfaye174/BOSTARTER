@@ -46,12 +46,11 @@ try {
     
     // Connessione database
     $db = Database::getInstance()->getConnection();
-    
-    // Hash password
+      // Hash password
     $password_hash = password_hash($input['password'], PASSWORD_DEFAULT);
     
     // Chiama stored procedure per registrazione
-    $stmt = $db->prepare("CALL sp_registra_utente(?, ?, ?, ?, ?, ?, ?, @user_id, @result)");
+    $stmt = $db->prepare("CALL sp_registra_utente(?, ?, ?, ?, ?, ?, ?, ?, @user_id, @success, @message)");
     $stmt->execute([
         $input['email'],
         $input['nickname'],
@@ -59,14 +58,15 @@ try {
         $input['nome'],
         $input['cognome'],
         $input['anno_nascita'],
-        $input['luogo_nascita']
+        $input['luogo_nascita'],
+        'standard' // tipo_utente default
     ]);
     
     // Recupera risultato
-    $result = $db->query("SELECT @user_id as user_id, @result as result")->fetch();
+    $result = $db->query("SELECT @user_id as user_id, @success as success, @message as message")->fetch();
     
-    if ($result['result'] !== 'SUCCESS') {
-        ApiResponse::error($result['result'], 400);
+    if (!$result['success']) {
+        ApiResponse::error($result['message'], 400);
     }
       // Log su MongoDB
     $mongoLogger = new MongoLogger();

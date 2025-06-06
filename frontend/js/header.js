@@ -11,16 +11,16 @@ class HeaderManager {
         this.searchCache = new Map();
 
         this.init();
-    }
-
-    init() {
+    } init() {
         this.setupSearchFunctionality();
         this.setupLanguageSelector();
         this.setupAuthButton();
-        this.setupThemeToggle();
         this.setupCategoryNavigation();
         this.setupMobileMenu();
         this.loadUserState();
+
+        // Theme functionality is now handled by centralized ThemeManager
+        // No need for duplicate theme setup here
     }
 
     // ===== SEARCH FUNCTIONALITY =====
@@ -85,7 +85,7 @@ class HeaderManager {
         this.setSearchLoading(true);
 
         try {
-            const response = await fetch(`/backend/api/search.php?q=${encodeURIComponent(query)}&limit=5`);
+            const response = await fetch(`/BOSTARTER/backend/api/projects_compliant.php?action=search&q=${encodeURIComponent(query)}&limit=5`);
             const data = await response.json();
 
             if (data.success) {
@@ -93,7 +93,7 @@ class HeaderManager {
                 this.displaySearchResults(data.results);
             }
         } catch (error) {
-            console.error('Search error:', error);
+            // Silent error handling for search
         } finally {
             this.setSearchLoading(false);
         }
@@ -310,11 +310,14 @@ class HeaderManager {
         }
     } async handleLogout() {
         try {
-            const response = await fetch('/backend/api/login.php', {
-                method: 'DELETE',
+            const response = await fetch('/BOSTARTER/backend/api/auth_compliant.php', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    action: 'logout'
+                })
             });
 
             const data = await response.json();
@@ -327,8 +330,8 @@ class HeaderManager {
                 // Update UI
                 this.updateAuthUI();
 
-                // Show success message
-                this.showNotification('Logout effettuato con successo', 'success');
+                // Show success message using centralized NotificationSystem
+                window.NotificationSystem.success('Logout effettuato con successo');
 
                 // Redirect to home if on protected page
                 if (window.location.pathname.includes('dashboard') ||
@@ -339,44 +342,8 @@ class HeaderManager {
                 }
             }
         } catch (error) {
-            console.error('Logout error:', error);
-            this.showNotification('Errore durante il logout', 'error');
-        }
-    }
-
-    // ===== THEME TOGGLE =====
-    setupThemeToggle() {
-        const themeToggle = document.getElementById('theme-toggle');
-
-        if (!themeToggle) return;
-
-        themeToggle.addEventListener('click', () => {
-            this.toggleTheme();
-        });
-
-        // Load saved theme
-        this.loadTheme();
-    }
-
-    toggleTheme() {
-        const html = document.documentElement;
-        const isDark = html.classList.contains('dark');
-
-        if (isDark) {
-            html.classList.remove('dark');
-            localStorage.setItem('bostarter-theme', 'light');
-        } else {
-            html.classList.add('dark');
-            localStorage.setItem('bostarter-theme', 'dark');
-        }
-    }
-
-    loadTheme() {
-        const savedTheme = localStorage.getItem('bostarter-theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-            document.documentElement.classList.add('dark');
+            // Silent error handling for logout
+            window.NotificationSystem.error('Errore durante il logout');
         }
     }
 
@@ -404,7 +371,7 @@ class HeaderManager {
     // ===== USER STATE =====
     async loadUserState() {
         try {
-            const response = await fetch('/backend/api/login.php', {
+            const response = await fetch('/BOSTARTER/backend/api/auth_compliant.php', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -421,7 +388,7 @@ class HeaderManager {
                 localStorage.removeItem('bostarter-user');
             }
         } catch (error) {
-            console.error('Auth check error:', error);
+            // Silent error handling for auth check
         }
     }
 
@@ -435,91 +402,54 @@ class HeaderManager {
             this.openDropdown(dropdown, toggle);
         }
     } openDropdown(dropdown, toggle) {
+        // Use centralized AnimationSystem for dropdown animation
         dropdown.classList.remove('hidden');
         toggle.setAttribute('aria-expanded', 'true');
 
-        // Trigger animation
-        setTimeout(() => {
-            dropdown.classList.remove('opacity-0', 'translate-y-2');
-            dropdown.classList.add('opacity-100', 'translate-y-0');
-        }, 10);
+        window.AnimationSystem.animate(dropdown, 'zoomIn', {
+            duration: window.AnimationSystem.config.duration.fast
+        });
     }
 
     closeDropdown(dropdown, toggle) {
-        dropdown.classList.remove('opacity-100', 'translate-y-0');
-        dropdown.classList.add('opacity-0', 'translate-y-2');
         toggle.setAttribute('aria-expanded', 'false');
 
-        // Hide after animation
-        setTimeout(() => {
-            dropdown.classList.add('hidden');
-        }, 200);
-    }
-
-    showModal(modal) {
+        // Use centralized AnimationSystem for dropdown animation
+        window.AnimationSystem.animate(dropdown, 'zoomOut', {
+            duration: window.AnimationSystem.config.duration.fast,
+            onComplete: () => {
+                dropdown.classList.add('hidden');
+            }
+        });
+    } showModal(modal) {
+        // Use centralized AnimationSystem for modal animation
         modal.classList.remove('hidden');
-        modal.classList.remove('opacity-0');
-        modal.classList.add('opacity-100');
-
-        const content = modal.querySelector('[id$="-modal-content"]');
-        if (content) {
-            content.classList.remove('scale-95');
-            content.classList.add('scale-100');
-        }
-
         document.body.style.overflow = 'hidden';
-    }
 
-    showNotification(message, type = 'info') {
-        const container = document.getElementById('notifications-container');
-        if (!container) return;
-
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type} opacity-0 transform translate-x-full transition-all duration-300`;
-
-        const icons = {
-            success: 'ri-check-circle-line',
-            error: 'ri-error-warning-line',
-            warning: 'ri-alert-line',
-            info: 'ri-information-line'
-        };
-
-        notification.innerHTML = `
-            <div class="flex items-center gap-3 p-4 rounded-lg shadow-lg bg-white dark:bg-gray-800 border-l-4 border-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-500">
-                <i class="${icons[type]} text-${type === 'success' ? 'green' : type === 'error' ? 'red' : type === 'warning' ? 'yellow' : 'blue'}-500"></i>
-                <span class="text-gray-900 dark:text-white">${message}</span>
-                <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-500">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-        `;
-
-        container.appendChild(notification);
-
-        // Animate in
-        setTimeout(() => {
-            notification.classList.remove('opacity-0', 'translate-x-full');
-        }, 100);
-
-        // Auto remove
-        setTimeout(() => {
-            notification.classList.add('opacity-0', 'translate-x-full');
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
+        window.AnimationSystem.openModal(modal, 'fadeIn', {
+            duration: 300,
+            onComplete: () => {
+                const content = modal.querySelector('[id$="-modal-content"]');
+                if (content) {
+                    window.AnimationSystem.animate(content, 'zoomIn', {
+                        duration: 200
+                    });
                 }
-            }, 300);
-        }, 5000);
-    }
-
-    trackEvent(eventName, data = {}) {
+            }
+        });
+    } trackEvent(eventName, data = {}) {
         // Analytics tracking
         if (window.gtag) {
             window.gtag('event', eventName, data);
         }
 
-        // Custom tracking
-        console.log('Event tracked:', eventName, data);
+        // Use centralized event system instead of console logging
+        if (window.BOSTARTER && window.BOSTARTER._emitEvent) {
+            window.BOSTARTER._emitEvent('analytics:event', {
+                event: eventName,
+                data: data
+            });
+        }
     }
 }
 

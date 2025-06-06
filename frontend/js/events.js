@@ -7,8 +7,11 @@ import { apiManager } from './api.js';
 // Importa il gestore dello store
 import { store } from './store.js';
 
-// Importa il gestore delle notifiche
-import { notificationManager } from './notifications.js';
+// Importa il sistema di notifiche centralizzato
+import { NotificationSystem } from './core/NotificationSystem.js';
+
+// Inizializza il sistema di notifiche
+const notificationSystem = new NotificationSystem();
 
 // Authentication events handling
 export const initAuthEvents = () => {
@@ -28,10 +31,9 @@ export const initAuthEvents = () => {
             try {
                 const response = await apiManager.post('/auth/login', data);
                 store.setUser(response.user);
-                notificationManager.success('Login effettuato con successo');
-                window.location.href = '/';
+                notificationSystem.success('Login effettuato con successo'); window.location.href = '/';
             } catch (error) {
-                notificationManager.error(error.message);
+                notificationSystem.error(error.message);
             }
         });
     }
@@ -51,10 +53,9 @@ export const initAuthEvents = () => {
             try {
                 const response = await apiManager.post('/auth/register', data);
                 store.setUser(response.user);
-                notificationManager.success('Registrazione completata con successo');
-                window.location.href = '/';
+                notificationSystem.success('Registrazione completata con successo'); window.location.href = '/';
             } catch (error) {
-                notificationManager.error(error.message);
+                notificationSystem.error(error.message);
             }
         });
     }
@@ -80,10 +81,9 @@ export const initProjectEvents = () => {
 
             try {
                 const response = await apiManager.post('/projects', data);
-                notificationManager.success('Progetto creato con successo');
-                window.location.href = `/projects/${response.id}`;
+                notificationSystem.success('Progetto creato con successo'); window.location.href = `/projects/${response.id}`;
             } catch (error) {
-                notificationManager.error(error.message);
+                notificationSystem.error(error.message);
             }
         });
     }
@@ -132,7 +132,7 @@ export const initSearchEvents = () => {
                 // Aggiorna l'UI con i risultati
                 updateSearchResults(results);
             } catch (error) {
-                notificationManager.error('Errore durante la ricerca');
+                notificationSystem.error('Errore durante la ricerca');
             }
         }, 300);
 

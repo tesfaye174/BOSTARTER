@@ -1,12 +1,10 @@
-
 /**
  * Enhanced Dashboard JavaScript functionality for BOSTARTER
- * Handles dynamic content loading, real-time updates, and user interactions
+ * Handles dynamic content loading, real-time updates via HTTP polling, and user interactions
  */
 
 class Dashboard {
     constructor() {
-        this.ws = null;
         this.retryCount = 0;
         this.maxRetries = 3;
         this.isOnline = navigator.onLine;
@@ -19,14 +17,15 @@ class Dashboard {
         this.initializeAnimations();
         this.setupNotifications();
         this.setupOfflineSupport();
-        this.initializeTheme();
     }
 
     setupEventListeners() {
         // Theme toggle with improved handling
         const themeToggle = document.getElementById('theme-toggle');
         if (themeToggle) {
-            themeToggle.addEventListener('click', this.toggleTheme.bind(this));
+            themeToggle.addEventListener('click', () => {
+                window.ThemeManager.toggle();
+            });
         }
 
         // Mobile menu toggle with accessibility
@@ -62,52 +61,17 @@ class Dashboard {
                 e.preventDefault();
                 this.refreshDashboard();
             }
-        });        // Real-time updates via polling
-        this.setupNotifications();
-
-        // Online/offline status
+        });        // Online/offline status
         window.addEventListener('online', () => {
             this.isOnline = true;
-            this.showNotification('Connection restored', 'success');
+            window.NotificationSystem.success('Connection restored');
             this.loadDashboardData();
         });
 
         window.addEventListener('offline', () => {
             this.isOnline = false;
-            this.showNotification('You are offline. Some features may be limited.', 'warning');
+            window.NotificationSystem.warning('You are offline. Some features may be limited.');
         });
-    }
-
-    initializeTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-            document.documentElement.classList.add('dark');
-        }
-
-        // Update theme toggle button state
-        this.updateThemeToggleIcon();
-    }
-
-    toggleTheme() {
-        const html = document.documentElement;
-        const isDark = html.classList.contains('dark');
-
-        html.classList.toggle('dark', !isDark);
-        localStorage.setItem('theme', isDark ? 'light' : 'dark');
-
-        this.updateThemeToggleIcon();
-        this.showNotification(`Switched to ${isDark ? 'light' : 'dark'} mode`, 'info');
-    }
-
-    updateThemeToggleIcon() {
-        const isDark = document.documentElement.classList.contains('dark');
-        const sunIcons = document.querySelectorAll('.ri-sun-line');
-        const moonIcons = document.querySelectorAll('.ri-moon-line');
-
-        sunIcons.forEach(icon => icon.classList.toggle('hidden', isDark));
-        moonIcons.forEach(icon => icon.classList.toggle('hidden', !isDark));
     }
 
     async loadDashboardData() {
@@ -117,17 +81,13 @@ class Dashboard {
         }
 
         try {
-            this.showLoadingState(true);
-
-            // Load user statistics with retry logic
-            const stats = await this.fetchWithRetry('/backend/api/stats.php?type=user');
+            this.showLoadingState(true);            // Load user statistics with retry logic
+            const stats = await this.fetchWithRetry('/BOSTARTER/backend/api/stats_compliant.php?action=user_stats');
             if (stats && stats.success) {
-                this.updateStatistics(stats.stats);
-                this.cacheData('stats', stats.stats);
-            }
-
-            // Load recent activities
-            const activities = await this.fetchWithRetry('/backend/api/users.php?action=activities');
+                this.updateStatistics(stats.data);
+                this.cacheData('stats', stats.data);
+            }            // Load recent activities  
+            const activities = await this.fetchWithRetry('/BOSTARTER/backend/api/stats_compliant.php?action=user_activities');
             if (activities && activities.success) {
                 this.updateActivities(activities.data);
                 this.cacheData('activities', activities.data);
@@ -136,9 +96,8 @@ class Dashboard {
             // Load project updates
             await this.loadProjectUpdates();
 
-            this.retryCount = 0; // Reset retry count on success
-        } catch (error) {
-            console.error('Error loading dashboard data:', error);
+            this.retryCount = 0; // Reset retry count on success        } catch (error) {
+            // Silent error handling for dashboard data loading
             this.handleDataLoadError(error);
         } finally {
             this.showLoadingState(false);
@@ -171,16 +130,14 @@ class Dashboard {
                 await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
             }
         }
-    }
-
-    handleDataLoadError(error) {
+    } handleDataLoadError(error) {
         if (error.message.includes('401')) {
             // Unauthorized - redirect to login
             window.location.href = '/frontend/auth/login.php';
             return;
         }
 
-        this.showNotification('Failed to load dashboard data. Showing cached data.', 'error');
+        window.NotificationSystem.error('Failed to load dashboard data. Showing cached data.');
         this.loadCachedData();
     }
 
@@ -201,16 +158,21 @@ class Dashboard {
                 this.animateValue(valueElement, 0, values[index], 1500, index === 1 ? '€' : '');
             }
         });
-    }
+    } animateValue(element, start, end, duration, prefix = '') {
+        // Skip animation if user prefers reduced motion
+        if (window.AnimationSystem.prefersReducedMotion) {
+            element.textContent = prefix + window.Utils.formatCompactNumber(end);
+            return;
+        }
 
-    animateValue(element, start, end, duration, prefix = '') {
         const startTime = performance.now();
         const animate = (currentTime) => {
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1);
 
-            const currentValue = Math.floor(this.easeOutQuart(progress) * (end - start) + start);
-            element.textContent = prefix + this.formatNumber(currentValue);
+            // Using the centralized easing function via AnimationSystem
+            const currentValue = Math.floor(this.calculateEasing(progress) * (end - start) + start);
+            element.textContent = prefix + window.Utils.formatCompactNumber(currentValue);
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
@@ -220,18 +182,9 @@ class Dashboard {
         requestAnimationFrame(animate);
     }
 
-    easeOutQuart(t) {
+    calculateEasing(t) {
+        // Cubic-bezier easing similar to easeOutQuart
         return 1 - Math.pow(1 - t, 4);
-    }
-
-    formatNumber(num) {
-        if (num >= 1000000) {
-            return (num / 1000000).toFixed(1) + 'M';
-        }
-        if (num >= 1000) {
-            return (num / 1000).toFixed(1) + 'K';
-        }
-        return num.toLocaleString();
     }
 
     updateActivities(activities) {
@@ -255,13 +208,13 @@ class Dashboard {
 
     async loadProjectUpdates() {
         try {
-            const projects = await this.fetchWithRetry('/backend/api/projects.php?action=user_projects&limit=4');
+            const projects = await this.fetchWithRetry('/BOSTARTER/backend/api/projects_compliant.php?action=user_projects&limit=4');
             if (projects && projects.success) {
                 this.updateProjectCards(projects.data);
                 this.cacheData('projects', projects.data);
             }
         } catch (error) {
-            console.error('Error loading project updates:', error);
+            // Silent error handling for project updates
         }
     }
 
@@ -324,53 +277,61 @@ class Dashboard {
             'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
         };
         return classes[status] || classes.closed;
-    }
-
-    initializeAnimations() {
-        // Animate elements on load
+    } initializeAnimations() {
+        // Use the centralized AnimationSystem for animations
         const animatedElements = document.querySelectorAll('.animate-fade-in');
-        animatedElements.forEach((element, index) => {
-            element.style.opacity = '0';
-            element.style.transform = 'translateY(20px)';
-
-            setTimeout(() => {
-                element.style.transition = 'all 0.6s ease';
-                element.style.opacity = '1';
-                element.style.transform = 'translateY(0)';
-            }, index * 100);
-        });
+        if (animatedElements.length) {
+            window.AnimationSystem.stagger(Array.from(animatedElements), 'fadeIn', {
+                staggerDelay: 100,
+                duration: 600,
+                easing: window.AnimationSystem.config.easing.smooth
+            });
+        }
 
         this.animateProgressBars();
     }
 
     animateProgressBars() {
-        const progressBars = document.querySelectorAll('.progress-bar-custom, [class*="bg-primary"][style*="width"]');
-        progressBars.forEach((bar, index) => {
-            const width = bar.style.width;
-            bar.style.width = '0%';
-            setTimeout(() => {
-                bar.style.width = width;
-            }, 500 + (index * 100));
+        // Use the centralized AnimationSystem for progress bar animations
+        window.AnimationSystem.animateProgressBars('.progress-bar-custom, [class*="bg-primary"][style*="width"]', {
+            duration: 800,
+            staggerDelay: 100,
+            baseDelay: 500
         });
-    }
-
-    setupNotifications() {
-        // Check for notifications every 30 seconds
+    } setupNotifications() {
+        // Check for notifications every 30 seconds using HTTP polling
         this.notificationInterval = setInterval(() => {
             if (this.isOnline) {
                 this.checkNotifications();
             }
         }, 30000);
+
+        // Initial check
+        if (this.isOnline) {
+            this.checkNotifications();
+        }
+
+        // Configure centralized notification system with dashboard preferences
+        window.NotificationSystem.configure({
+            position: 'top-right',
+            duration: 5000
+        });
     }
 
     async checkNotifications() {
         try {
-            const response = await this.fetchWithRetry('/backend/api/notifications.php?action=unread');
+            const response = await this.fetchWithRetry('/BOSTARTER/backend/api/stats_compliant.php?action=notifications');
             if (response && response.success && response.data.length > 0) {
                 this.showNotificationBadge(response.data.length);
+
+                // Populate notification dropdown if it exists
+                this.populateNotificationDropdown(response.data);
+            } else {
+                // Hide badge if no unread notifications
+                this.hideNotificationBadge();
             }
         } catch (error) {
-            console.error('Error checking notifications:', error);
+            // Silent error handling for notifications check
         }
     }
 
@@ -380,267 +341,13 @@ class Dashboard {
             badge.textContent = count;
             badge.classList.remove('hidden');
         }
-    } setupWebSocket() {
-        if (!this.isOnline) return;
+    }
 
-        // Use the enhanced WebSocket client
-        if (typeof WebSocketClient !== 'undefined') {
-            const userId = sessionStorage.getItem('user_id') || localStorage.getItem('user_id');
-            const token = sessionStorage.getItem('token') || localStorage.getItem('token');
-
-            if (userId && token) {
-                // Set up authentication callback
-                WebSocketClient.setAuthCallback((success) => {
-                    if (success) {
-                        console.log('WebSocket authenticated successfully');
-                        this.showNotification('Real-time updates enabled', 'success');
-                        WebSocketClient.subscribeToNotifications();
-                    } else {
-                        console.error('WebSocket authentication failed');
-                        this.showNotification('Failed to connect to real-time updates', 'error');
-                    }
-                });
-
-                // Set up notification listener
-                WebSocketClient.addListener('notification', (notification) => {
-                    this.handleRealtimeNotification(notification);
-                });
-
-                // Set up pending notifications listener
-                WebSocketClient.addListener('pending_notifications', (data) => {
-                    this.handlePendingNotifications(data);
-                });
-
-                // Set up connection failure listener
-                WebSocketClient.addListener('connection_failed', (data) => {
-                    this.showNotification('Real-time connection failed. Using fallback polling.', 'warning');
-                    // Fall back to periodic polling
-                    this.setupNotifications();
-                });
-
-                // Connect to WebSocket
-                WebSocketClient.connect(userId, token);
-            }
-        } else {
-            // Fallback to original WebSocket implementation
-            try {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${protocol}//${window.location.host}:8080`;
-
-                this.ws = new WebSocket(wsUrl);
-
-                this.ws.onopen = () => {
-                    console.log('WebSocket connected');
-                    this.retryCount = 0;
-                };
-
-                this.ws.onmessage = (event) => {
-                    try {
-                        const data = JSON.parse(event.data);
-                        this.handleWebSocketMessage(data);
-                    } catch (error) {
-                        console.error('Error parsing WebSocket message:', error);
-                    }
-                };
-
-                this.ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                };
-
-                this.ws.onclose = () => {
-                    console.log('WebSocket disconnected');
-                    // Attempt to reconnect with exponential backoff
-                    if (this.retryCount < this.maxRetries && this.isOnline) {
-                        setTimeout(() => {
-                            this.retryCount++;
-                            this.setupWebSocket();
-                        }, Math.pow(2, this.retryCount) * 1000);
-                    }
-                };
-            } catch (error) {
-                console.error('WebSocket setup failed:', error);
-            }
+    hideNotificationBadge() {
+        const badge = document.getElementById('notifications-badge');
+        if (badge) {
+            badge.classList.add('hidden');
         }
-    }
-
-    handleWebSocketMessage(data) {
-        switch (data.type) {
-            case 'notification':
-                this.showNotification(data.message, 'info');
-                break;
-            case 'project_update':
-                this.loadProjectUpdates();
-                break;
-            case 'funding_update':
-                this.loadDashboardData();
-                break;
-            case 'stats_update':
-                this.updateStatistics(data.stats);
-                break;
-            default:
-                console.log('Unknown WebSocket message:', data);
-        }
-    }
-
-    /**
-     * Handle real-time notifications from WebSocket
-     */
-    handleRealtimeNotification(notification) {
-        try {
-            // Update notification badge
-            this.updateNotificationBadge();
-
-            // Show in-app notification
-            this.showNotification(notification.message, this.getNotificationType(notification.type));
-
-            // Update relevant dashboard sections based on notification type
-            switch (notification.type) {
-                case 'project_backed':
-                    this.loadProjectUpdates();
-                    this.loadDashboardData();
-                    break;
-                case 'project_comment':
-                    this.loadProjectUpdates();
-                    break;
-                case 'project_update':
-                    this.loadProjectUpdates();
-                    break;
-                case 'goal_reached':
-                    this.loadDashboardData();
-                    this.showCelebration();
-                    break;
-                case 'application_status':
-                    this.loadApplications();
-                    break;
-                default:
-                    console.log('Unhandled notification type:', notification.type);
-            }
-
-            // Add to notification list if visible
-            this.addToNotificationList(notification);
-
-        } catch (error) {
-            console.error('Error handling real-time notification:', error);
-        }
-    }
-
-    /**
-     * Handle pending notifications received on connection
-     */
-    handlePendingNotifications(data) {
-        try {
-            if (data.notifications && data.notifications.length > 0) {
-                // Update notification badge with count
-                this.showNotificationBadge(data.count);
-
-                // Show summary notification
-                this.showNotification(
-                    `You have ${data.count} unread notification${data.count > 1 ? 's' : ''}`,
-                    'info'
-                );
-
-                // Populate notification dropdown if exists
-                this.populateNotificationDropdown(data.notifications);
-            }
-        } catch (error) {
-            console.error('Error handling pending notifications:', error);
-        }
-    }
-
-    /**
-     * Update notification badge
-     */
-    async updateNotificationBadge() {
-        try {
-            const response = await this.fetchWithRetry('/backend/api/notifications.php?action=count');
-            if (response && response.success) {
-                this.showNotificationBadge(response.count);
-            }
-        } catch (error) {
-            console.error('Error updating notification badge:', error);
-        }
-    }
-
-    /**
-     * Get notification type for styling
-     */
-    getNotificationType(type) {
-        const typeMap = {
-            'project_backed': 'success',
-            'project_comment': 'info',
-            'project_update': 'info',
-            'goal_reached': 'success',
-            'application_status': 'warning',
-            'error': 'error'
-        };
-        return typeMap[type] || 'info';
-    }
-
-    /**
-     * Show celebration animation for goal reached
-     */
-    showCelebration() {
-        // Create celebration overlay
-        const celebration = document.createElement('div');
-        celebration.className = 'celebration-overlay';
-        celebration.innerHTML = `
-            <div class="celebration-content">
-                <div class="celebration-icon">🎉</div>
-                <h2>Congratulations!</h2>
-                <p>Your project has reached its funding goal!</p>
-            </div>
-        `;
-
-        document.body.appendChild(celebration);
-
-        // Remove after animation
-        setTimeout(() => {
-            celebration.remove();
-        }, 5000);
-    }
-
-    /**
-     * Add notification to the notification list
-     */
-    addToNotificationList(notification) {
-        const notificationList = document.getElementById('notification-list');
-        if (notificationList) {
-            const notificationElement = this.createNotificationElement(notification);
-            notificationList.insertBefore(notificationElement, notificationList.firstChild);
-
-            // Limit the number of visible notifications
-            const notifications = notificationList.children;
-            if (notifications.length > 10) {
-                notificationList.removeChild(notifications[notifications.length - 1]);
-            }
-        }
-    }
-
-    /**
-     * Create notification element for the list
-     */
-    createNotificationElement(notification) {
-        const element = document.createElement('div');
-        element.className = `notification-item ${notification.is_read ? 'read' : 'unread'}`;
-        element.innerHTML = `
-            <div class="notification-content">
-                <div class="notification-message">${notification.message}</div>
-                <div class="notification-time">${this.formatTime(notification.created_at)}</div>
-            </div>
-            <button class="notification-mark-read" data-id="${notification.id}">
-                ${notification.is_read ? '✓' : 'Mark as read'}
-            </button>
-        `;
-
-        // Add click handler for mark as read
-        const markReadBtn = element.querySelector('.notification-mark-read');
-        if (markReadBtn && !notification.is_read) {
-            markReadBtn.addEventListener('click', () => {
-                this.markNotificationAsRead(notification.id);
-            });
-        }
-
-        return element;
     }
 
     /**
@@ -652,11 +359,23 @@ class Dashboard {
             dropdown.innerHTML = notifications.map(notification => `
                 <div class="notification-item ${notification.is_read ? 'read' : 'unread'}" data-id="${notification.id}">
                     <div class="notification-content">
-                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-message">${this.escapeHtml(notification.message)}</div>
                         <div class="notification-time">${this.formatTime(notification.created_at)}</div>
                     </div>
+                    ${!notification.is_read ? `
+                        <button class="notification-mark-read" data-id="${notification.id}">
+                            Mark as read
+                        </button>
+                    ` : ''}
                 </div>
             `).join('');
+
+            // Add click handlers for mark as read buttons
+            dropdown.querySelectorAll('.notification-mark-read').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    this.markNotificationAsRead(btn.dataset.id);
+                });
+            });
         }
     }
 
@@ -665,8 +384,8 @@ class Dashboard {
      */
     async markNotificationAsRead(notificationId) {
         try {
-            const response = await fetch('/backend/api/notifications.php?action=mark_read', {
-                method: 'PUT',
+            const response = await fetch('/BOSTARTER/backend/api/stats_compliant.php?action=mark_notification_read', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -680,13 +399,19 @@ class Dashboard {
                 if (notificationElement) {
                     notificationElement.classList.add('read');
                     notificationElement.classList.remove('unread');
+
+                    // Remove mark as read button
+                    const markReadBtn = notificationElement.querySelector('.notification-mark-read');
+                    if (markReadBtn) {
+                        markReadBtn.remove();
+                    }
                 }
 
-                // Update badge count
-                this.updateNotificationBadge();
+                // Refresh notification count
+                this.checkNotifications();
             }
         } catch (error) {
-            console.error('Error marking notification as read:', error);
+            // Silent error handling for notification marking
         }
     }
 
@@ -695,12 +420,12 @@ class Dashboard {
      */
     async loadApplications() {
         try {
-            const response = await this.fetchWithRetry('/backend/api/applications.php?action=user-applications');
+            const response = await this.fetchWithRetry('/BOSTARTER/backend/api/stats_compliant.php?action=user_applications');
             if (response && response.success) {
                 this.updateApplicationsSection(response.data);
             }
         } catch (error) {
-            console.error('Error loading applications:', error);
+            // Silent error handling for applications loading
         }
     }
 
@@ -713,49 +438,120 @@ class Dashboard {
             // Update applications display
             applicationsContainer.innerHTML = applications.map(app => `
                 <div class="application-item status-${app.status}">
-                    <h4>${app.project_title}</h4>
-                    <p>Status: <span class="status-badge">${app.status}</span></p>
+                    <h4>${this.escapeHtml(app.project_title)}</h4>
+                    <p>Status: <span class="status-badge">${this.escapeHtml(app.status)}</span></p>
                     <p>Applied: ${this.formatDate(app.created_at)}</p>
                 </div>
             `).join('');
         }
-    }
-
-    /**
-     * Format time for display
+    }    /**
+     * Format time for display - uses centralized Utils
      */
     formatTime(timestamp) {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diff = now - date;
-
-        if (diff < 60000) { // Less than 1 minute
-            return 'Just now';
-        } else if (diff < 3600000) { // Less than 1 hour
-            return `${Math.floor(diff / 60000)} minutes ago`;
-        } else if (diff < 86400000) { // Less than 1 day
-            return `${Math.floor(diff / 3600000)} hours ago`;
-        } else {
-            return date.toLocaleDateString();
-        }
+        // Use centralized relative time formatter
+        return window.Utils.formatRelativeTime(timestamp);
     }
 
     /**
-     * Format date for display
+     * Format date for display - uses centralized Utils
      */
     formatDate(timestamp) {
-        return new Date(timestamp).toLocaleDateString('en-US', {
+        // Use centralized date formatter with US locale for consistency
+        return window.Utils.formatDate(timestamp, {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
+        }, 'en-US');
+    }    /**
+     * Utility methods for UI handling - using centralized Utils
+     */
+    escapeHtml(text) {
+        // If Utils is available, use it, otherwise fallback to the local implementation
+        if (window.Utils && window.Utils.escapeHtml) {
+            return window.Utils.escapeHtml(text);
+        }
+
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    capitalizeFirst(str) {
+        // If Utils is available, use it, otherwise fallback to the local implementation
+        if (window.Utils && window.Utils.capitalizeFirst) {
+            return window.Utils.capitalizeFirst(str);
+        }
+
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    showLoadingState(show) {
+        const loadingIndicators = document.querySelectorAll('.loading-indicator, .skeleton-loader');
+        loadingIndicators.forEach(indicator => {
+            indicator.style.display = show ? 'block' : 'none';
         });
+    } refreshDashboard() {
+        this.loadDashboardData();
+        this.checkNotifications();
+        window.NotificationSystem.success('Dashboard refreshed');
+    }
+
+    viewProject(projectId) {
+        if (projectId) {
+            window.location.href = `/frontend/projects/view.php?id=${projectId}`;
+        }
+    }
+
+    manageProject(projectId) {
+        if (projectId) {
+            window.location.href = `/frontend/projects/manage.php?id=${projectId}`;
+        }
+    } setupOfflineSupport() {
+        // Register service worker if available
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/frontend/sw.js')
+                .then(registration => {
+                    // Log via centralized system instead of console
+                    if (window.BOSTARTER && window.BOSTARTER._emitEvent) {
+                        window.BOSTARTER._emitEvent('serviceworker:registered');
+                    }
+                })
+                .catch(error => {
+                    // Log error via centralized system instead of console
+                    if (window.NotificationSystem) {
+                        window.NotificationSystem.error('Offline support setup failed');
+                    }
+                });
+        }
+    } cacheData(key, data) {
+        try {
+            localStorage.setItem(`dashboard_${key}`, JSON.stringify(data));
+        } catch (error) {
+            // Silent error handling for cache operations
+        }
+    } loadCachedData() {
+        try {
+            const cachedStats = localStorage.getItem('dashboard_stats');
+            if (cachedStats) {
+                this.updateStatistics(JSON.parse(cachedStats));
+            }
+
+            const cachedActivities = localStorage.getItem('dashboard_activities');
+            if (cachedActivities) {
+                this.updateActivities(JSON.parse(cachedActivities));
+            }
+
+            const cachedProjects = localStorage.getItem('dashboard_projects');
+            if (cachedProjects) {
+                this.updateProjectCards(JSON.parse(cachedProjects));
+            } window.NotificationSystem.warning('Showing cached data. Check your internet connection.');
+        } catch (error) {
+            // Silent error handling for cached data loading
+        }
     }
 
     // Cleanup method
     destroy() {
-        if (this.ws) {
-            this.ws.close();
-        }
         if (this.notificationInterval) {
             clearInterval(this.notificationInterval);
         }

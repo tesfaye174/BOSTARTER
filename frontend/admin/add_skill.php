@@ -24,7 +24,7 @@ $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
 
 if (!$user || $user['tipo_utente'] !== 'admin') {
-    header('Location: /frontend/dashboard.html');
+    header('Location: /frontend/dashboard.php');
     exit;
 }
 
@@ -36,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     $nome = trim($_POST['nome'] ?? '');
     $descrizione = trim($_POST['descrizione'] ?? '');
     $categoria = trim($_POST['categoria'] ?? '');
+    $security_code = trim($_POST['security_code'] ?? '');
     
     // Validazioni
     if (empty($nome)) {
@@ -46,6 +47,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         $error = 'Il nome non può superare i 100 caratteri.';
     } elseif (empty($categoria)) {
         $error = 'La categoria è obbligatoria.';
+    } elseif (empty($security_code)) {
+        $error = 'Il codice di sicurezza è obbligatorio.';
+    } elseif ($security_code !== 'ADMIN2024') {
+        $error = 'Codice di sicurezza non valido.';
+        
+        // Log tentativo di accesso non autorizzato
+        $mongoLogger->logActivity($_SESSION['user_id'], 'admin_security_code_failed', [
+            'attempted_code' => $security_code,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+        ]);
     } else {
         try {
             // Verifica se la competenza esiste già
@@ -62,11 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                 ");
                 
                 $stmt->execute([$nome, $descrizione, $categoria]);
-                
-                // Log MongoDB
+                  // Log MongoDB
                 $mongoLogger->logActivity($_SESSION['user_id'], 'admin_add_skill', [
                     'skill_name' => $nome,
-                    'category' => $categoria
+                    'category' => $categoria,
+                    'security_code_verified' => true
                 ]);
                 
                 $success = 'Competenza aggiunta con successo!';
@@ -179,7 +191,7 @@ $stats = $stmt->fetch();
                 <span class="badge bg-light text-danger ms-2">ADMIN</span>
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/frontend/dashboard.html">
+                <a class="nav-link" href="/frontend/dashboard.php">
                     <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                 </a>
                 <a class="nav-link" href="/frontend/auth/logout.php">
@@ -194,7 +206,7 @@ $stats = $stmt->fetch();
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/frontend/">Home</a></li>
-                <li class="breadcrumb-item"><a href="/frontend/dashboard.html">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/frontend/dashboard.php">Dashboard</a></li>
                 <li class="breadcrumb-item active">Gestione Competenze</li>
             </ol>
         </nav>
@@ -304,9 +316,7 @@ $stats = $stmt->fetch();
                                     <option value="AI/ML" <?php echo ($_POST['categoria'] ?? '') == 'AI/ML' ? 'selected' : ''; ?>>AI/ML</option>
                                     <option value="Other" <?php echo ($_POST['categoria'] ?? '') == 'Other' ? 'selected' : ''; ?>>Altro</option>
                                 </select>
-                            </div>
-
-                            <div class="mb-3">
+                            </div>                            <div class="mb-3">
                                 <label for="descrizione" class="form-label">Descrizione</label>
                                 <textarea 
                                     class="form-control" 
@@ -318,6 +328,25 @@ $stats = $stmt->fetch();
                                 ><?php echo htmlspecialchars($_POST['descrizione'] ?? ''); ?></textarea>
                                 <div class="form-text">
                                     <span id="descCharCount">0</span>/500 caratteri
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="security_code" class="form-label">
+                                    Codice di Sicurezza <span class="text-danger">*</span>
+                                </label>
+                                <input 
+                                    type="password" 
+                                    class="form-control" 
+                                    id="security_code" 
+                                    name="security_code"
+                                    maxlength="20"
+                                    placeholder="Inserisci il codice di sicurezza amministrativo"
+                                    required
+                                >
+                                <div class="form-text">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Richiesto per confermare l'aggiunta di nuove competenze
                                 </div>
                             </div>
 

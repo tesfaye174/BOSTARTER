@@ -8,7 +8,8 @@
     <title>Progetti Food - BOSTARTER</title>
 
     <!-- ===== SEO E META TAGS OTTIMIZZATI ===== -->
-    <meta name="description" content="Gusta l'innovazione culinaria italiana su BOSTARTER, la principale piattaforma di crowdfunding italiana.">
+    <meta name="description"
+        content="Gusta l'innovazione culinaria italiana su BOSTARTER, la principale piattaforma di crowdfunding italiana.">
     <meta name="keywords" content="cibo, progetti, crowdfunding, italia, innovazione, finanziamento">
     <meta name="author" content="BOSTARTER">
     <meta name="robots" content="index, follow">
@@ -36,7 +37,8 @@
 
     <!-- ===== PRELOAD RISORSE CRITICHE ===== -->
     <link rel="preload" href="/frontend/css/main.css" as="style">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        as="style">
     <link rel="preload" href="/frontend/js/main.js" as="script">
 
     <!-- ===== PRECONNECT OTTIMIZZATO ===== -->
@@ -68,10 +70,14 @@
     <a href="#main-content" class="skip-link">Salta al contenuto principale</a>
 
     <!-- ===== LOADING OVERLAY ===== -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-500" aria-hidden="true">
+    <div id="loadingOverlay"
+        class="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center transition-opacity duration-500"
+        aria-hidden="true">
         <div class="text-center">
             <div class="relative mb-4">
-                <div class="w-16 h-16 border-4 border-primary-200 dark:border-gray-700 border-t-primary-500 rounded-full animate-spin"></div>
+                <div
+                    class="w-16 h-16 border-4 border-primary-200 dark:border-gray-700 border-t-primary-500 rounded-full animate-spin">
+                </div>
                 <div class="absolute inset-0 flex items-center justify-center">
                     <i class="ri-restaurant-line text-2xl text-primary-500 animate-pulse"></i>
                 </div>
@@ -86,17 +92,20 @@
     </div>
 
     <!-- ===== NOTIFICATION SYSTEM ===== -->
-    <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2" aria-live="polite" aria-label="Notifiche"></div>
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2" aria-live="polite"
+        aria-label="Notifiche"></div>
 
     <!-- ===== HEADER MODERNIZZATO ===== -->
-    <header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
+    <header id="main-header"
+        class="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
         <!-- Header content will be loaded by common functions -->
     </header>
 
     <!-- ===== MAIN CONTENT ===== -->
     <main id="main-content" class="pt-20">
         <!-- Hero Section -->
-        <section class="relative bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-700 py-16">
+        <section
+            class="relative bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-700 py-16">
             <div class="container mx-auto px-4">
                 <div class="text-center max-w-4xl mx-auto">
                     <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
@@ -105,7 +114,7 @@
                     <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
                         Gusta l'innovazione culinaria italiana
                     </p>
-                    
+
                     <!-- Search and Filters using common components -->
                     <div class="category-search-filters" data-category="cibo">
                         <!-- Will be populated by common functions -->
@@ -120,7 +129,7 @@
                 <div id="projectsGrid" class="category-projects-grid" data-category="cibo">
                     <!-- Projects will be loaded by common functions -->
                 </div>
-                
+
                 <!-- Load More Button -->
                 <div class="text-center mt-12">
                     <button id="loadMoreBtn" class="category-load-more-btn" data-category="cibo">
@@ -146,6 +155,7 @@
     </footer>
 
     <!-- ===== SCRIPTS OTTIMIZZATI - COMPONENTI COMUNI INTEGRATI ===== -->
+    <!-- Legacy notifications.js removed - using centralized NotificationSystem -->
     <script src="/frontend/assets/shared/js/category-config.js"></script>
     <script src="/frontend/assets/shared/js/common-functions.js"></script>
 

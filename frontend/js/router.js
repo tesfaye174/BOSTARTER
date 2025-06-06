@@ -8,7 +8,7 @@ class Router {
         this.currentRoute = null;
         this.params = {};
         this.query = {};
-        
+
         // Gestione degli eventi di navigazione
         window.addEventListener('popstate', this.handleRoute.bind(this));
         document.addEventListener('click', this.handleClick.bind(this));
@@ -23,10 +23,10 @@ class Router {
     handleClick(event) {
         const link = event.target.closest('a');
         if (!link) return;
-        
+
         const href = link.getAttribute('href');
         if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
-        
+
         event.preventDefault();
         this.navigate(href);
     }
@@ -42,7 +42,7 @@ class Router {
         const path = window.location.pathname;
         const queryString = window.location.search;
         this.query = this.parseQuery(queryString);
-        
+
         // Cerca la route corrispondente
         for (const [route, component] of this.routes) {
             const params = this.matchRoute(path, route);
@@ -53,7 +53,7 @@ class Router {
                 return;
             }
         }
-        
+
         // Route non trovata
         this.handleNotFound();
     }
@@ -62,11 +62,11 @@ class Router {
     parseQuery(queryString) {
         const params = {};
         const searchParams = new URLSearchParams(queryString);
-        
+
         for (const [key, value] of searchParams) {
             params[key] = value;
         }
-        
+
         return params;
     }
 
@@ -74,17 +74,17 @@ class Router {
     matchRoute(path, route) {
         const routeParts = route.split('/');
         const pathParts = path.split('/');
-        
+
         if (routeParts.length !== pathParts.length) {
             return null;
         }
-        
+
         const params = {};
-        
+
         for (let i = 0; i < routeParts.length; i++) {
             const routePart = routeParts[i];
             const pathPart = pathParts[i];
-            
+
             if (routePart.startsWith(':')) {
                 const paramName = routePart.slice(1);
                 params[paramName] = pathPart;
@@ -92,7 +92,7 @@ class Router {
                 return null;
             }
         }
-        
+
         return params;
     }
 
@@ -100,21 +100,21 @@ class Router {
     async render(component) {
         const main = document.querySelector('main');
         if (!main) return;
-        
+
         try {
             const content = await component(this.params, this.query);
             main.innerHTML = content;
-            
+
             // Aggiorna il titolo della pagina
             document.title = component.title || 'BoStarter';
-            
+
             // Aggiorna i meta tag
             this.updateMetaTags(component.meta);
-            
+
             // Aggiorna i link attivi
             this.updateActiveLinks();
         } catch (error) {
-            console.error('Errore nel rendering della route:', error);
+            // Silent error handling for route rendering
             this.handleError(error);
         }
     }
@@ -123,14 +123,14 @@ class Router {
     updateMetaTags(meta = {}) {
         const metaTags = document.querySelectorAll('meta[name^="description"], meta[name^="keywords"]');
         metaTags.forEach(tag => tag.remove());
-        
+
         if (meta.description) {
             const description = document.createElement('meta');
             description.name = 'description';
             description.content = meta.description;
             document.head.appendChild(description);
         }
-        
+
         if (meta.keywords) {
             const keywords = document.createElement('meta');
             keywords.name = 'keywords';

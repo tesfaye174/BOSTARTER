@@ -46,7 +46,7 @@ class Store {
                 const parsedState = JSON.parse(savedState);
                 this.state = { ...this.state, ...parsedState };
             } catch (error) {
-                console.error('Errore nel caricamento dello stato:', error);
+                // Silent error handling for state loading
             }
         }
 

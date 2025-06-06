@@ -68,4 +68,19 @@ class ApiResponse {
     public static function serverError($message = 'Errore interno del server') {
         self::error($message, 500);
     }
+
+    /**
+     * Sanitize data for output
+     */
+    public static function sanitize($data) {
+        if (is_array($data)) {
+            return array_map([self::class, 'sanitize'], $data);
+        }
+        
+        if (is_string($data)) {
+            return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+        }
+        
+        return $data;
+    }
 }

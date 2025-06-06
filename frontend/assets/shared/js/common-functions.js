@@ -88,22 +88,6 @@ window.BostarterCommon = (function () {
     }
 
     /**
-     * Formattazione date uniforme
-     * @param {string} dateString - Data in formato YYYY-MM-DD
-     */
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
-            'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-
-        return {
-            day: date.getDate().toString().padStart(2, '0'),
-            month: months[date.getMonth()],
-            year: date.getFullYear()
-        };
-    }
-
-    /**
      * Animazioni di caricamento per le card
      * @param {string} selector - Selettore per gli elementi da animare
      * @param {number} delay - Ritardo tra le animazioni (ms)
@@ -223,50 +207,7 @@ window.BostarterCommon = (function () {
         });
 
         images.forEach(img => imageObserver.observe(img));
-    }
-
-    /**
-     * Gestione notifiche toast
-     * @param {string} message - Messaggio da mostrare
-     * @param {string} type - Tipo di notifica ('success', 'error', 'info')
-     * @param {number} duration - Durata in ms
-     */
-    function showNotification(message, type = 'info', duration = 3000) {
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.textContent = message;
-
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px 24px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            z-index: 10000;
-            transform: translateX(100%);
-            transition: transform 0.3s ease-out;
-            background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-        `;
-
-        document.body.appendChild(notification);
-
-        // Animazione di entrata
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 100);
-
-        // Rimozione automatica
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 300);
-        }, duration);
-    }
-
-    /**
+    }    /**
      * Inizializzazione completa per una pagina categoria
      * @param {Object} config - Configurazione per l'inizializzazione
      */
@@ -315,13 +256,11 @@ window.BostarterCommon = (function () {
     return {
         initFilters,
         createCard,
-        formatDate,
         animateCards,
         initHoverEffects,
         initScrollAnimations,
         initSearch,
         initLazyLoading,
-        showNotification,
         initCategoryPage
     };
 

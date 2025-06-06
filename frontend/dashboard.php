@@ -2,11 +2,11 @@
 session_start();
 require_once '../backend/config/database.php';
 require_once '../backend/services/MongoLogger.php';
+require_once '../backend/utils/NavigationHelper.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header('Location: auth/login.php');
-    exit();
+// Check if user is logged in using NavigationHelper
+if (!NavigationHelper::isLoggedIn()) {
+    NavigationHelper::redirect('login', ['redirect' => 'dashboard']);
 }
 
 $database = Database::getInstance();
@@ -108,12 +108,21 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Personal BOSTARTER Dashboard - Manage your projects and profile">
     <title>User Dashboard - BOSTARTER</title>
+      <!-- Preload critical resources -->
+    <link rel="preload" href="/BOSTARTER/frontend/js/dashboard.js" as="script">
+    <link rel="preload" href="/BOSTARTER/frontend/css/dashboard.css" as="style">
+      <!-- Core CSS -->
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/critical.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/main.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/color-system.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/components.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/utilities.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/accessibility.css">
     
-    <!-- Preload critical resources -->
-    <link rel="preload" href="js/main.js" as="script">
-    <link rel="preload" href="js/api.js" as="script">
-    <link rel="preload" href="js/auth.js" as="script">
-    <link rel="preload" href="css/main.css" as="style">
+    <!-- Dashboard-specific CSS -->
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/dashboard.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/notifications.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/animations.css">
     
     <!-- Optimized fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -130,25 +139,16 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: { 
-                        primary: {
-                            DEFAULT: "#667eea",
-                            50: "#EBF2FF",
-                            100: "#D6E4FF",
-                            200: "#B3CCFF",
-                            300: "#80AAFF",
-                            400: "#4D88FF",
-                            500: "#667eea",
-                            600: "#1A5EFF",
-                            700: "#0A47E6",
-                            800: "#0837B8",
-                            900: "#062A8A",
-                            950: "#041C5C"
-                        }
+                    colors: {
+                        brand: '#3176FF',
+                        'brand-dark': '#1e4fc4',
+                        primary: '#111827',
+                        secondary: '#ffffff',
+                        tertiary: '#f3f4f6'
                     },
                     fontFamily: {
-                        'sans': ['Inter', 'system-ui', 'sans-serif'],
-                        'brand': ['Pacifico', 'cursive']
+                        sans: ['Inter', 'sans-serif'],
+                        brand: ['Pacifico', 'cursive']
                     }
                 }
             }
@@ -838,270 +838,72 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
         }
     </style>
 
-    <!-- Dashboard JavaScript -->
-    <script src="js/dashboard.js"></script>
+    <!-- Core JavaScript -->
+    <script src="/frontend/js/utils.js"></script>
+    <script src="/frontend/js/theme.js"></script>
+    <script src="/frontend/js/notifications.js"></script>
     
-    <script>
-        // Set current year in footer
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('theme-toggle');
-        const html = document.documentElement;
-        
-        // Check for saved theme preference or default to light
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        html.classList.toggle('dark', currentTheme === 'dark');
-        
-        themeToggle.addEventListener('click', () => {
-            const isDark = html.classList.contains('dark');
-            html.classList.toggle('dark', !isDark);
-            localStorage.setItem('theme', isDark ? 'light' : 'dark');
-        });
-
-        // Mobile menu toggle
-        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        mobileMenuToggle.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-
-        // Close modal on outside click
-        function closeModalOnOutsideClick(event) {
-            if (event.target === event.currentTarget) {
-                document.getElementById('profileModal').style.display = 'none';
-            }
-        }
-
-        // Enhanced dropdown behavior
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropdowns = document.querySelectorAll('.group');
-            
-            dropdowns.forEach(dropdown => {
-                const dropdownMenu = dropdown.querySelector('.dropdown');
-                
-                if (dropdownMenu) {
-                    dropdown.addEventListener('mouseenter', () => {
-                        dropdownMenu.classList.add('show');
-                    });
-                    
-                    dropdown.addEventListener('mouseleave', () => {
-                        dropdownMenu.classList.remove('show');
-                    });
-                }
-            });
-
-            // Add smooth transitions for stats cards
-            const statCards = document.querySelectorAll('.stat-card');
-            statCards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.transform = 'translateY(0)';
-                    card.style.opacity = '1';
-                }, index * 100);
-            });
-
-            // Add loading animation for project cards
-            const projectCards = document.querySelectorAll('.project-card');
-            projectCards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 150);
-            });
-        });
-
-        // Progress bar animation
-        window.addEventListener('load', () => {
-            const progressBars = document.querySelectorAll('.progress-bar-custom');
-            progressBars.forEach(bar => {
-                const width = bar.style.width;
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.width = width;
-                }, 500);
-            });
-        });
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const container = document.getElementById('notifications-container');
-            const notification = document.createElement('div');
-            
-            const bgColor = {
-                'success': 'bg-green-500',
-                'error': 'bg-red-500',
-                'warning': 'bg-yellow-500',
-                'info': 'bg-blue-500'
-            }[type] || 'bg-blue-500';
-            
-            notification.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg transform transition-transform duration-300 translate-x-full`;
-            notification.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <span>${message}</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 hover:bg-white/20 rounded p-1">
-                        <i class="fas fa-times text-sm"></i>
-                    </button>
-                </div>
-            `;
-            
-            container.appendChild(notification);
-            
-            // Slide in
-            setTimeout(() => {
-                notification.classList.remove('translate-x-full');
-            }, 100);
-            
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                notification.classList.add('translate-x-full');
-                setTimeout(() => notification.remove(), 300);        }, 5000);
-        }
-
-        // Settings Modal Functions
-        function closeSettingsModalOnOutsideClick(event) {
-            if (event.target === event.currentTarget) {
-                document.getElementById('settingsModal').style.display = 'none';
-            }
-        }
-
-        function toggleThemeFromSettings() {
-            const darkModeToggle = document.getElementById('settings-dark-mode');
-            const html = document.documentElement;
-            const isDark = darkModeToggle.checked;
-            html.classList.toggle('dark', isDark);
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        }
-
-        function toggleAnimations() {
-            const animationsToggle = document.getElementById('settings-animations');
-            const isEnabled = animationsToggle.checked;
-            document.body.classList.toggle('disable-animations', !isEnabled);
-            localStorage.setItem('animations', isEnabled);
-        }
-
-        function toggleCompactView() {
-            const compactToggle = document.getElementById('settings-compact-view');
-            const isCompact = compactToggle.checked;
-            document.body.classList.toggle('compact-view', isCompact);
-            localStorage.setItem('compactView', isCompact);
-        }
-
-        function toggleAutoRefresh() {
-            const autoRefreshToggle = document.getElementById('settings-auto-refresh');
-            const isEnabled = autoRefreshToggle.checked;
-            localStorage.setItem('autoRefresh', isEnabled);
-            
-            if (isEnabled) {
-                startAutoRefresh();
-            } else {
-                stopAutoRefresh();
-            }
-        }
-
-        let autoRefreshInterval;
-        function startAutoRefresh() {
-            autoRefreshInterval = setInterval(() => {
-                if (typeof Dashboard !== 'undefined' && window.dashboardInstance) {
-                    window.dashboardInstance.loadDashboardData();
-                }
-            }, 60000); // Refresh every minute
-        }
-
-        function stopAutoRefresh() {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-            }
-        }
-
-        function saveSettings() {
-            // Save all settings to localStorage
-            const settings = {
-                darkMode: document.getElementById('settings-dark-mode').checked,
-                animations: document.getElementById('settings-animations').checked,
-                projectNotifications: document.getElementById('settings-project-notifications').checked,
-                fundingNotifications: document.getElementById('settings-funding-notifications').checked,
-                emailNotifications: document.getElementById('settings-email-notifications').checked,
-                compactView: document.getElementById('settings-compact-view').checked,
-                autoRefresh: document.getElementById('settings-auto-refresh').checked
-            };
-            
-            localStorage.setItem('dashboardSettings', JSON.stringify(settings));
-            
-            // Show success notification
-            showNotification('Settings saved successfully!', 'success');
-            
-            // Close modal
-            document.getElementById('settingsModal').style.display = 'none';
-        }
-
-        function resetSettings() {
-            // Reset to default values
-            document.getElementById('settings-dark-mode').checked = false;
-            document.getElementById('settings-animations').checked = true;
-            document.getElementById('settings-project-notifications').checked = true;
-            document.getElementById('settings-funding-notifications').checked = true;
-            document.getElementById('settings-email-notifications').checked = false;
-            document.getElementById('settings-compact-view').checked = false;
-            document.getElementById('settings-auto-refresh').checked = true;
-            
-            // Apply defaults
-            document.documentElement.classList.remove('dark');
-            document.body.classList.remove('disable-animations', 'compact-view');
-            localStorage.setItem('theme', 'light');
-            localStorage.removeItem('dashboardSettings');
-            
-            showNotification('Settings reset to defaults', 'info');
-        }
-
-        function loadSettings() {
-            const saved = localStorage.getItem('dashboardSettings');
-            if (saved) {
-                const settings = JSON.parse(saved);
-                document.getElementById('settings-dark-mode').checked = settings.darkMode || false;
-                document.getElementById('settings-animations').checked = settings.animations !== false;
-                document.getElementById('settings-project-notifications').checked = settings.projectNotifications !== false;
-                document.getElementById('settings-funding-notifications').checked = settings.fundingNotifications !== false;
-                document.getElementById('settings-email-notifications').checked = settings.emailNotifications || false;
-                document.getElementById('settings-compact-view').checked = settings.compactView || false;
-                document.getElementById('settings-auto-refresh').checked = settings.autoRefresh !== false;
-                
-                // Apply settings
-                document.body.classList.toggle('disable-animations', !settings.animations);
-                document.body.classList.toggle('compact-view', settings.compactView);
-            }
-            
-            // Set dark mode toggle to match current theme
-            const isDark = document.documentElement.classList.contains('dark');
-            document.getElementById('settings-dark-mode').checked = isDark;
-        }        // Load settings on page load
-        document.addEventListener('DOMContentLoaded', loadSettings);
-
-        // Dashboard refresh function
-        function refreshDashboard() {
-            const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]');
-            const icon = refreshBtn.querySelector('i');
-            
-            // Add loading state
-            icon.classList.add('fa-spin');
-            refreshBtn.disabled = true;
-            
-            // Simulate data refresh (in a real app, this would call your API)
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-            
-            showNotification('Dashboard refreshed!', 'success');
-        }
-    </script>
+    <!-- Dashboard Features -->
+    <script src="/frontend/js/projects.js"></script>
+    <script src="/frontend/js/modal-accessibility.js"></script>
     
-    <!-- Dashboard JavaScript -->
-    <script src="js/dashboard.js"></script>
+    <!-- Chart Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <!-- Dashboard Core -->
+    <script src="/frontend/js/dashboard.js" type="module"></script>
+    
+    <!-- Performance Monitoring -->
+    <script src="/frontend/js/performance.js" async></script>
+    
     <script>
         // Initialize dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            new Dashboard();
+            initDashboard();
         });
+        
+        function initDashboard() {
+            // Setup theme
+            const themeToggle = document.getElementById('theme-toggle');
+            const html = document.documentElement;
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            html.classList.toggle('dark', currentTheme === 'dark');
+            
+            // Setup mobile menu
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            if (mobileMenuToggle && mobileMenu) {
+                mobileMenuToggle.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // Initialize notifications
+            initNotifications();
+            
+            // Start performance monitoring
+            if (window.PerformanceObserver) {
+                initPerformanceMonitoring();
+            }
+        }
+        
+        // Cleanup function for SPA navigation
+        function cleanup() {
+            // Cleanup chart instances
+            Chart.helpers.each(Chart.instances, (instance) => {
+                instance.destroy();
+            });
+            
+            // Clear any intervals/timeouts
+            clearInterval(autoRefreshInterval);
+        }
+        
+        // Export for module usage
+        window.dashboardUtils = {
+            initDashboard,
+            cleanup
+        };
     </script>
 </body>
 </html>

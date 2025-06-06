@@ -13,9 +13,7 @@ const I18n = {
             const response = await fetch(`/BOSTARTER/frontend/locales/${locale}.json`);
             if (!response.ok) throw new Error(`Errore nel caricamento delle traduzioni per ${locale}`);
             this.translations[locale] = await response.json();
-            console.log(`Traduzioni caricate per ${locale}`);
         } catch (error) {
-            console.error('Errore nel caricamento delle traduzioni:', error);
             // Fallback alle traduzioni di default se disponibili
             if (locale !== Config.i18n.fallbackLocale) {
                 await this.loadTranslations(Config.i18n.fallbackLocale);
@@ -26,7 +24,6 @@ const I18n = {
     // Imposta la lingua corrente
     async setLocale(locale) {
         if (!Config.i18n.supportedLocales.includes(locale)) {
-            console.warn(`Lingua ${locale} non supportata, uso ${Config.i18n.fallbackLocale}`);
             locale = Config.i18n.fallbackLocale;
         }
 
@@ -50,7 +47,6 @@ const I18n = {
         for (const k of keys) {
             translation = translation[k];
             if (!translation) {
-                console.warn(`Traduzione mancante per la chiave: ${key}`);
                 return key;
             }
         }

@@ -1,339 +1,235 @@
 /**
- * ===== CONFIGURAZIONI CATEGORIE BOSTARTER =====
- * Configurazioni centralizzate per ogni categoria
+ * ===== CONFIGURAZIONE CATEGORIE CONFORME AL PDF =====
+ * Configurazione per SOLO hardware e software secondo le specifiche PDF
+ * Progetto Basi di Dati A.A. 2024/2025
  */
 
 window.BostarterConfig = {
 
-    // Configurazione Arte
-    arte: {
+    // Configurazione Hardware (conforme al PDF)
+    hardware: {
         colors: {
-            primary: '#2997ff',
-            accent: '#41a7ff',
-            secondary: '#1a73e8'
+            primary: '#2196f3',      // Blu per hardware
+            accent: '#42a5f5',
+            secondary: '#1976d2',
+            light: '#e3f2fd',
+            dark: '#0d47a1'
         },
         selectors: {
-            cardClass: 'art-card',
-            itemSelector: '.art-card',
-            profileSelector: '.artist-card'
+            cardClass: 'hardware-card',
+            itemSelector: '.hardware-card',
+            profileSelector: '.hardware-creator-card',
+            categoryFilter: '.hardware-filter'
         },
-        filters: ['tutti', 'pittura', 'scultura', 'fotografia', 'digital'],
+        filters: [
+            'tutti',
+            'elettronica',
+            'robotica',
+            'iot',
+            'dispositivi',
+            'componenti',
+            'automazione',
+            'sensori'
+        ],
         texts: {
-            title: 'Arte & Creatività',
-            subtitle: 'Esplora il mondo dell\'arte e della creatività',
-            profileType: 'Artista'
+            title: 'Progetti Hardware',
+            subtitle: 'Innovazioni hardware: elettronica, robotica, IoT e dispositivi fisici',
+            profileType: 'Hardware Creator',
+            description: 'Scopri e finanzia progetti hardware innovativi',
+            emptyMessage: 'Nessun progetto hardware trovato',
+            loadingMessage: 'Caricamento progetti hardware...'
+        },
+        features: [
+            'Componenti elettroniche',
+            'Dispositivi IoT',
+            'Robotica e automazione',
+            'Gadget innovativi',
+            'Prototipazione hardware',
+            'Sistemi embedded'
+        ],
+        icons: {
+            primary: 'ri-cpu-line',
+            category: 'ri-circuit-board-line',
+            filter: 'ri-filter-3-line',
+            project: 'ri-hard-drive-2-line'
+        },
+        meta: {
+            keywords: 'hardware, elettronica, robotica, iot, dispositivi, innovazione, crowdfunding',
+            ogImage: '/frontend/images/category-hardware-og.jpg'
         }
     },
 
-    // Configurazione Musica
-    musica: {
+    // Configurazione Software (conforme al PDF)
+    software: {
         colors: {
-            primary: '#6c1cd1',
-            accent: '#8e44ad',
-            secondary: '#9b59b6'
+            primary: '#4caf50',      // Verde per software
+            accent: '#66bb6a',
+            secondary: '#388e3c',
+            light: '#e8f5e8',
+            dark: '#1b5e20'
         },
         selectors: {
-            cardClass: 'music-card',
-            itemSelector: '.music-card',
-            profileSelector: '.musician-card'
+            cardClass: 'software-card',
+            itemSelector: '.software-card',
+            profileSelector: '.software-creator-card',
+            categoryFilter: '.software-filter'
         },
-        filters: ['tutti', 'rock', 'pop', 'classica', 'jazz', 'elettronica'],
+        filters: [
+            'tutti',
+            'web',
+            'mobile',
+            'desktop',
+            'ai',
+            'saas',
+            'gaming',
+            'blockchain'
+        ],
         texts: {
-            title: 'Musica & Suoni',
-            subtitle: 'Scopri artisti e progetti musicali',
-            profileType: 'Musicista'
-        }
-    },
-
-    // Configurazione Design
-    design: {
-        colors: {
-            primary: '#2c3e50',
-            accent: '#34495e',
-            secondary: '#3498db'
+            title: 'Progetti Software',
+            subtitle: 'Soluzioni software: applicazioni, piattaforme e servizi digitali',
+            profileType: 'Software Developer',
+            description: 'Sostieni lo sviluppo di applicazioni e soluzioni software innovative',
+            emptyMessage: 'Nessun progetto software trovato',
+            loadingMessage: 'Caricamento progetti software...'
         },
-        selectors: {
-            cardClass: 'design-card',
-            itemSelector: '.design-card',
-            profileSelector: '.designer-card'
+        features: [
+            'Applicazioni web e mobile',
+            'Piattaforme digitali',
+            'AI e Machine Learning',
+            'SaaS e servizi cloud',
+            'Sviluppo gaming',
+            'Soluzioni blockchain'
+        ],
+        icons: {
+            primary: 'ri-code-line',
+            category: 'ri-smartphone-line',
+            filter: 'ri-filter-3-line',
+            project: 'ri-computer-line'
         },
-        filters: ['tutti', 'grafico', 'web', 'prodotto', 'ux-ui'],
-        texts: {
-            title: 'Design & Innovazione',
-            subtitle: 'Progetti di design contemporaneo',
-            profileType: 'Designer'
-        }
-    },
-
-    // Configurazione Fotografia
-    fotografia: {
-        colors: {
-            primary: '#000000',
-            accent: '#333333',
-            secondary: '#666666'
-        },
-        selectors: {
-            cardClass: 'photo-card',
-            itemSelector: '.photo-card',
-            profileSelector: '.photographer-card'
-        },
-        filters: ['tutti', 'ritratto', 'paesaggio', 'street', 'moda', 'reportage'],
-        texts: {
-            title: 'Fotografia & Immagini',
-            subtitle: 'L\'arte di catturare momenti',
-            profileType: 'Fotografo'
-        }
-    },
-
-    // Configurazione Cinema
-    film: {
-        colors: {
-            primary: '#e50914',
-            accent: '#f40612',
-            secondary: '#b20710'
-        },
-        selectors: {
-            cardClass: 'movie-card',
-            itemSelector: '.movie-card',
-            profileSelector: '.director-card'
-        },
-        filters: ['tutti', 'drama', 'commedia', 'azione', 'documentario', 'animazione'],
-        texts: {
-            title: 'Cinema & Video',
-            subtitle: 'Storie che prendono vita',
-            profileType: 'Regista'
-        }
-    },
-
-    // Configurazione Moda
-    moda: {
-        colors: {
-            primary: '#d4af37',
-            accent: '#f4d03f',
-            secondary: '#b7950b'
-        },
-        selectors: {
-            cardClass: 'fashion-card',
-            itemSelector: '.fashion-card',
-            profileSelector: '.designer-card'
-        },
-        filters: ['tutti', 'alta-moda', 'streetwear', 'vintage', 'sostenibile'],
-        texts: {
-            title: 'Moda & Stile',
-            subtitle: 'Tendenze e creatività nel fashion',
-            profileType: 'Stilista'
-        }
-    },
-
-    // Configurazione Cibo
-    cibo: {
-        colors: {
-            primary: '#e67e22',
-            accent: '#f39c12',
-            secondary: '#d68910'
-        },
-        selectors: {
-            cardClass: 'food-card',
-            itemSelector: '.food-card',
-            profileSelector: '.chef-card'
-        },
-        filters: ['tutti', 'tradizionale', 'fusion', 'vegano', 'dolci', 'bevande'],
-        texts: {
-            title: 'Cibo & Gastronomia',
-            subtitle: 'Sapori e tradizioni culinarie',
-            profileType: 'Chef'
-        }
-    },
-
-    // Configurazione Tecnologia
-    tecnologia: {
-        colors: {
-            primary: '#00d4ff',
-            accent: '#33ddff',
-            secondary: '#0099cc'
-        },
-        selectors: {
-            cardClass: 'tech-card',
-            itemSelector: '.tech-card',
-            profileSelector: '.developer-card'
-        },
-        filters: ['tutti', 'web', 'mobile', 'ai', 'blockchain', 'iot'],
-        texts: {
-            title: 'Tecnologia & Innovazione',
-            subtitle: 'Il futuro prende forma',
-            profileType: 'Developer'
-        }
-    },
-
-    // Configurazione Giochi
-    giochi: {
-        colors: {
-            primary: '#ff6b35',
-            accent: '#ff8c42',
-            secondary: '#e55a2b'
-        },
-        selectors: {
-            cardClass: 'game-card',
-            itemSelector: '.game-card',
-            profileSelector: '.developer-card'
-        },
-        filters: ['tutti', 'indie', 'mobile', 'pc', 'console', 'vr'],
-        texts: {
-            title: 'Gaming & Intrattenimento',
-            subtitle: 'Mondi virtuali e interattivi',
-            profileType: 'Game Developer'
-        }
-    },
-
-    // Configurazione Fumetti
-    fumetti: {
-        colors: {
-            primary: '#ff4081',
-            accent: '#ff6ec7',
-            secondary: '#e91e63'
-        },
-        selectors: {
-            cardClass: 'comic-card',
-            itemSelector: '.comic-card',
-            profileSelector: '.artist-card'
-        },
-        filters: ['tutti', 'superhero', 'manga', 'indie', 'webcomic'],
-        texts: {
-            title: 'Fumetti & Illustrazione',
-            subtitle: 'Storie disegnate e fantasia',
-            profileType: 'Fumettista'
-        }
-    },
-
-    // Configurazione Giornalismo
-    giornalismo: {
-        colors: {
-            primary: '#3182ce',
-            accent: '#4299e1',
-            secondary: '#2b77cb'
-        },
-        selectors: {
-            cardClass: 'article-card',
-            itemSelector: '.article-card',
-            profileSelector: '.journalist-card'
-        },
-        filters: ['tutti', 'cronaca', 'sport', 'cultura', 'politica', 'economia'],
-        texts: {
-            title: 'Giornalismo & Informazione',
-            subtitle: 'Storie che contano',
-            profileType: 'Giornalista'
-        }
-    },
-
-    // Configurazione Artigianato
-    artigianato: {
-        colors: {
-            primary: '#c17767',
-            accent: '#d4a574',
-            secondary: '#a6614f'
-        },
-        selectors: {
-            cardClass: 'craft-card',
-            itemSelector: '.craft-card',
-            profileSelector: '.artisan-card'
-        },
-        filters: ['tutti', 'ceramica', 'legno', 'tessile', 'metallo', 'vetro'],
-        texts: {
-            title: 'Artigianato & Tradizioni',
-            subtitle: 'Maestria e saperi antichi',
-            profileType: 'Artigiano'
-        }
-    },
-
-    // Configurazione Teatro
-    teatro: {
-        colors: {
-            primary: '#8e44ad',
-            accent: '#a569bd',
-            secondary: '#7d3c98'
-        },
-        selectors: {
-            cardClass: 'theater-card',
-            itemSelector: '.theater-card',
-            profileSelector: '.actor-card'
-        },
-        filters: ['tutti', 'classico', 'contemporaneo', 'musical', 'cabaret'],
-        texts: {
-            title: 'Teatro & Performance',
-            subtitle: 'L\'arte della rappresentazione',
-            profileType: 'Attore'
-        }
-    },
-
-    // Configurazione Danza
-    danza: {
-        colors: {
-            primary: '#9b59b6',
-            accent: '#bb6bd9',
-            secondary: '#8e44ad'
-        },
-        selectors: {
-            cardClass: 'dance-card',
-            itemSelector: '.dance-card',
-            profileSelector: '.dancer-card'
-        },
-        filters: ['tutti', 'classica', 'moderna', 'hip-hop', 'latino', 'folk'],
-        texts: {
-            title: 'Danza & Movimento',
-            subtitle: 'Espressione attraverso il corpo',
-            profileType: 'Danzatore'
-        }
-    },
-
-    // Configurazione Editoriale
-    editoriale: {
-        colors: {
-            primary: '#3498db',
-            accent: '#5dade2',
-            secondary: '#2e86c1'
-        },
-        selectors: {
-            cardClass: 'editorial-card',
-            itemSelector: '.editorial-card',
-            profileSelector: '.author-card'
-        },
-        filters: ['tutti', 'romanzo', 'saggio', 'poesia', 'biografia', 'tecnico'],
-        texts: {
-            title: 'Editoria & Letteratura',
-            subtitle: 'Parole che ispirano',
-            profileType: 'Autore'
+        meta: {
+            keywords: 'software, applicazioni, web, mobile, ai, saas, sviluppo, crowdfunding',
+            ogImage: '/frontend/images/category-software-og.jpg'
         }
     }
 };
 
 /**
- * Funzione per ottenere la configurazione di una categoria
- * @param {string} category - Nome della categoria
- * @returns {Object} Configurazione della categoria
+ * ===== UTILITY FUNCTIONS CONFORMI AL PDF =====
  */
-window.BostarterConfig.getConfig = function (category) {
-    return this[category] || {};
+
+// Ottieni configurazione per categoria (solo hardware/software)
+window.getCategoryConfig = function (category) {
+    const validCategories = ['hardware', 'software'];
+    if (!validCategories.includes(category)) {
+        return null;
+    }
+    return window.BostarterConfig[category] || null;
+};
+
+// Ottieni lista delle categorie valide secondo il PDF
+window.getValidCategories = function () {
+    return ['hardware', 'software'];
+};
+
+// Verifica se una categoria è conforme al PDF
+window.isCategoryCompliant = function (category) {
+    return ['hardware', 'software'].includes(category);
+};
+
+// Migra categoria legacy a categoria conforme
+window.migrateLegacyCategory = function (legacyCategory) {
+    const migrationMap = {
+        // Tecnologia -> Hardware/Software (richiede classificazione manuale)
+        'tecnologia': 'hardware', // Default a hardware
+
+        // Tutte le altre categorie non sono supportate nel PDF
+        'arte': null,
+        'artigianato': null,
+        'cibo': null,
+        'danza': null,
+        'design': null,
+        'editoriale': null,
+        'film': null,
+        'fotografia': null,
+        'fumetti': null,
+        'giochi': 'software', // I giochi sono software
+        'giornalismo': null,
+        'moda': null,
+        'musica': null,
+        'teatro': null
+    };
+
+    return migrationMap[legacyCategory] || null;
 };
 
 /**
- * Funzione per applicare la configurazione a una pagina
- * @param {string} category - Nome della categoria
+ * ===== CONFIGURAZIONE API ENDPOINTS CONFORMI =====
  */
-window.BostarterConfig.applyConfig = function (category) {
-    const config = this.getConfig(category);
-    if (!config.colors) return;
+window.BostarterAPI = {
+    endpoints: {
+        projects: {
+            hardware: '/BOSTARTER/backend/api/projects_hardware.php',
+            software: '/BOSTARTER/backend/api/projects_software.php',
+            all: '/BOSTARTER/backend/api/projects.php'
+        },
+        categories: '/BOSTARTER/backend/api/categories_compliant.php',
+        filters: '/BOSTARTER/backend/api/filters_compliant.php'
+    },
 
-    // Applica i colori CSS custom properties
-    const root = document.documentElement;
-    root.style.setProperty('--primary-color', config.colors.primary);
-    root.style.setProperty('--accent-color', config.colors.accent);
-    root.style.setProperty('--secondary-color', config.colors.secondary);
-
-    // Aggiorna meta tags se presenti
-    const titleElement = document.querySelector('title');
-    if (titleElement && config.texts?.title) {
-        titleElement.textContent = `${config.texts.title} | BOSTARTER`;
+    // Parametri per query conformi al PDF
+    queryParams: {
+        categoryTypes: ['hardware', 'software'],
+        defaultLimit: 12,
+        defaultSort: 'data_creazione DESC',
+        statusFilter: 'attivo'
     }
+};
 
-    return config;
+/**
+ * ===== CONFIGURAZIONE UI COMPONENTS =====
+ */
+window.BostarterUI = {
+    components: {
+        categorySelector: {
+            hardware: {
+                label: 'Hardware',
+                icon: 'ri-cpu-line',
+                description: 'Progetti di elettronica e dispositivi'
+            },
+            software: {
+                label: 'Software',
+                icon: 'ri-code-line',
+                description: 'Applicazioni e soluzioni digitali'
+            }
+        },
+
+        projectCard: {
+            template: 'compliant-project-card',
+            className: 'project-card-compliant',
+            showCategory: true,
+            showProgress: true,
+            showCreator: true
+        },
+
+        filters: {
+            show: true,
+            position: 'sidebar',
+            style: 'accordion',
+            responsive: true
+        }
+    },
+
+    // Configurazione responsive conforme
+    responsive: {
+        breakpoints: {
+            mobile: '768px',
+            tablet: '1024px',
+            desktop: '1200px'
+        },
+        gridColumns: {
+            mobile: 1,
+            tablet: 2,
+            desktop: 3
+        }
+    }
 };

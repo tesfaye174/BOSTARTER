@@ -156,7 +156,7 @@ BOSTARTER/
 │   ├── api/                   # API endpoints (RESTful)
 │   │   ├── login.php         # Autenticazione utente
 │   │   ├── register.php      # Registrazione utente
-│   │   ├── projects_modern.php # API progetti (RESTful)
+│   │   ├── projects_compliant.php # API progetti (compliant with PDF specs)
 │   │   └── ...               # Altri endpoints
 │   ├── config/               # Configurazioni
 │   │   ├── database.php      # Configurazione database

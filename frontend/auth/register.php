@@ -1,14 +1,14 @@
 <?php
 require_once __DIR__ . '/../../backend/config/config.php';
 require_once __DIR__ . '/../../backend/config/database.php';
-require_once __DIR__ . '/../../backend/auth/auth.php';
+require_once __DIR__ . '/../../backend/utils/NavigationHelper.php';
+require_once __DIR__ . '/../../backend/services/MongoLogger.php';
 
 session_start();
 
 // Se l'utente è già loggato, redirect alla dashboard
-if (isset($_SESSION['user_id'])) {
-    header('Location: /dashboard');
-    exit;
+if (NavigationHelper::isLoggedIn()) {
+    NavigationHelper::redirect('dashboard');
 }
 
 $error = '';
@@ -36,16 +36,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $password = $_POST['password'] ?? '';
     $password_confirm = $_POST['password_confirm'] ?? '';
+      // Validazione migliorata
+    $validation_errors = [];
     
-    // Validazione
-    if (empty($formData['email']) || empty($formData['nickname']) || empty($formData['nome']) || 
-        empty($formData['cognome']) || empty($formData['anno_nascita']) || empty($formData['luogo_nascita']) || 
-        empty($password) || empty($password_confirm)) {
-        $error = 'Tutti i campi sono obbligatori';
-    } elseif ($password !== $password_confirm) {
-        $error = 'Le password non coincidono';
+    if (empty($formData['email'])) {
+        $validation_errors[] = 'Email è obbligatoria';
+    } elseif (!filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) {
+        $validation_errors[] = 'Email non valida';
+    }
+    
+    if (empty($formData['nickname'])) {
+        $validation_errors[] = 'Nickname è obbligatorio';
+    } elseif (strlen($formData['nickname']) < 3) {
+        $validation_errors[] = 'Nickname deve essere di almeno 3 caratteri';
+    }
+    
+    if (empty($formData['nome']) || empty($formData['cognome'])) {
+        $validation_errors[] = 'Nome e cognome sono obbligatori';
+    }
+    
+    if (empty($formData['anno_nascita'])) {
+        $validation_errors[] = 'Anno di nascita è obbligatorio';
+    } elseif (!is_numeric($formData['anno_nascita']) || $formData['anno_nascita'] < 1900 || $formData['anno_nascita'] > date('Y') - 13) {
+        $validation_errors[] = 'Anno di nascita non valido (minimo 13 anni)';
+    }
+    
+    if (empty($formData['luogo_nascita'])) {
+        $validation_errors[] = 'Luogo di nascita è obbligatorio';
+    }
+    
+    if (empty($password)) {
+        $validation_errors[] = 'Password è obbligatoria';
     } elseif (strlen($password) < 8) {
-        $error = 'La password deve essere di almeno 8 caratteri';
+        $validation_errors[] = 'Password deve essere di almeno 8 caratteri';
+    } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/', $password)) {
+        $validation_errors[] = 'Password deve contenere almeno una maiuscola, una minuscola e un numero';
+    }
+    
+    if ($password !== $password_confirm) {
+        $validation_errors[] = 'Le password non coincidono';
+    }
+    
+    if (!empty($validation_errors)) {
+        $error = implode('<br>', $validation_errors);
     } else {        $db = Database::getInstance();
         $conn = $db->getConnection();
         
@@ -97,144 +130,174 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrati - BOSTARTER</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Registrazione - BOSTARTER</title>
+    
+    <!-- Preconnect e Preload -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Fonts e Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="/frontend/css/main.css">
+    <link rel="stylesheet" href="/frontend/css/auth.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#3176FF',
+                        'brand-dark': '#1e4fc4'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body>
-    <?php include '../components/header.php'; ?>
-    
-    <main class="auth-page">
-        <div class="auth-container">
-            <h1>Registrati</h1>
+    <div class="auth-container">
+        <div class="auth-card max-w-xl">
+            <div class="auth-logo">
+                <a href="<?php echo NavigationHelper::url('home'); ?>">
+                    <img src="/frontend/images/logo.svg" alt="BOSTARTER" class="h-12 mx-auto">
+                </a>
+            </div>
+            
+            <h1 class="auth-title">Crea il tuo account</h1>
             
             <?php if ($error): ?>
-                <div class="alert alert-error">
-                    <?php echo htmlspecialchars($error); ?>
+                <div class="auth-error" role="alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <?php echo $error; ?>
                 </div>
             <?php endif; ?>
             
             <?php if ($success): ?>
-                <div class="alert alert-success">
-                    <?php echo htmlspecialchars($success); ?>
+                <div class="auth-success" role="alert">
+                    <i class="fas fa-check-circle"></i>
+                    <?php echo $success; ?>
                 </div>
             <?php endif; ?>
             
-            <form method="POST" action="" class="auth-form" data-validate>
-                <div class="form-row">
+            <form id="registerForm" method="POST" class="auth-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-group">
                         <label for="nome">Nome</label>
-                        <input type="text" id="nome" name="nome" value="<?php echo htmlspecialchars($formData['nome']); ?>" required>
+                        <input type="text" id="nome" name="nome" 
+                               value="<?php echo htmlspecialchars($formData['nome']); ?>"
+                               required autocomplete="given-name"
+                               class="focus:ring-brand focus:border-brand">
                     </div>
                     
                     <div class="form-group">
                         <label for="cognome">Cognome</label>
-                        <input type="text" id="cognome" name="cognome" value="<?php echo htmlspecialchars($formData['cognome']); ?>" required>
+                        <input type="text" id="cognome" name="cognome" 
+                               value="<?php echo htmlspecialchars($formData['cognome']); ?>"
+                               required autocomplete="family-name"
+                               class="focus:ring-brand focus:border-brand">
                     </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($formData['email']); ?>" required>
+                    <input type="email" id="email" name="email" 
+                           value="<?php echo htmlspecialchars($formData['email']); ?>"
+                           required autocomplete="email"
+                           class="focus:ring-brand focus:border-brand">
                 </div>
                 
                 <div class="form-group">
                     <label for="nickname">Nickname</label>
-                    <input type="text" id="nickname" name="nickname" value="<?php echo htmlspecialchars($formData['nickname']); ?>" required>
+                    <input type="text" id="nickname" name="nickname" 
+                           value="<?php echo htmlspecialchars($formData['nickname']); ?>"
+                           required autocomplete="username"
+                           class="focus:ring-brand focus:border-brand">
                 </div>
                 
-                <div class="form-row">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="form-group">
-                        <label for="anno_nascita">Anno di nascita</label>
-                        <input type="number" id="anno_nascita" name="anno_nascita" min="1900" max="<?php echo date('Y'); ?>" value="<?php echo htmlspecialchars($formData['anno_nascita']); ?>" required>
+                        <label for="password">Password</label>
+                        <div class="password-toggle">
+                            <input type="password" id="password" name="password" 
+                                   required autocomplete="new-password"
+                                   class="focus:ring-brand focus:border-brand">
+                        </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="luogo_nascita">Luogo di nascita</label>
-                        <input type="text" id="luogo_nascita" name="luogo_nascita" value="<?php echo htmlspecialchars($formData['luogo_nascita']); ?>" required>
+                        <label for="password_confirm">Conferma Password</label>
+                        <div class="password-toggle">
+                            <input type="password" id="password_confirm" name="password_confirm" 
+                                   required autocomplete="new-password"
+                                   class="focus:ring-brand focus:border-brand">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-group">
+                        <label for="anno_nascita">Anno di Nascita</label>
+                        <input type="number" id="anno_nascita" name="anno_nascita" 
+                               value="<?php echo htmlspecialchars($formData['anno_nascita']); ?>"
+                               required min="1900" max="<?php echo date('Y'); ?>"
+                               class="focus:ring-brand focus:border-brand">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="luogo_nascita">Luogo di Nascita</label>
+                        <input type="text" id="luogo_nascita" name="luogo_nascita" 
+                               value="<?php echo htmlspecialchars($formData['luogo_nascita']); ?>"
+                               required
+                               class="focus:ring-brand focus:border-brand">
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="tipo_utente">Tipo di utente</label>
-                    <select id="tipo_utente" name="tipo_utente" required>
-                        <option value="standard" <?php echo $formData['tipo_utente'] === 'standard' ? 'selected' : ''; ?>>Standard</option>
-                        <option value="creatore" <?php echo $formData['tipo_utente'] === 'creatore' ? 'selected' : ''; ?>>Creatore</option>
+                    <label for="tipo_utente">Tipo Utente</label>
+                    <select id="tipo_utente" name="tipo_utente" 
+                            class="focus:ring-brand focus:border-brand rounded-md">
+                        <option value="standard" <?php echo $formData['tipo_utente'] === 'standard' ? 'selected' : ''; ?>>
+                            Standard
+                        </option>
+                        <option value="creator" <?php echo $formData['tipo_utente'] === 'creator' ? 'selected' : ''; ?>>
+                            Creator
+                        </option>
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="password-input">
-                        <input type="password" id="password" name="password" required minlength="8">
-                        <button type="button" class="toggle-password">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <small>La password deve essere di almeno 8 caratteri</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password_confirm">Conferma Password</label>
-                    <div class="password-input">
-                        <input type="password" id="password_confirm" name="password_confirm" required>
-                        <button type="button" class="toggle-password">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="terms" required>
-                        <span>Accetto i <a href="/termini">Termini di Servizio</a> e la <a href="/privacy">Privacy Policy</a></span>
+                <div class="flex items-center mt-4">
+                    <input type="checkbox" id="terms" name="terms" required
+                           class="h-4 w-4 text-brand focus:ring-brand rounded">
+                    <label for="terms" class="ml-2 text-sm text-gray-600">
+                        Accetto i <a href="#" class="text-brand hover:text-brand-dark">Termini e Condizioni</a>
+                        e la <a href="#" class="text-brand hover:text-brand-dark">Privacy Policy</a>
                     </label>
                 </div>
                 
-                <button type="submit" class="btn btn-primary btn-block">Registrati</button>
+                <button type="submit" class="auth-button mt-6">
+                    Registrati
+                </button>
             </form>
             
             <div class="auth-links">
-                <p>Hai già un account? <a href="login.php">Accedi</a></p>
+                Hai già un account? 
+                <a href="<?php echo NavigationHelper::url('login'); ?>">
+                    Accedi
+                </a>
             </div>
         </div>
-    </main>
+    </div>
     
-    <?php include '../components/footer.php'; ?>
-    
-    <script>
-    // Toggle password visibility
-    document.querySelectorAll('.toggle-password').forEach(button => {
-        button.addEventListener('click', function() {
-            const passwordInput = this.parentElement.querySelector('input');
-            const icon = this.querySelector('i');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-    });
-    
-    // Password match validation
-    const password = document.getElementById('password');
-    const passwordConfirm = document.getElementById('password_confirm');
-    
-    function validatePassword() {
-        if (password.value !== passwordConfirm.value) {
-            passwordConfirm.setCustomValidity('Le password non coincidono');
-        } else {
-            passwordConfirm.setCustomValidity('');
-        }
-    }
-    
-    password.addEventListener('change', validatePassword);
-    passwordConfirm.addEventListener('keyup', validatePassword);
-    </script>
+    <!-- Core JavaScript -->
+    <script src="/frontend/js/auth.js"></script>
 </body>
-</html> 
+</html>

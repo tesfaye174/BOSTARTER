@@ -9,7 +9,6 @@ const STATIC_ASSETS = [
     '/frontend/css/main.css',
     '/frontend/js/main.js',
     '/frontend/js/auth.js',
-    '/frontend/js/notifications.js',
     '/frontend/images/logo1.svg',
     '/frontend/manifest.json'
 ];
@@ -19,7 +18,6 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(STATIC_CACHE)
             .then((cache) => {
-                console.log('Cache aperta');
                 return cache.addAll(STATIC_ASSETS);
             })
     );

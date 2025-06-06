@@ -22,7 +22,7 @@ function initializeAuthSystem() {
 // Authentication status check
 async function checkAuthStatus() {
     try {
-        const response = await fetch('/backend/api/login.php', {
+        const response = await fetch('/BOSTARTER/backend/api/auth_compliant.php', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -35,7 +35,7 @@ async function checkAuthStatus() {
             updateUIForLoggedInUser(data.user);
         }
     } catch (error) {
-        console.log('Authentication check failed:', error);
+        // Silent error handling for authentication check
     }
 }
 
@@ -181,12 +181,13 @@ async function handleLogin(e) {
     setButtonLoading(submitBtn, btnText, btnIcon, spinner, 'Accesso in corso...');
 
     try {
-        const response = await fetch('/backend/api/login.php', {
+        const response = await fetch('/BOSTARTER/backend/api/auth_compliant.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                action: 'login',
                 email: formData.get('email'),
                 password: formData.get('password')
             })
@@ -200,16 +201,15 @@ async function handleLogin(e) {
             // Redirect based on user type
             setTimeout(() => {
                 if (data.redirect === 'creatori_dashboard') {
-                    window.location.href = '/frontend/dashboard.html';
+                    window.location.href = '/frontend/dashboard.php';
                 } else {
-                    window.location.href = '/frontend/dashboard.html';
+                    window.location.href = '/frontend/dashboard.php';
                 }
             }, 1000);
         } else {
             showError('login-error', data.message || 'Errore durante l\'accesso');
         }
     } catch (error) {
-        console.error('Login error:', error);
         showError('login-error', 'Errore di connessione. Riprova più tardi.');
     } finally {
         resetButtonState(submitBtn, btnText, btnIcon, spinner, 'Accedi');
@@ -241,12 +241,13 @@ async function handleRegister(e) {
     setButtonLoading(submitBtn, btnText, btnIcon, spinner, 'Registrazione in corso...');
 
     try {
-        const response = await fetch('/backend/api/register.php', {
+        const response = await fetch('/BOSTARTER/backend/api/auth_compliant.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                action: 'register',
                 nome: formData.get('nome'),
                 cognome: formData.get('cognome'),
                 email: formData.get('email'),
@@ -265,16 +266,15 @@ async function handleRegister(e) {
             // Redirect based on user type
             setTimeout(() => {
                 if (data.redirect === 'creatori_dashboard') {
-                    window.location.href = '/frontend/dashboard.html';
+                    window.location.href = '/frontend/dashboard.php';
                 } else {
-                    window.location.href = '/frontend/dashboard.html';
+                    window.location.href = '/frontend/dashboard.php';
                 }
             }, 1500);
         } else {
             showError('register-error', data.message || 'Errore durante la registrazione');
         }
     } catch (error) {
-        console.error('Registration error:', error);
         showError('register-error', 'Errore di connessione. Riprova più tardi.');
     } finally {
         resetButtonState(submitBtn, btnText, btnIcon, spinner, 'Crea Account');
@@ -536,32 +536,6 @@ function clearAllErrors() {
     hideError('register-error');
 }
 
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-
-    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300`;
-    notification.innerHTML = `
-        <div class="flex items-center">
-            <i class="ri-${type === 'success' ? 'check' : type === 'error' ? 'error-warning' : 'info'}-line mr-2"></i>
-            <span>${message}</span>
-        </div>
-    `;
-
-    document.body.appendChild(notification);
-
-    // Animate in
-    setTimeout(() => {
-        notification.classList.remove('translate-x-full');
-    }, 100);
-
-    // Remove after 3 seconds
-    setTimeout(() => {
-        notification.classList.add('translate-x-full');
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
 function updateUIForLoggedInUser(user) {
     // Update navigation for logged in user
     const loginLink = document.getElementById('login-link');
@@ -580,7 +554,7 @@ function setupCreatorLinkHandler() {
             e.preventDefault();
 
             try {
-                const response = await fetch('/backend/api/login.php', {
+                const response = await fetch('/BOSTARTER/backend/api/auth_compliant.php', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -591,7 +565,7 @@ function setupCreatorLinkHandler() {
 
                 if (data.success && data.authenticated) {
                     if (data.user?.tipo_utente === 'creatore') {
-                        window.location.href = '/frontend/dashboard.html';
+                        window.location.href = '/frontend/dashboard.php';
                     } else {
                         showNotification('Accesso riservato ai creatori. Registrati come creatore per continuare.', 'error');
                         openModal('register-modal');
@@ -606,7 +580,6 @@ function setupCreatorLinkHandler() {
                     openModal('login-modal');
                 }
             } catch (error) {
-                console.error('Creator link error:', error);
                 showNotification('Effettua l\'accesso per continuare', 'error');
                 openModal('login-modal');
             }
@@ -618,11 +591,14 @@ function setupCreatorLinkHandler() {
 async function handleLogout() {
     try {
         const formData = new FormData();
-        const response = await fetch('/backend/api/login.php', {
-            method: 'DELETE',
+        const response = await fetch('/BOSTARTER/backend/api/auth_compliant.php', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({
+                action: 'logout'
+            })
         });
 
         const data = await response.json();
@@ -634,7 +610,6 @@ async function handleLogout() {
             }, 1000);
         }
     } catch (error) {
-        console.error('Logout error:', error);
         window.location.href = '/index.html';
     }
 }

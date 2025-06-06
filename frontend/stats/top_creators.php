@@ -134,7 +134,7 @@ if (isset($_SESSION['user_id'])) {
             </a>
             <div class="navbar-nav ms-auto">
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <a class="nav-link" href="/frontend/dashboard.html">
+                    <a class="nav-link" href="/frontend/dashboard.php">
                         <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                     </a>
                     <a class="nav-link" href="/frontend/auth/logout.php">
@@ -409,9 +409,11 @@ if (isset($_SESSION['user_id'])) {
             <div class="col-12">
                 <div class="card">
                     <div class="card-body text-center">
-                        <h6 class="card-title">Altre Statistiche</h6>
-                        <a href="/frontend/stats/close_to_goal.php" class="btn btn-outline-primary me-2">
+                        <h6 class="card-title">Altre Statistiche</h6>                        <a href="/frontend/stats/close_to_goal.php" class="btn btn-outline-primary me-2">
                             <i class="fas fa-bullseye me-1"></i>Progetti Vicini all'Obiettivo
+                        </a>
+                        <a href="volume_analysis.php" class="btn btn-outline-success me-2">
+                            <i class="fas fa-chart-line me-1"></i>Analisi Volume
                         </a>
                         <a href="/frontend/projects/list_open.php" class="btn btn-outline-secondary">
                             <i class="fas fa-list me-1"></i>Tutti i Progetti

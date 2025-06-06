@@ -65,7 +65,7 @@ const accessibility = {
                 if (currentIndex === -1) return;
 
                 e.preventDefault();
-                const nextIndex = e.key === 'ArrowDown' 
+                const nextIndex = e.key === 'ArrowDown'
                     ? Math.min(currentIndex + 1, items.length - 1)
                     : Math.max(currentIndex - 1, 0);
                 items[nextIndex].focus();
@@ -96,8 +96,8 @@ const accessibility = {
 
         // Gestione cambio tema
         themeToggle.addEventListener('click', () => {
-            const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' 
-                ? 'light' 
+            const newTheme = document.documentElement.getAttribute('data-theme') === 'dark'
+                ? 'light'
                 : 'dark';
             setTheme(newTheme);
         });
@@ -145,7 +145,7 @@ const accessibility = {
     // Gestione animazioni ridotte
     setupReducedMotion() {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-        
+
         const updateMotion = (reduced) => {
             document.documentElement.classList.toggle('reduced-motion', reduced);
         };

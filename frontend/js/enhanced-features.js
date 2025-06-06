@@ -6,26 +6,22 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
             const registration = await navigator.serviceWorker.register('/frontend/sw.js');
-            console.log('✅ Service Worker registered successfully:', registration.scope);
+            // Service Worker registered successfully
 
             // Check for updates
             registration.addEventListener('updatefound', () => {
                 const newWorker = registration.installing;
                 newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // Show update notification
-                        if (window.bosstarterApp) {
-                            window.bosstarterApp.showNotification(
-                                'Nuova versione disponibile! Ricarica la pagina per aggiornare.',
-                                'info',
-                                10000
-                            );
-                        }
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {                        // Show update notification
+                        showNotification(
+                            'Nuova versione disponibile! Ricarica la pagina per aggiornare.',
+                            'info'
+                        );
                     }
                 });
             });
         } catch (error) {
-            console.warn('❌ Service Worker registration failed:', error);
+            // Silent error handling for SW registration
         }
     });
 }
@@ -50,9 +46,7 @@ if ('performance' in window && 'getEntriesByType' in performance) {
                 } else if (entry.name === 'first-contentful-paint') {
                     metrics.firstContentfulPaint = Math.round(entry.startTime);
                 }
-            });
-
-            console.log('📊 Performance Metrics:', metrics);
+            });            // Performance metrics logged
 
             // Send to analytics if available
             if (typeof gtag !== 'undefined') {
@@ -78,13 +72,10 @@ function updateNetworkStatus() {
             '🟢 Connesso' :
             '🔴 Offline - Alcune funzionalità potrebbero non essere disponibili';
         statusElement.style.display = isOnline ? 'none' : 'block';
-    }
-
-    if (!isOnline && window.bosstarterApp) {
-        window.bosstarterApp.showNotification(
+    } if (!isOnline) {
+        showNotification(
             'Connessione persa. Verifica la tua connessione internet.',
-            'warning',
-            5000
+            'warning'
         );
     }
 }
@@ -405,7 +396,7 @@ window.addEventListener('load', () => {
 
 // Enhanced error handling
 window.addEventListener('error', (event) => {
-    console.error('Global error:', event.error);
+    // Silent error handling for production
     // Optional: Send error to analytics
     if (window.gtag) {
         gtag('event', 'exception', {
@@ -430,48 +421,6 @@ document.addEventListener('keydown', (event) => {
         });
     }
 });
-
-// Enhanced notification system
-function showNotification(message, type = 'info', duration = 5000) {
-    const container = document.getElementById('notifications-container');
-    if (!container) return;
-
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.setAttribute('role', 'alert');
-    notification.innerHTML = `
-        <div class="flex items-center justify-between">
-            <div class="flex items-center">
-                <i class="ri-${getNotificationIcon(type)} mr-2" aria-hidden="true"></i>
-                <span>${message}</span>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" 
-                    class="ml-4 text-gray-400 hover:text-gray-600" 
-                    aria-label="Chiudi notifica">
-                <i class="ri-close-line" aria-hidden="true"></i>
-            </button>
-        </div>
-    `;
-
-    container.appendChild(notification);
-
-    // Auto-remove after duration
-    if (duration > 0) {
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease-in';
-            setTimeout(() => notification.remove(), 300);
-        }, duration);
-    }
-}
-
-function getNotificationIcon(type) {
-    switch (type) {
-        case 'success': return 'check-circle-line';
-        case 'error': return 'error-warning-line';
-        case 'warning': return 'alert-line';
-        default: return 'information-line';
-    }
-}
 
 // Enhanced form validation
 function enhanceFormValidation() {
@@ -577,16 +526,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.animate-on-scroll').forEach(el => {
             observer.observe(el);
         });
-    }
-
-    // Service Worker registration for PWA
+    }    // Service Worker registration for PWA
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/frontend/sw.js')
             .then(registration => {
-                console.log('SW registered:', registration);
+                // SW registered successfully
             })
             .catch(error => {
-                console.log('SW registration failed:', error);
+                // SW registration failed
             });
     }
 });
@@ -598,4 +545,4 @@ window.BOSTARTER = {
     validateField
 };
 
-console.log('🚀 BOSTARTER Enhanced features loaded successfully!');
+// Enhanced features loaded successfully

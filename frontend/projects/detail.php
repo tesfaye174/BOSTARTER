@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../backend/config/database.php';
+require_once '../../backend/utils/NavigationHelper.php';
 require_once '../../backend/services/MongoLogger.php';
 
 $database = Database::getInstance();
@@ -10,7 +11,7 @@ $mongoLogger = new MongoLogger();
 $project_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if (!$project_id) {
-    header("Location: list_open.php");
+    NavigationHelper::redirect('projects');
     exit();
 }
 
@@ -31,7 +32,7 @@ $project_stmt->execute();
 $project = $project_stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$project) {
-    header("Location: list_open.php");
+    NavigationHelper::redirect('projects');
     exit();
 }
 
@@ -55,27 +56,6 @@ if ($project['project_type'] === 'hardware') {
     $hardware_components = $components_stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Get software profile if software project
-$software_profile = null;
-$required_skills = [];
-if ($project['project_type'] === 'software') {
-    $profile_query = "SELECT * FROM SOFTWARE_PROFILES WHERE project_id = :project_id";
-    $profile_stmt = $db->prepare($profile_query);
-    $profile_stmt->bindParam(':project_id', $project_id);
-    $profile_stmt->execute();
-    $software_profile = $profile_stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($software_profile && $software_profile['required_skills']) {
-        $skill_ids = json_decode($software_profile['required_skills'], true);
-        if ($skill_ids) {
-            $skills_query = "SELECT skill_name, category FROM SKILLS WHERE skill_id IN (" . implode(',', array_fill(0, count($skill_ids), '?')) . ")";
-            $skills_stmt = $db->prepare($skills_query);
-            $skills_stmt->execute($skill_ids);
-            $required_skills = $skills_stmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-    }
-}
-
 // Get project rewards
 $rewards_query = "SELECT * FROM REWARDS WHERE project_id = :project_id ORDER BY min_amount ASC";
 $rewards_stmt = $db->prepare($rewards_query);
@@ -96,35 +76,9 @@ $comments_stmt->bindParam(':project_id', $project_id);
 $comments_stmt->execute();
 $all_comments = $comments_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Organize comments into threads
-$comments = [];
-$replies = [];
-foreach ($all_comments as $comment) {
-    if ($comment['is_reply']) {
-        $replies[$comment['parent_comment_id']][] = $comment;
-    } else {
-        $comments[] = $comment;
-    }
-}
-
-// Get applications for software projects
-$applications = [];
-if ($project['project_type'] === 'software') {
-    $applications_query = "SELECT c.*, u.username, s.skill_name
-                          FROM CANDIDATURE c
-                          JOIN USERS u ON c.user_id = u.user_id
-                          JOIN SKILLS s ON c.skill_id = s.skill_id
-                          WHERE c.project_id = :project_id
-                          ORDER BY c.application_date DESC";
-    $applications_stmt = $db->prepare($applications_query);
-    $applications_stmt->bindParam(':project_id', $project_id);
-    $applications_stmt->execute();
-    $applications = $applications_stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-// Check if current user can apply (for software projects)
+// Get software skills if it's a software project
+$required_skills = [];
 $can_apply = false;
-$user_applications = [];
 if (isset($_SESSION['user_id']) && $project['project_type'] === 'software' && 
     $_SESSION['user_id'] != $project['creator_id'] && $project['status'] === 'open') {
     
@@ -149,28 +103,21 @@ if (isset($_SESSION['user_id']) && $project['project_type'] === 'software' &&
     <title><?php echo htmlspecialchars($project['title']); ?> - BOSTARTER</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .progress-thick { height: 20px; }
-        .comment-thread { border-left: 3px solid #e9ecef; }
-        .reply-comment { margin-left: 2rem; border-left: 2px solid #dee2e6; }
-        .skill-badge { margin: 2px; }
-        .component-item { background: #f8f9fa; border-radius: 8px; }
-    </style>
+    <link href="../css/style.css" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="../index.php">
+            <a class="navbar-brand" href="<?php echo NavigationHelper::url('home'); ?>">
                 <i class="fas fa-rocket"></i> BOSTARTER
             </a>
             <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="list_open.php">Browse Projects</a>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <a class="nav-link" href="create.php">Create Project</a>
-                    <a class="nav-link" href="../auth/logout.php">Logout</a>
+                    <a class="nav-link" href="<?php echo NavigationHelper::url('create_project'); ?>">Create Project</a>
+                    <a class="nav-link" href="<?php echo NavigationHelper::url('logout'); ?>">Logout</a>
                 <?php else: ?>
-                    <a class="nav-link" href="../auth/login.php">Login</a>
-                    <a class="nav-link" href="../auth/register.php">Register</a>
+                    <a class="nav-link" href="<?php echo NavigationHelper::url('login'); ?>">Login</a>
+                    <a class="nav-link" href="<?php echo NavigationHelper::url('register'); ?>">Register</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -228,24 +175,24 @@ if (isset($_SESSION['user_id']) && $project['project_type'] === 'software' &&
                         <?php if (isset($_SESSION['user_id'])): ?>
                             <div class="d-grid gap-2 d-md-flex justify-content-md-center">
                                 <?php if ($_SESSION['user_id'] != $project['creator_id'] && $project['status'] === 'open'): ?>
-                                    <a href="fund.php?id=<?php echo $project_id; ?>" class="btn btn-success btn-lg me-md-2">
+                                    <a href="<?php echo NavigationHelper::url('fund_project', ['id' => $project_id]); ?>" class="btn btn-success btn-lg me-md-2">
                                         <i class="fas fa-heart"></i> Support This Project
                                     </a>
                                 <?php endif; ?>
                                 <?php if ($_SESSION['user_id'] == $project['creator_id']): ?>
-                                    <a href="add_reward.php?id=<?php echo $project_id; ?>" class="btn btn-primary me-md-2">
+                                    <a href="<?php echo NavigationHelper::url('manage_rewards', ['id' => $project_id]); ?>" class="btn btn-primary me-md-2">
                                         <i class="fas fa-gift"></i> Manage Rewards
                                     </a>
                                 <?php endif; ?>
                                 <?php if ($can_apply && !empty($required_skills)): ?>
-                                    <a href="apply.php?id=<?php echo $project_id; ?>" class="btn btn-info">
+                                    <a href="<?php echo NavigationHelper::url('apply_project', ['id' => $project_id]); ?>" class="btn btn-info">
                                         <i class="fas fa-user-plus"></i> Apply to Help
                                     </a>
                                 <?php endif; ?>
                             </div>
                         <?php else: ?>
                             <div class="text-center">
-                                <a href="../auth/login.php" class="btn btn-success btn-lg">
+                                <a href="<?php echo NavigationHelper::url('login'); ?>" class="btn btn-success btn-lg">
                                     Login to Support This Project
                                 </a>
                             </div>
@@ -273,11 +220,15 @@ if (isset($_SESSION['user_id']) && $project['project_type'] === 'software' &&
                             <div class="row">
                                 <?php foreach ($hardware_components as $component): ?>
                                     <div class="col-md-6 mb-3">
-                                        <div class="component-item p-3">
-                                            <h6><?php echo htmlspecialchars($component['component_name']); ?></h6>
-                                            <p class="mb-1">Quantity: <strong><?php echo $component['quantity']; ?></strong></p>
-                                            <p class="mb-0">Unit Cost: <strong>$<?php echo number_format($component['unit_cost'], 2); ?></strong></p>
-                                            <small class="text-muted">Total: $<?php echo number_format($component['quantity'] * $component['unit_cost'], 2); ?></small>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-microchip me-2"></i>
+                                            <div>
+                                                <strong><?php echo htmlspecialchars($component['component_name']); ?></strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <?php echo htmlspecialchars($component['description']); ?>
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
@@ -286,100 +237,78 @@ if (isset($_SESSION['user_id']) && $project['project_type'] === 'software' &&
                     </div>
                 <?php endif; ?>
 
-                <!-- Software Skills -->
-                <?php if ($project['project_type'] === 'software' && !empty($required_skills)): ?>
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5><i class="fas fa-code"></i> Required Skills</h5>
-                        </div>
-                        <div class="card-body">
-                            <?php 
-                            $skills_by_category = [];
-                            foreach ($required_skills as $skill) {
-                                $skills_by_category[$skill['category']][] = $skill['skill_name'];
-                            }
-                            ?>
-                            <?php foreach ($skills_by_category as $category => $skills): ?>
-                                <h6><?php echo htmlspecialchars($category); ?></h6>
-                                <div class="mb-3">
-                                    <?php foreach ($skills as $skill): ?>
-                                        <span class="badge bg-secondary skill-badge"><?php echo htmlspecialchars($skill); ?></span>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endforeach; ?>
-                            
-                            <?php if ($software_profile): ?>
-                                <p class="mb-0">
-                                    <strong>Max Contributors:</strong> <?php echo $software_profile['max_contributors']; ?>
-                                    <?php if (isset($project['current_contributors'])): ?>
-                                        (<?php echo $project['current_contributors']; ?> accepted)
-                                    <?php endif; ?>
-                                </p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
                 <!-- Comments Section -->
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5><i class="fas fa-comments"></i> Comments (<?php echo count($comments); ?>)</h5>
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <a href="comment.php?id=<?php echo $project_id; ?>" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus"></i> Add Comment
-                            </a>
-                        <?php endif; ?>
+                    <div class="card-header">
+                        <h5><i class="fas fa-comments"></i> Comments</h5>
                     </div>
                     <div class="card-body">
-                        <?php if (empty($comments)): ?>
-                            <p class="text-muted text-center py-4">No comments yet. Be the first to comment!</p>
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <form action="<?php echo NavigationHelper::url('add_comment'); ?>" method="post" class="mb-4">
+                                <input type="hidden" name="project_id" value="<?php echo $project_id; ?>">
+                                <div class="mb-3">
+                                    <textarea name="content" class="form-control" rows="3" 
+                                              placeholder="Share your thoughts..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Post Comment</button>
+                            </form>
                         <?php else: ?>
-                            <?php foreach ($comments as $comment): ?>
-                                <div class="comment-thread ps-3 mb-4">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                            <p class="text-center mb-4">
+                                <a href="<?php echo NavigationHelper::url('login'); ?>" class="btn btn-outline-primary">
+                                    Login to Comment
+                                </a>
+                            </p>
+                        <?php endif; ?>
+
+                        <!-- Display Comments -->
+                        <?php if (!empty($all_comments)): ?>
+                            <?php foreach ($all_comments as $comment): ?>
+                                <div class="mb-3 <?php echo $comment['is_reply'] ? 'ms-4' : ''; ?>">
+                                    <div class="d-flex gap-2">
                                         <div>
-                                            <strong><?php echo htmlspecialchars($comment['username']); ?></strong>
-                                            <small class="text-muted ms-2"><?php echo date('M j, Y g:i A', strtotime($comment['created_at'])); ?></small>
+                                            <i class="fas fa-user-circle fa-2x text-muted"></i>
                                         </div>
-                                        <?php if (isset($_SESSION['user_id'])): ?>
-                                            <a href="reply_comment.php?id=<?php echo $comment['comment_id']; ?>" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-reply"></i> Reply
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                    <p><?php echo nl2br(htmlspecialchars($comment['content'])); ?></p>
-                                    
-                                    <!-- Replies -->
-                                    <?php if (isset($replies[$comment['comment_id']])): ?>
-                                        <?php foreach ($replies[$comment['comment_id']] as $reply): ?>
-                                            <div class="reply-comment ps-3 pt-3 mt-3">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <div>
-                                                        <strong><?php echo htmlspecialchars($reply['username']); ?></strong>
-                                                        <small class="text-muted ms-2"><?php echo date('M j, Y g:i A', strtotime($reply['created_at'])); ?></small>
-                                                    </div>
-                                                </div>
-                                                <p class="mb-0"><?php echo nl2br(htmlspecialchars($reply['content'])); ?></p>
+                                        <div class="flex-grow-1">
+                                            <div>
+                                                <strong><?php echo htmlspecialchars($comment['username']); ?></strong>
+                                                <small class="text-muted ms-2">
+                                                    <?php echo date('M j, Y', strtotime($comment['created_at'])); ?>
+                                                </small>
                                             </div>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
+                                            <p class="mb-1"><?php echo nl2br(htmlspecialchars($comment['content'])); ?></p>
+                                            <?php if (isset($_SESSION['user_id']) && !$comment['is_reply']): ?>
+                                                <button class="btn btn-sm btn-link p-0 reply-btn" 
+                                                        data-comment-id="<?php echo $comment['comment_id']; ?>">
+                                                    Reply
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
+                        <?php else: ?>
+                            <p class="text-center text-muted">No comments yet. Be the first to share your thoughts!</p>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-            <!-- Sidebar -->
+            <!-- Right Sidebar -->
             <div class="col-md-4">
-                <!-- Project Info -->
-                <div class="card mb-3">
+                <!-- Creator Info -->
+                <div class="card mb-4">
                     <div class="card-header">
-                        <h6><i class="fas fa-calendar"></i> Project Timeline</h6>
+                        <h6><i class="fas fa-user"></i> Project Creator</h6>
                     </div>
                     <div class="card-body">
-                        <p><strong>Created:</strong> <?php echo date('M j, Y', strtotime($project['created_at'])); ?></p>
-                        <p><strong>Deadline:</strong> <?php echo date('M j, Y', strtotime($project['deadline'])); ?></p>
+                        <p class="mb-0">
+                            <strong><?php echo htmlspecialchars($project['creator_name']); ?></strong>
+                            <br>
+                            <small class="text-muted">
+                                <?php echo htmlspecialchars($project['creator_email']); ?>
+                            </small>
+                        </p>
+                        <hr>
                         <p class="mb-0">
                             <strong>Status:</strong> 
                             <span class="badge bg-<?php echo $project['status'] === 'open' ? 'success' : ($project['status'] === 'funded' ? 'primary' : 'secondary'); ?>">
@@ -400,48 +329,78 @@ if (isset($_SESSION['user_id']) && $project['project_type'] === 'software' &&
                                 <div class="border rounded p-3 mb-2">
                                     <h6 class="mb-1"><?php echo htmlspecialchars($reward['title']); ?></h6>
                                     <p class="small text-muted mb-2"><?php echo htmlspecialchars($reward['description']); ?></p>
-                                    <strong class="text-success">$<?php echo number_format($reward['min_amount'], 2); ?>+</strong>
-                                    <?php if ($reward['estimated_delivery']): ?>
-                                        <br><small class="text-muted">Est. delivery: <?php echo date('M Y', strtotime($reward['estimated_delivery'])); ?></small>
-                                    <?php endif; ?>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-primary">$<?php echo number_format($reward['min_amount'], 2); ?></span>
+                                        <?php if ($project['status'] === 'open' && isset($_SESSION['user_id']) && $_SESSION['user_id'] != $project['creator_id']): ?>
+                                            <a href="<?php echo NavigationHelper::url('fund_project', ['id' => $project_id, 'reward' => $reward['reward_id']]); ?>" 
+                                               class="btn btn-sm btn-outline-success">
+                                                Select
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endif; ?>
 
-                <!-- Applications (for software projects) -->
-                <?php if ($project['project_type'] === 'software' && (($_SESSION['user_id'] ?? 0) == $project['creator_id'] || !empty($applications))): ?>
-                    <div class="card">
-                        <div class="card-header">
-                            <h6><i class="fas fa-users"></i> Applications (<?php echo count($applications); ?>)</h6>
-                        </div>
-                        <div class="card-body">
-                            <?php if (empty($applications)): ?>
-                                <p class="text-muted small">No applications yet.</p>
-                            <?php else: ?>
-                                <?php foreach (array_slice($applications, 0, 5) as $application): ?>
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div>
-                                            <strong><?php echo htmlspecialchars($application['username']); ?></strong>
-                                            <br><small class="text-muted"><?php echo htmlspecialchars($application['skill_name']); ?></small>
-                                        </div>
-                                        <span class="badge bg-<?php echo $application['status'] === 'accepted' ? 'success' : ($application['status'] === 'pending' ? 'warning' : 'danger'); ?>">
-                                            <?php echo ucfirst($application['status']); ?>
-                                        </span>
-                                    </div>
-                                <?php endforeach; ?>
-                                <?php if (count($applications) > 5): ?>
-                                    <small class="text-muted">And <?php echo count($applications) - 5; ?> more...</small>
-                                <?php endif; ?>
-                            <?php endif; ?>
+                <!-- Share Project -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-share-alt"></i> Share Project</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="https://twitter.com/intent/tweet?url=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>&text=<?php echo urlencode($project['title']); ?>" 
+                               class="btn btn-outline-info" target="_blank">
+                                <i class="fab fa-twitter"></i> Share on Twitter
+                            </a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>" 
+                               class="btn btn-outline-primary" target="_blank">
+                                <i class="fab fa-facebook"></i> Share on Facebook
+                            </a>
+                            <a href="https://www.linkedin.com/shareArticle?mini=true&url=<?php echo urlencode($_SERVER['REQUEST_URI']); ?>&title=<?php echo urlencode($project['title']); ?>" 
+                               class="btn btn-outline-secondary" target="_blank">
+                                <i class="fab fa-linkedin"></i> Share on LinkedIn
+                            </a>
                         </div>
                     </div>
-                <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Reply functionality
+        document.querySelectorAll('.reply-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const commentId = this.dataset.commentId;
+                const replyForm = document.createElement('form');
+                replyForm.action = '<?php echo NavigationHelper::url('add_comment'); ?>';
+                replyForm.method = 'post';
+                replyForm.className = 'mt-2';
+                replyForm.innerHTML = `
+                    <input type="hidden" name="project_id" value="<?php echo $project_id; ?>">
+                    <input type="hidden" name="parent_comment_id" value="${commentId}">
+                    <div class="mb-2">
+                        <textarea name="content" class="form-control form-control-sm" rows="2" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">Reply</button>
+                    <button type="button" class="btn btn-sm btn-link cancel-reply">Cancel</button>
+                `;
+                
+                // Remove any existing reply forms
+                document.querySelectorAll('.reply-form').forEach(form => form.remove());
+                this.parentElement.appendChild(replyForm);
+                
+                replyForm.querySelector('.cancel-reply').addEventListener('click', () => {
+                    replyForm.remove();
+                });
+            });
+        });
+    </script>
 </body>
 </html>
+
+<?php require_once '../components/footer.php'; ?>
