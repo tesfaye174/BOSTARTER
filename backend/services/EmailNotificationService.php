@@ -239,10 +239,9 @@ class EmailNotificationService {
         $stmt = $this->db->prepare("
             SELECT u.email, u.nickname, 
                    ns.email_enabled, ns.email_frequency, ns.quiet_hours_start, 
-                   ns.quiet_hours_end, ns.timezone
-            FROM utenti u
+                   ns.quiet_hours_end, ns.timezone            FROM utenti u
             LEFT JOIN notification_settings ns ON u.id = ns.user_id
-            WHERE u.id = ? AND u.stato = 'attivo'
+            WHERE u.id = ?
         ");
         $stmt->execute([$userId]);
         return $stmt->fetch(\PDO::FETCH_ASSOC);

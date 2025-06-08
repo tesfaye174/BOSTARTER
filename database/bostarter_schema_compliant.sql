@@ -351,10 +351,9 @@ BEGIN
         END IF;
     END LOOP;
     CLOSE skill_cursor;
-    
-    -- Se skill match OK, inserisci candidatura
+      -- Se skill match OK, inserisci candidatura
     IF skill_match_ok THEN
-        INSERT INTO candidatura (utente_id, progetto_id, profilo_id)
+        INSERT INTO candidature (utente_id, progetto_id, profilo_id)
         VALUES (p_utente_id, p_progetto_id, p_profilo_id);
         SELECT 'Candidatura inserita con successo' AS messaggio;
     ELSE
@@ -376,9 +375,8 @@ BEGIN
     FROM progetti p
     JOIN candidature c ON p.id = c.progetto_id
     WHERE c.id = p_candidatura_id;
-    
-    IF v_progetto_creatore = p_creatore_id THEN
-        UPDATE candidatura 
+      IF v_progetto_creatore = p_creatore_id THEN
+        UPDATE candidature 
         SET stato = p_stato, data_risposta = NOW()
         WHERE id = p_candidatura_id;
     END IF;

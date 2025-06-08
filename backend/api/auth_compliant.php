@@ -11,25 +11,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../config/database.php';
 require_once '../models/UserCompliant.php';
 require_once '../services/MongoLogger.php';
+require_once '../services/AuthService.php';
 require_once '../utils/Validator.php';
+require_once '../utils/ApiResponse.php';
 
+// Inizializza i servizi sicuri
 $database = Database::getInstance();
 $db = $database->getConnection();
 $userModel = new UserCompliant();
 $mongoLogger = new MongoLogger();
+$authService = new AuthService();
 
 $method = $_SERVER['REQUEST_METHOD'];
 $request = json_decode(file_get_contents('php://input'), true);
 
 switch ($method) {
     case 'POST':
-        handleAuthRequest($userModel, $mongoLogger, $request);
+        handleAuthRequest($authService, $mongoLogger, $request);
         break;
     case 'GET':
-        handleAuthCheck($userModel, $mongoLogger);
+        handleAuthCheck($authService, $mongoLogger);
         break;
     case 'DELETE':
-        handleLogout($mongoLogger);
+        handleLogout($authService, $mongoLogger);
         break;
     default:
         http_response_code(405);
@@ -37,7 +41,7 @@ switch ($method) {
         break;
 }
 
-function handleAuthRequest($userModel, $mongoLogger, $request) {
+function handleAuthRequest($authService, $mongoLogger, $request) {
     if (!isset($request['action'])) {
         http_response_code(400);
         echo json_encode(['error' => 'Action required']);
@@ -46,7 +50,7 @@ function handleAuthRequest($userModel, $mongoLogger, $request) {
 
     switch ($request['action']) {
         case 'login':
-            handleLogin($userModel, $mongoLogger, $request);
+            handleLogin($authService, $mongoLogger, $request);
             break;
         case 'register':
             handleRegister($userModel, $mongoLogger, $request);
@@ -58,65 +62,48 @@ function handleAuthRequest($userModel, $mongoLogger, $request) {
     }
 }
 
-function handleLogin($userModel, $mongoLogger, $request) {
+function handleLogin($authService, $mongoLogger, $request) {
     try {
-        // Validazione con metodo static standardizzato
-        $validationResult = Validator::validateLogin(
-            $request['email'] ?? '', 
-            $request['password'] ?? ''
+        // Usa AuthService per login sicuro
+        $result = $authService->login(
+            $request['email'] ?? '',
+            $request['password'] ?? '',
+            $request['remember_me'] ?? false,
+            $request['csrf_token'] ?? ''
         );
-        
-        if ($validationResult !== true) {
-            http_response_code(400);
-            echo json_encode(['error' => implode(', ', $validationResult)]);
-            return;
-        }
-
-        // Use stored procedure for login
-        $result = $userModel->login($request['email'], $request['password']);
 
         if ($result['success']) {
-            // Start session
-            session_start();
-            $_SESSION['user_id'] = $result['user']['id'];
-            $_SESSION['nickname'] = $result['user']['nickname'];
-            $_SESSION['login_time'] = time();
-
             // Log successful login
             $mongoLogger->logEvent('user_login', [
                 'user_id' => $result['user']['id'],
-                'nickname' => $result['user']['nickname'],
+                'email' => $result['user']['email'],
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+                'login_method' => 'api_compliant'
             ]);
 
-            echo json_encode([
-                'success' => true,
-                'message' => $result['message'],
-                'user' => $result['user']
-            ]);
+            ApiResponse::success([
+                'user' => $result['user'],
+                'session_id' => session_id(),
+                'csrf_token' => $_SESSION['csrf_token'] ?? null
+            ], $result['message']);
         } else {
             // Log failed login attempt
             $mongoLogger->logEvent('login_failed', [
-                'email' => $request['email'], // Fixed: was using nickname instead of email
+                'email' => $request['email'],
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-                'reason' => $result['message']
+                'reason' => $result['message'],
+                'login_method' => 'api_compliant'
             ]);
 
-            http_response_code(401);
-            echo json_encode([
-                'success' => false,
-                'message' => $result['message']
-            ]);
+            ApiResponse::unauthorized($result['message']);
         }
     } catch (Exception $e) {
         $mongoLogger->logEvent('login_error', [
-            'email' => $request['email'] ?? 'unknown', // Fixed: was using nickname instead of email
-            'error' => $e->getMessage()
-        ]);
-
-        http_response_code(500);
-        echo json_encode(['error' => 'Internal server error']);
+            'email' => $request['email'] ?? 'unknown',
+            'error' => $e->getMessage(),
+            'login_method' => 'api_compliant'
+        ]);        ApiResponse::serverError('Errore interno durante il login');
     }
 }
 

@@ -20,7 +20,7 @@ if (!$project_id) {
 }
 
 // Get project details and verify ownership
-$project_query = "SELECT title, creator_id, status FROM PROJECTS WHERE project_id = :project_id";
+$project_query = "SELECT nome as title, creatore_id as creator_id, stato as status FROM progetti WHERE id = :project_id";
 $project_stmt = $db->prepare($project_query);
 $project_stmt->bindParam(':project_id', $project_id);
 $project_stmt->execute();
@@ -32,7 +32,7 @@ if (!$project || $project['creator_id'] != $_SESSION['user_id']) {
 }
 
 // Get existing rewards
-$rewards_query = "SELECT * FROM REWARDS WHERE project_id = :project_id ORDER BY min_amount ASC";
+$rewards_query = "SELECT * FROM reward WHERE progetto_id = :project_id ORDER BY importo_minimo ASC";
 $rewards_stmt = $db->prepare($rewards_query);
 $rewards_stmt->bindParam(':project_id', $project_id);
 $rewards_stmt->execute();
@@ -51,9 +51,8 @@ if ($_POST) {
                 if (empty($title) || empty($description) || $min_amount <= 0) {
                     throw new Exception("All fields are required and minimum amount must be positive.");
                 }
-                
-                // Check for duplicate minimum amounts
-                $check_query = "SELECT COUNT(*) FROM REWARDS WHERE project_id = :project_id AND min_amount = :min_amount";
+                  // Check for duplicate minimum amounts
+                $check_query = "SELECT COUNT(*) FROM reward WHERE progetto_id = :project_id AND importo_minimo = :min_amount";
                 $check_stmt = $db->prepare($check_query);
                 $check_stmt->bindParam(':project_id', $project_id);
                 $check_stmt->bindParam(':min_amount', $min_amount);
@@ -63,7 +62,7 @@ if ($_POST) {
                     throw new Exception("A reward with this minimum amount already exists.");
                 }
                 
-                $insert_query = "INSERT INTO REWARDS (project_id, title, description, min_amount, estimated_delivery) 
+                $insert_query = "INSERT INTO reward (progetto_id, titolo, descrizione, importo_minimo, data_consegna) 
                                 VALUES (:project_id, :title, :description, :min_amount, :estimated_delivery)";
                 $insert_stmt = $db->prepare($insert_query);
                 $insert_stmt->bindParam(':project_id', $project_id);
@@ -77,9 +76,8 @@ if ($_POST) {
                 
             } elseif ($_POST['action'] === 'delete') {
                 $reward_id = (int)$_POST['reward_id'];
-                
-                // Check if reward has been selected by backers
-                $funding_check = "SELECT COUNT(*) FROM FUNDINGS WHERE reward_id = :reward_id";
+                  // Check if reward has been selected by backers
+                $funding_check = "SELECT COUNT(*) FROM finanziamenti WHERE reward_id = :reward_id";
                 $funding_stmt = $db->prepare($funding_check);
                 $funding_stmt->bindParam(':reward_id', $reward_id);
                 $funding_stmt->execute();
@@ -88,7 +86,7 @@ if ($_POST) {
                     throw new Exception("Cannot delete reward that has been selected by backers.");
                 }
                 
-                $delete_query = "DELETE FROM REWARDS WHERE reward_id = :reward_id AND project_id = :project_id";
+                $delete_query = "DELETE FROM reward WHERE id = :reward_id AND progetto_id = :project_id";
                 $delete_stmt = $db->prepare($delete_query);
                 $delete_stmt->bindParam(':reward_id', $reward_id);
                 $delete_stmt->bindParam(':project_id', $project_id);
@@ -210,15 +208,14 @@ if ($_POST) {
                             <?php foreach ($rewards as $reward): ?>
                                 <div class="border rounded p-3 mb-3">
                                     <div class="d-flex justify-content-between align-items-start">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1"><?php echo htmlspecialchars($reward['title']); ?></h6>
-                                            <p class="text-muted small mb-2"><?php echo htmlspecialchars($reward['description']); ?></p>
+                                        <div class="flex-grow-1">                                            <h6 class="mb-1"><?php echo htmlspecialchars($reward['titolo']); ?></h6>
+                                            <p class="text-muted small mb-2"><?php echo htmlspecialchars($reward['descrizione']); ?></p>
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <strong class="text-success">$<?php echo number_format($reward['min_amount'], 2); ?>+</strong>
-                                                <?php if ($reward['estimated_delivery']): ?>
+                                                <strong class="text-success">$<?php echo number_format($reward['importo_minimo'], 2); ?>+</strong>
+                                                <?php if ($reward['data_consegna']): ?>
                                                     <small class="text-muted">
                                                         <i class="fas fa-calendar"></i> 
-                                                        <?php echo date('M Y', strtotime($reward['estimated_delivery'])); ?>
+                                                        <?php echo date('M Y', strtotime($reward['data_consegna'])); ?>
                                                     </small>
                                                 <?php endif; ?>
                                             </div>
@@ -227,7 +224,7 @@ if ($_POST) {
                                             <form method="POST" style="display: inline;" 
                                                   onsubmit="return confirm('Are you sure you want to delete this reward?');">
                                                 <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="reward_id" value="<?php echo $reward['reward_id']; ?>">
+                                                <input type="hidden" name="reward_id" value="<?php echo $reward['id']; ?>">
                                                 <button type="submit" class="btn btn-outline-danger btn-sm">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -235,11 +232,10 @@ if ($_POST) {
                                         </div>
                                     </div>
                                     
-                                    <?php
-                                    // Check if reward has backers
-                                    $backers_query = "SELECT COUNT(*) as backer_count FROM FUNDINGS WHERE reward_id = :reward_id";
+                                    <?php                                    // Check if reward has backers
+                                    $backers_query = "SELECT COUNT(*) as backer_count FROM finanziamenti WHERE reward_id = :reward_id";
                                     $backers_stmt = $db->prepare($backers_query);
-                                    $backers_stmt->bindParam(':reward_id', $reward['reward_id']);
+                                    $backers_stmt->bindParam(':reward_id', $reward['id']);
                                     $backers_stmt->execute();
                                     $backer_count = $backers_stmt->fetch(PDO::FETCH_ASSOC)['backer_count'];
                                     ?>

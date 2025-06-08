@@ -1,0 +1,427 @@
+/* 
+ * BOSTARTER - Crafts Category Styles
+ * Category: Artigianato
+ * Theme: Handmade, rustic, artisanal-inspired design
+ */
+
+/* Crafts Category Header */
+.category-artigianato .hero-section {
+    background: linear-gradient(135deg, #8B4513 0%, #A0522D 30%, #D2691E 70%, #CD853F 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.category-artigianato .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(255,248,220,0.3) 1px, transparent 1px),
+        radial-gradient(circle at 80% 70%, rgba(255,248,220,0.2) 2px, transparent 2px),
+        radial-gradient(circle at 60% 20%, rgba(255,248,220,0.25) 1.5px, transparent 1.5px);
+    background-size: 30px 30px, 50px 50px, 40px 40px;
+    animation: craft-texture 5s ease-in-out infinite;
+}
+
+@keyframes craft-texture {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.9; }
+}
+
+.category-artigianato .category-title {
+    color: #FFF8DC;
+    text-shadow: 3px 3px 6px rgba(139, 69, 19, 0.8);
+    font-family: 'Merriweather', serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Crafts Cards */
+.category-artigianato .project-card {
+    border: 3px solid #8B4513;
+    background: linear-gradient(145deg, #FFF8DC 0%, #F5DEB3 100%);
+    box-shadow: 
+        0 8px 25px rgba(139, 69, 19, 0.2),
+        inset 0 1px 0 rgba(255, 248, 220, 0.8);
+    border-radius: 8px;
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.category-artigianato .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: repeating-linear-gradient(
+        90deg,
+        #8B4513 0px,
+        #8B4513 8px,
+        #A0522D 8px,
+        #A0522D 16px,
+        #D2691E 16px,
+        #D2691E 24px
+    );
+}
+
+.category-artigianato .project-card::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, rgba(139,69,19,0.1), transparent);
+    border-radius: 50%;
+    border: 2px dashed rgba(139, 69, 19, 0.3);
+}
+
+.category-artigianato .project-card:hover {
+    transform: translateY(-5px) rotate(-1deg);
+    box-shadow: 
+        0 15px 35px rgba(139, 69, 19, 0.3),
+        inset 0 1px 0 rgba(255, 248, 220, 0.9);
+    border-color: #A0522D;
+}
+
+.category-artigianato .card-title {
+    color: #8B4513;
+    font-family: 'Merriweather', serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.category-artigianato .card-description {
+    color: #654321;
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+/* Crafts Tags */
+.category-artigianato .tag {
+    background: linear-gradient(135deg, #D2691E, #A0522D);
+    color: #FFF8DC;
+    border: 2px solid #8B4513;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-family: 'Merriweather', serif;
+    text-transform: lowercase;
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+.category-artigianato .tag::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    border: 1px dashed rgba(255, 248, 220, 0.5);
+    border-radius: 4px;
+}
+
+.category-artigianato .tag:hover {
+    background: linear-gradient(135deg, #CD853F, #D2691E);
+    transform: scale(1.05) rotate(2deg);
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+.category-artigianato .tag.tag-handmade {
+    background: linear-gradient(135deg, #8B4513, #654321);
+}
+
+.category-artigianato .tag.tag-wood {
+    background: linear-gradient(135deg, #A0522D, #8B4513);
+}
+
+.category-artigianato .tag.tag-ceramic {
+    background: linear-gradient(135deg, #CD853F, #DAA520);
+}
+
+/* Crafts Buttons */
+.category-artigianato .btn-primary {
+    background: linear-gradient(135deg, #8B4513, #A0522D);
+    border: 2px solid #654321;
+    color: #FFF8DC;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    padding: 0.75rem 2rem;
+    font-family: 'Merriweather', serif;
+    text-transform: uppercase;
+    position: relative;
+    box-shadow: 
+        0 4px 8px rgba(139, 69, 19, 0.3),
+        inset 0 1px 0 rgba(255, 248, 220, 0.2);
+}
+
+.category-artigianato .btn-primary:hover {
+    background: linear-gradient(135deg, #A0522D, #D2691E);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 8px 16px rgba(139, 69, 19, 0.4),
+        inset 0 1px 0 rgba(255, 248, 220, 0.3);
+}
+
+.category-artigianato .btn-outline {
+    border: 3px solid #8B4513;
+    color: #8B4513;
+    background: transparent;
+    border-radius: 6px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+}
+
+.category-artigianato .btn-outline:hover {
+    background: #8B4513;
+    color: #FFF8DC;
+}
+
+/* Crafts Progress Bars */
+.category-artigianato .progress-bar {
+    background: repeating-linear-gradient(
+        45deg,
+        #8B4513,
+        #8B4513 5px,
+        #A0522D 5px,
+        #A0522D 10px,
+        #D2691E 10px,
+        #D2691E 15px
+    );
+    box-shadow: 0 2px 8px rgba(139, 69, 19, 0.3);
+    border-radius: 4px;
+    border: 1px solid #654321;
+}
+
+.category-artigianato .progress {
+    background-color: rgba(139, 69, 19, 0.1);
+    border-radius: 4px;
+    height: 8px;
+}
+
+/* Crafts Forms */
+.category-artigianato .form-control {
+    border: 2px solid #A0522D;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    background: #FFF8DC;
+    transition: all 0.3s ease;
+    font-family: 'Open Sans', sans-serif;
+    box-shadow: inset 0 1px 3px rgba(139, 69, 19, 0.1);
+}
+
+.category-artigianato .form-control:focus {
+    border-color: #8B4513;
+    box-shadow: 
+        0 0 0 0.2rem rgba(139, 69, 19, 0.25),
+        inset 0 1px 3px rgba(139, 69, 19, 0.1);
+    outline: none;
+    background: #FFFFFF;
+}
+
+.category-artigianato .form-label {
+    color: #8B4513;
+    font-weight: 600;
+    font-family: 'Merriweather', serif;
+    margin-bottom: 0.5rem;
+}
+
+/* Crafts Icons */
+.category-artigianato .icon-artigianato::before {
+    content: '🛠️';
+    font-size: 1.5em;
+    margin-right: 8px;
+}
+
+.category-artigianato .icon-hammer::before {
+    content: '🔨';
+    font-size: 1.3em;
+    margin-right: 6px;
+    animation: hammer-work 3s ease-in-out infinite;
+}
+
+@keyframes hammer-work {
+    0%, 80%, 100% { transform: rotate(0deg); }
+    10%, 30% { transform: rotate(-15deg); }
+    20% { transform: rotate(15deg); }
+}
+
+.category-artigianato .icon-wood::before {
+    content: '🪵';
+    font-size: 1.2em;
+    margin-right: 6px;
+}
+
+.category-artigianato .icon-pottery::before {
+    content: '🏺';
+    font-size: 1.3em;
+    margin-right: 6px;
+}
+
+/* Crafts Workshop Layout */
+.category-artigianato .workshop-area {
+    background: linear-gradient(45deg, #F5DEB3, #FFF8DC);
+    border: 3px solid #8B4513;
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(139, 69, 19, 0.1);
+}
+
+.category-artigianato .workshop-area::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 1px dashed rgba(139, 69, 19, 0.3);
+    border-radius: 4px;
+}
+
+/* Crafts Material Cards */
+.category-artigianato .material-card {
+    background: linear-gradient(135deg, #FFFFFF, #FFF8DC);
+    border: 2px solid #CD853F;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 0.5rem;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(205, 133, 63, 0.2);
+}
+
+.category-artigianato .material-card:hover {
+    transform: translateY(-2px) rotate(1deg);
+    box-shadow: 0 6px 16px rgba(205, 133, 63, 0.3);
+    border-color: #8B4513;
+}
+
+.category-artigianato .material-name {
+    color: #8B4513;
+    font-family: 'Merriweather', serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Crafts Technique Badge */
+.category-artigianato .technique-badge {
+    background: #8B4513;
+    color: #FFF8DC;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    margin: 0.2rem;
+    box-shadow: 0 2px 4px rgba(139, 69, 19, 0.3);
+    border: 1px solid #654321;
+}
+
+/* Responsive Crafts Design */
+@media (max-width: 768px) {
+    .category-artigianato .hero-section {
+        padding: 2rem 1rem;
+    }
+    
+    .category-artigianato .category-title {
+        font-size: 2rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .category-artigianato .workshop-area {
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    .category-artigianato .material-card {
+        display: block;
+        margin: 0.5rem 0;
+    }
+    
+    .category-artigianato .btn-primary,
+    .category-artigianato .btn-outline {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Crafts Loading States */
+.category-artigianato .loading-skeleton {
+    background: linear-gradient(90deg, #f5deb3 25%, #e6d3a3 50%, #f5deb3 75%);
+    background-size: 200% 100%;
+    animation: craft-loading 2.5s infinite;
+    border-radius: 6px;
+}
+
+@keyframes craft-loading {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Crafts Accessibility */
+.category-artigianato .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Crafts High Contrast Mode */
+@media (prefers-contrast: high) {
+    .category-artigianato .project-card {
+        border: 4px solid #000;
+        background: #fff;
+    }
+    
+    .category-artigianato .card-title {
+        color: #000;
+    }
+    
+    .category-artigianato .btn-primary {
+        background: #000;
+        color: #fff;
+        border: 3px solid #000;
+    }
+    
+    .category-artigianato .tag {
+        background: #fff;
+        color: #000;
+        border: 2px solid #000;
+    }
+}
+
+/* Crafts Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .category-artigianato .project-card:hover {
+        transform: translateY(-3px);
+        animation: none;
+    }
+    
+    .category-artigianato .icon-hammer::before {
+        animation: none;
+    }
+    
+    .category-artigianato .material-card:hover {
+        transform: translateY(-1px);
+    }
+}

@@ -48,15 +48,15 @@ if ($_SESSION['user_id'] == $project['creator_id']) {
 }
 
 // Get project rewards
-$rewards_query = "SELECT * FROM REWARDS WHERE project_id = :project_id ORDER BY min_amount ASC";
+$rewards_query = "SELECT * FROM reward WHERE progetto_id = :project_id ORDER BY importo_minimo ASC";
 $rewards_stmt = $db->prepare($rewards_query);
 $rewards_stmt->bindParam(':project_id', $project_id);
 $rewards_stmt->execute();
 $rewards = $rewards_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get user's previous funding for this project
-$user_funding_query = "SELECT SUM(amount) as total_funded FROM FUNDINGS 
-                       WHERE project_id = :project_id AND user_id = :user_id";
+$user_funding_query = "SELECT SUM(importo) as total_funded FROM finanziamenti 
+                       WHERE progetto_id = :project_id AND utente_id = :user_id";
 $user_funding_stmt = $db->prepare($user_funding_query);
 $user_funding_stmt->bindParam(':project_id', $project_id);
 $user_funding_stmt->bindParam(':user_id', $_SESSION['user_id']);

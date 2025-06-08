@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="it" class="no-js">
 
 <head>
@@ -23,7 +23,7 @@
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
 
-    <!-- ===== PERFORMANCE E ACCESSIBILITÀ ===== -->
+    <!-- ===== PERFORMANCE E ACCESSIBILITÃ€ ===== -->
     <meta name="theme-color" content="#E91E63" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#AD1457" media="(prefers-color-scheme: dark)">
     <meta name="color-scheme" content="light dark">
@@ -61,12 +61,12 @@
     <!-- ===== CSS OTTIMIZZATO - COMPONENTI COMUNI INTEGRATI ===== -->
     <link rel="stylesheet" href="/frontend/css/main.css">
     <link rel="stylesheet" href="/frontend/css/animations.css">
-    <link rel="stylesheet" href="/frontend/assets/shared/css/common-styles.css">
+    <link rel="stylesheet" href="/frontend/css/components/common-styles.css">
     <link rel="stylesheet" href="css/giochi.css">
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-    <!-- ===== SKIP LINK ACCESSIBILITÀ ===== -->
+    <!-- ===== SKIP LINK ACCESSIBILITÃ€ ===== -->
     <a href="#main-content" class="skip-link">Salta al contenuto principale</a>
 
     <!-- ===== LOADING OVERLAY ===== -->
@@ -156,14 +156,25 @@
 
     <!-- ===== SCRIPTS OTTIMIZZATI - COMPONENTI COMUNI INTEGRATI ===== -->
     <!-- Legacy notifications.js removed - using centralized NotificationSystem -->
-    <script src="/frontend/assets/shared/js/category-config.js"></script>
-    <script src="/frontend/assets/shared/js/common-functions.js"></script>
+        <!-- Core utilities -->
+    <script src="/frontend/js/utils/common-functions.js"></script>
+    
+    <!-- Component system -->
+    <script src="/frontend/js/components/ui-components.js"></script>
+    
+    <!-- Category configuration -->
+    <script src="/frontend/js/utils/category-config.js"></script>
+    
+    <!-- Category manager -->
+    <script src="/frontend/js/managers/base-category-manager.js"></script>
+    <script src="/frontend/js/managers/generic-category-manager.js"></script>
+    <script src="/frontend/js/utils/common-functions.js"></script>
 
     <script>
         // Inizializza la pagina con componenti comuni
         document.addEventListener('DOMContentLoaded', () => {
-            // Inizializza le funzioni comuni per la categoria
-            initializeCommonFunctions('giochi');
+            // Initialize generic category manager for giochi
+            new GenericCategoryManager('giochi');
         });
 
         // Global error handling
@@ -181,3 +192,4 @@
 </body>
 
 </html>
+

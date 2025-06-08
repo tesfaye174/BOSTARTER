@@ -10,8 +10,7 @@ require_once '../utils/Validator.php';
 header('Content-Type: application/json');
 
 try {
-    $database = new Database();
-    $pdo = $database->getConnection();
+    $pdo = Database::getInstance()->getConnection();
     
     // Get parameters
     $limit = (int)($_GET['limit'] ?? 10);
@@ -32,18 +31,16 @@ try {
     $whereClause = "";
     $params = [];
     
-    switch ($period) {
-        case 'month':
-            $whereClause = "WHERE p.data_creazione >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+    switch ($period) {        case 'month':
+            $whereClause = "WHERE p.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
             break;
         case 'year':
-            $whereClause = "WHERE p.data_creazione >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+            $whereClause = "WHERE p.created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
             break;
         case 'all':
         default:
             $whereClause = "";
-            break;
-    }
+            break;    }
     
     // Get top creators by total funding raised
     $sql = "
@@ -52,22 +49,23 @@ try {
             u.nome,
             u.cognome,
             u.email,
-            u.avatar,
-            u.data_registrazione,
+            '' as avatar,
+            u.created_at as data_registrazione,
             COUNT(p.id) as progetti_totali,
-            COUNT(CASE WHEN p.stato = 'finanziato' THEN 1 END) as progetti_finanziati,
-            COUNT(CASE WHEN p.stato = 'attivo' THEN 1 END) as progetti_attivi,
-            COALESCE(SUM(p.finanziamento_attuale), 0) as totale_raccolto,
-            COALESCE(SUM(p.obiettivo_finanziario), 0) as totale_obiettivi,
-            COALESCE(AVG(p.finanziamento_attuale), 0) as media_raccolto,
+            COUNT(CASE WHEN p.stato = 'chiuso' THEN 1 END) as progetti_finanziati,
+            COUNT(CASE WHEN p.stato = 'aperto' THEN 1 END) as progetti_attivi,
+            COALESCE(SUM(COALESCE(f.importo, 0)), 0) as totale_raccolto,
+            COALESCE(SUM(p.budget_richiesto), 0) as totale_obiettivi,
+            COALESCE(AVG(COALESCE(f.importo, 0)), 0) as media_raccolto,
             ROUND(
-                (COUNT(CASE WHEN p.stato = 'finanziato' THEN 1 END) / COUNT(p.id)) * 100, 
+                (COUNT(CASE WHEN p.stato = 'chiuso' THEN 1 END) / NULLIF(COUNT(p.id), 0)) * 100, 
                 2
             ) as percentuale_successo
         FROM utenti u
         LEFT JOIN progetti p ON u.id = p.creatore_id
+        LEFT JOIN finanziamenti f ON p.id = f.progetto_id AND f.stato_pagamento = 'completato'
         $whereClause
-        GROUP BY u.id, u.nome, u.cognome, u.email, u.avatar, u.data_registrazione
+        GROUP BY u.id, u.nome, u.cognome, u.email, u.created_at
         HAVING progetti_totali > 0
         ORDER BY totale_raccolto DESC, progetti_finanziati DESC
         LIMIT ?
@@ -77,15 +75,14 @@ try {
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $creators = $stmt->fetchAll();
-    
-    // Get additional statistics for each creator
+      // Get additional statistics for each creator
     foreach ($creators as &$creator) {
         // Get recent projects
         $stmt = $pdo->prepare("
-            SELECT id, titolo, stato, finanziamento_attuale, obiettivo_finanziario, data_creazione
+            SELECT id, nome as titolo, stato, 0 as finanziamento_attuale, budget_richiesto as obiettivo_finanziario, created_at as data_creazione
             FROM progetti 
             WHERE creatore_id = ? 
-            ORDER BY data_creazione DESC 
+            ORDER BY created_at DESC 
             LIMIT 3
         ");
         $stmt->execute([$creator['id']]);
@@ -99,14 +96,13 @@ try {
             WHERE p.creatore_id = ? AND f.stato_pagamento = 'completato'
         ");
         $stmt->execute([$creator['id']]);
-        $result = $stmt->fetch();
-        $creator['total_backers'] = $result['total_backers'] ?? 0;
+        $result = $stmt->fetch();        $creator['total_backers'] = $result['total_backers'] ?? 0;
         
         // Calculate average project duration for completed projects
         $stmt = $pdo->prepare("
-            SELECT AVG(DATEDIFF(data_scadenza, data_creazione)) as avg_duration
+            SELECT AVG(DATEDIFF(data_limite, created_at)) as avg_duration
             FROM progetti 
-            WHERE creatore_id = ? AND stato IN ('finanziato', 'scaduto')
+            WHERE creatore_id = ? AND stato IN ('chiuso')
         ");
         $stmt->execute([$creator['id']]);
         $result = $stmt->fetch();
@@ -115,18 +111,18 @@ try {
         // Format numbers
         $creator['totale_raccolto'] = number_format($creator['totale_raccolto'], 2);
         $creator['totale_obiettivi'] = number_format($creator['totale_obiettivi'], 2);
-        $creator['media_raccolto'] = number_format($creator['media_raccolto'], 2);
-    }
+        $creator['media_raccolto'] = number_format($creator['media_raccolto'], 2);    }
     
     // Get overall platform statistics for context
     $stmt = $pdo->prepare("
         SELECT 
             COUNT(DISTINCT u.id) as total_creators,
-            COUNT(p.id) as total_projects,
-            SUM(p.finanziamento_attuale) as total_funding,
-            AVG(p.finanziamento_attuale) as avg_funding_per_project
+            COUNT(DISTINCT p.id) as total_projects,
+            COALESCE(SUM(f.importo), 0) as total_funding,
+            COALESCE(AVG(f.importo), 0) as avg_funding_per_project
         FROM utenti u
         LEFT JOIN progetti p ON u.id = p.creatore_id
+        LEFT JOIN finanziamenti f ON p.id = f.progetto_id AND f.stato_pagamento = 'completato'
         $whereClause
     ");
     $stmt->execute();

@@ -36,9 +36,8 @@ function canAccessProfile($db, $targetUserId) {
     if ($_SESSION['user_id'] == $targetUserId) {
         return true;
     }
-    
-    // Check if current user is admin
-    $stmt = $db->prepare("SELECT role FROM USERS WHERE user_id = ?");
+      // Check if current user is admin
+    $stmt = $db->prepare("SELECT tipo_utente as role FROM utenti WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -74,14 +73,13 @@ function getUserProfile($db, $mongoLogger, $userId) {
             http_response_code(403);
             echo json_encode(['error' => 'Access denied']);
             return;
-        }
-
-        // Get user basic info
+        }        // Get user basic info
         $userStmt = $db->prepare("
-            SELECT user_id, username, email, full_name, bio, location, 
-                   avatar_url, website_url, status, role, created_at, last_login
-            FROM USERS 
-            WHERE user_id = ?
+            SELECT id as user_id, nickname as username, email, CONCAT(nome, ' ', cognome) as full_name, 
+                   '' as bio, luogo_nascita as location, '' as avatar_url, '' as website_url, 
+                   'active' as status, tipo_utente as role, created_at, last_access as last_login
+            FROM utenti 
+            WHERE id = ?
         ");
         $userStmt->execute([$userId]);
         $user = $userStmt->fetch(PDO::FETCH_ASSOC);
@@ -90,63 +88,57 @@ function getUserProfile($db, $mongoLogger, $userId) {
             http_response_code(404);
             echo json_encode(['error' => 'User not found']);
             return;
-        }
-
-        // Get user's projects
+        }        // Get user's projects
         $projectsStmt = $db->prepare("
             SELECT p.*, 
-                   COALESCE(pf.total_funded, 0) as total_funded,
-                   COALESCE(pf.funding_percentage, 0) as funding_percentage,
-                   COALESCE(pf.backers_count, 0) as backers_count,
-                   DATEDIFF(p.deadline, NOW()) as days_left
-            FROM PROJECTS p
-            LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.project_id = pf.project_id
-            WHERE p.creator_id = ?
-            ORDER BY p.created_at DESC
+                   COALESCE(pf.totale_finanziato, 0) as total_funded,
+                   COALESCE(pf.percentuale_finanziamento, 0) as funding_percentage,
+                   COALESCE(pf.numero_sostenitori, 0) as backers_count,
+                   DATEDIFF(p.data_limite, NOW()) as days_left
+            FROM progetti p
+            LEFT JOIN view_progetti pf ON p.id = pf.progetto_id
+            WHERE p.creatore_id = ?
+            ORDER BY p.data_inserimento DESC
         ");
         $projectsStmt->execute([$userId]);
         $projects = $projectsStmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Get user's funding history (if viewing own profile or admin)
-        $fundings = [];
-        if ($_SESSION['user_id'] == $userId || canAccessProfile($db, $userId)) {
+        $fundings = [];        if ($_SESSION['user_id'] == $userId || canAccessProfile($db, $userId)) {
             $fundingStmt = $db->prepare("
-                SELECT f.*, p.title as project_title, p.project_type,
-                       u.username as creator_name
-                FROM FUNDINGS f
-                JOIN PROJECTS p ON f.project_id = p.project_id
-                JOIN USERS u ON p.creator_id = u.user_id
-                WHERE f.user_id = ?
-                ORDER BY f.created_at DESC
+                SELECT f.*, p.nome as project_title, p.tipo_progetto as project_type,
+                       u.nickname as creator_name
+                FROM finanziamenti f
+                JOIN progetti p ON f.progetto_id = p.id
+                JOIN utenti u ON p.creatore_id = u.id
+                WHERE f.utente_id = ?
+                ORDER BY f.data_finanziamento DESC
                 LIMIT 50
             ");
             $fundingStmt->execute([$userId]);
             $fundings = $fundingStmt->fetchAll(PDO::FETCH_ASSOC);
-        }
-
-        // Get user's skills
+        }        // Get user's skills
         $skillsStmt = $db->prepare("
-            SELECT s.skill_id, s.name, s.description, us.proficiency_level, us.years_experience
-            FROM USER_SKILLS us
-            JOIN SKILLS s ON us.skill_id = s.skill_id
-            WHERE us.user_id = ? AND s.status = 'active'
-            ORDER BY us.proficiency_level DESC, s.name ASC
+            SELECT c.id as skill_id, c.nome as name, c.descrizione as description, 
+                   su.livello as proficiency_level, 0 as years_experience
+            FROM skill_utente su
+            JOIN competenze c ON su.competenza_id = c.id
+            WHERE su.utente_id = ?
+            ORDER BY su.livello DESC, c.nome ASC
         ");
         $skillsStmt->execute([$userId]);
-        $skills = $skillsStmt->fetchAll(PDO::FETCH_ASSOC);
-
-        // Calculate user statistics
+        $skills = $skillsStmt->fetchAll(PDO::FETCH_ASSOC);        // Calculate user statistics
         $statsStmt = $db->prepare("
             SELECT 
-                COUNT(DISTINCT p.project_id) as projects_created,
-                COUNT(DISTINCT CASE WHEN p.status = 'funded' THEN p.project_id END) as successful_projects,
-                COALESCE(SUM(CASE WHEN p.status = 'funded' THEN p.funding_goal END), 0) as total_raised,
-                COUNT(DISTINCT f.funding_id) as projects_backed,
-                COALESCE(SUM(f.amount), 0) as total_backed
-            FROM USERS u
-            LEFT JOIN PROJECTS p ON u.user_id = p.creator_id
-            LEFT JOIN FUNDINGS f ON u.user_id = f.user_id
-            WHERE u.user_id = ?
+                COUNT(DISTINCT p.id) as projects_created,
+                COUNT(DISTINCT CASE WHEN p.stato = 'chiuso' THEN p.id END) as successful_projects,
+                COALESCE(SUM(CASE WHEN p.stato = 'chiuso' THEN p.budget_richiesto END), 0) as total_raised,
+                COUNT(DISTINCT f.id) as projects_backed,
+                COALESCE(SUM(f.importo), 0) as total_backed
+            FROM utenti u
+            LEFT JOIN progetti p ON u.id = p.creatore_id
+            LEFT JOIN finanziamenti f ON u.id = f.utente_id
+            WHERE u.id = ?
         ");
         $statsStmt->execute([$userId]);
         $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
@@ -191,15 +183,14 @@ function getUserProfile($db, $mongoLogger, $userId) {
 }
 
 function getUserList($db, $mongoLogger) {
-    try {
-        // Only allow admins to see user list
+    try {        // Only allow admins to see user list
         requireAuth();
         
-        $stmt = $db->prepare("SELECT role FROM USERS WHERE user_id = ?");
+        $stmt = $db->prepare("SELECT tipo_utente as role FROM utenti WHERE id = ?");
         $stmt->execute([$_SESSION['user_id']]);
         $currentUser = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$currentUser || $currentUser['role'] !== 'admin') {
+        if (!$currentUser || $currentUser['role'] !== 'amministratore') {
             http_response_code(403);
             echo json_encode(['error' => 'Admin access required']);
             return;
@@ -209,16 +200,15 @@ function getUserList($db, $mongoLogger) {
         $status = $_GET['status'] ?? 'all';
         $role = $_GET['role'] ?? 'all';
         $limit = min(100, max(1, intval($_GET['limit'] ?? 20)));
-        $offset = max(0, intval($_GET['offset'] ?? 0));
-
-        $baseQuery = "
-            SELECT u.user_id, u.username, u.email, u.full_name, u.status, u.role, 
-                   u.created_at, u.last_login,
-                   COUNT(DISTINCT p.project_id) as projects_count,
-                   COUNT(DISTINCT f.funding_id) as fundings_count
-            FROM USERS u
-            LEFT JOIN PROJECTS p ON u.user_id = p.creator_id
-            LEFT JOIN FUNDINGS f ON u.user_id = f.user_id
+        $offset = max(0, intval($_GET['offset'] ?? 0));        $baseQuery = "
+            SELECT u.id as user_id, u.nickname as username, u.email, CONCAT(u.nome, ' ', u.cognome) as full_name, 
+                   'active' as status, u.tipo_utente as role, 
+                   u.created_at, u.last_access as last_login,
+                   COUNT(DISTINCT p.id) as projects_count,
+                   COUNT(DISTINCT f.id) as fundings_count
+            FROM utenti u
+            LEFT JOIN progetti p ON u.id = p.creatore_id
+            LEFT JOIN finanziamenti f ON u.id = f.utente_id
             WHERE 1=1
         ";
 

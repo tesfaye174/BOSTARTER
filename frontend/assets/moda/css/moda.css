@@ -1,0 +1,306 @@
+/* 
+ * BOSTARTER - Fashion Category Styles
+ * Category: Moda
+ * Theme: Elegant, sophisticated, modern fashion-inspired design
+ */
+
+/* Fashion Category Header */
+.category-moda .hero-section {
+    background: linear-gradient(135deg, #E6E6FA 0%, #DDA0DD 30%, #DA70D6 70%, #8B008B 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.category-moda .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.3) 1px, transparent 1px),
+                radial-gradient(circle at 70% 80%, rgba(255,255,255,0.2) 1px, transparent 1px);
+    background-size: 50px 50px, 80px 80px;
+    animation: fashion-shimmer 6s ease-in-out infinite;
+}
+
+@keyframes fashion-shimmer {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+.category-moda .category-title {
+    color: #FFFFFF;
+    text-shadow: 2px 2px 4px rgba(139, 0, 139, 0.8);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+/* Fashion Cards */
+.category-moda .project-card {
+    border: none;
+    background: linear-gradient(145deg, #FFFFFF 0%, #FAFAFA 100%);
+    box-shadow: 0 10px 30px rgba(139, 0, 139, 0.12);
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-moda .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #E6E6FA, #DDA0DD, #DA70D6, #8B008B);
+}
+
+.category-moda .project-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(139, 0, 139, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-moda .card-title {
+    color: #8B008B;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.category-moda .card-description {
+    color: #666;
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.6;
+}
+
+/* Fashion Tags */
+.category-moda .tag {
+    background: linear-gradient(135deg, #E6E6FA, #DDA0DD);
+    color: #8B008B;
+    border: 1px solid rgba(139, 0, 139, 0.3);
+    font-weight: 500;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+    padding: 0.4rem 1rem;
+}
+
+.category-moda .tag:hover {
+    background: linear-gradient(135deg, #DDA0DD, #DA70D6);
+    color: #FFFFFF;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(139, 0, 139, 0.3);
+}
+
+/* Fashion Buttons */
+.category-moda .btn-primary {
+    background: linear-gradient(135deg, #DDA0DD, #8B008B);
+    border: none;
+    color: #FFFFFF;
+    font-weight: 500;
+    letter-spacing: 1px;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    text-transform: uppercase;
+}
+
+.category-moda .btn-primary:hover {
+    background: linear-gradient(135deg, #8B008B, #4B0082);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 0, 139, 0.4);
+}
+
+.category-moda .btn-outline {
+    border: 2px solid #DDA0DD;
+    color: #8B008B;
+    background: transparent;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+}
+
+.category-moda .btn-outline:hover {
+    background: #DDA0DD;
+    color: #FFFFFF;
+}
+
+/* Fashion Progress Bars */
+.category-moda .progress-bar {
+    background: linear-gradient(90deg, #E6E6FA, #DDA0DD, #DA70D6);
+    box-shadow: 0 2px 10px rgba(139, 0, 139, 0.3);
+    border-radius: 10px;
+}
+
+.category-moda .progress {
+    background-color: rgba(139, 0, 139, 0.1);
+    border-radius: 10px;
+}
+
+/* Fashion Forms */
+.category-moda .form-control {
+    border: 2px solid rgba(139, 0, 139, 0.2);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.category-moda .form-control:focus {
+    border-color: #DDA0DD;
+    box-shadow: 0 0 0 0.2rem rgba(221, 160, 221, 0.25);
+    outline: none;
+}
+
+.category-moda .form-label {
+    color: #8B008B;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+/* Fashion Icons */
+.category-moda .icon-moda::before {
+    content: '👗';
+    font-size: 1.5em;
+    margin-right: 8px;
+}
+
+.category-moda .icon-accessory::before {
+    content: '👜';
+    font-size: 1.2em;
+    margin-right: 6px;
+}
+
+/* Fashion Grid Layout */
+.category-moda .fashion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+/* Fashion Animations */
+.category-moda .runway-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.category-moda .runway-effect::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    animation: runway-walk 4s ease-in-out infinite;
+}
+
+@keyframes runway-walk {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Fashion Image Effects */
+.category-moda .fashion-image {
+    filter: brightness(1.1) contrast(1.05) saturate(1.1);
+    transition: all 0.3s ease;
+}
+
+.category-moda .fashion-image:hover {
+    filter: brightness(1.2) contrast(1.1) saturate(1.2);
+    transform: scale(1.05);
+}
+
+/* Responsive Fashion Design */
+@media (max-width: 768px) {
+    .category-moda .hero-section {
+        padding: 2rem 1rem;
+    }
+    
+    .category-moda .category-title {
+        font-size: 2rem;
+        letter-spacing: 2px;
+    }
+    
+    .category-moda .fashion-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1rem 0;
+    }
+    
+    .category-moda .btn-primary,
+    .category-moda .btn-outline {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Fashion Loading States */
+.category-moda .loading-skeleton {
+    background: linear-gradient(90deg, #f5f5f5 25%, #eeeeee 50%, #f5f5f5 75%);
+    background-size: 200% 100%;
+    animation: fashion-loading 2s infinite;
+    border-radius: 10px;
+}
+
+@keyframes fashion-loading {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Fashion Accessibility */
+.category-moda .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Fashion High Contrast Mode */
+@media (prefers-contrast: high) {
+    .category-moda .project-card {
+        border: 2px solid #000;
+        background: #fff;
+    }
+    
+    .category-moda .card-title {
+        color: #000;
+    }
+    
+    .category-moda .btn-primary {
+        background: #000;
+        color: #fff;
+        border: 2px solid #000;
+    }
+    
+    .category-moda .tag {
+        background: #fff;
+        color: #000;
+        border: 2px solid #000;
+    }
+}
+
+/* Fashion Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .category-moda .project-card {
+        background: linear-gradient(145deg, #2a2a2a 0%, #1e1e1e 100%);
+        color: #e0e0e0;
+    }
+    
+    .category-moda .card-title {
+        color: #DDA0DD;
+    }
+    
+    .category-moda .card-description {
+        color: #b0b0b0;
+    }
+}

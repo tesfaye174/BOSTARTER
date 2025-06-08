@@ -207,34 +207,48 @@ class UserCompliant {
                 'message' => 'Errore durante l\'aggiornamento del profilo'
             ];
         }
-    }
-
-    /**
-     * Change user password
+    }    /**
+     * Change user password - SECURE VERSION
      */
     public function changePassword($userId, $currentPassword, $newPassword) {
         try {
-            // Verify current password
+            // Recupera hash password corrente
             $stmt = $this->conn->prepare("
-                SELECT id FROM utenti 
-                WHERE id = ? AND password = MD5(?)
+                SELECT password_hash FROM utenti 
+                WHERE id = ?
             ");
-            $stmt->execute([$userId, $currentPassword]);
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if (!$stmt->fetch()) {
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'Utente non trovato'
+                ];
+            }
+            
+            // Verifica password corrente con password_verify (SICURO)
+            if (!password_verify($currentPassword, $user['password_hash'])) {
                 return [
                     'success' => false,
                     'message' => 'Password corrente non corretta'
                 ];
             }
             
-            // Update password
+            // Hash sicuro della nuova password
+            $newPasswordHash = password_hash($newPassword, PASSWORD_ARGON2ID, [
+                'memory_cost' => 65536,
+                'time_cost' => 4,
+                'threads' => 3
+            ]);
+            
+            // Aggiorna con hash sicuro
             $stmt = $this->conn->prepare("
                 UPDATE utenti 
-                SET password = MD5(?) 
+                SET password_hash = ? 
                 WHERE id = ?
             ");
-            $stmt->execute([$newPassword, $userId]);
+            $stmt->execute([$newPasswordHash, $userId]);
             
             return [
                 'success' => true,

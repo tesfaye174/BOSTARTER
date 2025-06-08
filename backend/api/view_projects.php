@@ -83,9 +83,8 @@ try {
             break;
         case 'popular':
             $order_clause = "backers_count DESC";
-            break;
-        default:
-            $order_clause = "p.data_creazione DESC";
+            break;        default:
+            $order_clause = "p.created_at DESC";
     }
 
     // Get total count
@@ -109,7 +108,7 @@ try {
             p.foto as image,
             p.tipo_progetto as category,
             p.data_limite as deadline,
-            p.data_creazione as created_at,
+            p.created_at as created_at,
             u.nickname as creator_name,
             u.id as creator_id,
             COALESCE(SUM(f.importo), 0) as current_funding,
@@ -120,7 +119,7 @@ try {
         JOIN utenti u ON p.creatore_id = u.id
         LEFT JOIN finanziamenti f ON p.id = f.progetto_id AND f.stato_pagamento = 'completato'
         WHERE $where_clause
-        GROUP BY p.id, p.nome, p.descrizione, p.budget_richiesto, p.foto, p.tipo_progetto, p.data_limite, p.data_creazione, u.nickname, u.id
+        GROUP BY p.id, p.nome, p.descrizione, p.budget_richiesto, p.foto, p.tipo_progetto, p.data_limite, p.created_at, u.nickname, u.id
         ORDER BY $order_clause
         LIMIT ? OFFSET ?
     ";
@@ -136,15 +135,14 @@ try {
     if (!empty($projects)) {
         $project_ids = array_column($projects, 'id');
         $placeholders = str_repeat('?,', count($project_ids) - 1) . '?';
-        
-        $skills_query = "
+          $skills_query = "
             SELECT 
-                cr.profilo_id as project_id,
+                srp.profilo_id as project_id,
                 c.nome as skill_name,
                 c.categoria as skill_category
-            FROM competenze_richieste cr
-            JOIN competenze c ON cr.competenza_id = c.id
-            JOIN profili_software ps ON cr.profilo_id = ps.id
+            FROM skill_richieste_profilo srp
+            JOIN competenze c ON srp.competenza_id = c.id
+            JOIN profili_software ps ON srp.profilo_id = ps.id
             WHERE ps.progetto_id IN ($placeholders)
         ";
         

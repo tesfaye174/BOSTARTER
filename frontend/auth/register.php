@@ -24,12 +24,12 @@ if (!isset($_SESSION['csrf_token_time']) || (time() - $_SESSION['csrf_token_time
 }
 
 // Additional form token (not session-dependent)
-$form_token = hash('sha256', session_id() . $_SERVER['HTTP_USER_AGENT'] . date('Y-m-d-H'));
+$form_token = hash('sha256', session_id() . ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown') . date('Y-m-d-H'));
 
 // Rate limiting per tentativi di registrazione
 $max_attempts = 3;
 $lockout_time = 30 * 60; // 30 minuti
-$attempts_key = 'register_attempts_' . $_SERVER['REMOTE_ADDR'];
+$attempts_key = 'register_attempts_' . ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
 
 if (!isset($_SESSION[$attempts_key])) {
     $_SESSION[$attempts_key] = ['count' => 0, 'last_attempt' => 0];
@@ -62,7 +62,7 @@ $formData = [
     'tipo_utente' => 'standard'
 ];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     // Controlla rate limiting prima di tutto
     if ($is_locked_out) {
         $error = "Troppi tentativi di registrazione. Riprova tra $minutes_remaining minuti.";
@@ -145,10 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $error = 'Email o nickname già registrati.';
                         $_SESSION[$attempts_key]['count']++;
                         $_SESSION[$attempts_key]['last_attempt'] = time();
-                    } else {
-                        // Inserisci nuovo utente
-                        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                        $insert = $conn->prepare("INSERT INTO utenti (email, nickname, password, nome, cognome, anno_nascita, luogo_nascita, sesso, tipo_utente, attivo, data_registrazione) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())");
+                    } else {                        // Inserisci nuovo utente
+                        $hashed_password = password_hash($password, PASSWORD_DEFAULT);                        $insert = $conn->prepare("INSERT INTO utenti (email, nickname, password_hash, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                         $insert->execute([
                             $formData['email'],
                             $formData['nickname'],
@@ -157,7 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $formData['cognome'],
                             $formData['anno_nascita'],
                             $formData['luogo_nascita'],
-                            $formData['sesso'],
                             $formData['tipo_utente']
                         ]);
                         $user_id = $conn->lastInsertId();

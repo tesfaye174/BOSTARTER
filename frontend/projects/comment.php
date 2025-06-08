@@ -22,7 +22,7 @@ if (!$project_id) {
 }
 
 // Get project details
-$project_query = "SELECT title, creator_id FROM PROJECTS WHERE project_id = :project_id";
+$project_query = "SELECT nome as title, creatore_id as creator_id FROM progetti WHERE id = :project_id";
 $project_stmt = $db->prepare($project_query);
 $project_stmt->bindParam(':project_id', $project_id);
 $project_stmt->execute();
@@ -44,9 +44,8 @@ if ($_POST) {
         if (strlen($content) > 1000) {
             throw new Exception("Comment must be less than 1000 characters.");
         }
-        
-        // Insert comment
-        $insert_query = "INSERT INTO COMMENTS (project_id, user_id, content, created_at) 
+          // Insert comment
+        $insert_query = "INSERT INTO commenti (progetto_id, utente_id, testo, data_commento) 
                         VALUES (:project_id, :user_id, :content, NOW())";
         $insert_stmt = $db->prepare($insert_query);
         $insert_stmt->bindParam(':project_id', $project_id);

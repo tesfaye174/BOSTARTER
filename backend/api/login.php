@@ -24,7 +24,6 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
 require_once __DIR__ . '/../utils/Validator.php';
-require_once __DIR__ . '/../utils/Auth.php';
 
 try {
     // Leggi input JSON
@@ -50,28 +49,41 @@ try {
     if (!$user_data) {
         ApiResponse::unauthorized('Email o password non validi');
     }
-    
-    // Verifica password (supporta sia hash che plain text per compatibilità)
+      // Verifica password - SOLO hash sicuri
     $password_valid = false;
-    if (password_verify($input['password'], $user_data['password_hash'])) {
-        // Password hashata verificata
-        $password_valid = true;
-    } elseif ($input['password'] === $user_data['password_hash']) {
-        // Password in plain text (per compatibilità con dati esistenti)
-        $password_valid = true;
+    if (!empty($user_data['password_hash'])) {
+        // Solo password_verify per hash sicuri
+        if (password_verify($input['password'], $user_data['password_hash'])) {
+            $password_valid = true;
+        }
+        // VULNERABILITÀ RIMOSSA: Non più supporto plain text
     }
     
     if (!$password_valid) {
         ApiResponse::unauthorized('Email o password non validi');
     }
-    
-    // Aggiorna ultimo accesso
+      // Aggiorna ultimo accesso
     $stmt = $db->prepare("UPDATE utenti SET last_access = CURRENT_TIMESTAMP WHERE id = ?");
     $stmt->execute([$user_data['id']]);
     
-    // Effettua login
-    $auth = Auth::getInstance();
-    $auth->login($user_data);// Log su MongoDB
+    // Imposta sessione utente
+    $_SESSION['user_id'] = $user_data['id'];
+    $_SESSION['user_email'] = $user_data['email'];
+    $_SESSION['user_tipo'] = $user_data['tipo_utente'];
+    $_SESSION['login_time'] = time();
+    $_SESSION['user'] = [
+        'id' => $user_data['id'],
+        'email' => $user_data['email'],
+        'username' => $user_data['nickname'],
+        'tipo_utente' => $user_data['tipo_utente'],
+        'nome' => $user_data['nome'],
+        'cognome' => $user_data['cognome']
+    ];
+    
+    // Rigenera l'ID di sessione per sicurezza
+    session_regenerate_id(true);
+    
+    // Log su MongoDB
     $mongoLogger = new MongoLogger();
     $mongoLogger->logUserLogin(
         $user_data['id'],

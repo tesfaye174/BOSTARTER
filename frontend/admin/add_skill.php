@@ -101,14 +101,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     $skill_id = intval($_POST['skill_id'] ?? 0);
     
     if ($skill_id) {
-        try {
-            // Verifica se la competenza è utilizzata in progetti
+        try {            // Verifica se la competenza è utilizzata in progetti
             $stmt = $conn->prepare("
                 SELECT COUNT(*) as count 
                 FROM profili_software ps 
                 WHERE ps.id IN (
                     SELECT DISTINCT profilo_id 
-                    FROM competenze_richieste 
+                    FROM skill_richieste_profilo 
                     WHERE competenza_id = ?
                 )
             ");
@@ -141,12 +140,12 @@ $stmt = $conn->prepare("
         c.nome,
         c.descrizione,
         c.categoria,
-        c.data_creazione,
-        COUNT(DISTINCT cr.profilo_id) as progetti_count
+        c.created_at as data_creazione,
+        COUNT(DISTINCT srp.profilo_id) as progetti_count
     FROM competenze c
-    LEFT JOIN competenze_richieste cr ON c.id = cr.competenza_id
-    LEFT JOIN profili_software ps ON cr.profilo_id = ps.id
-    GROUP BY c.id, c.nome, c.descrizione, c.categoria, c.data_creazione
+    LEFT JOIN skill_richieste_profilo srp ON c.id = srp.competenza_id
+    LEFT JOIN profili_software ps ON srp.profilo_id = ps.id
+    GROUP BY c.id, c.nome, c.descrizione, c.categoria, c.created_at
     ORDER BY c.categoria, c.nome
 ");
 
@@ -164,9 +163,9 @@ $stmt = $conn->prepare("
     SELECT 
         COUNT(*) as total_skills,
         COUNT(DISTINCT categoria) as total_categories,
-        COUNT(DISTINCT cr.profilo_id) as used_in_projects
+        COUNT(DISTINCT srp.profilo_id) as used_in_projects
     FROM competenze c
-    LEFT JOIN competenze_richieste cr ON c.id = cr.competenza_id
+    LEFT JOIN skill_richieste_profilo srp ON c.id = srp.competenza_id
 ");
 $stmt->execute();
 $stats = $stmt->fetch();

@@ -448,20 +448,17 @@
             // Auto-run tests on load
             setTimeout(() => verifier.runAllTests(), 1000);
         });
-    </script>
+    </script> <!-- Load working optimization modules --> <!-- Core utilities -->
+    <script src="js/utils/common-functions.js"></script>
 
-    <!-- Load optimization modules -->
-    <script src="/js/accessibility-manager.js"></script>
-    <script src="/js/animation-manager.js"></script>
-    <script src="/js/performance-auditor.js"></script>
-    <script src="/js/ui-components.js"></script>
-    <script src="/js/optimized-image-loader.js"></script>
-    <script src="/js/resource-optimizer.js"></script>
-    <script src="/js/mobile-optimizer.js"></script>
-    <script src="/js/system-validator.js"></script>
-    <script src="/js/error-manager.js"></script>
-    <script src="/js/optimization-validator.js"></script>
-    <script src="/js/sw-register.js"></script>
+    <!-- Component system -->
+    <script src="js/components/ui-components.js"></script>
+
+    <!-- Verification utilities -->
+    <script src="js/utils/verification-utils.js"></script>
+
+    <!-- Service worker registration -->
+    <script src="js/sw-register.js"></script>
 </body>
 
 </html>

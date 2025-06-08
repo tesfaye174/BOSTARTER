@@ -1,0 +1,396 @@
+/* 
+ * BOSTARTER - Journalism Category Styles
+ * Category: Giornalismo
+ * Theme: Professional, clean, news-inspired design
+ */
+
+/* Journalism Category Header */
+.category-giornalismo .hero-section {
+    background: linear-gradient(135deg, #2C3E50 0%, #34495E 30%, #4A5F7A 70%, #1B2631 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.category-giornalismo .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(255,255,255,0.03) 2px,
+            rgba(255,255,255,0.03) 4px
+        );
+    animation: news-ticker 6s linear infinite;
+}
+
+@keyframes news-ticker {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.category-giornalismo .category-title {
+    color: #FFFFFF;
+    text-shadow: 2px 2px 4px rgba(44, 62, 80, 0.8);
+    font-family: 'Times New Roman', serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Journalism Cards */
+.category-giornalismo .project-card {
+    border: 1px solid #BDC3C7;
+    background: linear-gradient(145deg, #FFFFFF 0%, #F8F9FA 100%);
+    box-shadow: 0 4px 15px rgba(44, 62, 80, 0.1);
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.category-giornalismo .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #E74C3C, #C0392B);
+    border-radius: 4px 0 0 4px;
+}
+
+.category-giornalismo .project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(44, 62, 80, 0.15);
+    border-color: #34495E;
+}
+
+.category-giornalismo .card-title {
+    color: #2C3E50;
+    font-family: 'Times New Roman', serif;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+}
+
+.category-giornalismo .card-subtitle {
+    color: #7F8C8D;
+    font-family: 'Arial', sans-serif;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.category-giornalismo .card-description {
+    color: #34495E;
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    text-align: justify;
+}
+
+/* Journalism Tags */
+.category-giornalismo .tag {
+    background: #ECF0F1;
+    color: #2C3E50;
+    border: 1px solid #BDC3C7;
+    font-weight: 500;
+    border-radius: 3px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.85rem;
+    font-family: 'Arial', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.category-giornalismo .tag.tag-breaking {
+    background: #E74C3C;
+    color: #FFFFFF;
+    border-color: #C0392B;
+    animation: breaking-news 2s ease-in-out infinite;
+}
+
+@keyframes breaking-news {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.category-giornalismo .tag:hover {
+    background: #D5DBDB;
+    color: #1B2631;
+    transform: scale(1.05);
+}
+
+.category-giornalismo .tag.tag-urgent {
+    background: #F39C12;
+    color: #FFFFFF;
+    border-color: #E67E22;
+}
+
+/* Journalism Buttons */
+.category-giornalismo .btn-primary {
+    background: linear-gradient(135deg, #2C3E50, #34495E);
+    border: 1px solid #1B2631;
+    color: #FFFFFF;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 3px;
+    padding: 0.75rem 2rem;
+    font-family: 'Arial', sans-serif;
+    text-transform: uppercase;
+}
+
+.category-giornalismo .btn-primary:hover {
+    background: linear-gradient(135deg, #34495E, #4A5F7A);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+}
+
+.category-giornalismo .btn-secondary {
+    background: transparent;
+    border: 2px solid #2C3E50;
+    color: #2C3E50;
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 0.75rem 2rem;
+}
+
+.category-giornalismo .btn-secondary:hover {
+    background: #2C3E50;
+    color: #FFFFFF;
+}
+
+/* Journalism Progress Bars */
+.category-giornalismo .progress-bar {
+    background: linear-gradient(90deg, #E74C3C, #C0392B);
+    box-shadow: 0 1px 5px rgba(231, 76, 60, 0.3);
+    border-radius: 2px;
+}
+
+.category-giornalismo .progress {
+    background-color: #ECF0F1;
+    border-radius: 2px;
+    height: 8px;
+}
+
+/* Journalism Forms */
+.category-giornalismo .form-control {
+    border: 1px solid #BDC3C7;
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+    background: #FFFFFF;
+    transition: all 0.3s ease;
+    font-family: 'Arial', sans-serif;
+}
+
+.category-giornalismo .form-control:focus {
+    border-color: #34495E;
+    box-shadow: 0 0 0 0.2rem rgba(52, 73, 94, 0.25);
+    outline: none;
+}
+
+.category-giornalismo .form-label {
+    color: #2C3E50;
+    font-weight: 600;
+    font-family: 'Arial', sans-serif;
+    margin-bottom: 0.5rem;
+}
+
+/* Journalism Icons */
+.category-giornalismo .icon-giornalismo::before {
+    content: '📰';
+    font-size: 1.5em;
+    margin-right: 8px;
+}
+
+.category-giornalismo .icon-breaking::before {
+    content: '🚨';
+    font-size: 1.2em;
+    margin-right: 6px;
+    animation: urgent-flash 1.5s ease-in-out infinite;
+}
+
+@keyframes urgent-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.category-giornalismo .icon-interview::before {
+    content: '🎤';
+    font-size: 1.3em;
+    margin-right: 6px;
+}
+
+/* Journalism Article Layout */
+.category-giornalismo .article-preview {
+    border-left: 4px solid #E74C3C;
+    padding-left: 1rem;
+    margin: 1rem 0;
+}
+
+.category-giornalismo .article-meta {
+    color: #7F8C8D;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Arial', sans-serif;
+}
+
+.category-giornalismo .article-meta .author {
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+.category-giornalismo .article-meta .date {
+    margin-left: 1rem;
+}
+
+.category-giornalismo .article-content {
+    font-family: 'Times New Roman', serif;
+    line-height: 1.7;
+    color: #2C3E50;
+    text-align: justify;
+}
+
+/* Journalism Quote Styles */
+.category-giornalismo .quote {
+    border-left: 4px solid #34495E;
+    padding-left: 1.5rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    color: #4A5F7A;
+    font-family: 'Times New Roman', serif;
+    font-size: 1.1rem;
+    position: relative;
+}
+
+.category-giornalismo .quote::before {
+    content: '"';
+    font-size: 3rem;
+    color: #BDC3C7;
+    position: absolute;
+    left: -0.5rem;
+    top: -1rem;
+    font-family: 'Times New Roman', serif;
+}
+
+/* Journalism Byline */
+.category-giornalismo .byline {
+    background: #F8F9FA;
+    border: 1px solid #ECF0F1;
+    padding: 1rem;
+    border-radius: 3px;
+    margin: 1rem 0;
+}
+
+.category-giornalismo .byline .author-name {
+    font-weight: 700;
+    color: #2C3E50;
+    font-family: 'Arial', sans-serif;
+}
+
+.category-giornalismo .byline .author-title {
+    color: #7F8C8D;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* Responsive Journalism Design */
+@media (max-width: 768px) {
+    .category-giornalismo .hero-section {
+        padding: 2rem 1rem;
+    }
+    
+    .category-giornalismo .category-title {
+        font-size: 2rem;
+    }
+    
+    .category-giornalismo .article-meta .date {
+        margin-left: 0;
+        display: block;
+        margin-top: 0.25rem;
+    }
+    
+    .category-giornalismo .quote {
+        margin: 1rem 0;
+        padding-left: 1rem;
+    }
+    
+    .category-giornalismo .btn-primary,
+    .category-giornalismo .btn-secondary {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Journalism Loading States */
+.category-giornalismo .loading-skeleton {
+    background: linear-gradient(90deg, #f8f9fa 25%, #ecf0f1 50%, #f8f9fa 75%);
+    background-size: 200% 100%;
+    animation: journalism-loading 2s infinite;
+    border-radius: 3px;
+}
+
+@keyframes journalism-loading {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Journalism Accessibility */
+.category-giornalismo .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Journalism High Contrast Mode */
+@media (prefers-contrast: high) {
+    .category-giornalismo .project-card {
+        border: 2px solid #000;
+        background: #fff;
+    }
+    
+    .category-giornalismo .card-title {
+        color: #000;
+    }
+    
+    .category-giornalismo .btn-primary {
+        background: #000;
+        color: #fff;
+        border: 2px solid #000;
+    }
+    
+    .category-giornalismo .tag {
+        background: #fff;
+        color: #000;
+        border: 2px solid #000;
+    }
+}
+
+/* Journalism Print Styles */
+@media print {
+    .category-giornalismo .hero-section {
+        background: none;
+        color: #000;
+    }
+    
+    .category-giornalismo .project-card {
+        border: 1px solid #000;
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+    
+    .category-giornalismo .btn-primary,
+    .category-giornalismo .btn-secondary {
+        display: none;
+    }
+}

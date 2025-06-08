@@ -14,7 +14,6 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
 require_once __DIR__ . '/../utils/Validator.php';
-require_once __DIR__ . '/../utils/Auth.php';
 
 session_start();
 
@@ -30,13 +29,12 @@ try {
     $mongoLogger = new MongoLogger();
 
     switch ($method) {
-        case 'GET':
-            // Get user's skills
+        case 'GET':            // Get user's skills
             $stmt = $db->prepare("
                 SELECT s.id, s.nome as skill_name, s.categoria, s.descrizione,
-                       us.livello_competenza, us.anni_esperienza, us.data_aggiunta
+                       us.livello as livello_competenza, 0 as anni_esperienza, us.created_at as data_aggiunta
                 FROM competenze s
-                JOIN competenze_utenti us ON s.id = us.competenza_id
+                JOIN skill_utente us ON s.id = us.competenza_id
                 WHERE us.utente_id = ?
                 ORDER BY s.categoria, s.nome
             ");
@@ -86,10 +84,8 @@ try {
 
             if (!$skill) {
                 ApiResponse::notFound('Skill not found');
-            }
-
-            // Check if user already has this skill
-            $stmt = $db->prepare("SELECT id FROM competenze_utenti WHERE utente_id = ? AND competenza_id = ?");
+            }            // Check if user already has this skill
+            $stmt = $db->prepare("SELECT id FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
             $stmt->execute([$user_id, $skill_id]);
             
             if ($stmt->fetch()) {
@@ -98,10 +94,10 @@ try {
 
             // Add skill to user
             $stmt = $db->prepare("
-                INSERT INTO competenze_utenti (utente_id, competenza_id, livello_competenza, anni_esperienza, data_aggiunta)
-                VALUES (?, ?, ?, ?, NOW())
+                INSERT INTO skill_utente (utente_id, competenza_id, livello)
+                VALUES (?, ?, ?)
             ");
-            $stmt->execute([$user_id, $skill_id, $livello, $anni_esperienza]);
+            $stmt->execute([$user_id, $skill_id, $livello]);
 
             $mongoLogger->logActivity($user_id, 'skill_added', [
                 'skill_id' => $skill_id,
@@ -134,10 +130,8 @@ try {
 
             $skill_id = (int)$input['skill_id'];
             $livello = $input['livello_competenza'];
-            $anni_esperienza = (int)($input['anni_esperienza'] ?? 0);
-
-            // Check if user has this skill
-            $stmt = $db->prepare("SELECT id FROM competenze_utenti WHERE utente_id = ? AND competenza_id = ?");
+            $anni_esperienza = (int)($input['anni_esperienza'] ?? 0);            // Check if user has this skill
+            $stmt = $db->prepare("SELECT id FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
             $stmt->execute([$user_id, $skill_id]);
             
             if (!$stmt->fetch()) {
@@ -146,11 +140,11 @@ try {
 
             // Update skill
             $stmt = $db->prepare("
-                UPDATE competenze_utenti 
-                SET livello_competenza = ?, anni_esperienza = ?
+                UPDATE skill_utente 
+                SET livello = ?
                 WHERE utente_id = ? AND competenza_id = ?
             ");
-            $stmt->execute([$livello, $anni_esperienza, $user_id, $skill_id]);
+            $stmt->execute([$livello, $user_id, $skill_id]);
 
             $mongoLogger->logActivity($user_id, 'skill_updated', [
                 'skill_id' => $skill_id,
@@ -167,10 +161,8 @@ try {
             
             if (!$skill_id) {
                 ApiResponse::error('Skill ID is required');
-            }
-
-            // Check if user has this skill
-            $stmt = $db->prepare("SELECT id FROM competenze_utenti WHERE utente_id = ? AND competenza_id = ?");
+            }            // Check if user has this skill
+            $stmt = $db->prepare("SELECT id FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
             $stmt->execute([$user_id, $skill_id]);
             
             if (!$stmt->fetch()) {
@@ -178,7 +170,7 @@ try {
             }
 
             // Remove skill
-            $stmt = $db->prepare("DELETE FROM competenze_utenti WHERE utente_id = ? AND competenza_id = ?");
+            $stmt = $db->prepare("DELETE FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
             $stmt->execute([$user_id, $skill_id]);
 
             $mongoLogger->logActivity($user_id, 'skill_removed', [

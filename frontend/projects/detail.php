@@ -83,10 +83,9 @@ if (isset($_SESSION['user_id']) && $project['project_type'] === 'software' &&
     $_SESSION['user_id'] != $project['creator_id'] && $project['status'] === 'open') {
     
     $can_apply = true;
-    
-    // Get user's existing applications
-    $user_app_query = "SELECT skill_id, status FROM CANDIDATURE 
-                       WHERE project_id = :project_id AND user_id = :user_id";
+      // Get user's existing applications
+    $user_app_query = "SELECT profilo_id as skill_id, stato as status FROM candidature 
+                       WHERE progetto_id = :project_id AND utente_id = :user_id";
     $user_app_stmt = $db->prepare($user_app_query);
     $user_app_stmt->bindParam(':project_id', $project_id);
     $user_app_stmt->bindParam(':user_id', $_SESSION['user_id']);

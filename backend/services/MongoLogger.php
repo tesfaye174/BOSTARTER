@@ -160,5 +160,36 @@ class MongoLogger {
             'login_time' => date('Y-m-d H:i:s')
         ], $details));
     }
+    
+    /**
+     * Log security events (wrapper for compatibility)
+     */
+    public function logSecurity($event, $details = []) {
+        if ($this->isMongoAvailable) {
+            try {
+                $bulk = new MongoDB\Driver\BulkWrite;
+                $bulk->insert([
+                    'type' => 'security',
+                    'event' => $event,
+                    'details' => $details,
+                    'timestamp' => new MongoDB\BSON\UTCDateTime(),
+                    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+                ]);
+                $this->manager->executeBulkWrite('bostarter.logs', $bulk);
+            } catch (Exception $e) {
+                $this->logToFile('security', $event, array_merge($details, ['error' => $e->getMessage()]));
+            }
+        } else {
+            $this->logToFile('security', $event, $details);
+        }
+    }
+    
+    /**
+     * Log general events
+     */
+    public function logEvent($event, $details = []) {
+        $this->logAction($event, $details);
+    }
 }
 ?>

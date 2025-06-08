@@ -182,15 +182,18 @@ class Validator {
         if (!isset($data['cognome']) || empty(trim($data['cognome']))) {
             $errors['cognome'] = 'Cognome obbligatorio';
         }
-        
-        // Validazione data di nascita
-        if (!isset($data['data_nascita']) || empty($data['data_nascita'])) {
-            $errors['data_nascita'] = 'Data di nascita obbligatoria';
+          // Validazione anno di nascita
+        if (!isset($data['anno_nascita']) || empty($data['anno_nascita'])) {
+            $errors['anno_nascita'] = 'Anno di nascita obbligatorio';
+        } elseif (!is_numeric($data['anno_nascita']) || $data['anno_nascita'] < 1900 || $data['anno_nascita'] > (date('Y') - 13)) {
+            $errors['anno_nascita'] = 'Anno di nascita non valido (devi avere almeno 13 anni)';
         }
         
-        // Validazione sesso
-        if (!isset($data['sesso']) || empty($data['sesso'])) {
-            $errors['sesso'] = 'Sesso obbligatorio';
+        // Validazione luogo di nascita
+        if (!isset($data['luogo_nascita']) || empty(trim($data['luogo_nascita']))) {
+            $errors['luogo_nascita'] = 'Luogo di nascita obbligatorio';
+        } elseif (strlen($data['luogo_nascita']) > 100) {
+            $errors['luogo_nascita'] = 'Luogo di nascita troppo lungo (max 100 caratteri)';
         }
         
         return empty($errors) ? true : $errors;

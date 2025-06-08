@@ -18,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../config/database.php';
 require_once '../services/VolumeAnalysisService.php';
 require_once '../utils/ApiResponse.php';
-require_once '../utils/Auth.php';
 require_once '../utils/Validator.php';
 
 try {

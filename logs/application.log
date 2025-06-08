@@ -1,45 +1,33 @@
-[2025-06-08 00:42:42] ACTIVITY: User 28: user_registration {"email":"meg1@gmail.com","registration_time":"2025-06-08 00:42:42","nickname":"meg1","ip_address":"::1","auto_login":true}
-[2025-06-08 00:42:44] ACTIVITY: User 28: dashboard_access {"timestamp":"2025-06-08 00:42:44"}
-[2025-06-08 00:42:56] ACTIVITY: User 28: project_create_page_access {"timestamp":"2025-06-08 00:42:56"}
-[2025-06-08 00:42:59] ACTIVITY: User 28: dashboard_access {"timestamp":"2025-06-08 00:42:59"}
-[2025-06-08 00:43:02] ACTIVITY: User 28: dashboard_access {"timestamp":"2025-06-08 00:43:02"}
-[2025-06-08 00:43:13] ACTIVITY: User 28: user_logout {"logout_time":"2025-06-08 00:43:13"}
-[2025-06-08 14:57:08] ERROR: search_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'f.stato_pagamento' in 'where clause'","query":"AI"}
-[2025-06-08 14:57:21] ACTION: projects_compliant_request {"endpoint":"projects_compliant","method":"GET","action":"list","timestamp":1749387441,"pdf_compliant":true,"supported_types":["hardware","software"]}
-[2025-06-08 14:58:27] ERROR: search_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'f.stato_pagamento' in 'where clause'","query":"AI"}
-[2025-06-08 15:09:43] SYSTEM: login_error {"email":"tesfaye1@gmail.com","error_message":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'field list'","error_file":"C:\\xampp\\htdocs\\BOSTARTER\\frontend\\auth\\login.php","error_line":122,"ip_address":"::1","timestamp":"2025-06-08 15:09:43"}
-[2025-06-08 15:10:10] SYSTEM: login_error {"email":"tesfaye1@gmail.com","error_message":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'field list'","error_file":"C:\\xampp\\htdocs\\BOSTARTER\\frontend\\auth\\login.php","error_line":122,"ip_address":"::1","timestamp":"2025-06-08 15:10:10"}
-[2025-06-08 15:10:44] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 15:10:44","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
-[2025-06-08 15:10:44] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:10:44"}
-[2025-06-08 15:12:04] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 15:12:04"}
-[2025-06-08 15:12:35] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 15:12:35","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
-[2025-06-08 15:12:35] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:12:35"}
-[2025-06-08 15:13:05] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 15:13:05"}
-[2025-06-08 15:13:11] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:13:11"}
-[2025-06-08 15:13:20] ACTIVITY: User 25: projects_browse {"timestamp":"2025-06-08 15:13:20","filters":{"type":null,"search":null,"sort":"newest"},"page":1}
-[2025-06-08 15:13:35] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:13:35"}
-[2025-06-08 15:20:49] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 15:20:49"}
-[2025-06-08 15:29:39] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 15:29:39","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
-[2025-06-08 15:29:39] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:29:39"}
-[2025-06-08 15:53:10] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:53:10"}
-[2025-06-08 15:58:27] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 15:58:27"}
-[2025-06-08 15:58:36] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:58:36"}
-[2025-06-08 15:58:40] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 15:58:40"}
-[2025-06-08 15:58:44] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 15:58:44","session_duration":1745,"session_duration_human":"00:29:05","login_time":"2025-06-08 15:29:39","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","referer":"http:\/\/localhost\/BOSTARTER\/frontend\/index.php","logout_method":"manual","security_context":{"session_id":"ailmlc7ku9hhfb03tqlgrq6kop","csrf_token":"2428b9ea84eb7dd02f514f70f888388df22b4e3e6ee730343ec3b654dd47f017"},"timestamp":1749391124}
-[2025-06-08 15:59:16] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 15:59:16","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
-[2025-06-08 15:59:16] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:59:16"}
-[2025-06-08 15:59:18] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:59:18"}
-[2025-06-08 15:59:20] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 15:59:20"}
-[2025-06-08 15:59:31] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 15:59:31"}
-[2025-06-08 16:00:52] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 16:00:52"}
-[2025-06-08 16:01:05] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 16:01:05"}
-[2025-06-08 16:01:58] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 16:01:58","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
-[2025-06-08 16:01:58] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 16:01:58"}
-[2025-06-08 16:02:04] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 16:02:04"}
-[2025-06-08 16:02:09] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 16:02:09"}
-[2025-06-08 16:02:16] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 16:02:16"}
-[2025-06-08 16:02:31] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 16:02:31"}
-[2025-06-08 16:02:33] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 16:02:33"}
-[2025-06-08 16:02:38] ACTIVITY: User 25: projects_browse {"timestamp":"2025-06-08 16:02:38","filters":{"type":null,"search":null,"sort":"newest"},"page":1}
-[2025-06-08 16:02:41] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 16:02:41"}
-[2025-06-08 16:02:45] ACTIVITY: User 25: projects_browse {"timestamp":"2025-06-08 16:02:45","filters":{"type":null,"search":null,"sort":"newest"},"page":1}
+[2025-06-08 18:38:09] SYSTEM: auth_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attivo' in 'field list'","email":"tesfaye1@gmail.com","file":"C:\\xampp\\htdocs\\BOSTARTER\\backend\\services\\AuthService.php","line":266}
+[2025-06-08 18:38:50] SYSTEM: auth_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attivo' in 'field list'","email":"tesfaye1@gmail.com","file":"C:\\xampp\\htdocs\\BOSTARTER\\backend\\services\\AuthService.php","line":266}
+[2025-06-08 18:41:59] SYSTEM: auth_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attivo' in 'field list'","email":"tesfaye1@gmail.com","file":"C:\\xampp\\htdocs\\BOSTARTER\\backend\\services\\AuthService.php","line":266}
+[2025-06-08 18:42:34] SYSTEM: auth_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attivo' in 'field list'","email":"tesfaye@gmail.com","file":"C:\\xampp\\htdocs\\BOSTARTER\\backend\\services\\AuthService.php","line":266}
+[2025-06-08 19:12:50] SYSTEM: auth_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attivo' in 'field list'","email":"tesfaye1@gmail.com","file":"C:\\xampp\\htdocs\\BOSTARTER\\backend\\services\\AuthService.php","line":266}
+[2025-06-08 19:15:25] SYSTEM: auth_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attivo' in 'field list'","email":"tesfaye1@gmail.com","file":"C:\\xampp\\htdocs\\BOSTARTER\\backend\\services\\AuthService.php","line":266}
+[2025-06-08 19:30:55] SYSTEM: auth_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'attivo' in 'field list'","email":"tesfaye1@gmail.com","file":"C:\\xampp\\htdocs\\BOSTARTER\\backend\\services\\AuthService.php","line":279}
+[2025-06-08 19:36:24] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-08 20:17:17] SECURITY: failed_login {"email_hash":"138da67584168cc6d9eba1b28c588dbf29aab5ca82f9b0e209971aec1bdac61a","ip":"unknown","attempts":1,"user_agent":"unknown"}
+[2025-06-08 20:17:17] SECURITY: failed_login {"email_hash":"138da67584168cc6d9eba1b28c588dbf29aab5ca82f9b0e209971aec1bdac61a","ip":"unknown","attempts":2,"user_agent":"unknown"}
+[2025-06-08 20:17:17] ACTION: test_event {"test_data":"authentication_test"}
+[2025-06-08 20:18:11] SECURITY: failed_login {"email_hash":"138da67584168cc6d9eba1b28c588dbf29aab5ca82f9b0e209971aec1bdac61a","ip":"unknown","attempts":1,"user_agent":"unknown"}
+[2025-06-08 20:18:11] SECURITY: failed_login {"email_hash":"138da67584168cc6d9eba1b28c588dbf29aab5ca82f9b0e209971aec1bdac61a","ip":"unknown","attempts":2,"user_agent":"unknown"}
+[2025-06-08 20:18:11] ACTIVITY: User 34: user_login {"email":"test_login@bostarter.it","ip":"unknown","user_agent":"unknown","remember_me":false}
+[2025-06-08 20:18:11] ACTION: test_event {"test_data":"authentication_test"}
+[2025-06-08 20:19:28] ACTIVITY: User 34: user_login {"email":"test_login@bostarter.it","login_time":"2025-06-08 20:19:28","ip_address":"::1"}
+[2025-06-08 20:19:28] ACTIVITY: User 35: user_registration {"email":"test_api_1749406768@bostarter.it","registration_time":"2025-06-08 20:19:28","nickname":"test_api_1749406768","ip_address":"::1","auto_login":true}
+[2025-06-08 20:20:21] SYSTEM: registration_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'sesso' in 'field list'","email":"test_flow_1749406821@bostarter.it"}
+[2025-06-08 20:20:48] SYSTEM: registration_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'sesso' in 'field list'","email":"test_flow_1749406848@bostarter.it"}
+[2025-06-08 20:21:01] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 20:21:01","session_duration":2677}
+[2025-06-08 20:21:28] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-08 20:22:41] SYSTEM: registration_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'sesso' in 'field list'","email":"debug_auth_1749406961@bostarter.it"}
+[2025-06-08 20:22:41] SYSTEM: registration_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'sesso' in 'field list'","email":"debug_auth_1749406961@bostarter.it"}
+[2025-06-08 20:24:26] ACTIVITY: User 36: user_register {"email":"debug_auth_1749407066@bostarter.it","register_time":"2025-06-08 20:24:26","ip":"unknown","user_agent":"unknown"}
+[2025-06-08 20:24:26] ACTIVITY: User 36: user_login {"email":"debug_auth_1749407066@bostarter.it","ip":"unknown","user_agent":"unknown","remember_me":false}
+[2025-06-08 20:26:56] ACTIVITY: User 37: user_register {"email":"testuser_1749407216@example.com","register_time":"2025-06-08 20:26:56","ip":"unknown","user_agent":"unknown"}
+[2025-06-08 20:26:56] ACTIVITY: User 37: user_login {"email":"testuser_1749407216@example.com","ip":"unknown","user_agent":"unknown","remember_me":false}
+[2025-06-08 21:48:07] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 21:48:07","session_duration":5199}
+[2025-06-08 21:50:26] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-08 22:01:52] ACTIVITY: User : projects_viewed {"filters":{"category":"","search":"","sort":"recent","page":1},"results_count":0,"total_available":0}
+[2025-06-08 22:02:02] ACTIVITY: User : projects_viewed {"filters":{"category":"","search":"","sort":"recent","page":1},"results_count":0,"total_available":0}
+[2025-06-09 00:13:49] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-09 00:13:49","session_duration":8603}
+[2025-06-09 00:14:09] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}

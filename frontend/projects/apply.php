@@ -47,9 +47,8 @@ if ($_SESSION['user_id'] == $project['creator_id']) {
 // Get required skills
 $required_skills = [];
 if ($project['required_skills']) {
-    $skill_ids = json_decode($project['required_skills'], true);
-    if ($skill_ids) {
-        $skills_query = "SELECT skill_id, skill_name, category FROM SKILLS WHERE skill_id IN (" . implode(',', array_fill(0, count($skill_ids), '?')) . ") ORDER BY category, skill_name";
+    $skill_ids = json_decode($project['required_skills'], true);    if ($skill_ids) {
+        $skills_query = "SELECT id as skill_id, nome as skill_name, categoria as category FROM competenze WHERE id IN (" . implode(',', array_fill(0, count($skill_ids), '?')) . ") ORDER BY categoria, nome";
         $skills_stmt = $db->prepare($skills_query);
         $skills_stmt->execute($skill_ids);
         $required_skills = $skills_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -57,8 +56,8 @@ if ($project['required_skills']) {
 }
 
 // Get user's existing applications
-$user_applications_query = "SELECT skill_id, status FROM CANDIDATURE 
-                           WHERE project_id = :project_id AND user_id = :user_id";
+$user_applications_query = "SELECT profilo_id as skill_id, stato as status FROM candidature 
+                           WHERE progetto_id = :project_id AND utente_id = :user_id";
 $user_app_stmt = $db->prepare($user_applications_query);
 $user_app_stmt->bindParam(':project_id', $project_id);
 $user_app_stmt->bindParam(':user_id', $_SESSION['user_id']);
@@ -97,17 +96,13 @@ if ($_POST) {
         if (isset($user_applications[$skill_id])) {
             throw new Exception("You have already applied for this skill.");
         }
-        
-        // Insert application
-        $insert_query = "INSERT INTO CANDIDATURE (user_id, project_id, skill_id, motivation, experience_years, portfolio_url, application_date) 
-                        VALUES (:user_id, :project_id, :skill_id, :motivation, :experience_years, :portfolio_url, NOW())";
+          // Insert application
+        $insert_query = "INSERT INTO candidature (utente_id, progetto_id, profilo_id, data_candidatura) 
+                        VALUES (:user_id, :project_id, :skill_id, NOW())";
         $insert_stmt = $db->prepare($insert_query);
         $insert_stmt->bindParam(':user_id', $_SESSION['user_id']);
         $insert_stmt->bindParam(':project_id', $project_id);
         $insert_stmt->bindParam(':skill_id', $skill_id);
-        $insert_stmt->bindParam(':motivation', $motivation);
-        $insert_stmt->bindParam(':experience_years', $experience_years);
-        $insert_stmt->bindParam(':portfolio_url', $portfolio_url);
         $insert_stmt->execute();
           // MongoDB logging
         try {

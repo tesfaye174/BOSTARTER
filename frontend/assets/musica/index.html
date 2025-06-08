@@ -61,7 +61,7 @@
     <!-- ===== CSS OTTIMIZZATO - COMPONENTI COMUNI INTEGRATI ===== -->
     <link rel="stylesheet" href="/frontend/css/main.css">
     <link rel="stylesheet" href="/frontend/css/animations.css">
-    <link rel="stylesheet" href="/frontend/assets/shared/css/common-styles.css">
+    <link rel="stylesheet" href="/frontend/css/components/common-styles.css">
     <link rel="stylesheet" href="css/musica.css">
 </head>
 
@@ -129,19 +129,24 @@
     <!-- ===== FOOTER ===== -->
     <footer id="main-footer" class="bg-gray-900 text-white">
         <!-- Footer content will be loaded by common functions -->
-    </footer>
+    </footer> <!-- ===== SCRIPTS OTTIMIZZATI - COMPONENTI COMUNI INTEGRATI ===== -->
+    <!-- Core utilities -->
+    <script src="/frontend/js/utils/common-functions.js"></script>
 
-    <!-- ===== SCRIPTS OTTIMIZZATI - COMPONENTI COMUNI INTEGRATI ===== -->
-    <!-- Legacy notifications.js removed - using centralized NotificationSystem -->
-    <script src="/frontend/assets/shared/js/ui-components.js"></script>
-    <script src="/frontend/assets/shared/js/category-config.js"></script>
-    <script src="/frontend/assets/shared/js/common-functions.js"></script>
+    <!-- Component system -->
+    <script src="/frontend/js/components/ui-components.js"></script>
 
+    <!-- Category configuration -->
+    <script src="/frontend/js/utils/category-config.js"></script>
+
+    <!-- Category manager -->
+    <script src="/frontend/js/managers/base-category-manager.js"></script>
+    <script src="/frontend/js/managers/generic-category-manager.js"></script>
     <script>
-        // Inizializza la pagina con componenti comuni
+        // Initialize music category page
         document.addEventListener('DOMContentLoaded', () => {
-            // Inizializza le funzioni comuni per la categoria
-            initializeCommonFunctions('musica');
+            // Initialize generic category manager for music
+            new GenericCategoryManager('musica');
         });
 
         // Global error handling

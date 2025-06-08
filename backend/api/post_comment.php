@@ -6,7 +6,6 @@
 
 session_start();
 require_once '../config/database.php';
-require_once '../utils/Auth.php';
 require_once '../utils/Validator.php';
 
 header('Content-Type: application/json');
@@ -46,9 +45,8 @@ if ($project_id <= 0 || !$validator->isValid()) {
 try {
     $database = new Database();
     $pdo = $database->getConnection();
-    
-    // Check if project exists
-    $stmt = $pdo->prepare("SELECT id, titolo, creatore_id FROM progetti WHERE id = ?");
+      // Check if project exists
+    $stmt = $pdo->prepare("SELECT id, nome, creatore_id FROM progetti WHERE id = ?");
     $stmt->execute([$project_id]);
     $project = $stmt->fetch();
     
@@ -68,10 +66,9 @@ try {
             exit();
         }
     }
-    
-    // Insert comment
+      // Insert comment
     $stmt = $pdo->prepare("
-        INSERT INTO commenti (progetto_id, utente_id, commento, parent_id, data_creazione) 
+        INSERT INTO commenti (progetto_id, utente_id, testo, parent_id, data_commento) 
         VALUES (?, ?, ?, ?, NOW())
     ");
     $stmt->execute([$project_id, $user_id, $comment_text, $parent_id]);
@@ -85,15 +82,17 @@ try {
     ");
     $stmt->execute([$user_id]);
     $user = $stmt->fetch();
-    
-    // Create notification for project creator (if not commenting on own project)
+      // Create notification for project creator (if not commenting on own project)
     if ($project['creatore_id'] != $user_id) {
+        // TODO: Create notifiche table and enable notifications
+        /*
         $stmt = $pdo->prepare("
             INSERT INTO notifiche (utente_id, tipo, messaggio, data_creazione, progetto_id) 
             VALUES (?, 'commento', ?, NOW(), ?)
         ");
-        $message = $user['nome'] . ' ' . $user['cognome'] . ' ha commentato il tuo progetto "' . $project['titolo'] . '"';
+        $message = $user['nome'] . ' ' . $user['cognome'] . ' ha commentato il tuo progetto "' . $project['nome'] . '"';
         $stmt->execute([$project['creatore_id'], $message, $project_id]);
+        */
     }
     
     // If it's a reply, notify the parent comment author
@@ -103,14 +102,16 @@ try {
         ");
         $stmt->execute([$parent_id]);
         $parent_author = $stmt->fetch();
-        
-        if ($parent_author && $parent_author['utente_id'] != $user_id) {
+          if ($parent_author && $parent_author['utente_id'] != $user_id) {
+            // TODO: Create notifiche table and enable notifications
+            /*
             $stmt = $pdo->prepare("
                 INSERT INTO notifiche (utente_id, tipo, messaggio, data_creazione, progetto_id) 
                 VALUES (?, 'risposta_commento', ?, NOW(), ?)
             ");
             $message = $user['nome'] . ' ' . $user['cognome'] . ' ha risposto al tuo commento';
             $stmt->execute([$parent_author['utente_id'], $message, $project_id]);
+            */
         }
     }
     

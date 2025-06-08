@@ -92,10 +92,7 @@ class AuthMiddleware {
         if (!preg_match('/\d/', $password)) {
             $errors[] = 'Password must contain at least one number';
         }
-        
-        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
-            $errors[] = 'Password must contain at least one special character';
-        }
+          if (!preg_match('/[^A-Za-z0-9]/', $password)) {
             $errors[] = 'Password must contain at least one special character';
         }
         

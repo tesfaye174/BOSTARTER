@@ -1,0 +1,209 @@
+/* 
+ * BOSTARTER - Theater Category Styles
+ * Category: Teatro
+ * Theme: Dramatic, elegant, stage-inspired design
+ */
+
+/* Theater Category Header */
+.category-teatro .hero-section {
+    background: linear-gradient(135deg, #8B0000 0%, #DC143C 50%, #2F1B14 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.category-teatro .hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23FFD700" opacity="0.3"/></svg>') repeat;
+    background-size: 20px 20px;
+    animation: sparkle 4s linear infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
+}
+
+.category-teatro .category-title {
+    color: #FFD700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+}
+
+/* Theater Cards */
+.category-teatro .project-card {
+    border: 2px solid #8B0000;
+    background: linear-gradient(145deg, #FFFFFF 0%, #F8F8FF 100%);
+    box-shadow: 0 8px 25px rgba(139, 0, 0, 0.15);
+    position: relative;
+}
+
+.category-teatro .project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8B0000, #DC143C, #FFD700);
+}
+
+.category-teatro .project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(139, 0, 0, 0.25);
+    border-color: #DC143C;
+}
+
+.category-teatro .card-title {
+    color: #8B0000;
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+}
+
+.category-teatro .card-description {
+    color: #2F1B14;
+    font-style: italic;
+}
+
+/* Theater Tags */
+.category-teatro .tag {
+    background: linear-gradient(135deg, #8B0000, #DC143C);
+    color: #FFD700;
+    border: 1px solid #FFD700;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.category-teatro .tag:hover {
+    background: linear-gradient(135deg, #DC143C, #FFD700);
+    color: #8B0000;
+    transform: scale(1.05);
+}
+
+/* Theater Buttons */
+.category-teatro .btn-primary {
+    background: linear-gradient(135deg, #8B0000, #DC143C);
+    border: 2px solid #FFD700;
+    color: #FFD700;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.category-teatro .btn-primary:hover {
+    background: linear-gradient(135deg, #DC143C, #FFD700);
+    color: #8B0000;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(139, 0, 0, 0.3);
+}
+
+/* Theater Progress Bars */
+.category-teatro .progress-bar {
+    background: linear-gradient(90deg, #8B0000, #DC143C, #FFD700);
+    box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+}
+
+/* Theater Forms */
+.category-teatro .form-control:focus {
+    border-color: #DC143C;
+    box-shadow: 0 0 0 0.2rem rgba(220, 20, 60, 0.25);
+}
+
+.category-teatro .form-label {
+    color: #8B0000;
+    font-weight: 600;
+}
+
+/* Theater Icons */
+.category-teatro .icon-teatro::before {
+    content: '🎭';
+    font-size: 1.5em;
+    margin-right: 8px;
+}
+
+/* Theater Animations */
+.category-teatro .curtain-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.category-teatro .curtain-effect::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(139, 0, 0, 0.4), transparent);
+    animation: curtain-sweep 3s ease-in-out infinite;
+}
+
+@keyframes curtain-sweep {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: -100%; }
+}
+
+/* Responsive Theater Design */
+@media (max-width: 768px) {
+    .category-teatro .hero-section {
+        padding: 2rem 1rem;
+    }
+    
+    .category-teatro .category-title {
+        font-size: 2rem;
+    }
+    
+    .category-teatro .project-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Theater Loading States */
+.category-teatro .loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: theater-shimmer 2s infinite;
+}
+
+@keyframes theater-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Theater Accessibility */
+.category-teatro .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Theater High Contrast Mode */
+@media (prefers-contrast: high) {
+    .category-teatro .project-card {
+        border: 3px solid #000;
+        background: #fff;
+    }
+    
+    .category-teatro .card-title {
+        color: #000;
+    }
+    
+    .category-teatro .btn-primary {
+        background: #000;
+        color: #fff;
+        border: 2px solid #fff;
+    }
+}

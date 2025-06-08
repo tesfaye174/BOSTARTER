@@ -61,7 +61,7 @@
     <!-- ===== CSS OTTIMIZZATO - COMPONENTI COMUNI INTEGRATI ===== -->
     <link rel="stylesheet" href="/frontend/css/main.css">
     <link rel="stylesheet" href="/frontend/css/animations.css">
-    <link rel="stylesheet" href="/frontend/assets/shared/css/common-styles.css">
+    <link rel="stylesheet" href="/frontend/css/components/common-styles.css">
     <link rel="stylesheet" href="css/tecnologia.css">
 </head>
 
@@ -154,18 +154,24 @@
     </footer>
 
     <!-- ===== SCRIPTS OTTIMIZZATI - COMPONENTI COMUNI INTEGRATI ===== -->
-    <!-- Legacy notifications.js removed - using centralized NotificationSystem -->
-    <script src="/frontend/js/base-category-manager.js"></script>
-    <script src="/frontend/assets/shared/js/category-config.js"></script>
-    <script src="/frontend/assets/shared/js/common-functions.js"></script>
-    <script src="/frontend/assets/shared/js/mock-data-generator.js"></script>
-    <script src="js/tecnologia-manager.js"></script>
+    <!-- Legacy notifications.js removed - using centralized NotificationSystem --> <!-- Core utilities -->
+    <script src="/frontend/js/utils/common-functions.js"></script>
+
+    <!-- Component system -->
+    <script src="/frontend/js/components/ui-components.js"></script>
+
+    <!-- Category configuration -->
+    <script src="/frontend/js/utils/category-config.js"></script>
+
+    <!-- Category manager -->
+    <script src="/frontend/js/managers/base-category-manager.js"></script>
+    <script src="/frontend/js/managers/generic-category-manager.js"></script>
 
     <script>
-        // Inizializza la pagina con componenti comuni
+        // Initialize technology category page
         document.addEventListener('DOMContentLoaded', () => {
-            // Inizializza le funzioni comuni per la categoria
-            initializeCommonFunctions('tecnologia');
+            // Initialize generic category manager for technology
+            new GenericCategoryManager('tecnologia');
         });
 
         // Global error handling
