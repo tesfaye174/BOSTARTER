@@ -67,22 +67,26 @@ $user_applications = $user_app_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
 if ($_POST) {
     try {
-        $skill_id = (int)$_POST['skill_id'];
-        $motivation = trim($_POST['motivation']);
-        $experience_years = (int)$_POST['experience_years'];
-        $portfolio_url = trim($_POST['portfolio_url']);
+        // Validazione centralizzata usando Validator
+        require_once '../../backend/utils/Validator.php';
         
-        if (empty($motivation)) {
-            throw new Exception("Motivation is required.");
+        $applicationData = [
+            'skill_id' => (int)($_POST['skill_id'] ?? 0),
+            'motivation' => trim($_POST['motivation'] ?? ''),
+            'experience_years' => (int)($_POST['experience_years'] ?? 0),
+            'portfolio_url' => trim($_POST['portfolio_url'] ?? '')
+        ];
+        
+        $validationResult = Validator::validateApplication($applicationData);
+        if ($validationResult !== true) {
+            $errorMessages = is_array($validationResult) ? implode(', ', $validationResult) : $validationResult;
+            throw new Exception($errorMessages);
         }
         
-        if (strlen($motivation) < 50) {
-            throw new Exception("Motivation must be at least 50 characters long.");
-        }
-        
-        if (!empty($portfolio_url) && !filter_var($portfolio_url, FILTER_VALIDATE_URL)) {
-            throw new Exception("Please provide a valid portfolio URL.");
-        }
+        $skill_id = $applicationData['skill_id'];
+        $motivation = $applicationData['motivation'];
+        $experience_years = $applicationData['experience_years'];
+        $portfolio_url = $applicationData['portfolio_url'];
         
         // Check if skill is required for this project
         if (!in_array($skill_id, json_decode($project['required_skills'], true))) {

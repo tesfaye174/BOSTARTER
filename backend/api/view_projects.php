@@ -8,6 +8,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
+require_once __DIR__ . '/../utils/Validator.php';
 
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -27,6 +28,18 @@ try {
     $sort = $_GET['sort'] ?? 'recent'; // recent, funded, ending_soon, title
     $min_funding = (float)($_GET['min_funding'] ?? 0);
     $max_funding = (float)($_GET['max_funding'] ?? 0);
+
+    // Validazione centralizzata dei parametri di paginazione
+    $validator = new Validator();
+    if ($page < 1) {
+        $validator->min(1);
+    }
+    if ($per_page < 10 || $per_page > 50) {
+        $validator->min(10)->max(50);
+    }
+    if (!$validator->isValid()) {
+        ApiResponse::error(implode(', ', $validator->getErrors()), 400);
+    }
 
     // Build WHERE clause
     $where_conditions = ["p.stato = 'aperto'", "p.data_limite > NOW()"];

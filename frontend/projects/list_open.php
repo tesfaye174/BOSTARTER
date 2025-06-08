@@ -30,16 +30,16 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $sort = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
 
 // Build WHERE clause
-$where_conditions = ["p.status = 'open'"];
+$where_conditions = ["p.stato = 'open'"];
 $params = [];
 
 if ($type_filter) {
-    $where_conditions[] = "p.project_type = :type";
+    $where_conditions[] = "p.tipo_progetto = :type";
     $params[':type'] = $type_filter;
 }
 
 if ($search) {
-    $where_conditions[] = "(p.title LIKE :search OR p.description LIKE :search)";
+    $where_conditions[] = "(p.nome LIKE :search OR p.descrizione LIKE :search)";
     $params[':search'] = "%$search%";
 }
 
@@ -48,17 +48,17 @@ $where_clause = implode(' AND ', $where_conditions);
 // Build ORDER BY clause
 $order_clause = match($sort) {
     'oldest' => 'p.created_at ASC',
-    'deadline' => 'p.deadline ASC',
-    'goal_low' => 'p.funding_goal ASC',
-    'goal_high' => 'p.funding_goal DESC',
+    'deadline' => 'p.data_limite ASC',
+    'goal_low' => 'p.budget_richiesto ASC',
+    'goal_high' => 'p.budget_richiesto DESC',
     'progress' => 'funding_percentage DESC',
     default => 'p.created_at DESC'
 };
 
 // Get total count for pagination
 $count_query = "SELECT COUNT(*) as total 
-                FROM PROJECTS p 
-                LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.project_id = pf.project_id 
+                FROM progetti p 
+                LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.id = pf.project_id 
                 WHERE $where_clause";
 $count_stmt = $db->prepare($count_query);
 $count_stmt->execute($params);
@@ -70,10 +70,10 @@ $projects_query = "SELECT p.*, u.username as creator_name, u.email as creator_em
                           COALESCE(pf.total_funded, 0) as total_funded,
                           COALESCE(pf.funding_percentage, 0) as funding_percentage,
                           COALESCE(pf.backers_count, 0) as backers_count,
-                          DATEDIFF(p.deadline, NOW()) as days_left
-                   FROM PROJECTS p
-                   JOIN USERS u ON p.creator_id = u.user_id
-                   LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.project_id = pf.project_id
+                          DATEDIFF(p.data_limite, NOW()) as days_left
+                   FROM progetti p
+                   JOIN utenti u ON p.creatore_id = u.id
+                   LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.id = pf.project_id
                    WHERE $where_clause
                    ORDER BY $order_clause
                    LIMIT :offset, :per_page";

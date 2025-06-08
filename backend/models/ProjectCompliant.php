@@ -3,8 +3,8 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
 /**
- * Project Model - Compliant with PDF specifications
- * Uses stored procedures for all operations as required
+ * Modello Project - Conforme alle specifiche PDF
+ * Utilizza stored procedure per tutte le operazioni richieste
  */
 class ProjectCompliant {
     private $db;
@@ -16,11 +16,11 @@ class ProjectCompliant {
     }
 
     /**
-     * Creates a new project using stored procedure
+     * Crea un nuovo progetto tramite stored procedure
      */
     public function create($data) {
         try {
-            // Validate project type (only hardware or software allowed)
+            // Valida il tipo di progetto (solo hardware o software consentiti)
             if (!in_array($data['tipo'], ['hardware', 'software'])) {
                 return [
                     'success' => false,
@@ -28,7 +28,7 @@ class ProjectCompliant {
                 ];
             }
 
-            // Create project based on type
+            // Crea il progetto in base al tipo
             if ($data['tipo'] === 'hardware') {
                 return $this->createHardwareProject($data);
             } else {
@@ -44,13 +44,13 @@ class ProjectCompliant {
     }
 
     /**
-     * Creates a hardware project
+     * Crea un progetto hardware
      */
     private function createHardwareProject($data) {
         try {
             $this->conn->beginTransaction();
 
-            // Insert base project
+            // Inserisci il progetto base
             $stmt = $this->conn->prepare("
                 INSERT INTO progetti (
                     nome, descrizione, budget_richiesto, data_scadenza,
@@ -70,7 +70,7 @@ class ProjectCompliant {
             
             $projectId = $this->conn->lastInsertId();
 
-            // Insert hardware components
+            // Inserisci i componenti hardware
             if (!empty($data['componenti'])) {
                 $stmt = $this->conn->prepare("
                     INSERT INTO componenti_hardware (progetto_id, nome, descrizione, quantita, prezzo_unitario)
@@ -88,7 +88,7 @@ class ProjectCompliant {
                 }
             }
 
-            // Insert rewards
+            // Inserisci le ricompense
             if (!empty($data['ricompense'])) {
                 $this->insertRewards($projectId, $data['ricompense']);
             }
@@ -106,13 +106,13 @@ class ProjectCompliant {
     }
 
     /**
-     * Creates a software project
+     * Crea un progetto software
      */
     private function createSoftwareProject($data) {
         try {
             $this->conn->beginTransaction();
 
-            // Insert base project
+            // Inserisci il progetto base
             $stmt = $this->conn->prepare("
                 INSERT INTO progetti (
                     nome, descrizione, budget_richiesto, data_scadenza,
@@ -132,7 +132,7 @@ class ProjectCompliant {
             
             $projectId = $this->conn->lastInsertId();
 
-            // Insert software profiles
+            // Inserisci i profili software
             if (!empty($data['profili'])) {
                 $stmt = $this->conn->prepare("
                     INSERT INTO profili_software (progetto_id, nome, descrizione, budget_dedicato)
@@ -149,7 +149,7 @@ class ProjectCompliant {
                     
                     $profiloId = $this->conn->lastInsertId();
                     
-                    // Insert required skills for this profile
+                    // Inserisci le competenze richieste per questo profilo
                     if (!empty($profilo['skill_richieste'])) {
                         $skillStmt = $this->conn->prepare("
                             INSERT INTO skill_richieste_profilo (profilo_id, competenza_id, livello_richiesto)
@@ -167,7 +167,7 @@ class ProjectCompliant {
                 }
             }
 
-            // Insert rewards
+            // Inserisci le ricompense
             if (!empty($data['ricompense'])) {
                 $this->insertRewards($projectId, $data['ricompense']);
             }
@@ -185,7 +185,7 @@ class ProjectCompliant {
     }
 
     /**
-     * Insert rewards for a project
+     * Inserisci le ricompense per un progetto
      */
     private function insertRewards($projectId, $rewards) {
         $stmt = $this->conn->prepare("
@@ -206,7 +206,7 @@ class ProjectCompliant {
     }
 
     /**
-     * Fund a project using stored procedure
+     * Finanza un progetto utilizzando la stored procedure
      */
     public function fundProject($projectId, $userId, $amount, $rewardId = null) {
         try {
@@ -236,7 +236,7 @@ class ProjectCompliant {
     }
 
     /**
-     * Apply to software project using stored procedure
+     * Candidati per un progetto software utilizzando la stored procedure
      */
     public function applyToProject($projectId, $userId, $profiloId, $tariffa) {
         try {
@@ -266,11 +266,11 @@ class ProjectCompliant {
     }
 
     /**
-     * Get project details with all related data
+     * Ottieni i dettagli del progetto con tutti i dati correlati
      */
     public function getDetails($projectId) {
         try {
-            // Get base project info
+            // Ottieni le informazioni di base del progetto
             $stmt = $this->conn->prepare("
                 SELECT p.*, u.nickname as creatore_nickname, u.avatar as creatore_avatar, u.affidabilita
                 FROM progetti p
@@ -284,7 +284,7 @@ class ProjectCompliant {
                 return null;
             }
 
-            // Get funding information
+            // Ottieni le informazioni sul finanziamento
             $stmt = $this->conn->prepare("
                 SELECT COALESCE(SUM(importo), 0) as totale_finanziamenti, COUNT(*) as numero_finanziatori
                 FROM finanziamenti
@@ -295,15 +295,15 @@ class ProjectCompliant {
             $project['totale_finanziamenti'] = $funding['totale_finanziamenti'];
             $project['numero_finanziatori'] = $funding['numero_finanziatori'];
 
-            // Calculate completion percentage
+            // Calcola la percentuale di completamento
             $project['percentuale_completamento'] = $project['budget_richiesto'] > 0 
                 ? ($project['totale_finanziamenti'] / $project['budget_richiesto']) * 100 
                 : 0;
 
-            // Calculate remaining days
+            // Calcola i giorni rimanenti
             $project['giorni_rimanenti'] = max(0, floor((strtotime($project['data_scadenza']) - time()) / (60 * 60 * 24)));
 
-            // Get rewards
+            // Ottieni le ricompense
             $stmt = $this->conn->prepare("
                 SELECT *
                 FROM reward
@@ -313,7 +313,7 @@ class ProjectCompliant {
             $stmt->execute([$projectId]);
             $project['ricompense'] = $stmt->fetchAll();
 
-            // Get type-specific data
+            // Ottieni i dati specifici per tipo
             if ($project['tipo'] === 'hardware') {
                 $stmt = $this->conn->prepare("
                     SELECT *
@@ -344,14 +344,14 @@ class ProjectCompliant {
     }
 
     /**
-     * Get projects list with filters
+     * Ottieni la lista dei progetti con filtri
      */
     public function getList($filters = [], $page = 1, $perPage = 10) {
         try {
             $where = ["p.stato = 'aperto'"];
             $params = [];
             
-            // Apply filters
+            // Applica i filtri
             if (!empty($filters['tipo'])) {
                 $where[] = "p.tipo = ?";
                 $params[] = $filters['tipo'];
@@ -381,7 +381,7 @@ class ProjectCompliant {
                 $params[] = $searchTerm;
             }
             
-            // Build query
+            // Costruisci la query
             $sql = "
                 SELECT p.*, u.nickname as creatore_nickname, u.affidabilita,
                        (SELECT COALESCE(SUM(importo), 0) FROM finanziamenti f WHERE f.progetto_id = p.id) as totale_finanziamenti
@@ -391,7 +391,7 @@ class ProjectCompliant {
                 ORDER BY p.data_inserimento DESC
             ";
             
-            // Add pagination
+            // Aggiungi la paginazione
             $offset = ($page - 1) * $perPage;
             $sql .= " LIMIT ? OFFSET ?";
             $params[] = $perPage;
@@ -401,7 +401,7 @@ class ProjectCompliant {
             $stmt->execute($params);
             $projects = $stmt->fetchAll();
 
-            // Calculate additional fields for each project
+            // Calcola i campi aggiuntivi per ogni progetto
             foreach ($projects as &$project) {
                 $project['percentuale_completamento'] = $project['budget_richiesto'] > 0 
                     ? ($project['totale_finanziamenti'] / $project['budget_richiesto']) * 100 
@@ -409,7 +409,7 @@ class ProjectCompliant {
                 $project['giorni_rimanenti'] = max(0, floor((strtotime($project['data_limite']) - time()) / (60 * 60 * 24)));
             }
             
-            // Get total count
+            // Ottieni il conteggio totale
             $countSql = "
                 SELECT COUNT(*)
                 FROM progetti p
@@ -434,21 +434,21 @@ class ProjectCompliant {
     }
 
     /**
-     * Get statistics using views as required by PDF
+     * Ottieni statistiche utilizzando le viste come richiesto da PDF
      */
     public function getStatistics() {
         try {
             $stats = [];
 
-            // Top creators by reliability
+            // Creatori top per affidabilità
             $stmt = $this->conn->query("SELECT * FROM vista_top_creatori_affidabilita");
             $stats['top_creatori'] = $stmt->fetchAll();
 
-            // Projects near completion
+            // Progetti vicini al completamento
             $stmt = $this->conn->query("SELECT * FROM vista_progetti_vicini_completamento");
             $stats['progetti_vicini_completamento'] = $stmt->fetchAll();
 
-            // Top funders
+            // Finanziatori top
             $stmt = $this->conn->query("SELECT * FROM vista_top_finanziatori");
             $stats['top_finanziatori'] = $stmt->fetchAll();
 
@@ -460,7 +460,7 @@ class ProjectCompliant {
     }
 
     /**
-     * Get project comments
+     * Ottieni i commenti del progetto
      */
     public function getComments($projectId, $page = 1, $perPage = 10) {
         try {
@@ -478,7 +478,7 @@ class ProjectCompliant {
             $stmt->execute([$projectId, $perPage, $offset]);
             $comments = $stmt->fetchAll();
 
-            // Get replies for each comment
+            // Ottieni le risposte per ogni commento
             foreach ($comments as &$comment) {
                 $stmt = $this->conn->prepare("
                     SELECT r.*, u.nickname, u.avatar

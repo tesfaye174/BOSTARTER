@@ -354,7 +354,7 @@ BEGIN
     
     -- Se skill match OK, inserisci candidatura
     IF skill_match_ok THEN
-        INSERT INTO candidature (utente_id, progetto_id, profilo_id)
+        INSERT INTO candidatura (utente_id, progetto_id, profilo_id)
         VALUES (p_utente_id, p_progetto_id, p_profilo_id);
         SELECT 'Candidatura inserita con successo' AS messaggio;
     ELSE
@@ -378,7 +378,7 @@ BEGIN
     WHERE c.id = p_candidatura_id;
     
     IF v_progetto_creatore = p_creatore_id THEN
-        UPDATE candidature 
+        UPDATE candidatura 
         SET stato = p_stato, data_risposta = NOW()
         WHERE id = p_candidatura_id;
     END IF;
@@ -542,6 +542,16 @@ BEGIN
     WHERE id = NEW.creatore_id;
 END //
 
+-- Trigger: Decrementa nr_progetti quando un progetto viene eliminato
+CREATE TRIGGER decrementa_nr_progetti
+AFTER DELETE ON progetti
+FOR EACH ROW
+BEGIN
+    UPDATE utenti
+    SET nr_progetti = IF(nr_progetti > 0, nr_progetti - 1, 0)
+    WHERE id = OLD.creatore_id;
+END //
+
 DELIMITER ;
 
 -- =================================================================
@@ -593,3 +603,37 @@ INSERT INTO utenti (email, nickname, password_hash, nome, cognome, anno_nascita,
 
 -- Esempio di progetti e dati per test
 -- (da completare secondo necessità)
+
+-- Tabelle aggiuntive per piena conformità audit
+
+-- Tabella UTENTI_COMPETENZE (relazione molti-a-molti tra utenti e competenze)
+CREATE TABLE IF NOT EXISTS utenti_competenze (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    utente_id INT NOT NULL,
+    competenza_id INT NOT NULL,
+    livello TINYINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (utente_id) REFERENCES utenti(id) ON DELETE CASCADE,
+    FOREIGN KEY (competenza_id) REFERENCES competenze(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_utente_competenza (utente_id, competenza_id)
+);
+
+-- Tabella BACKUPS (log dei backup del database)
+CREATE TABLE IF NOT EXISTS backups (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    backup_name VARCHAR(255) NOT NULL,
+    backup_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    backup_path VARCHAR(512) NOT NULL,
+    status ENUM('success','failed') DEFAULT 'success',
+    notes TEXT
+);
+
+-- Tabella SISTEMA_LOG (log di sistema generico)
+CREATE TABLE IF NOT EXISTS sistema_log (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    log_type VARCHAR(50) NOT NULL,
+    log_message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user_id INT NULL,
+    FOREIGN KEY (user_id) REFERENCES utenti(id) ON DELETE SET NULL
+);

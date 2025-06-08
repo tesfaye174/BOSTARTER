@@ -1,159 +1,45 @@
-[2025-06-04 02:22:01] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:22:01","ip_address":"unknown"}
-[2025-06-04 02:22:23] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:22:23","ip_address":"::1"}
-[2025-06-04 02:22:57] SYSTEM: test_action {"test":"data"}
-[2025-06-04 02:26:37] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:26:37","ip_address":"unknown"}
-[2025-06-04 02:28:46] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:28:46","ip_address":"unknown"}
-[2025-06-04 02:29:22] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:29:22","ip_address":"unknown"}
-[2025-06-04 02:29:48] SYSTEM: system_test {"timestamp":"2025-06-04 02:29:48","test_id":"frontend_integration_test"}
-[2025-06-04 02:29:48] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:29:48","ip_address":"unknown"}
-[2025-06-04 02:30:52] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:30:52","ip_address":"::1"}
-[2025-06-04 02:38:37] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:38:37","ip_address":"::1"}
-[2025-06-04 02:38:46] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:38:46","ip_address":"::1"}
-[2025-06-04 02:38:50] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:38:50","ip_address":"::1"}
-[2025-06-04 02:39:00] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:39:00","ip_address":"::1"}
-[2025-06-04 02:39:23] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:39:23","ip_address":"::1"}
-[2025-06-04 02:49:31] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:49:31","ip_address":"::1"}
-[2025-06-04 02:50:54] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:50:54","ip_address":"::1"}
-[2025-06-04 02:51:01] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:51:01","ip_address":"::1"}
-[2025-06-04 02:52:25] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:52:25","ip_address":"unknown"}
-[2025-06-04 02:52:49] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:52:49","ip_address":"::1"}
-[2025-06-04 02:54:12] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:54:12","ip_address":"::1"}
-[2025-06-04 02:54:22] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:54:22","ip_address":"::1"}
-[2025-06-04 02:54:28] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 02:54:28","ip_address":"::1"}
-[2025-06-04 03:00:19] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:00:19","ip_address":"::1"}
-[2025-06-04 03:00:26] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:00:26","ip_address":"::1"}
-[2025-06-04 03:00:31] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:00:31","ip_address":"::1"}
-[2025-06-04 03:05:38] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:05:38","ip_address":"::1"}
-[2025-06-04 03:07:38] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:07:38","ip_address":"::1"}
-[2025-06-04 03:17:00] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:17:00","ip_address":"::1"}
-[2025-06-04 03:18:16] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:18:16","ip_address":"::1"}
-[2025-06-04 03:18:46] ACTIVITY: User 7: user_registration {"email":"httptest1748999926@example.com","registration_time":"2025-06-04 03:18:46","nickname":"httptest1748999926","ip_address":"::1"}
-[2025-06-04 03:18:46] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:18:46","ip_address":"::1"}
-[2025-06-04 03:19:49] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:19:49","ip_address":"::1"}
-[2025-06-04 03:20:01] ACTIVITY: User 8: user_registration {"email":"httptest1749000001@example.com","registration_time":"2025-06-04 03:20:01","nickname":"httptest1749000001","ip_address":"::1"}
-[2025-06-04 03:20:02] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:20:02","ip_address":"::1"}
-[2025-06-04 03:20:33] ACTIVITY: User 9: user_registration {"email":"fulltest1749000033@example.com","registration_time":"2025-06-04 03:20:33","nickname":"fulltest1749000033","ip_address":"::1"}
-[2025-06-04 03:22:12] ACTIVITY: User 5: user_login {"email":"simpletest1748999782@example.com","login_time":"2025-06-04 03:22:12","ip_address":"::1"}
-[2025-06-04 03:22:29] ACTIVITY: User 10: user_registration {"email":"fulltest1749000148@example.com","registration_time":"2025-06-04 03:22:29","nickname":"fulltest1749000148","ip_address":"::1"}
-[2025-06-04 03:22:29] ACTIVITY: User 10: user_login {"email":"fulltest1749000148@example.com","login_time":"2025-06-04 03:22:29","ip_address":"::1"}
-[2025-06-04 03:34:29] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:34:29","ip_address":"::1"}
-[2025-06-04 03:34:36] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:34:36","ip_address":"::1"}
-[2025-06-04 03:34:41] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 03:34:41","ip_address":"::1"}
-[2025-06-04 10:55:51] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 10:55:51","ip_address":"::1"}
-[2025-06-04 11:13:52] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:13:52","ip_address":"::1"}
-[2025-06-04 11:14:08] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:14:08","ip_address":"::1"}
-[2025-06-04 11:14:52] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:14:52","ip_address":"::1"}
-[2025-06-04 11:15:14] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:15:14","ip_address":"::1"}
-[2025-06-04 11:23:43] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:23:43","ip_address":"::1"}
-[2025-06-04 11:23:49] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:23:49","ip_address":"::1"}
-[2025-06-04 11:25:57] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:25:57","ip_address":"::1"}
-[2025-06-04 11:26:43] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:26:43","ip_address":"::1"}
-[2025-06-04 11:27:01] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:27:01","ip_address":"::1"}
-[2025-06-04 11:29:26] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:29:26","ip_address":"::1"}
-[2025-06-04 11:29:35] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:29:35","ip_address":"::1"}
-[2025-06-04 11:29:41] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:29:41","ip_address":"::1"}
-[2025-06-04 11:29:44] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:29:44","ip_address":"::1"}
-[2025-06-04 11:29:58] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 11:29:58","ip_address":"::1"}
-[2025-06-04 13:34:17] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 13:34:17","ip_address":"::1"}
-[2025-06-04 15:23:42] ACTIVITY: User 11: user_registration {"email":"httptest1749043421@example.com","registration_time":"2025-06-04 15:23:42","nickname":"httptest1749043421","ip_address":"::1"}
-[2025-06-04 15:23:42] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:23:42","ip_address":"::1"}
-[2025-06-04 15:23:52] ACTIVITY: User 12: user_registration {"email":"fulltest1749043432@example.com","registration_time":"2025-06-04 15:23:52","nickname":"fulltest1749043432","ip_address":"::1"}
-[2025-06-04 15:23:52] ACTIVITY: User 12: user_login {"email":"fulltest1749043432@example.com","login_time":"2025-06-04 15:23:52","ip_address":"::1"}
-[2025-06-04 15:35:07] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:35:07","ip_address":"::1"}
-[2025-06-04 15:35:55] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:35:55","ip_address":"::1"}
-[2025-06-04 15:36:00] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:36:00","ip_address":"::1"}
-[2025-06-04 15:36:03] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:36:03","ip_address":"::1"}
-[2025-06-04 15:36:07] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:36:07","ip_address":"::1"}
-[2025-06-04 15:36:17] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:36:17","ip_address":"::1"}
-[2025-06-04 15:36:23] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:36:23","ip_address":"::1"}
-[2025-06-04 15:42:22] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:42:22","ip_address":"::1"}
-[2025-06-04 15:42:32] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:42:32","ip_address":"::1"}
-[2025-06-04 15:42:41] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:42:41","ip_address":"::1"}
-[2025-06-04 15:42:47] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:42:47","ip_address":"::1"}
-[2025-06-04 15:42:54] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 15:42:54","ip_address":"::1"}
-[2025-06-04 18:45:11] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 18:45:11","ip_address":"::1"}
-[2025-06-04 18:45:14] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 18:45:14","ip_address":"::1"}
-[2025-06-04 19:43:14] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 19:43:14","ip_address":"::1"}
-[2025-06-04 19:43:20] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 19:43:20","ip_address":"::1"}
-[2025-06-04 19:43:28] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 19:43:28","ip_address":"::1"}
-[2025-06-04 19:43:34] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 19:43:34","ip_address":"::1"}
-[2025-06-04 19:44:54] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-04 19:44:54","ip_address":"::1"}
-[2025-06-05 12:48:03] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 12:48:03","ip_address":"::1"}
-[2025-06-05 12:49:43] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 12:49:43","ip_address":"::1"}
-[2025-06-05 12:58:22] ACTIVITY: User 14: user_registration {"email":"fulltest1749121102@example.com","registration_time":"2025-06-05 12:58:22","nickname":"fulltest1749121102","ip_address":"::1"}
-[2025-06-05 13:00:57] ACTIVITY: User 16: user_registration {"email":"fulltest1749121256@example.com","registration_time":"2025-06-05 13:00:57","nickname":"fulltest1749121256","ip_address":"::1"}
-[2025-06-05 13:01:33] ACTIVITY: User 17: user_registration {"email":"hashtest1749121293@example.com","registration_time":"2025-06-05 13:01:33","nickname":"hashtest1749121293","ip_address":"::1"}
-[2025-06-05 13:02:52] ACTIVITY: User 15: user_login {"email":"testuser@example.com","login_time":"2025-06-05 13:02:52","ip_address":"::1"}
-[2025-06-05 13:02:52] ACTIVITY: User 18: user_registration {"email":"hashtest1749121372@example.com","registration_time":"2025-06-05 13:02:52","nickname":"hashtest1749121372","ip_address":"::1"}
-[2025-06-05 13:02:52] ACTIVITY: User 18: user_login {"email":"hashtest1749121372@example.com","login_time":"2025-06-05 13:02:52","ip_address":"::1"}
-[2025-06-05 13:03:03] ACTIVITY: User 19: user_registration {"email":"fulltest1749121383@example.com","registration_time":"2025-06-05 13:03:03","nickname":"fulltest1749121383","ip_address":"::1"}
-[2025-06-05 13:03:04] ACTIVITY: User 19: user_login {"email":"fulltest1749121383@example.com","login_time":"2025-06-05 13:03:04","ip_address":"::1"}
-[2025-06-05 13:03:47] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 13:03:47","ip_address":"::1"}
-[2025-06-05 13:03:56] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 13:03:56","ip_address":"::1"}
-[2025-06-05 13:04:01] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 13:04:01","ip_address":"::1"}
-[2025-06-05 13:05:30] ACTIVITY: User 20: user_registration {"email":"fulltest1749121530@example.com","registration_time":"2025-06-05 13:05:30","nickname":"fulltest1749121530","ip_address":"::1"}
-[2025-06-05 13:06:25] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 13:06:25","ip_address":"::1"}
-[2025-06-05 13:06:30] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 13:06:30","ip_address":"::1"}
-[2025-06-05 13:16:53] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 13:16:53","ip_address":"::1"}
-[2025-06-05 13:17:03] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 13:17:03","ip_address":"::1"}
-[2025-06-05 13:17:07] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 13:17:07","ip_address":"::1"}
-[2025-06-05 21:09:21] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 21:09:21","ip_address":"::1"}
-[2025-06-05 23:58:52] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 23:58:52","ip_address":"::1"}
-[2025-06-05 23:59:01] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-05 23:59:01","ip_address":"::1"}
-[2025-06-06 00:00:01] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 00:00:01","ip_address":"::1"}
-[2025-06-06 01:37:35] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:37:35","ip_address":"::1"}
-[2025-06-06 01:38:18] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:38:18","ip_address":"::1"}
-[2025-06-06 01:38:28] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:38:28","ip_address":"::1"}
-[2025-06-06 01:38:33] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:38:33","ip_address":"::1"}
-[2025-06-06 01:38:48] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:38:48","ip_address":"::1"}
-[2025-06-06 01:39:20] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:39:20","ip_address":"::1"}
-[2025-06-06 01:39:39] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:39:39","ip_address":"::1"}
-[2025-06-06 01:40:25] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:40:25","ip_address":"::1"}
-[2025-06-06 01:40:57] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:40:57","ip_address":"::1"}
-[2025-06-06 01:41:03] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:41:03","ip_address":"::1"}
-[2025-06-06 01:41:06] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:41:06","ip_address":"::1"}
-[2025-06-06 01:41:13] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:41:13","ip_address":"::1"}
-[2025-06-06 01:45:55] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:45:55","ip_address":"::1"}
-[2025-06-06 01:46:00] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:46:00","ip_address":"::1"}
-[2025-06-06 01:46:06] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:46:06","ip_address":"::1"}
-[2025-06-06 01:46:13] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:46:13","ip_address":"::1"}
-[2025-06-06 01:58:12] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:58:12","ip_address":"::1"}
-[2025-06-06 01:58:28] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:58:28","ip_address":"::1"}
-[2025-06-06 01:58:32] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:58:32","ip_address":"::1"}
-[2025-06-06 01:58:42] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:58:42","ip_address":"::1"}
-[2025-06-06 01:58:48] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 01:58:48","ip_address":"::1"}
-[2025-06-06 02:06:38] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 02:06:38","ip_address":"::1"}
-[2025-06-06 02:09:17] SYSTEM: user_registered {"user_id":21,"email":"admin1@gmail.com","nickname":"Nimda1","tipo_utente":"creatore","registration_time":"2025-06-06 02:09:17"}
-[2025-06-06 02:14:04] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 02:14:04","ip_address":"::1"}
-[2025-06-06 02:14:09] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 02:14:09","ip_address":"::1"}
-[2025-06-06 02:14:11] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 02:14:11","ip_address":"::1"}
-[2025-06-06 02:14:19] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 02:14:19","ip_address":"::1"}
-[2025-06-06 02:21:01] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 02:22:04] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 02:22:56] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 02:35:44] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 02:42:39] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 02:44:06] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 02:45:03] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 02:46:35] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 10:54:25] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 11:00:15] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 11:00:15","ip_address":"::1"}
-[2025-06-06 11:00:59] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 11:00:59","ip_address":"::1"}
-[2025-06-06 11:02:59] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 11:03:47] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 11:03:47","ip_address":"::1"}
-[2025-06-06 11:04:25] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 11:04:25","ip_address":"::1"}
-[2025-06-06 11:05:48] ACTIVITY: User : system_test {"test":true}
-[2025-06-06 11:09:38] ACTION: projects_compliant_request {"endpoint":"projects_compliant","method":"GET","action":"list","timestamp":1749200978,"pdf_compliant":true,"supported_types":["hardware","software"]}
-[2025-06-06 11:10:14] ACTION: projects_compliant_request {"endpoint":"projects_compliant","method":"GET","action":"list","timestamp":1749201014,"pdf_compliant":true,"supported_types":["hardware","software"]}
-[2025-06-06 11:10:23] ACTION: projects_compliant_request {"endpoint":"projects_compliant","method":"GET","action":"list","timestamp":1749201023,"pdf_compliant":true,"supported_types":["hardware","software"]}
-[2025-06-06 11:42:54] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 11:42:54","ip_address":"::1"}
-[2025-06-06 11:43:10] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 11:43:10","ip_address":"::1"}
-[2025-06-06 11:58:20] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 11:58:20","ip_address":"::1"}
-[2025-06-06 12:12:58] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 12:12:58","ip_address":"::1"}
-[2025-06-06 12:20:01] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 12:20:01","ip_address":"::1"}
-[2025-06-06 12:20:51] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 12:20:51","ip_address":"::1"}
-[2025-06-06 12:21:09] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 12:21:09","ip_address":"::1"}
-[2025-06-06 12:23:35] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 12:23:35","ip_address":"::1"}
-[2025-06-06 12:23:49] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 12:23:49","ip_address":"::1"}
-[2025-06-06 12:24:05] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 12:24:05","ip_address":"::1"}
-[2025-06-06 12:24:10] SYSTEM: anonymous_homepage_visit {"timestamp":"2025-06-06 12:24:10","ip_address":"::1"}
+[2025-06-08 00:42:42] ACTIVITY: User 28: user_registration {"email":"meg1@gmail.com","registration_time":"2025-06-08 00:42:42","nickname":"meg1","ip_address":"::1","auto_login":true}
+[2025-06-08 00:42:44] ACTIVITY: User 28: dashboard_access {"timestamp":"2025-06-08 00:42:44"}
+[2025-06-08 00:42:56] ACTIVITY: User 28: project_create_page_access {"timestamp":"2025-06-08 00:42:56"}
+[2025-06-08 00:42:59] ACTIVITY: User 28: dashboard_access {"timestamp":"2025-06-08 00:42:59"}
+[2025-06-08 00:43:02] ACTIVITY: User 28: dashboard_access {"timestamp":"2025-06-08 00:43:02"}
+[2025-06-08 00:43:13] ACTIVITY: User 28: user_logout {"logout_time":"2025-06-08 00:43:13"}
+[2025-06-08 14:57:08] ERROR: search_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'f.stato_pagamento' in 'where clause'","query":"AI"}
+[2025-06-08 14:57:21] ACTION: projects_compliant_request {"endpoint":"projects_compliant","method":"GET","action":"list","timestamp":1749387441,"pdf_compliant":true,"supported_types":["hardware","software"]}
+[2025-06-08 14:58:27] ERROR: search_error {"error":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'f.stato_pagamento' in 'where clause'","query":"AI"}
+[2025-06-08 15:09:43] SYSTEM: login_error {"email":"tesfaye1@gmail.com","error_message":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'field list'","error_file":"C:\\xampp\\htdocs\\BOSTARTER\\frontend\\auth\\login.php","error_line":122,"ip_address":"::1","timestamp":"2025-06-08 15:09:43"}
+[2025-06-08 15:10:10] SYSTEM: login_error {"email":"tesfaye1@gmail.com","error_message":"SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'field list'","error_file":"C:\\xampp\\htdocs\\BOSTARTER\\frontend\\auth\\login.php","error_line":122,"ip_address":"::1","timestamp":"2025-06-08 15:10:10"}
+[2025-06-08 15:10:44] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 15:10:44","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
+[2025-06-08 15:10:44] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:10:44"}
+[2025-06-08 15:12:04] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 15:12:04"}
+[2025-06-08 15:12:35] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 15:12:35","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
+[2025-06-08 15:12:35] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:12:35"}
+[2025-06-08 15:13:05] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 15:13:05"}
+[2025-06-08 15:13:11] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:13:11"}
+[2025-06-08 15:13:20] ACTIVITY: User 25: projects_browse {"timestamp":"2025-06-08 15:13:20","filters":{"type":null,"search":null,"sort":"newest"},"page":1}
+[2025-06-08 15:13:35] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:13:35"}
+[2025-06-08 15:20:49] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 15:20:49"}
+[2025-06-08 15:29:39] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 15:29:39","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
+[2025-06-08 15:29:39] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:29:39"}
+[2025-06-08 15:53:10] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:53:10"}
+[2025-06-08 15:58:27] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 15:58:27"}
+[2025-06-08 15:58:36] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:58:36"}
+[2025-06-08 15:58:40] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 15:58:40"}
+[2025-06-08 15:58:44] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 15:58:44","session_duration":1745,"session_duration_human":"00:29:05","login_time":"2025-06-08 15:29:39","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","referer":"http:\/\/localhost\/BOSTARTER\/frontend\/index.php","logout_method":"manual","security_context":{"session_id":"ailmlc7ku9hhfb03tqlgrq6kop","csrf_token":"2428b9ea84eb7dd02f514f70f888388df22b4e3e6ee730343ec3b654dd47f017"},"timestamp":1749391124}
+[2025-06-08 15:59:16] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 15:59:16","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
+[2025-06-08 15:59:16] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:59:16"}
+[2025-06-08 15:59:18] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 15:59:18"}
+[2025-06-08 15:59:20] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 15:59:20"}
+[2025-06-08 15:59:31] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 15:59:31"}
+[2025-06-08 16:00:52] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 16:00:52"}
+[2025-06-08 16:01:05] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-08 16:01:05"}
+[2025-06-08 16:01:58] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","login_time":"2025-06-08 16:01:58","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false,"login_method":"web_form"}
+[2025-06-08 16:01:58] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-08 16:01:58"}
+[2025-06-08 16:02:04] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 16:02:04"}
+[2025-06-08 16:02:09] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 16:02:09"}
+[2025-06-08 16:02:16] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 16:02:16"}
+[2025-06-08 16:02:31] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-08 16:02:31"}
+[2025-06-08 16:02:33] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 16:02:33"}
+[2025-06-08 16:02:38] ACTIVITY: User 25: projects_browse {"timestamp":"2025-06-08 16:02:38","filters":{"type":null,"search":null,"sort":"newest"},"page":1}
+[2025-06-08 16:02:41] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-08 16:02:41"}
+[2025-06-08 16:02:45] ACTIVITY: User 25: projects_browse {"timestamp":"2025-06-08 16:02:45","filters":{"type":null,"search":null,"sort":"newest"},"page":1}

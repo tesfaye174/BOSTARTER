@@ -21,11 +21,13 @@ class VolumeAnalysisController {
             await this.loadFullAnalysis();
 
             // Hide loading and show content
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('content').classList.remove('hidden');
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+            if (loading) loading.classList.add('hidden');
+            if (content) content.classList.remove('hidden');
         } catch (error) {
-            // Silent error handling for initialization
             this.showError('Errore durante l\'inizializzazione dell\'analisi');
+            window.ErrorHandler.handleApiError(error, { context: 'volume_analysis_init' });
         }
     }
 
@@ -33,16 +35,18 @@ class VolumeAnalysisController {
         // Tab switching
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', (e) => {
-                this.switchTab(e.target.dataset.tab);
+                const tabName = e.target.getAttribute('data-tab');
+                this.switchTab(tabName);
             });
         });
 
-        // Consistency testing buttons
+        // Test consistency button
         const testBtn = document.getElementById('test-consistency-btn');
         if (testBtn) {
             testBtn.addEventListener('click', () => this.testConsistency());
         }
 
+        // Fix inconsistencies button
         const fixBtn = document.getElementById('fix-inconsistencies-btn');
         if (fixBtn) {
             fixBtn.addEventListener('click', () => this.fixInconsistencies());
@@ -63,8 +67,8 @@ class VolumeAnalysisController {
                 throw new Error(result.message || 'Failed to load analysis');
             }
         } catch (error) {
-            // Silent error handling for analysis loading
             this.showError('Errore nel caricamento dell\'analisi');
+            window.ErrorHandler.handleApiError(error, { context: 'volume_analysis_load' });
         }
     }
 
@@ -74,29 +78,36 @@ class VolumeAnalysisController {
         const data = this.currentData;
 
         // Update quick stats
-        document.getElementById('redundancy-cost').textContent =
-            data.redundancy_analysis?.total_redundancy_cost?.toFixed(2) || '--';
-        document.getElementById('non-redundancy-cost').textContent =
-            data.redundancy_analysis?.total_non_redundancy_cost?.toFixed(2) || '--';
-        document.getElementById('recommendation').textContent =
-            data.recommendations?.strategy || '--';
-        document.getElementById('total-projects').textContent =
-            data.current_stats?.total_projects || '--';
+        this.updateElement('redundancy-cost',
+            data.redundancy_analysis?.total_redundancy_cost?.toFixed(2) || '--');
+        this.updateElement('non-redundancy-cost',
+            data.redundancy_analysis?.total_non_redundancy_cost?.toFixed(2) || '--');
+        this.updateElement('recommendation',
+            data.recommendations?.strategy || '--');
+        this.updateElement('total-projects',
+            data.current_stats?.total_projects || '--');
 
         // Update parameters
         const params = data.parameters || {};
-        document.getElementById('param-wi').textContent = params.wI || 1;
-        document.getElementById('param-wb').textContent = params.wB || 0.5;
-        document.getElementById('param-a').textContent = params.a || 2;
-        document.getElementById('param-projects').textContent = params.num_projects || 10;
-        document.getElementById('param-fundings').textContent = params.fundings_per_project || 3;
-        document.getElementById('param-users').textContent = params.num_users || 5;
+        this.updateElement('param-wi', params.wI || 1);
+        this.updateElement('param-wb', params.wB || 0.5);
+        this.updateElement('param-a', params.a || 2);
+        this.updateElement('param-projects', params.num_projects || 10);
+        this.updateElement('param-fundings', params.fundings_per_project || 3);
+        this.updateElement('param-users', params.num_users || 5);
 
         // Update operations
         const ops = data.operations_analysis || {};
-        document.getElementById('op-add-freq').textContent = ops.add_project_frequency || 1;
-        document.getElementById('op-view-freq').textContent = ops.view_all_frequency || 1;
-        document.getElementById('op-count-freq').textContent = ops.count_projects_frequency || 3;
+        this.updateElement('op-add-freq', ops.add_project_frequency || 1);
+        this.updateElement('op-view-freq', ops.view_all_frequency || 1);
+        this.updateElement('op-count-freq', ops.count_projects_frequency || 3);
+    }
+
+    updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+        }
     }
 
     createCharts() {
@@ -209,14 +220,14 @@ class VolumeAnalysisController {
 
     async loadRecommendations() {
         try {
-            const response = await fetch(`${this.apiBaseUrl}?action=recommendations`);
+            const response = await fetch(`${this.apiBaseUrl}?action=get_recommendations`);
             const result = await response.json();
 
             if (result.success) {
                 this.displayRecommendations(result.data);
             }
         } catch (error) {
-            // Silent error handling for recommendations loading
+            window.ErrorHandler.handleApiError(error, { context: 'recommendations_load' });
         }
     }
 
@@ -236,9 +247,10 @@ class VolumeAnalysisController {
                 </div>
                 <div class="bg-green-50 p-4 rounded-lg">
                     <h4 class="font-semibold text-green-900 mb-2">Risparmio Stimato</h4>
-                    <p class="text-green-800 text-lg font-medium">${savings.toFixed(2)} operazioni/mese</p>
+                    <p class="text-green-800 text-lg font-medium">${savings.toFixed(1)}%</p>
                 </div>
             </div>
+            
             <div class="mt-4 bg-gray-50 p-4 rounded-lg">
                 <h4 class="font-semibold text-gray-900 mb-2">Motivazione</h4>
                 <p class="text-gray-700">${reasoning}</p>
@@ -248,14 +260,14 @@ class VolumeAnalysisController {
 
     async loadPerformanceImpact() {
         try {
-            const response = await fetch(`${this.apiBaseUrl}?action=performance_impact`);
+            const response = await fetch(`${this.apiBaseUrl}?action=get_performance_impact`);
             const result = await response.json();
 
             if (result.success) {
                 this.displayPerformanceImpact(result.data);
             }
         } catch (error) {
-            // Silent error handling for performance impact loading
+            window.ErrorHandler.handleApiError(error, { context: 'performance_impact_load' });
         }
     }
 
@@ -317,8 +329,8 @@ class VolumeAnalysisController {
                 throw new Error(result.message || 'Test failed');
             }
         } catch (error) {
-            // Silent error handling for consistency testing
             this.showError('Errore durante il test di consistenza');
+            window.ErrorHandler.handleApiError(error, { context: 'consistency_test' });
         } finally {
             button.textContent = originalText;
             button.disabled = false;
@@ -349,8 +361,8 @@ class VolumeAnalysisController {
                 throw new Error(result.message || 'Fix failed');
             }
         } catch (error) {
-            // Silent error handling for fixing inconsistencies
             this.showError('Errore durante la correzione delle inconsistenze');
+            window.ErrorHandler.handleApiError(error, { context: 'inconsistency_fix' });
         } finally {
             button.textContent = originalText;
             button.disabled = false;
@@ -386,46 +398,53 @@ class VolumeAnalysisController {
     }
 
     switchTab(tabName) {
-        // Update tab buttons
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.add('hidden');
+        });
+
+        // Remove active class from all buttons
         document.querySelectorAll('.tab-button').forEach(button => {
-            if (button.dataset.tab === tabName) {
-                button.classList.add('active', 'border-blue-500', 'text-blue-600');
-                button.classList.remove('border-transparent', 'text-gray-500');
-            } else {
-                button.classList.remove('active', 'border-blue-500', 'text-blue-600');
-                button.classList.add('border-transparent', 'text-gray-500');
-            }
+            button.classList.remove('bg-blue-600', 'text-white');
+            button.classList.add('bg-gray-200', 'text-gray-700');
         });
 
-        // Update tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.add('hidden');
-        });
+        // Show selected tab
+        const selectedTab = document.getElementById(`${tabName}-tab`);
+        if (selectedTab) {
+            selectedTab.classList.remove('hidden');
+        }
 
-        const activeTab = document.getElementById(`${tabName}-tab`);
-        if (activeTab) {
-            activeTab.classList.remove('hidden');
+        // Activate selected button
+        const selectedButton = document.querySelector(`[data-tab="${tabName}"]`);
+        if (selectedButton) {
+            selectedButton.classList.remove('bg-gray-200', 'text-gray-700');
+            selectedButton.classList.add('bg-blue-600', 'text-white');
+        }
 
-            // Load data for specific tabs
-            if (tabName === 'performance') {
-                this.loadPerformanceImpact();
-            }
+        // Load tab-specific content
+        if (tabName === 'performance') {
+            this.loadPerformanceImpact();
         }
     }
 
     showError(message) {
-        // Simple error display - could be enhanced with a proper notification system
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4';
-        errorDiv.textContent = message;
+        // Create or update error display
+        let errorDiv = document.getElementById('error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.id = 'error-message';
+            errorDiv.className = 'fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50';
+            document.body.appendChild(errorDiv);
+        }
 
-        const content = document.getElementById('content') || document.getElementById('loading');
-        content.insertBefore(errorDiv, content.firstChild);
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
 
         // Auto-hide after 5 seconds
         setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.parentNode.removeChild(errorDiv);
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
             }
         }, 5000);
     }

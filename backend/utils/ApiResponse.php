@@ -1,5 +1,8 @@
 <?php
-// filepath: c:\xampp\htdocs\BOSTARTER\backend\utils\ApiResponse.php
+/**
+ * Classe per la gestione delle risposte API standardizzate
+ * Fornisce metodi per inviare risposte di successo o errore in formato JSON
+ */
 
 class ApiResponse {
     /**

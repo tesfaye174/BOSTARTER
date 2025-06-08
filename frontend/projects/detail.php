@@ -16,15 +16,15 @@ if (!$project_id) {
 }
 
 // Get project details
-$project_query = "SELECT p.*, u.username as creator_name, u.email as creator_email,
+$project_query = "SELECT p.*, u.nickname as creator_name, u.email as creator_email,
                          COALESCE(pf.total_funded, 0) as total_funded,
                          COALESCE(pf.funding_percentage, 0) as funding_percentage,
                          COALESCE(pf.backers_count, 0) as backers_count,
-                         DATEDIFF(p.deadline, NOW()) as days_left
-                  FROM PROJECTS p
-                  JOIN USERS u ON p.creator_id = u.user_id
-                  LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.project_id = pf.project_id
-                  WHERE p.project_id = :project_id";
+                         DATEDIFF(p.data_limite, NOW()) as days_left
+                  FROM progetti p
+                  JOIN utenti u ON p.creatore_id = u.id
+                  LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.id = pf.project_id
+                  WHERE p.id = :project_id";
 
 $project_stmt = $db->prepare($project_query);
 $project_stmt->bindParam(':project_id', $project_id);
@@ -49,7 +49,7 @@ $mongoLogger->logActivity($user_id, 'project_view', [
 // Get hardware components if hardware project
 $hardware_components = [];
 if ($project['project_type'] === 'hardware') {
-    $components_query = "SELECT * FROM HARDWARE_COMPONENTS WHERE project_id = :project_id ORDER BY component_name";
+    $components_query = "SELECT * FROM componenti_hardware WHERE progetto_id = :project_id ORDER BY nome_componente";
     $components_stmt = $db->prepare($components_query);
     $components_stmt->bindParam(':project_id', $project_id);
     $components_stmt->execute();
@@ -57,20 +57,20 @@ if ($project['project_type'] === 'hardware') {
 }
 
 // Get project rewards
-$rewards_query = "SELECT * FROM REWARDS WHERE project_id = :project_id ORDER BY min_amount ASC";
+$rewards_query = "SELECT * FROM reward WHERE progetto_id = :project_id ORDER BY importo_minimo ASC";
 $rewards_stmt = $db->prepare($rewards_query);
 $rewards_stmt->bindParam(':project_id', $project_id);
 $rewards_stmt->execute();
 $rewards = $rewards_stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Get project comments with replies
-$comments_query = "SELECT c.*, u.username, 
-                          CASE WHEN c.parent_comment_id IS NULL THEN c.comment_id ELSE c.parent_comment_id END as thread_id,
+$comments_query = "SELECT c.*, u.nickname as username, 
+                          CASE WHEN c.parent_comment_id IS NULL THEN c.id ELSE c.parent_comment_id END as thread_id,
                           c.parent_comment_id IS NOT NULL as is_reply
-                   FROM COMMENTS c
-                   JOIN USERS u ON c.user_id = u.user_id
-                   WHERE c.project_id = :project_id
-                   ORDER BY thread_id, c.parent_comment_id IS NULL DESC, c.created_at ASC";
+                   FROM commenti c
+                   JOIN utenti u ON c.utente_id = u.id
+                   WHERE c.progetto_id = :project_id
+                   ORDER BY thread_id, c.parent_comment_id IS NULL DESC, c.data_commento ASC";
 $comments_stmt = $db->prepare($comments_query);
 $comments_stmt->bindParam(':project_id', $project_id);
 $comments_stmt->execute();

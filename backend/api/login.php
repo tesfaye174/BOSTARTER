@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
-require_once __DIR__ . '/../utils/FluentValidator.php';
+require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/Auth.php';
 
 try {
@@ -35,10 +35,9 @@ try {
     }
     
     // Validazione input
-    $validator = new FluentValidator();
+    $validator = new Validator();
     $validator->required('email', $input['email'] ?? '')->email();
     $validator->required('password', $input['password'] ?? '');
-    
     if (!$validator->isValid()) {
         ApiResponse::invalidInput($validator->getErrors());
     }    // Connessione database

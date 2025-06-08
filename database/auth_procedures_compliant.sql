@@ -170,3 +170,10 @@ INSERT IGNORE INTO competenze (nome) VALUES
 ('AI/Machine Learning');
 
 SHOW PROCEDURE STATUS WHERE Db = 'bostarter_compliant';
+
+DECLARE EXIT HANDLER FOR SQLEXCEPTION
+BEGIN
+    SET p_success = FALSE;
+    SET p_message = 'Errore durante la registrazione';
+    ROLLBACK;
+END;

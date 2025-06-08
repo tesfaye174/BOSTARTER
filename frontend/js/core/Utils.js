@@ -112,9 +112,17 @@ class Utils {
      */
     static escapeHtml(text) {
         if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    // Alias for backward compatibility
+    static escapeHTML(text) {
+        return this.escapeHtml(text);
     }
 
     /**
@@ -139,29 +147,12 @@ class Utils {
     }
 
     /**
-     * Sanitize HTML to prevent XSS
+     * Sanitize HTML to prevent XSS (legacy method - use escapeHtml instead)
      * @param {string} html - HTML to sanitize
      * @returns {string} Sanitized HTML
      */
     static sanitizeHTML(html) {
-        const temp = document.createElement('div');
-        temp.textContent = html;
-        return temp.innerHTML;
-    }
-
-    /**
-     * Escape HTML special characters
-     * @param {string} text - Text to escape
-     * @returns {string} Escaped HTML
-     */
-    static escapeHTML(text) {
-        if (!text) return '';
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+        return this.escapeHtml(html);
     }
 
     /**

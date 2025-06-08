@@ -4,6 +4,7 @@ require_once __DIR__ . '/../controllers/NotificationController.php';
 require_once __DIR__ . '/../services/PerformanceService.php';
 require_once __DIR__ . '/../services/SecurityService.php';
 require_once __DIR__ . '/../services/EmailNotificationService.php';
+require_once __DIR__ . '/../utils/Validator.php';
 
 use BOSTARTER\Controllers\NotificationController;
 use BOSTARTER\Services\PerformanceService;
@@ -27,7 +28,7 @@ $db = $database->getConnection();
 $performanceService = new PerformanceService($db);
 $securityService = new SecurityService($db, $performanceService);
 $emailService = new EmailNotificationService($db);
-$controller = new NotificationController($db)
+$controller = new NotificationController($db);
 
 // Security checks
 if ($securityService->isIPBlocked()) {
@@ -154,16 +155,6 @@ switch ($method) {
         $data = json_decode(file_get_contents('php://input'), true);
         
         switch ($action) {
-            case 'test':
-                // Create test notification for development
-                if (!isset($data['message']) || !isset($data['type'])) {
-                    http_response_code(400);
-                    $result = ['status' => 'error', 'message' => 'Message and type required'];
-                    break;
-                }
-                $result = $controller->createTestNotification($userId, $data['message'], $data['type']);
-                break;
-                
             case 'bulk_action':
                 if (!isset($data['notification_ids']) || !isset($data['action'])) {
                     http_response_code(400);
@@ -206,9 +197,8 @@ switch ($method) {
                 }
                 $result = $controller->updateNotificationSettings($userId, $data['settings']);
                 break;
-                
-            case 'send_test_email':
-                // Admin only feature for testing email notifications
+                  case 'send_test_email':
+                // Admin only feature for email notifications
                 if (!isset($_SESSION['user_type']) || $_SESSION['user_type'] !== 'amministratore') {
                     http_response_code(403);
                     $result = ['status' => 'error', 'message' => 'Admin access required'];
@@ -301,4 +291,4 @@ switch ($method) {
 }
 
 // Invia la risposta
-echo json_encode($result); 
+echo json_encode($result);

@@ -1,5 +1,4 @@
-// filepath: c:\\xampp\\htdocs\\BOSTARTER\\frontend\\assets\\arte\\js\\arte-manager.js
-// ===== ARTE PAGE MANAGEMENT SYSTEM =====
+// Arte Page Manager
 class ArtePageManager extends BaseCategoryManager {
     constructor() {
         super('arte');
@@ -37,17 +36,15 @@ class ArtePageManager extends BaseCategoryManager {
 
     async loadArtists() {
         try {
-            await this.simulateApiDelay(800); // Mock API delay
+            await this.simulateApiDelay(800);
             this.artists = this.generateMockArtists();
             this.renderArtists();
         } catch (error) {
             showNotification('Errore nel caricamento degli artisti', 'error');
         }
     } generateMockProjects() {
-        // Use centralized mock data generator
         return window.MockDataGenerator.generateProjects('arte', 24);
     } generateMockArtists() {
-        // Use centralized mock data generator
         return window.MockDataGenerator.generateCreators('arte', 8);
     }
 
@@ -236,7 +233,8 @@ class ArtePageManager extends BaseCategoryManager {
 
     viewArtist(artistId) {
         window.location.href = `/frontend/artists/artist-${artistId}.html`;
-    }    // Use centralized API delay simulation
+    }
+
     async simulateApiDelay(ms) {
         return window.MockDataGenerator.simulateApiDelay(ms);
     }
@@ -292,16 +290,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global error handling
 window.addEventListener('error', (e) => {
-    // Silent error handling for production
+    if (window.ErrorHandler) {
+        window.ErrorHandler.handleDashboardError(e.error, 'global-error');
+    }
 });
 
 // Service Worker registration for PWA support
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/frontend/sw.js')
         .then(registration => {
-            // Service worker registered successfully
+            // SW registered
         })
         .catch(error => {
-            // Service worker registration failed
+            if (window.ErrorHandler) {
+                window.ErrorHandler.handleCacheError(error, 'sw-registration');
+            }
         });
 }

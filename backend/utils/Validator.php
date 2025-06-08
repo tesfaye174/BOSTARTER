@@ -1,5 +1,76 @@
 <?php
+/**
+ * Classe per la gestione centralizzata della validazione dei dati
+ * Permette sia validazione statica che a catena (fluent interface)
+ */
 class Validator {
+    private $errors = [];
+    private $currentField = '';
+    private $currentValue = '';
+
+    // --- Metodi fluenti (catena) ---
+    public function required($field, $value) {
+        $this->currentField = $field;
+        $this->currentValue = $value;
+        if (empty($value) || trim($value) === '') {
+            $this->errors[$field][] = "Il campo {$field} è obbligatorio";
+        }
+        return $this;
+    }
+    public function email() {
+        if (!empty($this->currentValue) && !filter_var($this->currentValue, FILTER_VALIDATE_EMAIL)) {
+            $this->errors[$this->currentField][] = "Il campo {$this->currentField} deve essere un'email valida";
+        }
+        return $this;
+    }
+    public function minLength($length) {
+        if (!empty($this->currentValue) && strlen($this->currentValue) < $length) {
+            $this->errors[$this->currentField][] = "Il campo {$this->currentField} deve essere di almeno {$length} caratteri";
+        }
+        return $this;
+    }
+    public function maxLength($length) {
+        if (!empty($this->currentValue) && strlen($this->currentValue) > $length) {
+            $this->errors[$this->currentField][] = "Il campo {$this->currentField} non può superare {$length} caratteri";
+        }
+        return $this;
+    }
+    public function alphanumeric() {
+        if (!empty($this->currentValue) && !ctype_alnum($this->currentValue)) {
+            $this->errors[$this->currentField][] = "Il campo {$this->currentField} può contenere solo lettere e numeri";
+        }
+        return $this;
+    }
+    public function integer() {
+        if (!empty($this->currentValue) && !filter_var($this->currentValue, FILTER_VALIDATE_INT)) {
+            $this->errors[$this->currentField][] = "Il campo {$this->currentField} deve essere un numero intero";
+        }
+        return $this;
+    }
+    public function min($value) {
+        if (!empty($this->currentValue) && $this->currentValue < $value) {
+            $this->errors[$this->currentField][] = "Il campo {$this->currentField} deve essere almeno {$value}";
+        }
+        return $this;
+    }
+    public function max($value) {
+        if (!empty($this->currentValue) && $this->currentValue > $value) {
+            $this->errors[$this->currentField][] = "Il campo {$this->currentField} non può essere maggiore di {$value}";
+        }
+        return $this;
+    }
+    public function isValid() {
+        return empty($this->errors);
+    }
+    public function getErrors() {
+        $flatErrors = [];
+        foreach ($this->errors as $field => $fieldErrors) {
+            $flatErrors = array_merge($flatErrors, $fieldErrors);
+        }
+        return $flatErrors;
+    }
+
+    // --- Static validation methods (compatibilità vecchia logica) ---
     public static function validateProjectData($data) {
         $errors = [];
 
@@ -74,40 +145,62 @@ class Validator {
         }
 
         return empty($errors) ? true : $errors;
-    }
-
-    public function validateRegistration($data) {
+    }    public static function validateRegistration($data) {
         $errors = [];
         
         // Validazione email
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        if (!isset($data['email']) || empty(trim($data['email']))) {
+            $errors['email'] = 'Email obbligatoria';
+        } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Email non valida';
         }
         
-        // Validazione password
-        if (strlen($data['password']) < 8) {
+        // Validazione password con regole robuste
+        if (!isset($data['password']) || empty($data['password'])) {
+            $errors['password'] = 'Password obbligatoria';
+        } elseif (strlen($data['password']) < 8) {
             $errors['password'] = 'La password deve essere di almeno 8 caratteri';
+        } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/', $data['password'])) {
+            $errors['password'] = 'La password deve contenere almeno una lettera maiuscola, una minuscola, un numero e un carattere speciale';
         }
         
         // Validazione nickname
-        if (strlen($data['nickname']) < 3) {
+        if (!isset($data['nickname']) || empty(trim($data['nickname']))) {
+            $errors['nickname'] = 'Nickname obbligatorio';
+        } elseif (strlen($data['nickname']) < 3) {
             $errors['nickname'] = 'Il nickname deve essere di almeno 3 caratteri';
+        } elseif (strlen($data['nickname']) > 50) {
+            $errors['nickname'] = 'Il nickname non può superare 50 caratteri';
+        } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $data['nickname'])) {
+            $errors['nickname'] = 'Il nickname può contenere solo lettere, numeri, underscore e trattini';
         }
         
         // Validazione nome e cognome
-        if (empty($data['nome']) || empty($data['cognome'])) {
-            $errors['nome_cognome'] = 'Nome e cognome sono obbligatori';
+        if (!isset($data['nome']) || empty(trim($data['nome']))) {
+            $errors['nome'] = 'Nome obbligatorio';
+        }
+        if (!isset($data['cognome']) || empty(trim($data['cognome']))) {
+            $errors['cognome'] = 'Cognome obbligatorio';
         }
         
-        if (!empty($errors)) {
-            throw new ValidationException('Dati di registrazione non validi', $errors);
+        // Validazione data di nascita
+        if (!isset($data['data_nascita']) || empty($data['data_nascita'])) {
+            $errors['data_nascita'] = 'Data di nascita obbligatoria';
         }
+        
+        // Validazione sesso
+        if (!isset($data['sesso']) || empty($data['sesso'])) {
+            $errors['sesso'] = 'Sesso obbligatorio';
+        }
+        
+        return empty($errors) ? true : $errors;
     }
-    
-    public function validateLogin($email, $password) {
+      public static function validateLogin($email, $password) {
         $errors = [];
         
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (empty($email)) {
+            $errors['email'] = 'Email obbligatoria';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Email non valida';
         }
         
@@ -115,43 +208,80 @@ class Validator {
             $errors['password'] = 'Password obbligatoria';
         }
         
-        if (!empty($errors)) {
-            throw new ValidationException('Dati di login non validi', $errors);
-        }
+        return empty($errors) ? true : $errors;
     }
-    
-    public function validateProfileUpdate($data) {
+      public static function validateProfileUpdate($data) {
         $errors = [];
         
-        if (isset($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+        if (isset($data['email']) && !empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Email non valida';
         }
         
-        if (isset($data['nickname']) && strlen($data['nickname']) < 3) {
-            $errors['nickname'] = 'Il nickname deve essere di almeno 3 caratteri';
+        if (isset($data['nickname']) && !empty($data['nickname'])) {
+            if (strlen($data['nickname']) < 3) {
+                $errors['nickname'] = 'Il nickname deve essere di almeno 3 caratteri';
+            } elseif (strlen($data['nickname']) > 50) {
+                $errors['nickname'] = 'Il nickname non può superare 50 caratteri';
+            } elseif (!preg_match('/^[a-zA-Z0-9_-]+$/', $data['nickname'])) {
+                $errors['nickname'] = 'Il nickname può contenere solo lettere, numeri, underscore e trattini';
+            }
         }
         
-        if (!empty($errors)) {
-            throw new ValidationException('Dati profilo non validi', $errors);
-        }
+        return empty($errors) ? true : $errors;
     }
-    
-    public function validatePassword($password) {
-        if (strlen($password) < 8) {
-            throw new ValidationException('La password deve essere di almeno 8 caratteri');
+      public static function validatePassword($password) {
+        $errors = [];
+        
+        if (empty($password)) {
+            $errors[] = 'Password obbligatoria';
+        } elseif (strlen($password) < 8) {
+            $errors[] = 'La password deve essere di almeno 8 caratteri';
+        } elseif (!preg_match('/[A-Z]/', $password)) {
+            $errors[] = 'La password deve contenere almeno una lettera maiuscola';
+        } elseif (!preg_match('/[a-z]/', $password)) {
+            $errors[] = 'La password deve contenere almeno una lettera minuscola';
+        } elseif (!preg_match('/[0-9]/', $password)) {
+            $errors[] = 'La password deve contenere almeno un numero';
+        } elseif (!preg_match('/[!@#$%^&*]/', $password)) {
+            $errors[] = 'La password deve contenere almeno un carattere speciale (!@#$%^&*)';
         }
         
-        if (!preg_match('/[A-Z]/', $password)) {
-            throw new ValidationException('La password deve contenere almeno una lettera maiuscola');
+        return empty($errors) ? true : $errors;
+    }
+    public static function validateApplication($data) {
+        $errors = [];
+        
+        // Validazione skill_id
+        if (!isset($data['skill_id']) || !is_numeric($data['skill_id']) || $data['skill_id'] <= 0) {
+            $errors['skill_id'] = 'Skill ID obbligatorio e valido';
         }
         
-        if (!preg_match('/[a-z]/', $password)) {
-            throw new ValidationException('La password deve contenere almeno una lettera minuscola');
+        // Validazione motivation
+        if (!isset($data['motivation']) || empty(trim($data['motivation']))) {
+            $errors['motivation'] = 'Motivazione obbligatoria';
+        } elseif (strlen(trim($data['motivation'])) < 50) {
+            $errors['motivation'] = 'La motivazione deve contenere almeno 50 caratteri';
+        } elseif (strlen(trim($data['motivation'])) > 1000) {
+            $errors['motivation'] = 'La motivazione non può superare 1000 caratteri';
         }
         
-        if (!preg_match('/[0-9]/', $password)) {
-            throw new ValidationException('La password deve contenere almeno un numero');
+        // Validazione experience_years
+        if (!isset($data['experience_years']) || !is_numeric($data['experience_years']) || $data['experience_years'] < 0) {
+            $errors['experience_years'] = 'Anni di esperienza devono essere un numero non negativo';
+        } elseif ($data['experience_years'] > 50) {
+            $errors['experience_years'] = 'Anni di esperienza non possono superare 50';
         }
+        
+        // Validazione portfolio_url (opzionale)
+        if (isset($data['portfolio_url']) && !empty($data['portfolio_url'])) {
+            if (!filter_var($data['portfolio_url'], FILTER_VALIDATE_URL)) {
+                $errors['portfolio_url'] = 'URL portfolio non valido';
+            } elseif (strlen($data['portfolio_url']) > 500) {
+                $errors['portfolio_url'] = 'URL portfolio troppo lungo';
+            }
+        }
+        
+        return empty($errors) ? true : $errors;
     }
 }
 

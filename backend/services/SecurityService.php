@@ -1,7 +1,7 @@
 <?php
 /**
- * Security Enhancement Service for BOSTARTER
- * Handles rate limiting, spam protection, and security monitoring
+ * Servizio per la sicurezza dell'applicazione
+ * Implementa funzioni di protezione e verifica della sicurezza
  */
 
 namespace BOSTARTER\Services;
@@ -23,27 +23,27 @@ class SecurityService {
     }
     
     /**
-     * Load security configuration
+     * Carica la configurazione di sicurezza
      */
     private function loadSecurityConfig() {
         return [
             // Rate limiting
             'rate_limit_enabled' => $_ENV['RATE_LIMIT_ENABLED'] ?? true,
-            'api_rate_limit' => $_ENV['API_RATE_LIMIT'] ?? 100, // requests per hour
-            'login_rate_limit' => $_ENV['LOGIN_RATE_LIMIT'] ?? 5, // attempts per 15 minutes
-            'notification_rate_limit' => $_ENV['NOTIFICATION_RATE_LIMIT'] ?? 50, // per hour
+            'api_rate_limit' => $_ENV['API_RATE_LIMIT'] ?? 100, // richieste all'ora
+            'login_rate_limit' => $_ENV['LOGIN_RATE_LIMIT'] ?? 5, // tentativi ogni 15 minuti
+            'notification_rate_limit' => $_ENV['NOTIFICATION_RATE_LIMIT'] ?? 50, // all'ora
             
-            // IP blocking
+            // Blocco IP
             'auto_block_enabled' => $_ENV['AUTO_BLOCK_ENABLED'] ?? true,
             'max_failed_logins' => $_ENV['MAX_FAILED_LOGINS'] ?? 10,
-            'block_duration' => $_ENV['BLOCK_DURATION'] ?? 3600, // 1 hour
+            'block_duration' => $_ENV['BLOCK_DURATION'] ?? 3600, // 1 ora
             
-            // Content filtering
+            // Filtro dei contenuti
             'spam_detection_enabled' => $_ENV['SPAM_DETECTION_ENABLED'] ?? true,
             'max_comment_length' => $_ENV['MAX_COMMENT_LENGTH'] ?? 5000,
             'max_project_description_length' => $_ENV['MAX_PROJECT_DESC_LENGTH'] ?? 50000,
             
-            // Security monitoring
+            // Monitoraggio della sicurezza
             'log_security_events' => $_ENV['LOG_SECURITY_EVENTS'] ?? true,
             'alert_admin_on_attack' => $_ENV['ALERT_ADMIN_ON_ATTACK'] ?? true,
             'suspicious_activity_threshold' => $_ENV['SUSPICIOUS_ACTIVITY_THRESHOLD'] ?? 20,
@@ -51,11 +51,11 @@ class SecurityService {
     }
     
     /**
-     * Create security tables if they don't exist
+     * Crea le tabelle di sicurezza se non esistono
      */
     private function createSecurityTables() {
         try {
-            // Security logs table
+            // Tabella dei log di sicurezza
             $this->db->exec("
                 CREATE TABLE IF NOT EXISTS security_logs (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -76,7 +76,7 @@ class SecurityService {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
             
-            // Blocked IPs table
+            // Tabella degli IP bloccati
             $this->db->exec("
                 CREATE TABLE IF NOT EXISTS blocked_ips (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -92,7 +92,7 @@ class SecurityService {
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ");
             
-            // Spam content table
+            // Tabella dei contenuti spam
             $this->db->exec("
                 CREATE TABLE IF NOT EXISTS spam_content (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -122,7 +122,7 @@ class SecurityService {
     }
     
     /**
-     * Check rate limit for API requests
+     * Controlla il rate limit per le richieste API
      */
     public function checkRateLimit($identifier, $limit = null, $window = 3600) {
         if (!$this->config['rate_limit_enabled']) {
@@ -155,7 +155,7 @@ class SecurityService {
     }
     
     /**
-     * Database-based rate limiting fallback
+     * Fallback del rate limiting basato su database
      */
     private function checkRateLimitDatabase($identifier, $limit, $window) {
         try {
@@ -173,7 +173,7 @@ class SecurityService {
                 return false;
             }
             
-            // Log the request
+            // Registra la richiesta
             $this->logSecurityEvent($identifier, null, 'api_request', 'API request');
             return true;
             
@@ -184,12 +184,12 @@ class SecurityService {
     }
     
     /**
-     * Check if IP is blocked
+     * Controlla se l'IP è bloccato
      */
     public function isIPBlocked($ip = null) {
         $ip = $ip ?? $this->getClientIP();
         
-        // Check cache first
+        // Controlla prima nella cache
         if ($this->cache) {
             $blocked = $this->cache->get(self::BLOCKED_IP_PREFIX . $ip);
             if ($blocked !== false) {
@@ -209,9 +209,9 @@ class SecurityService {
             
             $isBlocked = (bool)$result;
             
-            // Cache the result
+            // Memorizza il risultato nella cache
             if ($this->cache) {
-                $this->cache->set(self::BLOCKED_IP_PREFIX . $ip, $isBlocked, 300); // 5 minutes
+                $this->cache->set(self::BLOCKED_IP_PREFIX . $ip, $isBlocked, 300); // 5 minuti
             }
             
             return $isBlocked;
@@ -223,7 +223,7 @@ class SecurityService {
     }
     
     /**
-     * Block IP address
+     * Blocca l'indirizzo IP
      */
     public function blockIP($ip, $reason, $duration = null, $isPermanent = false) {
         try {
@@ -247,7 +247,7 @@ class SecurityService {
                 'system'
             ]);
             
-            // Clear cache
+            // Pulisci la cache
             if ($this->cache) {
                 $this->cache->delete(self::BLOCKED_IP_PREFIX . $ip);
             }
@@ -269,22 +269,22 @@ class SecurityService {
     }
     
     /**
-     * Track failed login attempt
+     * Traccia un tentativo di accesso non riuscito
      */
     public function trackFailedLogin($email, $ip = null) {
         $ip = $ip ?? $this->getClientIP();
         
-        // Increment failed login counter
+        // Incrementa il contatore dei tentativi di accesso non riusciti
         if ($this->cache) {
             $key = self::FAILED_LOGIN_PREFIX . $ip;
             $current = $this->cache->get($key) ?? 0;
-            $this->cache->set($key, $current + 1, 900); // 15 minutes
+            $this->cache->set($key, $current + 1, 900); // 15 minuti
             
-            // Auto-block if threshold exceeded
+            // Blocco automatico se supera la soglia
             if ($this->config['auto_block_enabled'] && $current >= $this->config['max_failed_logins']) {
                 $this->blockIP(
                     $ip,
-                    "Too many failed login attempts ({$current})",
+                    "Troppi tentativi di accesso non riusciti ({$current})",
                     $this->config['block_duration']
                 );
             }
@@ -294,13 +294,13 @@ class SecurityService {
             $ip,
             null,
             'failed_login',
-            "Failed login attempt for email: $email",
+            "Tentativo di accesso non riuscito per l'email: $email",
             'medium'
         );
     }
     
     /**
-     * Clear failed login attempts (on successful login)
+     * Pulisci i tentativi di accesso non riusciti (al momento dell'accesso riuscito)
      */
     public function clearFailedLogins($ip = null) {
         $ip = $ip ?? $this->getClientIP();
@@ -311,7 +311,7 @@ class SecurityService {
     }
     
     /**
-     * Detect spam content
+     * Rileva contenuti spam
      */
     public function detectSpam($content, $contentType = 'comment', $userId = null) {
         if (!$this->config['spam_detection_enabled']) {
@@ -321,34 +321,34 @@ class SecurityService {
         $spamScore = 0;
         $reasons = [];
         
-        // Length checks
+        // Controlli sulla lunghezza
         if (strlen($content) > $this->config['max_comment_length']) {
             $spamScore += 20;
-            $reasons[] = 'Content too long';
+            $reasons[] = 'Contenuto troppo lungo';
         }
         
-        // Suspicious patterns
+        // Modelli sospetti
         $suspiciousPatterns = [
             '/\b(viagra|casino|poker|lottery|winner|congratulations)\b/i' => 10,
             '/\b(click here|buy now|limited time|act now)\b/i' => 8,
-            '/http[s]?:\/\/[^\s]{4,}/i' => 5, // URLs
-            '/[A-Z]{5,}/' => 3, // Excessive caps
-            '/(.)\1{4,}/' => 5, // Repeated characters
+            '/http[s]?:\/\/[^\s]{4,}/i' => 5, // URL
+            '/[A-Z]{5,}/' => 3, // Maiuscole eccessive
+            '/(.)\1{4,}/' => 5, // Caratteri ripetuti
         ];
         
         foreach ($suspiciousPatterns as $pattern => $score) {
             if (preg_match_all($pattern, $content, $matches)) {
                 $spamScore += $score * count($matches[0]);
-                $reasons[] = "Pattern match: $pattern";
+                $reasons[] = "Corrispondenza modello: $pattern";
             }
         }
         
-        // Check for repeated content
+        // Controlla contenuti ripetuti
         if ($userId) {
             $similarContent = $this->findSimilarContent($content, $userId);
             if ($similarContent > 2) {
                 $spamScore += 15;
-                $reasons[] = 'Similar content posted multiple times';
+                $reasons[] = 'Contenuto simile pubblicato più volte';
             }
         }
         
@@ -366,7 +366,7 @@ class SecurityService {
     }
     
     /**
-     * Find similar content by user
+     * Trova contenuti simili dall'utente
      */
     private function findSimilarContent($content, $userId) {
         try {
@@ -390,7 +390,7 @@ class SecurityService {
     }
     
     /**
-     * Report spam content
+     * Riporta contenuti spam
      */
     private function reportSpamContent($contentType, $content, $userId, $spamScore, $detectionMethod) {
         try {
@@ -412,7 +412,7 @@ class SecurityService {
                 $this->getClientIP(),
                 $userId,
                 'spam_detected',
-                "Spam content detected (score: $spamScore): $detectionMethod",
+                "Contenuto spam rilevato (punteggio: $spamScore): $detectionMethod",
                 'medium'
             );
             
@@ -422,7 +422,7 @@ class SecurityService {
     }
     
     /**
-     * Log security event
+     * Registra un evento di sicurezza
      */
     public function logSecurityEvent($ip, $userId, $eventType, $description, $severity = 'medium', $metadata = []) {
         if (!$this->config['log_security_events']) {
@@ -453,7 +453,7 @@ class SecurityService {
     }
     
     /**
-     * Get security statistics
+     * Ottieni statistiche di sicurezza
      */
     public function getSecurityStats($days = 7) {
         try {
@@ -479,7 +479,7 @@ class SecurityService {
     }
     
     /**
-     * Get top attacking IPs
+     * Ottieni i principali IP attaccanti
      */
     public function getTopAttackingIPs($limit = 10, $days = 7) {
         try {
@@ -507,7 +507,7 @@ class SecurityService {
     }
     
     /**
-     * Clean up old security logs
+     * Pulisci i vecchi log di sicurezza
      */
     public function cleanupOldLogs($daysToKeep = 90) {
         try {
@@ -536,7 +536,7 @@ class SecurityService {
     }
     
     /**
-     * Get client IP address
+     * Ottieni l'indirizzo IP del client
      */
     private function getClientIP() {
         $ipKeys = ['HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_CLIENT_IP', 'REMOTE_ADDR'];
@@ -544,11 +544,11 @@ class SecurityService {
         foreach ($ipKeys as $key) {
             if (!empty($_SERVER[$key])) {
                 $ip = $_SERVER[$key];
-                // Handle comma-separated IPs (from proxies)
+                // Gestisci IP separati da virgola (da proxy)
                 if (strpos($ip, ',') !== false) {
                     $ip = trim(explode(',', $ip)[0]);
                 }
-                // Validate IP
+                // Valida IP
                 if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
                     return $ip;
                 }

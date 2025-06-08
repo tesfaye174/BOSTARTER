@@ -1,4 +1,8 @@
 <?php
+/**
+ * Servizio per la gestione delle notifiche
+ * Si occupa della logica di invio, salvataggio e recupero delle notifiche
+ */
 namespace BOSTARTER\Services;
 
 use BOSTARTER\Models\Notification;
@@ -13,11 +17,11 @@ class NotificationService {
     }
 
     /**
-     * Create and send a notification
+     * Crea e invia una notifica
      */
     public function createNotification($userId, $message, $type, $relatedId = null, $metadata = []) {
         try {
-            // Create notification in database
+            // Crea la notifica nel database
             $notificationData = [
                 'user_id' => $userId,
                 'message' => $message,
@@ -26,16 +30,15 @@ class NotificationService {
                 'metadata' => json_encode($metadata),
                 'is_read' => false,
                 'created_at' => date('Y-m-d H:i:s')
-            ];            $notification = $this->notificationModel->create($notificationData);
-
+            ];
+            $notification = $this->notificationModel->create($notificationData);
             if ($notification) {
-                // Log the notification
+                // Log della notifica
                 $this->logNotification($userId, $type, $message);
             }
-
             return $notification;
         } catch (\Exception $e) {
-            error_log("Error creating notification: " . $e->getMessage());
+            error_log("Errore nella creazione della notifica: " . $e->getMessage());
             return false;
         }    }
 

@@ -1,4 +1,3 @@
-// filepath: c:\xampp\htdocs\BOSTARTER\frontend\assets\tecnologia\js\tecnologia-manager.js
 // Technology Page Manager
 class TechnologyPageManager extends BaseCategoryManager {
     constructor() {
@@ -37,13 +36,13 @@ class TechnologyPageManager extends BaseCategoryManager {
             this.technologies = this.generateMockTechnologies();
             this.renderTechnologies();
         } catch (error) {
-            // Silent error handling for technology loading
+            if (window.ErrorHandler) {
+                window.ErrorHandler.handleDashboardError(error, 'technology-loading');
+            }
         }
     } generateMockProjects() {
-        // Use centralized mock data generator
         return window.MockDataGenerator.generateProjects('tecnologia', 24);
     } generateMockTechnologies() {
-        // Use centralized mock data generator
         return window.MockDataGenerator.generateTechnologies(8);
     }
 
@@ -231,7 +230,6 @@ class TechnologyPageManager extends BaseCategoryManager {
     viewTechnology(techId) {
         window.location.href = `/frontend/technologies/tech-${techId}.html`;
     } async simulateApiDelay(ms) {
-        // Use centralized API delay simulation
         return window.MockDataGenerator.simulateApiDelay(ms);
     }
 }
@@ -243,16 +241,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global error handling
 window.addEventListener('error', (e) => {
-    // Silent error handling for production
+    if (window.ErrorHandler) {
+        window.ErrorHandler.handleDashboardError(e.error, 'global-error');
+    }
 });
 
 // Service Worker registration for PWA support
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/frontend/sw.js')
         .then(registration => {
-            // Service worker registered successfully
+            // SW registered
         })
         .catch(error => {
-            // Service worker registration failed
+            if (window.ErrorHandler) {
+                window.ErrorHandler.handleCacheError(error, 'sw-registration');
+            }
         });
 }

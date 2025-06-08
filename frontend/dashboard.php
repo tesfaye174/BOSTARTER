@@ -19,86 +19,128 @@ $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_access', [
 ]);
 
 // Get user info
-$user_query = "SELECT * FROM USERS WHERE user_id = :user_id";
+$user_query = "SELECT * FROM utenti WHERE id = :user_id";
 $user_stmt = $db->prepare($user_query);
 $user_stmt->bindParam(':user_id', $_SESSION['user_id']);
 $user_stmt->execute();
 $user = $user_stmt->fetch(PDO::FETCH_ASSOC);
 
+// Ensure user exists
+if (!$user) {
+    session_destroy();
+    NavigationHelper::redirect('login', ['error' => 'User not found']);
+}
+
+// Set default values for missing user fields
+$user['username'] = $user['nickname'] ?? $user['nome'] ?? 'User';
+$user['user_type'] = $user['tipo_utente'] ?? 'standard';
+
 // Get user's projects
-$projects_query = "SELECT p.*, 
-                          COALESCE(pf.total_funded, 0) as total_funded,
-                          COALESCE(pf.funding_percentage, 0) as funding_percentage,
-                          COALESCE(pf.backers_count, 0) as backers_count,
-                          DATEDIFF(p.deadline, NOW()) as days_left
-                   FROM PROJECTS p
-                   LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.project_id = pf.project_id
-                   WHERE p.creator_id = :user_id
-                   ORDER BY p.created_at DESC";
-$projects_stmt = $db->prepare($projects_query);
-$projects_stmt->bindParam(':user_id', $_SESSION['user_id']);
-$projects_stmt->execute();
-$user_projects = $projects_stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $projects_query = "SELECT p.*, 
+                              COALESCE(pf.totale_finanziato, 0) as totale_finanziato,
+                              COALESCE(pf.percentuale_finanziamento, 0) as percentuale_finanziamento,
+                              COALESCE(pf.numero_sostenitori, 0) as numero_sostenitori,
+                              DATEDIFF(p.data_limite, NOW()) as giorni_rimasti
+                       FROM progetti p
+                       LEFT JOIN view_progetti pf ON p.id = pf.progetto_id
+                       WHERE p.creatore_id = :user_id
+                       ORDER BY p.data_inserimento DESC";
+    $projects_stmt = $db->prepare($projects_query);
+    $projects_stmt->bindParam(':user_id', $_SESSION['user_id']);
+    $projects_stmt->execute();
+    $user_projects = $projects_stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
+        'error' => 'Failed to fetch user projects: ' . $e->getMessage(),
+        'timestamp' => date('Y-m-d H:i:s')
+    ]);
+    $user_projects = [];
+}
 
 // Get user's funding history
-$fundings_query = "SELECT f.*, p.title as project_title, p.project_type,
-                          u.username as creator_name, r.title as reward_title
-                   FROM FUNDINGS f
-                   JOIN PROJECTS p ON f.project_id = p.project_id
-                   JOIN USERS u ON p.creator_id = u.user_id
-                   LEFT JOIN REWARDS r ON f.reward_id = r.reward_id
-                   WHERE f.user_id = :user_id
-                   ORDER BY f.funding_date DESC
-                   LIMIT 10";
-$fundings_stmt = $db->prepare($fundings_query);
-$fundings_stmt->bindParam(':user_id', $_SESSION['user_id']);
-$fundings_stmt->execute();
-$user_fundings = $fundings_stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $fundings_query = "SELECT f.*, p.nome as titolo_progetto, p.tipo_progetto,
+                              u.nickname as nome_creatore, r.descrizione as titolo_ricompensa
+                       FROM finanziamenti f
+                       JOIN progetti p ON f.progetto_id = p.id
+                       JOIN utenti u ON p.creatore_id = u.id
+                       LEFT JOIN reward r ON f.reward_id = r.id
+                       WHERE f.utente_id = :user_id
+                       ORDER BY f.data_finanziamento DESC
+                       LIMIT 10";
+    $fundings_stmt = $db->prepare($fundings_query);
+    $fundings_stmt->bindParam(':user_id', $_SESSION['user_id']);
+    $fundings_stmt->execute();
+    $user_fundings = $fundings_stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
+        'error' => 'Failed to fetch user fundings: ' . $e->getMessage(),
+        'timestamp' => date('Y-m-d H:i:s')
+    ]);
+    $user_fundings = [];
+}
 
 // Get user's applications (for software projects)
-$applications_query = "SELECT c.*, p.title as project_title, s.skill_name,
-                              u.username as creator_name
-                       FROM CANDIDATURE c
-                       JOIN PROJECTS p ON c.project_id = p.project_id
-                       JOIN SKILLS s ON c.skill_id = s.skill_id
-                       JOIN USERS u ON p.creator_id = u.user_id
-                       WHERE c.user_id = :user_id
-                       ORDER BY c.application_date DESC";
-$applications_stmt = $db->prepare($applications_query);
-$applications_stmt->bindParam(':user_id', $_SESSION['user_id']);
-$applications_stmt->execute();
-$user_applications = $applications_stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $applications_query = "SELECT c.*, p.nome as titolo_progetto, ps.nome as nome_profilo,
+                                  u.nickname as nome_creatore
+                           FROM candidature c
+                           JOIN progetti p ON c.progetto_id = p.id
+                           JOIN profili_software ps ON c.profilo_id = ps.id
+                           JOIN utenti u ON p.creatore_id = u.id
+                           WHERE c.utente_id = :user_id
+                           ORDER BY c.data_candidatura DESC";
+    $applications_stmt = $db->prepare($applications_query);
+    $applications_stmt->bindParam(':user_id', $_SESSION['user_id']);
+    $applications_stmt->execute();
+    $user_applications = $applications_stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
+        'error' => 'Failed to fetch user applications: ' . $e->getMessage(),
+        'timestamp' => date('Y-m-d H:i:s')
+    ]);
+    $user_applications = [];
+}
 
 // Get recent activities
-$activities_query = "SELECT 'project_created' as activity_type, p.title, p.created_at as activity_date, 
-                            'You created a new project' as description
-                     FROM PROJECTS p 
-                     WHERE p.creator_id = :user_id
-                     UNION ALL
-                     SELECT 'funding_made' as activity_type, p.title, f.funding_date as activity_date,
-                            CONCAT('You funded $', f.amount) as description
-                     FROM FUNDINGS f
-                     JOIN PROJECTS p ON f.project_id = p.project_id
-                     WHERE f.user_id = :user_id
-                     UNION ALL
-                     SELECT 'application_made' as activity_type, p.title, c.application_date as activity_date,
-                            CONCAT('You applied for ', s.skill_name) as description
-                     FROM CANDIDATURE c
-                     JOIN PROJECTS p ON c.project_id = p.project_id
-                     JOIN SKILLS s ON c.skill_id = s.skill_id
-                     WHERE c.user_id = :user_id
-                     ORDER BY activity_date DESC
-                     LIMIT 10";
-$activities_stmt = $db->prepare($activities_query);
-$activities_stmt->bindParam(':user_id', $_SESSION['user_id']);
-$activities_stmt->execute();
-$recent_activities = $activities_stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $activities_query = "SELECT 'progetto_creato' as tipo_attivita, p.nome, p.data_inserimento as data_attivita, 
+                                'Hai creato un nuovo progetto' as descrizione
+                         FROM progetti p 
+                         WHERE p.creatore_id = ?
+                         UNION ALL
+                         SELECT 'finanziamento_effettuato' as tipo_attivita, p.nome, f.data_finanziamento as data_attivita,
+                                CONCAT('Hai finanziato €', f.importo) as descrizione
+                         FROM finanziamenti f
+                         JOIN progetti p ON f.progetto_id = p.id
+                         WHERE f.utente_id = ?
+                         UNION ALL
+                         SELECT 'candidatura_inviata' as tipo_attivita, p.nome, c.data_candidatura as data_attivita,
+                                CONCAT('Hai inviato candidatura per ', ps.nome) as descrizione
+                         FROM candidature c
+                         JOIN progetti p ON c.progetto_id = p.id
+                         JOIN profili_software ps ON c.profilo_id = ps.id
+                         WHERE c.utente_id = ?
+                         ORDER BY data_attivita DESC
+                         LIMIT 10";
+    $activities_stmt = $db->prepare($activities_query);
+    $activities_stmt->execute([$_SESSION['user_id'], $_SESSION['user_id'], $_SESSION['user_id']]);
+    $recent_activities = $activities_stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
+        'error' => 'Failed to fetch recent activities: ' . $e->getMessage(),
+        'query' => 'recent_activities',
+        'timestamp' => date('Y-m-d H:i:s')
+    ]);
+    $recent_activities = [];
+}
 
 // Calculate user stats
 $total_created = count($user_projects);
-$total_funded_amount = array_sum(array_column($user_fundings, 'amount'));
+$total_funded_amount = array_sum(array_column($user_fundings, 'importo'));
 $total_applications = count($user_applications);
-$successful_projects = count(array_filter($user_projects, function($p) { return $p['status'] === 'funded'; }));
+$successful_projects = count(array_filter($user_projects, function($p) { return $p['stato'] === 'finanziato'; }));
 ?>
 
 <!DOCTYPE html>
@@ -131,8 +173,7 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
     <!-- Optimized icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
+      <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -142,7 +183,8 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                     colors: {
                         brand: '#3176FF',
                         'brand-dark': '#1e4fc4',
-                        primary: '#111827',
+                        primary: '#667eea',
+                        'primary-600': '#5a67d8',
                         secondary: '#ffffff',
                         tertiary: '#f3f4f6'
                     },
@@ -221,8 +263,7 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
         }
         .skip-link:focus {
             top: 6px;
-        }
-        @keyframes fadeIn {
+        }        @keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(20px);
@@ -425,8 +466,7 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- My Projects Section -->
             <div class="lg:col-span-2 animate-fade-in" style="animation-delay: 0.2s;">
-                <div class="dashboard-card p-6">
-                    <div class="flex justify-content-between items-center mb-6">
+                <div class="dashboard-card p-6">                    <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                             <i class="fas fa-folder mr-3 text-primary" aria-hidden="true"></i>
                             My Projects
@@ -451,37 +491,35 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                         </div>
                     <?php else: ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <?php foreach (array_slice($user_projects, 0, 4) as $project): ?>
-                                <div class="project-card border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-white dark:bg-gray-800">
+                            <?php foreach (array_slice($user_projects, 0, 4) as $project): ?>                                <div class="project-card border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-white dark:bg-gray-800">
                                     <div class="flex justify-between items-start mb-3">
-                                        <h3 class="font-medium text-gray-900 dark:text-white line-clamp-1"><?php echo htmlspecialchars($project['title']); ?></h3>
+                                        <h3 class="font-medium text-gray-900 dark:text-white line-clamp-1"><?php echo htmlspecialchars($project['nome']); ?></h3>
                                         <span class="px-2 py-1 text-xs rounded-full 
-                                            <?php echo $project['status'] === 'open' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                                                     ($project['status'] === 'funded' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
+                                            <?php echo $project['stato'] === 'aperto' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                                                     ($project['stato'] === 'finanziato' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
                                                       'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'); ?>">
-                                            <?php echo ucfirst($project['status']); ?>
+                                            <?php echo ucfirst($project['stato']); ?>
                                         </span>
                                     </div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3"><?php echo ucfirst($project['project_type']); ?> Project</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3"><?php echo ucfirst($project['tipo_progetto']); ?> Project</p>
                                     
                                     <div class="mb-3">
                                         <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                            <span>$<?php echo number_format($project['total_funded'], 0); ?></span>
-                                            <span><?php echo round($project['funding_percentage'], 1); ?>%</span>
+                                            <span>$<?php echo number_format($project['totale_finanziato'], 0); ?></span>
+                                            <span><?php echo round($project['percentuale_finanziamento'], 1); ?>%</span>
                                         </div>
                                         <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                             <div class="progress-bar-custom h-2 rounded-full transition-all duration-500" 
-                                                 style="width: <?php echo min(100, $project['funding_percentage']); ?>%"></div>
+                                                 style="width: <?php echo min(100, $project['percentuale_finanziamento']); ?>%"></div>
                                         </div>
                                     </div>
-                                    
-                                    <div class="flex gap-2">
-                                        <a href="projects/detail.php?id=<?php echo $project['project_id']; ?>" 
+                                      <div class="flex gap-2">
+                                        <a href="projects/detail.php?id=<?php echo $project['id']; ?>" 
                                            class="flex-1 text-center px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                                             View Details
                                         </a>
-                                        <?php if ($project['status'] === 'open'): ?>
-                                            <a href="projects/add_reward.php?id=<?php echo $project['project_id']; ?>" 
+                                        <?php if ($project['stato'] === 'aperto'): ?>
+                                            <a href="projects/add_reward.php?id=<?php echo $project['id']; ?>" 
                                                class="flex-1 text-center px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors">
                                                 Manage
                                             </a>
@@ -513,15 +551,14 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                             <p class="text-gray-500 dark:text-gray-400">No recent activity</p>
                         </div>
                     <?php else: ?>
-                        <div class="space-y-4">
-                            <?php foreach ($recent_activities as $activity): ?>
+                        <div class="space-y-4">                            <?php foreach ($recent_activities as $activity): ?>
                                 <div class="activity-item p-4 rounded-lg">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <h3 class="font-medium text-gray-900 dark:text-white mb-1"><?php echo htmlspecialchars($activity['title']); ?></h3>
-                                            <p class="text-sm text-gray-600 dark:text-gray-400"><?php echo htmlspecialchars($activity['description']); ?></p>
+                                            <h3 class="font-medium text-gray-900 dark:text-white mb-1"><?php echo htmlspecialchars($activity['nome']); ?></h3>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400"><?php echo htmlspecialchars($activity['descrizione']); ?></p>
                                         </div>
-                                        <span class="text-xs text-gray-500 dark:text-gray-400"><?php echo date('M j', strtotime($activity['activity_date'])); ?></span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400"><?php echo date('M j', strtotime($activity['data_attivita'])); ?></span>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -559,15 +596,14 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                     <?php if (empty($user_fundings)): ?>
                         <p class="text-gray-500 dark:text-gray-400 text-sm">No funding history yet</p>
                     <?php else: ?>
-                        <div class="space-y-3">
-                            <?php foreach (array_slice($user_fundings, 0, 3) as $funding): ?>
+                        <div class="space-y-3">                            <?php foreach (array_slice($user_fundings, 0, 3) as $funding): ?>
                                 <div class="flex justify-between items-center">
                                     <div class="flex-1 min-w-0">
-                                        <h4 class="text-sm font-medium text-gray-900 dark:text-white truncate"><?php echo htmlspecialchars($funding['project_title']); ?></h4>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">by <?php echo htmlspecialchars($funding['creator_name']); ?></p>
+                                        <h4 class="text-sm font-medium text-gray-900 dark:text-white truncate"><?php echo htmlspecialchars($funding['titolo_progetto']); ?></h4>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">by <?php echo htmlspecialchars($funding['nome_creatore']); ?></p>
                                     </div>
                                     <span class="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs rounded-full">
-                                        $<?php echo number_format($funding['amount'], 0); ?>
+                                        $<?php echo number_format($funding['importo'], 0); ?>
                                     </span>
                                 </div>
                             <?php endforeach; ?>
@@ -583,17 +619,15 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                             My Applications
                         </h3>
                         <div class="space-y-3">
-                            <?php foreach (array_slice($user_applications, 0, 3) as $application): ?>
-                                <div class="flex justify-between items-center">
+                            <?php foreach (array_slice($user_applications, 0, 3) as $application): ?>                                <div class="flex justify-between items-center">
                                     <div class="flex-1 min-w-0">
-                                        <h4 class="text-sm font-medium text-gray-900 dark:text-white truncate"><?php echo htmlspecialchars($application['project_title']); ?></h4>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400"><?php echo htmlspecialchars($application['skill_name']); ?></p>
-                                    </div>
-                                    <span class="px-2 py-1 text-xs rounded-full 
-                                        <?php echo $application['status'] === 'accepted' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                                                 ($application['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' : 
+                                        <h4 class="text-sm font-medium text-gray-900 dark:text-white truncate"><?php echo htmlspecialchars($application['titolo_progetto']); ?></h4>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400"><?php echo htmlspecialchars($application['nome_profilo']); ?></p>
+                                    </div>                                    <span class="px-2 py-1 text-xs rounded-full 
+                                        <?php echo $application['stato'] === 'accettata' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                                                 ($application['stato'] === 'in_attesa' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
                                                   'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'); ?>">
-                                        <?php echo ucfirst($application['status']); ?>
+                                        <?php echo ucfirst($application['stato']); ?>
                                     </span>
                                 </div>
                             <?php endforeach; ?>
@@ -682,11 +716,10 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                                     <?php echo ucfirst($user['user_type']); ?>
                                 </span>
                             </div>
-                        </div>
-                        <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+                        </div>                        <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
                             <div class="flex justify-between">
                                 <span class="font-medium text-gray-700 dark:text-gray-300">Member Since:</span>
-                                <span class="text-gray-900 dark:text-white"><?php echo date('F j, Y', strtotime($user['created_at'])); ?></span>
+                                <span class="text-gray-900 dark:text-white"><?php echo isset($user['data_registrazione']) ? date('F j, Y', strtotime($user['data_registrazione'])) : 'N/A'; ?></span>
                             </div>
                         </div>
                     </div>
@@ -839,7 +872,7 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
     </style>
 
     <!-- Core JavaScript -->
-    <script src="/frontend/js/utils.js"></script>
+    <script src="/frontend/js/core/Utils.js"></script>
     <script src="/frontend/js/theme.js"></script>
     <script src="/frontend/js/notifications.js"></script>
     
@@ -856,11 +889,14 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
     
     <!-- Performance Monitoring -->
     <script src="/frontend/js/performance.js" async></script>
-    
-    <script>
+      <script>
+        // Global variables
+        let autoRefreshInterval;
+        
         // Initialize dashboard when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
             initDashboard();
+            updateCurrentYear();
         });
         
         function initDashboard() {
@@ -879,21 +915,218 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                 });
             }
             
+            // Initialize theme toggle functionality
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+            }
+            
             // Initialize notifications
-            initNotifications();
+            if (typeof initNotifications === 'function') {
+                initNotifications();
+            }
             
             // Start performance monitoring
-            if (window.PerformanceObserver) {
+            if (window.PerformanceObserver && typeof initPerformanceMonitoring === 'function') {
                 initPerformanceMonitoring();
             }
+            
+            // Setup auto-refresh if enabled
+            const autoRefreshEnabled = localStorage.getItem('auto-refresh') !== 'false';
+            if (autoRefreshEnabled) {
+                startAutoRefresh();
+            }
+        }
+        
+        // Theme functions
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        function toggleThemeFromSettings() {
+            toggleTheme();
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('settings-dark-mode').checked = isDark;
+        }
+        
+        // Dashboard functions
+        function refreshDashboard() {
+            showNotification('Refreshing dashboard...', 'info');
+            location.reload();
+        }
+        
+        function startAutoRefresh() {
+            // Refresh every 5 minutes
+            autoRefreshInterval = setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    refreshDashboard();
+                }
+            }, 300000);
+        }
+        
+        function toggleAutoRefresh() {
+            const enabled = document.getElementById('settings-auto-refresh').checked;
+            localStorage.setItem('auto-refresh', enabled);
+            
+            if (enabled) {
+                startAutoRefresh();
+            } else {
+                clearInterval(autoRefreshInterval);
+            }
+        }
+        
+        // Layout functions
+        function toggleCompactView() {
+            const enabled = document.getElementById('settings-compact-view').checked;
+            document.body.classList.toggle('compact-view', enabled);
+            localStorage.setItem('compact-view', enabled);
+        }
+        
+        function toggleAnimations() {
+            const enabled = document.getElementById('settings-animations').checked;
+            document.body.classList.toggle('disable-animations', !enabled);
+            localStorage.setItem('animations', enabled);
+        }
+        
+        // Modal functions
+        function closeModalOnOutsideClick(event) {
+            if (event.target === event.currentTarget) {
+                document.getElementById('profileModal').style.display = 'none';
+            }
+        }
+        
+        function closeSettingsModalOnOutsideClick(event) {
+            if (event.target === event.currentTarget) {
+                document.getElementById('settingsModal').style.display = 'none';
+            }
+        }
+        
+        // Settings functions
+        function saveSettings() {
+            // Save all settings to localStorage
+            const darkMode = document.getElementById('settings-dark-mode').checked;
+            const animations = document.getElementById('settings-animations').checked;
+            const compactView = document.getElementById('settings-compact-view').checked;
+            const autoRefresh = document.getElementById('settings-auto-refresh').checked;
+            const projectNotifications = document.getElementById('settings-project-notifications').checked;
+            const fundingNotifications = document.getElementById('settings-funding-notifications').checked;
+            const emailNotifications = document.getElementById('settings-email-notifications').checked;
+            
+            localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+            localStorage.setItem('animations', animations);
+            localStorage.setItem('compact-view', compactView);
+            localStorage.setItem('auto-refresh', autoRefresh);
+            localStorage.setItem('project-notifications', projectNotifications);
+            localStorage.setItem('funding-notifications', fundingNotifications);
+            localStorage.setItem('email-notifications', emailNotifications);
+            
+            showNotification('Settings saved successfully!', 'success');
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+        
+        function resetSettings() {
+            if (confirm('Are you sure you want to reset all settings to default?')) {
+                localStorage.removeItem('theme');
+                localStorage.removeItem('animations');
+                localStorage.removeItem('compact-view');
+                localStorage.removeItem('auto-refresh');
+                localStorage.removeItem('project-notifications');
+                localStorage.removeItem('funding-notifications');
+                localStorage.removeItem('email-notifications');
+                
+                showNotification('Settings reset to default values', 'info');
+                location.reload();
+            }
+        }
+        
+        // Load saved settings
+        function loadSettings() {
+            const savedSettings = {
+                darkMode: localStorage.getItem('theme') === 'dark',
+                animations: localStorage.getItem('animations') !== 'false',
+                compactView: localStorage.getItem('compact-view') === 'true',
+                autoRefresh: localStorage.getItem('auto-refresh') !== 'false',
+                projectNotifications: localStorage.getItem('project-notifications') !== 'false',
+                fundingNotifications: localStorage.getItem('funding-notifications') !== 'false',
+                emailNotifications: localStorage.getItem('email-notifications') === 'true'
+            };
+            
+            // Apply settings when settings modal is opened
+            document.getElementById('settings-dark-mode').checked = savedSettings.darkMode;
+            document.getElementById('settings-animations').checked = savedSettings.animations;
+            document.getElementById('settings-compact-view').checked = savedSettings.compactView;
+            document.getElementById('settings-auto-refresh').checked = savedSettings.autoRefresh;
+            document.getElementById('settings-project-notifications').checked = savedSettings.projectNotifications;
+            document.getElementById('settings-funding-notifications').checked = savedSettings.fundingNotifications;
+            document.getElementById('settings-email-notifications').checked = savedSettings.emailNotifications;
+            
+            // Apply layout settings
+            document.body.classList.toggle('compact-view', savedSettings.compactView);
+            document.body.classList.toggle('disable-animations', !savedSettings.animations);
+        }
+        
+        // Notification function (fallback if not loaded from external file)
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notifications-container');
+            if (!container) return;
+            
+            const notification = document.createElement('div');
+            notification.className = `p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-y-0 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                type === 'warning' ? 'bg-yellow-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // Update current year in footer
+        function updateCurrentYear() {
+            const yearElement = document.getElementById('current-year');
+            if (yearElement) {
+                yearElement.textContent = new Date().getFullYear();
+            }
+        }
+        
+        // Open settings modal and load current settings
+        function openSettingsModal() {
+            loadSettings();
+            document.getElementById('settingsModal').style.display = 'flex';
         }
         
         // Cleanup function for SPA navigation
         function cleanup() {
             // Cleanup chart instances
-            Chart.helpers.each(Chart.instances, (instance) => {
-                instance.destroy();
-            });
+            if (window.Chart && Chart.instances) {
+                Chart.helpers.each(Chart.instances, (instance) => {
+                    instance.destroy();
+                });
+            }
             
             // Clear any intervals/timeouts
             clearInterval(autoRefreshInterval);
@@ -902,7 +1135,10 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
         // Export for module usage
         window.dashboardUtils = {
             initDashboard,
-            cleanup
+            cleanup,
+            refreshDashboard,
+            toggleTheme,
+            showNotification
         };
     </script>
 </body>

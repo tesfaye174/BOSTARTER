@@ -1,20 +1,21 @@
 <?php
-// Enhanced accessible header component for BOSTARTER
+// Componente header accessibile per BOSTARTER
 require_once __DIR__ . '/../../backend/utils/NavigationHelper.php';
 
+// Recupera la pagina corrente e lo stato di login
 $current_page = basename($_SERVER['PHP_SELF']);
 $is_logged_in = NavigationHelper::isLoggedIn();
-$user_name = $is_logged_in ? ($_SESSION['user']['nome'] ?? $_SESSION['user']['nickname'] ?? 'User') : '';
+$user_name = $is_logged_in ? ($_SESSION['user']['nome'] ?? $_SESSION['user']['nickname'] ?? 'Utente') : '';
 ?>
 
-<!-- Skip Links for Accessibility -->
+<!-- Collegamenti rapidi per l'accessibilità -->
 <a href="#main-content" class="skip-link">Vai al contenuto principale</a>
 <a href="#search-form" class="skip-link">Vai alla ricerca</a>
 <a href="#user-navigation" class="skip-link">Vai alla navigazione utente</a>
 
 <header class="bg-white shadow-sm border-b border-gray-200 sticky-top" role="banner">
     <div class="container-fluid px-4 py-3">
-        <div class="row align-items-center">            <!-- Logo and Brand -->
+        <div class="row align-items-center">            <!-- Logo e Brand -->
             <div class="col-md-3">
                 <a href="<?php echo NavigationHelper::url('home'); ?>" 
                    class="navbar-brand d-flex align-items-center text-decoration-none"
@@ -29,7 +30,7 @@ $user_name = $is_logged_in ? ($_SESSION['user']['nome'] ?? $_SESSION['user']['ni
                 </a>
             </div>
             
-            <!-- Search Bar -->
+            <!-- Barra di ricerca -->
             <div class="col-md-5">
                 <form class="d-flex" 
                       id="search-form" 
@@ -58,13 +59,13 @@ $user_name = $is_logged_in ? ($_SESSION['user']['nome'] ?? $_SESSION['user']['ni
                 </form>
             </div>
             
-            <!-- Navigation Links -->
+            <!-- Collegamenti di navigazione -->
             <div class="col-md-4">
                 <nav class="d-flex align-items-center justify-content-end" 
                      id="user-navigation"
                      aria-label="Navigazione principale utente"
                      role="navigation">
-                    <?php if ($is_logged_in): ?>                        <!-- Logged in user menu -->
+                    <?php if ($is_logged_in): ?>                        <!-- Menu utente loggato -->
                         <a href="<?php echo NavigationHelper::url('dashboard'); ?>" 
                            class="btn btn-outline-primary me-2"
                            aria-label="Vai alla dashboard personale">
@@ -114,7 +115,7 @@ $user_name = $is_logged_in ? ($_SESSION['user']['nome'] ?? $_SESSION['user']['ni
                                 </li>
                             </ul>
                         </div>                    <?php else: ?>
-                        <!-- Guest user buttons -->
+                        <!-- Pulsanti per utente ospite -->
                         <a href="<?php echo NavigationHelper::url('login'); ?>" 
                            class="btn btn-outline-primary me-2"
                            aria-label="Accedi al tuo account">

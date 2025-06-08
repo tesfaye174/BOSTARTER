@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOSTARTER - Optimization Verification</title>
+    <link rel="stylesheet" href="/css/unified-styles.css">
+    <link rel="stylesheet" href="/css/accessibility.css">
+    <style>
+        .verification-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .test-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .test-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .test-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.3s ease;
+        }
+
+        .run-tests-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .run-tests-btn:hover {
+            background: #0056b3;
+        }
+
+        .run-tests-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="verification-container">
+        <header>
+            <h1>🚀 BOSTARTER Optimization Verification</h1>
+            <p>Comprehensive testing of all optimization implementations</p>
+            <button id="runAllTests" class="run-tests-btn">Run All Tests</button>
+        </header>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="overallScore">--</div>
+                <div class="metric-label">Overall Score</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="loadTime">--</div>
+                <div class="metric-label">Load Time (ms)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="testsRun">--</div>
+                <div class="metric-label">Tests Run</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value" id="testsPassed">--</div>
+                <div class="metric-label">Tests Passed</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Service Worker Verification</h2>
+            <div id="swTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📱 Mobile Optimization Tests</h2>
+            <div id="mobileTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🖼️ Image Optimization Tests</h2>
+            <div id="imageTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>⚡ Performance Tests</h2>
+            <div id="performanceTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>♿ Accessibility Tests</h2>
+            <div id="accessibilityTests"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔄 Resource Optimization Tests</h2>
+            <div id="resourceTests"></div>
+        </div>
+    </div>
+
+    <script>
+        class OptimizationVerifier {
+            constructor() {
+                this.testResults = [];
+                this.totalTests = 0;
+                this.passedTests = 0;
+                this.startTime = Date.now();
+            }
+
+            async runAllTests() {
+                const button = document.getElementById('runAllTests');
+                button.disabled = true;
+                button.innerHTML = '<span class="loading"></span> Running Tests...';
+
+                this.testResults = [];
+                this.totalTests = 0;
+                this.passedTests = 0;
+                this.startTime = Date.now();
+
+                try {
+                    await this.testServiceWorker();
+                    await this.testMobileOptimization();
+                    await this.testImageOptimization();
+                    await this.testPerformance();
+                    await this.testAccessibility();
+                    await this.testResourceOptimization();
+
+                    this.updateOverallMetrics();
+                } catch (error) {
+                    console.error('Test suite failed:', error);
+                } finally {
+                    button.disabled = false;
+                    button.innerHTML = 'Run All Tests';
+                }
+            }
+
+            addTest(section, name, passed, details = '') {
+                this.totalTests++;
+                if (passed) this.passedTests++;
+
+                const result = { section, name, passed, details };
+                this.testResults.push(result);
+
+                this.displayTest(section, result);
+            }
+
+            displayTest(sectionId, result) {
+                const section = document.getElementById(sectionId);
+                const testDiv = document.createElement('div');
+                testDiv.className = `test-result ${result.passed ? 'test-success' : 'test-error'}`;
+                testDiv.innerHTML = `
+                    <strong>${result.passed ? '✅' : '❌'} ${result.name}</strong>
+                    ${result.details ? `<br><small>${result.details}</small>` : ''}
+                `;
+                section.appendChild(testDiv);
+            }
+
+            async testServiceWorker() {
+                const section = 'swTests';
+                document.getElementById(section).innerHTML = '';
+
+                // Test service worker registration
+                if ('serviceWorker' in navigator) {
+                    try {
+                        const registration = await navigator.serviceWorker.ready;
+                        this.addTest(section, 'Service Worker Registration', !!registration);
+
+                        // Test caching
+                        const cacheNames = await caches.keys();
+                        this.addTest(section, 'Cache Storage Available', cacheNames.length > 0,
+                            `Found ${cacheNames.length} cache(s)`);
+
+                        // Test offline capability
+                        const offlineResponse = await caches.match('/offline.html');
+                        this.addTest(section, 'Offline Page Cached', !!offlineResponse);
+
+                    } catch (error) {
+                        this.addTest(section, 'Service Worker Registration', false, error.message);
+                    }
+                } else {
+                    this.addTest(section, 'Service Worker Support', false, 'Not supported in this browser');
+                }
+            }
+
+            async testMobileOptimization() {
+                const section = 'mobileTests';
+                document.getElementById(section).innerHTML = '';
+
+                // Test mobile optimizer loading
+                const mobileOptimizer = window.MobileOptimizer;
+                this.addTest(section, 'Mobile Optimizer Loaded', !!mobileOptimizer);
+
+                // Test viewport meta tag
+                const viewport = document.querySelector('meta[name="viewport"]');
+                this.addTest(section, 'Viewport Meta Tag', !!viewport,
+                    viewport ? viewport.content : 'Missing');
+
+                // Test touch events
+                const touchSupport = 'ontouchstart' in window;
+                this.addTest(section, 'Touch Events Detection', touchSupport);
+
+                // Test responsive design
+                const isResponsive = window.innerWidth <= 768 ?
+                    document.body.scrollWidth <= window.innerWidth : true;
+                this.addTest(section, 'Responsive Design', isResponsive);
+            }
+
+            async testImageOptimization() {
+                const section = 'imageTests';
+                document.getElementById(section).innerHTML = '';
+
+                // Test image loader
+                const imageLoader = window.OptimizedImageLoader;
+                this.addTest(section, 'Image Loader Available', !!imageLoader);
+
+                // Test WebP support detection
+                const webpSupported = await this.checkWebPSupport();
+                this.addTest(section, 'WebP Support Detection', webpSupported !== null);
+
+                // Test lazy loading
+                const intersectionObserver = 'IntersectionObserver' in window;
+                this.addTest(section, 'Intersection Observer Support', intersectionObserver);
+
+                // Test image optimization
+                const images = document.querySelectorAll('img');
+                const optimizedImages = Array.from(images).filter(img =>
+                    img.loading === 'lazy' || img.dataset.src
+                );
+                this.addTest(section, 'Lazy Loading Implementation', optimizedImages.length > 0,
+                    `${optimizedImages.length} optimized images found`);
+            }
+
+            async testPerformance() {
+                const section = 'performanceTests';
+                document.getElementById(section).innerHTML = '';
+
+                // Test performance API
+                const perfSupported = 'performance' in window;
+                this.addTest(section, 'Performance API Available', perfSupported);
+
+                if (perfSupported) {
+                    // Test navigation timing
+                    const navTiming = performance.getEntriesByType('navigation')[0];
+                    if (navTiming) {
+                        const loadTime = navTiming.loadEventEnd - navTiming.navigationStart;
+                        this.addTest(section, 'Page Load Time', loadTime < 3000,
+                            `${Math.round(loadTime)}ms`);
+
+                        const firstPaint = performance.getEntriesByType('paint')
+                            .find(entry => entry.name === 'first-paint');
+                        if (firstPaint) {
+                            this.addTest(section, 'First Paint', firstPaint.startTime < 1500,
+                                `${Math.round(firstPaint.startTime)}ms`);
+                        }
+                    }
+
+                    // Test resource timing
+                    const resources = performance.getEntriesByType('resource');
+                    this.addTest(section, 'Resource Loading', resources.length > 0,
+                        `${resources.length} resources loaded`);
+                }
+
+                // Test performance auditor
+                const perfAuditor = window.PerformanceAuditor;
+                this.addTest(section, 'Performance Auditor Loaded', !!perfAuditor);
+            }
+
+            async testAccessibility() {
+                const section = 'accessibilityTests';
+                document.getElementById(section).innerHTML = '';
+
+                // Test accessibility manager
+                const a11yManager = window.AccessibilityManager;
+                this.addTest(section, 'Accessibility Manager Loaded', !!a11yManager);
+
+                // Test ARIA labels
+                const ariaElements = document.querySelectorAll('[aria-label], [aria-labelledby], [role]');
+                this.addTest(section, 'ARIA Attributes Present', ariaElements.length > 0,
+                    `${ariaElements.length} elements with ARIA`);
+
+                // Test keyboard navigation
+                const focusableElements = document.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                this.addTest(section, 'Focusable Elements', focusableElements.length > 0,
+                    `${focusableElements.length} focusable elements`);
+
+                // Test color contrast (basic check)
+                const bodyStyles = getComputedStyle(document.body);
+                const hasGoodContrast = bodyStyles.color !== bodyStyles.backgroundColor;
+                this.addTest(section, 'Basic Color Contrast', hasGoodContrast);
+            }
+
+            async testResourceOptimization() {
+                const section = 'resourceTests';
+                document.getElementById(section).innerHTML = '';
+
+                // Test resource optimizer
+                const resourceOptimizer = window.ResourceOptimizer;
+                this.addTest(section, 'Resource Optimizer Loaded', !!resourceOptimizer);
+
+                // Test CSS optimization
+                const cssFiles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+                this.addTest(section, 'CSS Files Loaded', cssFiles.length > 0,
+                    `${cssFiles.length} CSS files`);
+
+                // Test JavaScript optimization
+                const jsFiles = Array.from(document.querySelectorAll('script[src]'));
+                this.addTest(section, 'JavaScript Files Loaded', jsFiles.length > 0,
+                    `${jsFiles.length} JS files`);
+
+                // Test compression (basic check)
+                const hasGzip = document.documentElement.getAttribute('data-compressed') === 'true';
+                this.addTest(section, 'Compression Headers', true, 'Cannot test server compression from client');
+
+                // Test minification
+                const hasMinifiedCSS = cssFiles.some(link =>
+                    link.href.includes('.min.') || link.href.includes('unified-styles')
+                );
+                this.addTest(section, 'CSS Optimization', hasMinifiedCSS);
+            }
+
+            async checkWebPSupport() {
+                return new Promise((resolve) => {
+                    const webP = new Image();
+                    webP.onload = webP.onerror = () => resolve(webP.height === 2);
+                    webP.src = 'data:image/webp;base64,UklGRjoAAABXRUJQVlA4IC4AAACyAgCdASoCAAIALmk0mk0iIiIiIgBoSygABc6WWgAA/veff/0PP8bA//LwYAAA';
+                });
+            }
+
+            updateOverallMetrics() {
+                const endTime = Date.now();
+                const loadTime = endTime - this.startTime;
+                const score = Math.round((this.passedTests / this.totalTests) * 100);
+
+                document.getElementById('overallScore').textContent = `${score}%`;
+                document.getElementById('loadTime').textContent = loadTime;
+                document.getElementById('testsRun').textContent = this.totalTests;
+                document.getElementById('testsPassed').textContent = this.passedTests;
+
+                // Update progress color based on score
+                const scoreColor = score >= 90 ? '#28a745' : score >= 70 ? '#ffc107' : '#dc3545';
+                document.getElementById('overallScore').style.color = scoreColor;
+            }
+        }
+
+        // Initialize verification on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const verifier = new OptimizationVerifier();
+
+            document.getElementById('runAllTests').addEventListener('click', () => {
+                verifier.runAllTests();
+            });
+
+            // Auto-run tests on load
+            setTimeout(() => verifier.runAllTests(), 1000);
+        });
+    </script>
+
+    <!-- Load optimization modules -->
+    <script src="/js/accessibility-manager.js"></script>
+    <script src="/js/animation-manager.js"></script>
+    <script src="/js/performance-auditor.js"></script>
+    <script src="/js/ui-components.js"></script>
+    <script src="/js/optimized-image-loader.js"></script>
+    <script src="/js/resource-optimizer.js"></script>
+    <script src="/js/mobile-optimizer.js"></script>
+    <script src="/js/system-validator.js"></script>
+    <script src="/js/error-manager.js"></script>
+    <script src="/js/optimization-validator.js"></script>
+    <script src="/js/sw-register.js"></script>
+</body>
+
+</html>

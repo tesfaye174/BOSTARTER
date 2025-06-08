@@ -20,7 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
-require_once __DIR__ . '/../utils/FluentValidator.php';
+require_once __DIR__ . '/../utils/Validator.php';
+
+// Disabilita la visualizzazione degli errori in produzione
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(0);
 
 try {
     // Leggi input JSON
@@ -31,7 +36,7 @@ try {
     }
     
     // Validazione input
-    $validator = new FluentValidator();
+    $validator = new Validator();
     $validator->required('email', $input['email'] ?? '')->email();
     $validator->required('nickname', $input['nickname'] ?? '')->minLength(3)->maxLength(50);
     $validator->required('password', $input['password'] ?? '')->minLength(8);
@@ -39,7 +44,6 @@ try {
     $validator->required('cognome', $input['cognome'] ?? '')->maxLength(100);
     $validator->required('anno_nascita', $input['anno_nascita'] ?? '')->integer()->min(1900)->max(date('Y') - 13);
     $validator->required('luogo_nascita', $input['luogo_nascita'] ?? '')->maxLength(100);
-    
     if (!$validator->isValid()) {
         ApiResponse::invalidInput($validator->getErrors());
     }
@@ -64,18 +68,35 @@ try {
     
     // Recupera risultato
     $result = $db->query("SELECT @user_id as user_id, @success as success, @message as message")->fetch();
-    
-    if (!$result['success']) {
+      if (!$result['success']) {
         ApiResponse::error($result['message'], 400);
     }
-      // Log su MongoDB
+    
+    // Avvia la sessione per il login automatico
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    // Login automatico dell'utente appena registrato
+    $_SESSION['user_id'] = (int)$result['user_id'];
+    $_SESSION['user'] = [
+        'id' => (int)$result['user_id'],
+        'email' => $input['email'],
+        'username' => $input['nickname'],
+        'tipo_utente' => 'standard',
+        'nome' => $input['nome'],
+        'cognome' => $input['cognome']
+    ];
+    
+    // Log su MongoDB
     $mongoLogger = new MongoLogger();
     $mongoLogger->logUserRegistration(
         $result['user_id'],
         $input['email'],
         [
             'nickname' => $input['nickname'],
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'auto_login' => true
         ]
     );
     
@@ -83,13 +104,14 @@ try {
     ApiResponse::success([
         'user_id' => (int)$result['user_id'],
         'email' => $input['email'],
-        'nickname' => $input['nickname']
+        'nickname' => $input['nickname'],
+        'redirect_url' => '/BOSTARTER/frontend/dashboard.php'
     ], 'Registrazione completata con successo');
     
 } catch (PDOException $e) {
     error_log("Database error in register.php: " . $e->getMessage());
-    ApiResponse::serverError('Errore durante la registrazione');
+    ApiResponse::serverError('Errore durante la registrazione: ' . $e->getMessage());
 } catch (Exception $e) {
     error_log("Error in register.php: " . $e->getMessage());
-    ApiResponse::serverError('Errore interno del server');
+    ApiResponse::serverError('Errore interno del server: ' . $e->getMessage());
 }

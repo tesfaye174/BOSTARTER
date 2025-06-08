@@ -7,6 +7,7 @@
 session_start();
 require_once '../config/database.php';
 require_once '../utils/Auth.php';
+require_once '../utils/Validator.php';
 
 header('Content-Type: application/json');
 
@@ -30,22 +31,15 @@ $comment_text = trim($input['comment'] ?? '');
 $parent_id = (int)($input['parent_id'] ?? 0) ?: null; // For replies
 $user_id = $_SESSION['user_id'];
 
-// Validate input
-if ($project_id <= 0) {
+// Validazione centralizzata input
+$validator = new Validator();
+$validator->required('project_id', $project_id)
+          ->required('comment', $comment_text)
+          ->minLength(1)
+          ->maxLength(1000);
+if ($project_id <= 0 || !$validator->isValid()) {
     http_response_code(400);
-    echo json_encode(['error' => 'ID progetto non valido']);
-    exit();
-}
-
-if (empty($comment_text)) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Il commento non può essere vuoto']);
-    exit();
-}
-
-if (strlen($comment_text) > 1000) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Il commento è troppo lungo (massimo 1000 caratteri)']);
+    echo json_encode(['error' => implode(', ', $validator->getErrors())]);
     exit();
 }
 

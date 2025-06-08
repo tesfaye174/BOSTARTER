@@ -1,12 +1,7 @@
 <?php
 /**
- * Servizio per l'Analisi dei Volumi di Ridondanza
- * Conforme alle specifiche del PDF "Corso di Basi di Dati CdS Informatica per il Management A.A. 2024/2025"
- * 
- * Analizza la ridondanza del campo #nr_progetti negli utenti usando:
- * - Coefficienti: wI = 1, wB = 0.5, a = 2
- * - Operazioni: aggiungi progetto (1/mese), visualizza tutti (1/mese), conta progetti (3/mese)
- * - Volumi: 10 progetti, 3 finanziamenti per progetto, 5 utenti, 2 progetti per utente
+ * Servizio per l'analisi dei volumi
+ * Si occupa di raccogliere e analizzare dati relativi ai volumi delle operazioni
  */
 
 require_once __DIR__ . '/../config/database.php';

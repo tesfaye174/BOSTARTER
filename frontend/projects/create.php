@@ -21,7 +21,7 @@ $message = '';
 $error = '';
 
 // Get skills for software projects
-$skills_query = "SELECT skill_id, skill_name, category FROM SKILLS ORDER BY category, skill_name";
+$skills_query = "SELECT id as skill_id, nome as skill_name, 'Generale' as category FROM competenze ORDER BY nome";
 $skills_stmt = $db->prepare($skills_query);
 $skills_stmt->execute();
 $skills = $skills_stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -63,9 +63,8 @@ if ($_POST) {
         if ($project_type === 'hardware') {
             if (!empty($_POST['components'])) {
                 $components = json_decode($_POST['components'], true);
-                if ($components) {
-                    $component_query = "INSERT INTO HARDWARE_COMPONENTS (project_id, component_name, quantity, unit_cost) 
-                                      VALUES (:project_id, :component_name, :quantity, :unit_cost)";
+                if ($components) {                    $component_query = "INSERT INTO componenti_hardware (progetto_id, nome_componente, quantita, costo_unitario) 
+                                     VALUES (:project_id, :component_name, :quantity, :unit_cost)";
                     $component_stmt = $db->prepare($component_query);
                     
                     foreach ($components as $component) {
@@ -77,10 +76,9 @@ if ($_POST) {
                     }
                 }
             }
-        } else { // software
-            $required_skills = isset($_POST['required_skills']) ? $_POST['required_skills'] : [];
+        } else { // software            $required_skills = isset($_POST['required_skills']) ? $_POST['required_skills'] : [];
             if (!empty($required_skills)) {
-                $profile_query = "INSERT INTO SOFTWARE_PROFILES (project_id, required_skills, max_contributors) 
+                $profile_query = "INSERT INTO profili_software (progetto_id, competenze_richieste, max_contributori) 
                                 VALUES (:project_id, :required_skills, :max_contributors)";
                 $profile_stmt = $db->prepare($profile_query);
                 $profile_stmt->bindParam(':project_id', $project_id);

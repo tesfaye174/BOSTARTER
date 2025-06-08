@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
-require_once __DIR__ . '/../utils/FluentValidator.php';
+require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/Auth.php';
 
 session_start();
@@ -68,10 +68,9 @@ try {
                 ApiResponse::error('Invalid JSON format');
             }
 
-            $validator = new FluentValidator();
+            $validator = new Validator();
             $validator->required('skill_id', $input['skill_id'] ?? '');
             $validator->required('livello_competenza', $input['livello_competenza'] ?? '');
-            
             if (!$validator->isValid()) {
                 ApiResponse::invalidInput($validator->getErrors());
             }
@@ -126,10 +125,9 @@ try {
                 ApiResponse::error('Invalid JSON format');
             }
 
-            $validator = new FluentValidator();
+            $validator = new Validator();
             $validator->required('skill_id', $input['skill_id'] ?? '');
             $validator->required('livello_competenza', $input['livello_competenza'] ?? '');
-            
             if (!$validator->isValid()) {
                 ApiResponse::invalidInput($validator->getErrors());
             }

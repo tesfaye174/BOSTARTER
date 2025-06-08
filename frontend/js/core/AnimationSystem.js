@@ -245,7 +245,7 @@ class AnimationSystem {
             try {
                 callback(event, data);
             } catch (error) {
-                // Silent error handling for animation observer
+                window.ErrorHandler.handleCacheError(error, { context: 'animation_observer' });
             }
         });
     }

@@ -28,6 +28,7 @@ try {
     require_once '../config/database.php';
     require_once '../models/ProjectCompliant.php';
     require_once '../services/MongoLogger.php';
+    require_once '../utils/Validator.php';
 
     $database = Database::getInstance();
     $db = $database->getConnection();
@@ -201,40 +202,30 @@ function handleGetProjects($projectModel, $mongoLogger) {
 
 function handleCreateProject($projectModel, $mongoLogger, $request) {
     $userId = requireAuth();
-
     try {
-        // Validate required fields
-        $requiredFields = ['nome', 'descrizione', 'budget_richiesto', 'data_scadenza', 'tipo'];
-        foreach ($requiredFields as $field) {
-            if (!isset($request[$field]) || empty($request[$field])) {
-                http_response_code(400);
-                echo json_encode(['error' => "Campo '$field' obbligatorio"]);
-                return;
-            }
+        // Validazione standardizzata con metodi static
+        $validationResult = Validator::validateProjectData([
+            'name' => $request['nome'] ?? '',
+            'creator_id' => $userId,
+            'description' => $request['descrizione'] ?? '',
+            'budget' => $request['budget_richiesto'] ?? '',
+            'project_type' => $request['tipo'] ?? '',
+            'end_date' => $request['data_scadenza'] ?? ''
+        ]);
+        
+        if ($validationResult !== true) {
+            http_response_code(400);
+            echo json_encode(['error' => implode(', ', $validationResult)]);
+            return;
         }
-
-        // Validate project type
+        
+        // Validazione tipo progetto conforme al PDF
         if (!in_array($request['tipo'], ['hardware', 'software'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Tipo progetto deve essere hardware o software']);
             return;
         }
-
-        // Validate budget
-        if (!is_numeric($request['budget_richiesto']) || $request['budget_richiesto'] <= 0) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Budget deve essere un numero positivo']);
-            return;
-        }
-
-        // Validate deadline (must be in the future)
-        $deadline = DateTime::createFromFormat('Y-m-d H:i:s', $request['data_scadenza']);
-        if (!$deadline || $deadline <= new DateTime()) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Data scadenza deve essere futura']);
-            return;
-        }
-
+        
         // Type-specific validations
         if ($request['tipo'] === 'hardware') {
             if (empty($request['componenti'])) {
@@ -308,15 +299,16 @@ function handleUpdateProject($projectModel, $mongoLogger, $projectId, $request) 
             return;
         }
 
-        // Validate fields if provided
+        // Validazione centralizzata campi modificabili
         if (isset($request['budget_richiesto'])) {
-            if (!is_numeric($request['budget_richiesto']) || $request['budget_richiesto'] <= 0) {
+            $validator = new Validator();
+            $validator->required('budget_richiesto', $request['budget_richiesto']);
+            if (!$validator->isValid() || !is_numeric($request['budget_richiesto']) || $request['budget_richiesto'] <= 0) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Budget deve essere un numero positivo']);
                 return;
             }
         }
-
         if (isset($request['data_scadenza'])) {
             $deadline = DateTime::createFromFormat('Y-m-d H:i:s', $request['data_scadenza']);
             if (!$deadline || $deadline <= new DateTime()) {

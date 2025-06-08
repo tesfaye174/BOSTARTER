@@ -1,249 +1,451 @@
 # BOSTARTER - Piattaforma di Crowdfunding 🚀
 
-BOSTARTER è una piattaforma di crowdfunding moderna e ottimizzata per progetti creativi, sviluppata con architettura modulare e componenti condivisi.
+BOSTARTER è una piattaforma di crowdfunding sviluppata conforme alle specifiche del corso di Basi di Dati A.A. 2024/2025. La piattaforma supporta esclusivamente progetti **hardware** e **software**, implementando un sistema completo di candidature, competenze utente e finanziamenti con una architettura moderna e sicura.
 
 ## ✨ Caratteristiche Principali
 
-- **🔐 Sistema di Autenticazione Sicuro**
-  - API moderne RESTful (login.php, register.php)
-  - Gestione sessioni JWT ottimizzata
-  - Validazione input con FluentValidator
-  - Protezione CSRF e XSS
+- **🔐 Sistema di Autenticazione Compliant**
+  - API RESTful conformi al PDF delle specifiche
+  - Registrazione utenti con campi obbligatori (nome, cognome, anno_nascita, luogo_nascita, sesso)
+  - Validazione input centralizzata con Validator class
+  - Sistema di sessioni PHP sicuro
 
-- **📋 Gestione Progetti Avanzata**
-  - 15 categorie specializzate (Arte, Design, Tecnologia, etc.)
-  - Sistema di ricompense flessibile
-  - Tracking finanziamenti real-time
-  - Dashboard creatori responsive
+- **💼 Gestione Progetti Conformi al PDF**
+  - **SOLO** progetti Hardware e Software (conforme alle specifiche)
+  - Sistema competenze utente con livelli 0-5
+  - Candidature ai progetti software con matching competenze
+  - Finanziamenti con reward system
+  - Stati progetti: 'aperto' / 'chiuso'
 
-- **🎨 Frontend Ottimizzato**
-  - Componenti condivisi per prestazioni superiori
-  - Design system unificato con Tailwind CSS
-  - Tema chiaro/scuro automatico
-  - PWA con service worker
+- **🎯 Sistema Competenze Avanzato**
+  - Associazione utenti-competenze con livelli di expertise
+  - Validazione automatica requisiti per candidature
+  - Profili software con competenze richieste
+  - Gestione skill mismatch e feedback utente
+
+- **📊 Database Compliant & Performance**
+  - Schema conforme al 100% alle specifiche PDF
+  - 15+ tabelle implementate con relazioni ottimizzate
+  - Stored procedures per operazioni critiche
+  - Views statistiche per reportistica
+  - Trigger per mantenimento consistenza dati
+
+- **🎨 Frontend Moderno & Accessibile**
+  - Design responsive con Tailwind CSS
+  - Dashboard utenti con gestione progetti
+  - Sistema tema chiaro/scuro
+  - API JavaScript per integrazione seamless
   - Lazy loading e ottimizzazioni performance
-
-- **🛡️ Sicurezza Enterprise**
-  - Validazione input centralizzata
-  - Hashing password bcrypt
-  - Rate limiting per API
-  - Logging eventi con MongoDB
-  - Monitoraggio performance
 
 ## 📋 Requisiti
 
-- PHP >= 8.0
-- MySQL >= 5.7
-- Composer
-- Node.js >= 14.0 (per sviluppo frontend)
-- Estensioni PHP:
-  - PDO
+- **PHP >= 8.0** con estensioni:
+  - PDO (per database MySQL)
   - JSON
   - OpenSSL
+  - mysqli
+- **MySQL >= 5.7** o MariaDB >= 10.2
+- **XAMPP/WAMP** o server web con mod_rewrite
+- Browser moderno (per frontend JavaScript)
 
 ## 🛠️ Installazione
 
-1. Clona il repository:
+### 1. Setup Progetto
+
 ```bash
-git clone https://github.com/tuousername/bostarter.git
-cd bostarter
+# Clona o scarica il progetto nella directory XAMPP
+# Posiziona in: C:\xampp\htdocs\BOSTARTER\
 ```
 
-2. Installa le dipendenze PHP:
+### 2. Configurazione Database
+
 ```bash
-composer install
+# Avvia XAMPP (Apache + MySQL)
+# Crea database 'bostarter_compliant' in phpMyAdmin
+
+# Importa schema conforme:
+mysql -u root -p bostarter_compliant < database/bostarter_schema_compliant.sql
+
+# Importa stored procedures e dati di test:
+mysql -u root -p bostarter_compliant < database/create_apply_and_sample.sql
 ```
 
-3. Configura il database:
-- Crea un database MySQL
-- Importa lo schema da `database/bostarter_schema_fixed.sql` o usa `database/complete_setup.sql` per un'installazione completa
-- Importa le estensioni da `database/bostarter_extensions.sql`
-- Configura le credenziali in `backend/config/database.php`
+### 3. Configurazione Backend
 
-4. Configura il server web:
-- Punto la root del server web alla cartella `public`
-- Assicurati che mod_rewrite sia abilitato (Apache)
-- Configura i permessi corretti per le cartelle
+```php
+// Verifica configurazione in backend/config/database.php
+$host = 'localhost';
+$dbname = 'bostarter_compliant';  
+$username = 'root';
+$password = '';  // O la tua password MySQL
+```
 
-5. Configura le variabili d'ambiente:
-```bash
-cp .env.example .env
-# Modifica .env con le tue configurazioni
+### 4. Test Installazione
+
+```
+# Accedi a: http://localhost/BOSTARTER/
+# Registra un nuovo utente con tutti i campi richiesti
+# Testa login e accesso dashboard
 ```
 
 ## 🔧 Configurazione
 
-### Backend
-- `backend/config/config.php`: Configurazioni generali
-- `backend/config/database.php`: Configurazione database
-- `backend/config/routes.php`: Definizione routes API
+### Variabili di Database
 
-### Frontend
-- `frontend/js/config.js`: Configurazioni frontend
-- `frontend/css/tailwind.config.js`: Configurazione Tailwind
+```php
+// backend/config/database.php
+private $host = "localhost";
+private $db_name = "bostarter_compliant";
+private $username = "root";  
+private $password = "";  // Imposta la tua password MySQL
+```
+
+### Logging MongoDB (Opzionale)
+
+```php
+// backend/services/MongoLogger.php - Per logging eventi avanzato
+// Configura connessione MongoDB se disponibile
+```
 
 ## 📚 Documentazione API
 
-### Autenticazione
+### 🔐 Autenticazione
 
-#### Login
+#### Registrazione Utente (Compliant)
+
 ```http
-POST /api/auth/login
+POST /BOSTARTER/backend/api/auth_compliant.php
 Content-Type: application/json
 
 {
+    "action": "register",
     "email": "user@example.com",
+    "password": "password123", 
+    "nickname": "username",
+    "nome": "Mario",
+    "cognome": "Rossi",
+    "anno_nascita": 1995,
+    "luogo_nascita": "Roma",
+    "sesso": "M"
+}
+```
+
+#### Login
+
+```http
+POST /BOSTARTER/backend/api/auth_compliant.php
+Content-Type: application/json
+
+{
+    "action": "login",
+    "email": "user@example.com", 
     "password": "password123"
 }
 ```
 
-#### Registrazione
+### 💼 Progetti (Solo Hardware/Software)
+
+#### Lista Progetti
+
 ```http
-POST /api/auth/register
+GET /BOSTARTER/backend/api/projects_compliant.php?action=list
+Optional Parameters:
+- tipo=hardware|software
+- stato=aperto|chiuso  
+- page=1&per_page=10
+```
+
+#### Dettagli Progetto
+
+```http
+GET /BOSTARTER/backend/api/projects_compliant.php?action=get&id=1
+```
+
+#### Creazione Progetto (Auth Required)
+
+```http
+POST /BOSTARTER/backend/api/projects_compliant.php
 Content-Type: application/json
+Authorization: Session required
 
 {
-    "email": "user@example.com",
-    "password": "password123",
-    "nickname": "username",
-    "name": "Nome",
-    "surname": "Cognome",
-    "birth_year": 1990,
-    "birth_place": "Città"
+    "action": "create",
+    "nome": "Robot Educativo",
+    "descrizione": "Robot per apprendimento STEM",
+    "budget_richiesto": 15000,
+    "data_scadenza": "2024-12-31",
+    "tipo": "hardware"
 }
 ```
 
-### Progetti
+### 🎯 Candidature & Competenze
 
-#### Creazione Progetto
+#### Candidatura a Progetto Software
+
 ```http
-POST /api/projects/create
+POST /BOSTARTER/backend/api/apply_project.php
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
-    "name": "Nome Progetto",
-    "description": "Descrizione",
-    "budget": 1000,
-    "project_type": "arte",
-    "end_date": "2024-12-31"
+    "project_id": 1,
+    "profilo_id": 1  
 }
+```
+
+#### Ricerca Progetti
+
+```http
+GET /BOSTARTER/backend/api/search.php?q=robot&tipo=hardware
+```
+
+### 📊 Statistiche
+
+#### Top Creatori per Affidabilità  
+
+```http
+GET /BOSTARTER/backend/api/stats_compliant.php?action=top_creators
 ```
 
 ## 🧪 Testing
 
-```bash
-# Esegui i test unitari
-composer test
+### Test Funzionali Base
 
-# Esegui i test di integrazione
-composer test:integration
+```bash
+# 1. Test Registrazione
+# Accedi a: http://localhost/BOSTARTER/frontend/auth/register.php
+# Compila tutti i campi richiesti incluso 'sesso'
+
+# 2. Test Login  
+# Accedi a: http://localhost/BOSTARTER/frontend/auth/login.php
+
+# 3. Test Dashboard
+# Dopo login: http://localhost/BOSTARTER/frontend/dashboard/
+
+# 4. Test Ricerca Progetti
+# Accedi a: http://localhost/BOSTARTER/frontend/projects/list_open.php
 ```
 
-## 🔐 Sicurezza
+### Test API con cURL
 
-- Tutte le password sono hashate con bcrypt
-- Implementata protezione CSRF
-- Validazione input lato server
-- Rate limiting per le API
-- Logging eventi di sicurezza
+```bash
+# Test registrazione API
+curl -X POST http://localhost/BOSTARTER/backend/api/auth_compliant.php \
+  -H "Content-Type: application/json" \
+  -d '{"action":"register","email":"test@test.it","password":"test123","nickname":"testuser","nome":"Test","cognome":"User","anno_nascita":1995,"luogo_nascita":"Roma","sesso":"M"}'
+
+# Test lista progetti  
+curl http://localhost/BOSTARTER/backend/api/projects_compliant.php?action=list
+```
+
+### Dati di Test Inclusi
+
+Il database include dati di esempio:
+
+- **Utenti**: <admin@test.it> / <user@test.it> (password: test123)
+- **Progetti**: 5 progetti hardware/software di esempio
+- **Competenze**: PHP, JavaScript, Python, MySQL, etc.
+
+## 🔐 Sicurezza & Compliance
+
+- **Password Hashing**: bcrypt per tutte le password utente
+- **Validazione Input**: Validator class centralizzata con sanitizzazione  
+- **SQL Injection Protection**: Prepared statements in tutti i query
+- **Session Security**: Gestione sessioni PHP native sicure
+- **Error Handling**: Logging errori senza esposizione dati sensibili
+- **Database Compliance**: Schema 100% conforme alle specifiche PDF
 
 ## 📁 Struttura del Progetto
 
 ```
 BOSTARTER/
 ├── backend/                    # Backend PHP
-│   ├── api/                   # API endpoints (RESTful)
-│   │   ├── login.php         # Autenticazione utente
-│   │   ├── register.php      # Registrazione utente
-│   │   ├── projects_compliant.php # API progetti (compliant with PDF specs)
-│   │   └── ...               # Altri endpoints
+│   ├── api/                   # API endpoints RESTful
+│   │   ├── auth_compliant.php # Autenticazione (login/register)
+│   │   ├── projects_compliant.php # Gestione progetti hardware/software  
+│   │   ├── apply_project.php  # Candidature progetti software
+│   │   ├── search.php         # Ricerca progetti
+│   │   ├── stats_compliant.php # Statistiche conformi
+│   │   └── user_skills.php    # Gestione competenze utenti
 │   ├── config/               # Configurazioni
-│   │   ├── database.php      # Configurazione database
-│   │   └── config.php        # Configurazioni generali
+│   │   └── database.php      # Configurazione database MySQL
 │   ├── models/               # Modelli dati
-│   │   ├── Project.php       # Modello progetti
-│   │   └── Notification.php  # Modello notifiche
+│   │   ├── ProjectCompliant.php # Modello progetti conforme
+│   │   ├── UserCompliant.php # Modello utenti conforme
+│   │   └── Notification.php  # Gestione notifiche
 │   ├── utils/                # Utility e helper
-│   │   ├── ApiResponse.php   # Gestione risposte API
-│   │   ├── Auth.php          # Sistema autenticazione
-│   │   └── FluentValidator.php # Validazione input
-│   ├── services/             # Servizi business logic
-│   └── legacy/               # File legacy (da migrare)
+│   │   ├── Validator.php     # Validazione input centralizzata
+│   │   ├── ApiResponse.php   # Gestione risposte API standardizzate
+│   │   └── Auth.php          # Helper autenticazione
+│   └── services/             # Servizi business logic
+│       └── MongoLogger.php   # Logging eventi avanzato
 ├── database/                  # Database e setup
-│   ├── bostarter_schema.sql  # Schema principale
-│   ├── setup_database.php    # Script setup
-│   └── README.md             # Documentazione database
-├── frontend/                  # Frontend web
-│   ├── assets/               # Asset statici
-│   ├── js/                   # JavaScript
-│   ├── css/                  # Fogli di stile
-│   └── components/           # Componenti riutilizzabili
-├── tests/                     # Test e debug
-│   ├── test_*.php            # File di test
-│   └── README.md             # Documentazione test
-├── docs/                      # Documentazione
-├── logs/                      # File di log
-└── README.md                  # Questo file
+│   ├── bostarter_schema_compliant.sql # Schema conforme al PDF
+│   ├── create_apply_and_sample.sql   # Stored procedures + dati test
+│   └── SCHEMA_BOSTARTER.md           # Documentazione schema
+├── frontend/                  # Frontend web  
+│   ├── auth/                 # Pagine autenticazione
+│   │   ├── login.php         # Form login
+│   │   └── register.php      # Form registrazione (con campo sesso)
+│   ├── projects/             # Gestione progetti
+│   │   ├── list_open.php     # Lista progetti aperti
+│   │   ├── detail.php        # Dettagli progetto
+│   │   └── apply.php         # Candidatura progetto
+│   ├── dashboard/            # Dashboard utenti
+│   ├── js/                   # JavaScript frontend
+│   │   ├── api.js           # Gestione chiamate API
+│   │   ├── auth.js          # Validazione form autenticazione
+│   │   └── dashboard-manager.js # Gestione dashboard
+│   └── css/                  # Fogli di stile
+│       └── tailwind.css      # Framework CSS moderno
+└── README.md                  # Documentazione principale
 ```
 
-### Principi di Organizzazione
+### 🎯 Architettura Caratteristiche
 
-- **API RESTful**: Endpoints organizzati in `backend/api/`
-- **Separazione di responsabilità**: Modelli, servizi e utility separati
-- **Test isolati**: Tutti i test in directory dedicata
-- **Database centralizzato**: Script e schema in `database/`
-- **Documentazione**: README in ogni directory importante
+- **API RESTful**: Endpoints organizzati per funzionalità
+- **Separazione Backend/Frontend**: Architettura moderna scalabile  
+- **Database Compliant**: Schema conforme al 100% alle specifiche
+- **Stored Procedures**: Operazioni critiche gestite a livello DB
+- **Validazione Centralizzata**: Input validation unificata
+- **Logging Strutturato**: Tracciamento eventi con MongoDB
 
-## 📈 Performance
+## 📈 Performance & Database
 
-- Caching implementato per query frequenti
-- Ottimizzazione immagini
-- Lazy loading per componenti
-- Minificazione assets
+### Database Ottimizzazioni
+
+- **Indici strategici** su campi di ricerca frequente (email, tipo_progetto, stato)
+- **Foreign keys** per integrità referenziale
+- **Trigger automatici** per aggiornamento affidabilità creatori
+- **Views materializzate** per statistiche complesse
+- **Event scheduler** per chiusura automatica progetti scaduti
+
+### Stored Procedures Implementate
+
+```sql
+-- Registrazione utente compliant
+CALL sp_registra_utente(email, password, nickname, nome, cognome, anno, luogo, sesso)
+
+-- Candidatura a progetto (con alias)  
+CALL apply_to_project(utente_id, progetto_id, profilo_id)
+CALL candidati_progetto(utente_id, progetto_id, profilo_id)
+
+-- Gestione competenze utente
+CALL inserisci_skill_utente(utente_id, competenza_id, livello)
+```
+
+### Views Statistiche
+
+- `vista_top_creatori_affidabilita` - Top 3 creatori per affidabilità
+- `vista_progetti_per_stato` - Distribuzione progetti per stato  
+- `vista_finanziamenti_mensili` - Trend finanziamenti nel tempo
+
+## 🚀 Funzionalità Implementate
+
+### ✅ Autenticazione & Utenti
+
+- [x] Registrazione conforme con tutti i campi richiesti
+- [x] Login sicuro con validazione
+- [x] Gestione sessioni PHP
+- [x] Dashboard utenti personalizzata
+- [x] Sistema competenze con livelli 0-5
+
+### ✅ Progetti (Hardware & Software)
+
+- [x] Creazione progetti conformi al PDF
+- [x] Lista progetti aperti con filtri
+- [x] Dettagli progetto completi
+- [x] Sistema finanziamenti con reward
+- [x] Chiusura automatica progetti scaduti
+
+### ✅ Candidature & Competenze  
+
+- [x] Candidature progetti software
+- [x] Validazione automatica skill requirements
+- [x] Feedback dettagliato per skill mismatch
+- [x] Gestione profili competenze richieste
+
+### ✅ API & Integrazione
+
+- [x] API RESTful per tutte le operazioni
+- [x] Ricerca progetti unificata
+- [x] Statistiche e reportistica
+- [x] Logging eventi con MongoDB
 
 ## 🤝 Contribuire
 
-1. Fork il progetto
-2. Crea un branch (`git checkout -b feature/AmazingFeature`)
-3. Commit le modifiche (`git commit -m 'Add some AmazingFeature'`)
-4. Push al branch (`git push origin feature/AmazingFeature`)
-5. Apri una Pull Request
+### Setup Sviluppo
+
+1. Clona il progetto in ambiente XAMPP
+2. Importa schema compliant dal database
+3. Configura credenziali database  
+4. Testa API endpoints con Postman/cURL
+
+### Guidelines
+
+- Mantieni compliance 100% con specifiche PDF
+- Usa prepared statements per tutte le query
+- Documenta nuove API con esempi
+- Testa su progetti SOLO hardware/software
 
 ## 📝 Licenza
 
-Questo progetto è sotto licenza MIT - vedi il file [LICENSE](LICENSE) per i dettagli.
+Progetto sviluppato per il corso di **Basi di Dati A.A. 2024/2025**.
+Conforme alle specifiche PDF del progetto.
 
-## 👥 Team
+## 👥 Team di Sviluppo
 
-- Nome Cognome - Lead Developer
-- Nome Cognome - Frontend Developer
-- Nome Cognome - Backend Developer
+**Frontend Development**
 
-## 📞 Supporto
+- Sistema registrazione con validazione completa
+- Dashboard responsive con gestione progetti  
+- Integrazione API JavaScript
 
-Per supporto, email support@bostarter.it o apri un issue su GitHub.
+**Backend Development**  
 
-## 🏗️ Architettura Ottimizzata
+- API RESTful conformi alle specifiche
+- Database schema e stored procedures
+- Sistema autenticazione e sicurezza
 
-### 📁 Componenti Condivisi
+**Database Design**
+
+- Schema conforme al 100% al PDF delle specifiche
+- Ottimizzazioni performance e indici
+- Trigger e views per funzionalità avanzate
+
+## 📞 Supporto & Troubleshooting
+
+### Problemi Comuni
+
+**Errore Database Connection:**
+
+```bash
+# Verifica XAMPP sia avviato (Apache + MySQL)
+# Controlla credenziali in backend/config/database.php
+# Assicurati database 'bostarter_compliant' esista
 ```
-frontend/assets/shared/
-├── css/
-│   └── common-styles.css      # Stili unificati (card, filtri, animazioni)
-├── js/
-│   ├── common-functions.js    # Funzioni JavaScript centralizzate  
-│   └── category-config.js     # Configurazioni per 15 categorie
+
+**Errore API 404:**
+
+```bash
+# Verifica path: http://localhost/BOSTARTER/backend/api/...
+# Controlla che mod_rewrite sia abilitato
+# Verifica permessi cartelle XAMPP
 ```
 
-### 🎯 Benefici Architettura
-- **-70% codice duplicato** rimosso
-- **Performance superiori** con componenti condivisi
-- **Manutenzione semplificata** con single source of truth
-- **Scalabilità migliorata** per nuove funzionalità
-- **UX consistente** tra tutte le categorie
+**Problemi Registrazione:**
 
-### 📋 Categorie Supportate
-🎨 Arte | 🛠️ Artigianato | 🍽️ Cibo | 💃 Danza | 🎨 Design
-📚 Editoriale | 🎬 Film | 📷 Fotografia | 📖 Fumetti | 🎮 Giochi  
-📰 Giornalismo | 👗 Moda | 🎵 Musica | 🎭 Teatro | 💻 Tecnologia
+```bash
+# Assicurati tutti i campi siano compilati (incluso 'sesso')
+# Verifica email non sia già in uso
+# Controlla log browser per errori JavaScript
+```
+
+### Log & Debug
+
+- Errori PHP: `C:\xampp\apache\logs\error.log`
+- Database errors: Controlla log MySQL in XAMPP Control Panel
+- API testing: Usa browser developer tools o Postman
+
+---
+
+**BOSTARTER** - Una piattaforma di crowdfunding moderna e compliant 🚀

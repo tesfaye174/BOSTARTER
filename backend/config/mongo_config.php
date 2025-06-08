@@ -74,17 +74,6 @@ function getLogsFromMongo($collection, $filter = [], $limit = 100, $sort = ['tim
     }
 }
 
-// Test MongoDB connection
-function testMongoConnection() {
-    try {
-        $db = getMongoConnection();
-        $db->listCollections();
-        return true;
-    } catch (Exception $e) {
-        return false;
-    }
-}
-
 // Collection names
 define('MONGO_COLLECTION_EVENTS', 'events');
 define('MONGO_COLLECTION_ERRORS', 'errors');

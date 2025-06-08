@@ -1,7 +1,7 @@
 <?php
 /**
- * Performance Optimization Service for BOSTARTER
- * Handles caching, database optimization, and performance monitoring
+ * Servizio per la gestione delle performance
+ * Fornisce strumenti per l'analisi e il monitoraggio delle prestazioni
  */
 
 namespace BOSTARTER\Services;
@@ -16,7 +16,7 @@ class PerformanceService {
     private $config;
     
     const CACHE_PREFIX = 'bostarter:';
-    const DEFAULT_TTL = 3600; // 1 hour
+    const DEFAULT_TTL = 3600; // 1 ora
     
     public function __construct($db) {
         $this->db = $db;
@@ -25,7 +25,7 @@ class PerformanceService {
     }
     
     /**
-     * Load performance configuration
+     * Carica la configurazione delle performance
      */
     private function loadConfig() {
         return [
@@ -37,14 +37,14 @@ class PerformanceService {
             'memcached_host' => $_ENV['MEMCACHED_HOST'] ?? 'localhost',
             'memcached_port' => $_ENV['MEMCACHED_PORT'] ?? 11211,
             'file_cache_dir' => $_ENV['FILE_CACHE_DIR'] ?? __DIR__ . '/../cache',
-            'query_cache_ttl' => $_ENV['QUERY_CACHE_TTL'] ?? 1800, // 30 minutes
-            'page_cache_ttl' => $_ENV['PAGE_CACHE_TTL'] ?? 3600, // 1 hour
-            'api_cache_ttl' => $_ENV['API_CACHE_TTL'] ?? 600, // 10 minutes
+            'query_cache_ttl' => $_ENV['QUERY_CACHE_TTL'] ?? 1800, // 30 minuti
+            'page_cache_ttl' => $_ENV['PAGE_CACHE_TTL'] ?? 3600, // 1 ora
+            'api_cache_ttl' => $_ENV['API_CACHE_TTL'] ?? 600, // 10 minuti
         ];
     }
     
     /**
-     * Initialize cache system
+     * Inizializza il sistema di cache
      */
     private function initializeCache() {
         if (!$this->config['cache_enabled']) {
@@ -64,21 +64,21 @@ class PerformanceService {
                     $this->initializeFileCache();
                     break;
                 default:
-                    throw new \Exception("Unsupported cache type: " . $this->config['cache_type']);
+                    throw new \Exception("Tipo di cache non supportato: " . $this->config['cache_type']);
             }
             $this->cacheType = $this->config['cache_type'];
         } catch (\Exception $e) {
-            error_log("Cache initialization failed: " . $e->getMessage());
+            error_log("Inizializzazione cache fallita: " . $e->getMessage());
             $this->cache = null;
         }
     }
     
     /**
-     * Initialize Redis cache
+     * Inizializza la cache Redis
      */
     private function initializeRedis() {
         if (!class_exists('Redis')) {
-            throw new \Exception("Redis extension not installed");
+            throw new \Exception("Estensione Redis non installata");
         }
         
         $this->cache = new Redis();
@@ -88,15 +88,15 @@ class PerformanceService {
             $this->cache->auth($this->config['redis_password']);
         }
         
-        $this->cache->select(0); // Use database 0
+        $this->cache->select(0); // Usa il database 0
     }
     
     /**
-     * Initialize Memcached cache
+     * Inizializza la cache Memcached
      */
     private function initializeMemcached() {
         if (!class_exists('Memcached')) {
-            throw new \Exception("Memcached extension not installed");
+            throw new \Exception("Estensione Memcached non installata");
         }
         
         $this->cache = new Memcached();
@@ -104,7 +104,7 @@ class PerformanceService {
     }
     
     /**
-     * Initialize file cache
+     * Inizializza la cache su file
      */
     private function initializeFileCache() {
         $cacheDir = $this->config['file_cache_dir'];
@@ -115,7 +115,7 @@ class PerformanceService {
     }
     
     /**
-     * Get cached data
+     * Ottieni i dati dalla cache
      */
     public function get($key) {
         if (!$this->cache) {
@@ -140,13 +140,13 @@ class PerformanceService {
                     return false;
             }
         } catch (\Exception $e) {
-            error_log("Cache get error: " . $e->getMessage());
+            error_log("Errore nel recupero dalla cache: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Set cached data
+     * Imposta i dati nella cache
      */
     public function set($key, $value, $ttl = null) {
         if (!$this->cache) {
@@ -171,13 +171,13 @@ class PerformanceService {
                     return false;
             }
         } catch (\Exception $e) {
-            error_log("Cache set error: " . $e->getMessage());
+            error_log("Errore nell'impostazione della cache: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Delete cached data
+     * Elimina i dati dalla cache
      */
     public function delete($key) {
         if (!$this->cache) {
@@ -201,13 +201,13 @@ class PerformanceService {
                     return false;
             }
         } catch (\Exception $e) {
-            error_log("Cache delete error: " . $e->getMessage());
+            error_log("Errore nell'eliminazione dalla cache: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Clear all cache
+     * Pulisce tutta la cache
      */
     public function clear() {
         if (!$this->cache) {
@@ -229,41 +229,41 @@ class PerformanceService {
                     return false;
             }
         } catch (\Exception $e) {
-            error_log("Cache clear error: " . $e->getMessage());
+            error_log("Errore nella pulizia della cache: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Cache database query results
+     * Cache dei risultati delle query al database
      */
     public function cacheQuery($query, $params = [], $ttl = null) {
         $cacheKey = 'query:' . md5($query . serialize($params));
         
-        // Try to get from cache first
+        // Prova a ottenere dalla cache prima
         $cached = $this->get($cacheKey);
         if ($cached !== false) {
             return $cached;
         }
         
-        // Execute query
+        // Esegui la query
         try {
             $stmt = $this->db->prepare($query);
             $stmt->execute($params);
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             
-            // Cache the result
+            // Memorizza il risultato nella cache
             $this->set($cacheKey, $result, $ttl ?? $this->config['query_cache_ttl']);
             
             return $result;
         } catch (\Exception $e) {
-            error_log("Query cache error: " . $e->getMessage());
+            error_log("Errore nella cache della query: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Get user notifications with caching
+     * Ottieni le notifiche dell'utente con caching
      */
     public function getCachedUserNotifications($userId, $limit = 20, $offset = 0) {
         $cacheKey = "user_notifications:{$userId}:{$limit}:{$offset}";
@@ -282,12 +282,12 @@ class PerformanceService {
             LIMIT ? OFFSET ?
         ";
         
-        $result = $this->cacheQuery($query, [$userId, $limit, $offset], 300); // 5 minutes cache
+        $result = $this->cacheQuery($query, [$userId, $limit, $offset], 300); // Cache di 5 minuti
         return $result;
     }
     
     /**
-     * Get project statistics with caching
+     * Ottieni le statistiche del progetto con caching
      */
     public function getCachedProjectStats($projectId) {
         $cacheKey = "project_stats:{$projectId}";
@@ -314,12 +314,12 @@ class PerformanceService {
             GROUP BY p.id
         ";
         
-        $stats = $this->cacheQuery($query, [$projectId], 600); // 10 minutes cache
+        $stats = $this->cacheQuery($query, [$projectId], 600); // Cache di 10 minuti
         return $stats ? $stats[0] : null;
     }
     
     /**
-     * Invalidate cache for user notifications
+     * Invalida la cache per le notifiche dell'utente
      */
     public function invalidateUserNotifications($userId) {
         $patterns = [
@@ -333,7 +333,7 @@ class PerformanceService {
     }
     
     /**
-     * Invalidate cache for project
+     * Invalida la cache per il progetto
      */
     public function invalidateProject($projectId) {
         $patterns = [
@@ -348,7 +348,7 @@ class PerformanceService {
     }
     
     /**
-     * Delete cache by pattern (Redis only)
+     * Elimina la cache in base a un pattern (solo per Redis)
      */
     private function deleteByPattern($pattern) {
         if ($this->cacheType !== 'redis' || !$this->cache) {
@@ -363,13 +363,13 @@ class PerformanceService {
             }
             return true;
         } catch (\Exception $e) {
-            error_log("Cache pattern delete error: " . $e->getMessage());
+            error_log("Errore nell'eliminazione della cache per pattern: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Get cache statistics
+     * Ottieni le statistiche della cache
      */
     public function getCacheStats() {
         if (!$this->cache) {
@@ -383,11 +383,11 @@ class PerformanceService {
                     return [
                         'enabled' => true,
                         'type' => 'redis',
-                        'memory_used' => $info['used_memory_human'] ?? 'unknown',
-                        'connections' => $info['connected_clients'] ?? 'unknown',
+                        'memory_used' => $info['used_memory_human'] ?? 'sconosciuto',
+                        'connections' => $info['connected_clients'] ?? 'sconosciuto',
                         'hit_rate' => isset($info['keyspace_hits'], $info['keyspace_misses']) 
                             ? round($info['keyspace_hits'] / ($info['keyspace_hits'] + $info['keyspace_misses']) * 100, 2) . '%'
-                            : 'unknown'
+                            : 'sconosciuto'
                     ];
                     
                 case 'memcached':
@@ -396,22 +396,22 @@ class PerformanceService {
                     return [
                         'enabled' => true,
                         'type' => 'memcached',
-                        'memory_used' => isset($server['bytes']) ? round($server['bytes'] / 1024 / 1024, 2) . ' MB' : 'unknown',
-                        'connections' => $server['curr_connections'] ?? 'unknown',
+                        'memory_used' => isset($server['bytes']) ? round($server['bytes'] / 1024 / 1024, 2) . ' MB' : 'sconosciuto',
+                        'connections' => $server['curr_connections'] ?? 'sconosciuto',
                         'hit_rate' => isset($server['get_hits'], $server['get_misses']) 
                             ? round($server['get_hits'] / ($server['get_hits'] + $server['get_misses']) * 100, 2) . '%'
-                            : 'unknown'
+                            : 'sconosciuto'
                     ];
                     
                 default:
                     return [
                         'enabled' => true,
                         'type' => $this->cacheType,
-                        'details' => 'Stats not available for this cache type'
+                        'details' => 'Statistiche non disponibili per questo tipo di cache'
                     ];
             }
         } catch (\Exception $e) {
-            error_log("Error getting cache stats: " . $e->getMessage());
+            error_log("Errore nel recupero delle statistiche della cache: " . $e->getMessage());
             return [
                 'enabled' => true,
                 'type' => $this->cacheType,
@@ -421,7 +421,7 @@ class PerformanceService {
     }
     
     /**
-     * Optimize database tables
+     * Ottimizza le tabelle del database
      */
     public function optimizeDatabase() {
         try {
@@ -440,17 +440,17 @@ class PerformanceService {
             
             return $results;
         } catch (\Exception $e) {
-            error_log("Database optimization error: " . $e->getMessage());
+            error_log("Errore nell'ottimizzazione del database: " . $e->getMessage());
             return false;
         }
     }
     
     /**
-     * Analyze slow queries
+     * Analizza le query lente
      */
     public function getSlowQueries($limit = 10) {
         try {
-            // Enable slow query log analysis
+            // Abilita l'analisi del log delle query lente
             $stmt = $this->db->query("
                 SELECT 
                     sql_text,
@@ -466,14 +466,14 @@ class PerformanceService {
             $stmt->execute([$limit]);
             return $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (\Exception $e) {
-            error_log("Slow query analysis error: " . $e->getMessage());
+            error_log("Errore nell'analisi delle query lente: " . $e->getMessage());
             return [];
         }
     }
 }
 
 /**
- * Simple file-based cache implementation
+ * Implementazione semplice della cache basata su file
  */
 class FileCache {
     private $cacheDir;

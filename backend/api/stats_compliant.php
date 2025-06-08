@@ -20,6 +20,7 @@ try {
     require_once '../config/database.php';
     require_once '../models/ProjectCompliant.php';
     require_once '../services/MongoLogger.php';
+    require_once '../utils/Validator.php';
 
     $database = Database::getInstance();
     $db = $database->getConnection();
@@ -60,5 +61,7 @@ try {
         'error' => $e->getMessage()
     ]);
 }
+
+// In questo endpoint non sono presenti input utente da validare, ma la Validator è pronta per eventuali estensioni future.
 
 ob_end_flush();

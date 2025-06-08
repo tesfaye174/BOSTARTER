@@ -5,6 +5,7 @@
  */
 
 require_once '../config/database.php';
+require_once '../utils/Validator.php';
 
 header('Content-Type: application/json');
 
@@ -17,8 +18,14 @@ try {
     $period = $_GET['period'] ?? 'all'; // all, month, year
     
     // Validate limit
+    $validator = new Validator();
     if ($limit <= 0 || $limit > 100) {
-        $limit = 10;
+        $validator->min(1)->max(100);
+    }
+    if (!$validator->isValid()) {
+        http_response_code(400);
+        echo json_encode(['error' => implode(', ', $validator->getErrors())]);
+        exit;
     }
     
     // Build WHERE clause based on period

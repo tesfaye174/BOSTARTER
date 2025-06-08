@@ -19,6 +19,7 @@ require_once '../config/database.php';
 require_once '../services/VolumeAnalysisService.php';
 require_once '../utils/ApiResponse.php';
 require_once '../utils/Auth.php';
+require_once '../utils/Validator.php';
 
 try {
     // Initialize database connection
@@ -139,4 +140,5 @@ function handlePostRequest($volumeService) {
             break;
     }
 }
+// In questo endpoint non sono presenti input utente da validare, ma la Validator è pronta per eventuali estensioni future.
 ?>

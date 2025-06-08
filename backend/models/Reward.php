@@ -7,18 +7,17 @@ class Reward {
     private $conn;
     
     public function __construct() {
-        $this->db = new Database();
+        $this->db = Database::getInstance();
         $this->conn = $this->db->getConnection();
-    }    /**
+    }/**
      * Ottiene la lista delle ricompense di un progetto
      */
-    public function getList($projectId) {
-        try {
+    public function getList($projectId) {        try {
             $stmt = $this->conn->prepare("
                 SELECT *
-                FROM ricompense
+                FROM reward
                 WHERE progetto_id = ?
-                ORDER BY importo_minimo ASC
+                ORDER BY created_at ASC
             ");
             $stmt->execute([$projectId]);
             return $stmt->fetchAll();
@@ -32,10 +31,9 @@ class Reward {
      * Ottiene i dettagli di una ricompensa
      */
     public function getDetails($rewardId) {
-        try {
-            $stmt = $this->conn->prepare("
-                SELECT r.*, p.titolo as progetto_titolo, u.nickname as creatore_nickname
-                FROM ricompense r
+        try {            $stmt = $this->conn->prepare("
+                SELECT r.*, p.nome as progetto_titolo, u.nickname as creatore_nickname
+                FROM reward r
                 JOIN progetti p ON r.progetto_id = p.id
                 JOIN utenti u ON p.creatore_id = u.id
                 WHERE r.id = ?
@@ -48,8 +46,8 @@ class Reward {
             }            // Ottiene il numero di donazioni per questa ricompensa
             $stmt = $this->conn->prepare("
                 SELECT COUNT(*) as num_donazioni
-                FROM donazioni
-                WHERE ricompensa_id = ?
+                FROM finanziamenti
+                WHERE reward_id = ?
             ");
             $stmt->execute([$rewardId]);
             $reward['num_donazioni'] = $stmt->fetchColumn();
@@ -64,22 +62,16 @@ class Reward {
     /**
      * Crea una nuova ricompensa
      */
-    public function create($data) {
-        try {
+    public function create($data) {        try {
             $stmt = $this->conn->prepare("
-                INSERT INTO ricompense (
-                    progetto_id, titolo, descrizione, importo_minimo,
-                    quantita_disponibile, data_consegna
-                ) VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO reward (
+                    progetto_id, codice, descrizione
+                ) VALUES (?, ?, ?)
             ");
-            
-            $stmt->execute([
+              $stmt->execute([
                 $data['progetto_id'],
-                $data['titolo'],
-                $data['descrizione'],
-                $data['importo_minimo'],
-                $data['quantita_disponibile'],
-                $data['data_consegna']
+                $data['codice'],
+                $data['descrizione']
             ]);
             
             return [
@@ -120,9 +112,8 @@ class Reward {
                     'message' => 'Nessun campo da aggiornare'
                 ];
             }
-            
-            $params[] = $rewardId;
-            $sql = "UPDATE ricompense SET " . implode(', ', $updates) . " WHERE id = ?";
+              $params[] = $rewardId;
+            $sql = "UPDATE reward SET " . implode(', ', $updates) . " WHERE id = ?";
             
             $stmt = $this->conn->prepare($sql);
             $stmt->execute($params);
@@ -143,13 +134,12 @@ class Reward {
     /**
      * Elimina una ricompensa
      */
-    public function delete($rewardId) {
-        try {
+    public function delete($rewardId) {        try {
             // Verifica se ci sono donazioni associate
             $stmt = $this->conn->prepare("
                 SELECT COUNT(*)
-                FROM donazioni
-                WHERE ricompensa_id = ?
+                FROM finanziamenti
+                WHERE reward_id = ?
             ");
             $stmt->execute([$rewardId]);
             
@@ -159,9 +149,8 @@ class Reward {
                     'message' => 'Impossibile eliminare la ricompensa: ci sono donazioni associate'
                 ];
             }
-            
-            // Elimina la ricompensa
-            $stmt = $this->conn->prepare("DELETE FROM ricompense WHERE id = ?");
+              // Elimina la ricompensa
+            $stmt = $this->conn->prepare("DELETE FROM reward WHERE id = ?");
             $stmt->execute([$rewardId]);
             
             return [
@@ -181,18 +170,17 @@ class Reward {
      * Verifica la disponibilità di una ricompensa
      */
     public function checkAvailability($rewardId) {
-        try {
-            $stmt = $this->conn->prepare("
-                SELECT quantita_disponibile
-                FROM ricompense
+        try {            $stmt = $this->conn->prepare("
+                SELECT COUNT(*) as available
+                FROM reward
                 WHERE id = ?
             ");
             $stmt->execute([$rewardId]);
-            $quantity = $stmt->fetchColumn();
+            $result = $stmt->fetchColumn();
             
             return [
-                'available' => $quantity > 0,
-                'quantity' => $quantity
+                'available' => $result > 0,
+                'quantity' => 1 // Since reward table doesn't track quantity
             ];
         } catch (PDOException $e) {
             error_log($e->getMessage());
@@ -209,22 +197,20 @@ class Reward {
     public function getDonations($rewardId, $page = 1, $perPage = 10) {
         try {
             $offset = ($page - 1) * $perPage;
-            
-            $stmt = $this->conn->prepare("
-                SELECT d.*, u.nickname, u.avatar
-                FROM donazioni d
-                JOIN utenti u ON d.utente_id = u.id
-                WHERE d.ricompensa_id = ?
-                ORDER BY d.data_donazione DESC
+              $stmt = $this->conn->prepare("
+                SELECT f.*, u.nickname, u.avatar
+                FROM finanziamenti f
+                JOIN utenti u ON f.utente_id = u.id
+                WHERE f.reward_id = ?
+                ORDER BY f.data_finanziamento DESC
                 LIMIT ? OFFSET ?
             ");
-            $stmt->execute([$rewardId, $perPage, $offset]);
-            $donations = $stmt->fetchAll();
+            $stmt->execute([$rewardId, $perPage, $offset]);            $donations = $stmt->fetchAll();
             
             $stmt = $this->conn->prepare("
                 SELECT COUNT(*)
-                FROM donazioni
-                WHERE ricompensa_id = ?
+                FROM finanziamenti
+                WHERE reward_id = ?
             ");
             $stmt->execute([$rewardId]);
             $total = $stmt->fetchColumn();
@@ -245,30 +231,26 @@ class Reward {
     /**
      * Ottiene le statistiche delle ricompense di un progetto
      */
-    public function getProjectStats($projectId) {
-        try {
+    public function getProjectStats($projectId) {        try {
             // Ottiene il numero totale di ricompense
             $stmt = $this->conn->prepare("
                 SELECT COUNT(*) as num_ricompense,
-                SUM(quantita_disponibile) as totale_disponibili,
-                MIN(importo_minimo) as importo_minimo,
-                MAX(importo_minimo) as importo_massimo
-                FROM ricompense
+                       COUNT(*) as totale_disponibili
+                FROM reward
                 WHERE progetto_id = ?
             ");
             $stmt->execute([$projectId]);
             $stats = $stmt->fetch();
-            
-            // Ottiene il numero di donazioni per ricompensa
+              // Ottiene il numero di donazioni per ricompensa
             $stmt = $this->conn->prepare("
-                SELECT r.id, r.titolo, r.importo_minimo,
-                COUNT(d.id) as num_donazioni,
-                SUM(d.importo) as totale_donazioni
-                FROM ricompense r
-                LEFT JOIN donazioni d ON r.id = d.ricompensa_id
+                SELECT r.id, r.descrizione,
+                COUNT(f.id) as num_donazioni,
+                SUM(f.importo) as totale_donazioni
+                FROM reward r
+                LEFT JOIN finanziamenti f ON r.id = f.reward_id
                 WHERE r.progetto_id = ?
                 GROUP BY r.id
-                ORDER BY r.importo_minimo ASC
+                ORDER BY r.created_at ASC
             ");
             $stmt->execute([$projectId]);
             $stats['ricompense'] = $stmt->fetchAll();

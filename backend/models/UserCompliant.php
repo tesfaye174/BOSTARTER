@@ -20,31 +20,25 @@ class UserCompliant {
      */
     public function register($data) {
         try {
-            $stmt = $this->conn->prepare("CALL registra_utente(?, ?, ?, ?, ?, ?, ?, ?, @risultato)");
+            // Call stored procedure for registration
+            $stmt = $this->conn->prepare("CALL sp_registra_utente(?, ?, ?, ?, ?, ?, ?, ?, @p_user_id, @p_success, @p_message)");
             $stmt->execute([
+                $data['email'],
                 $data['nickname'],
                 $data['password'],
-                $data['email'],
                 $data['nome'],
                 $data['cognome'],
-                $data['data_nascita'],
-                $data['sesso'],
-                $data['paese'] ?? null
+                date('Y', strtotime($data['data_nascita'])),
+                $data['luogo_nascita'],
+                $data['tipo_utente']
             ]);
-            
-            $result = $this->conn->query("SELECT @risultato as risultato")->fetch();
-            
-            if ($result['risultato'] === 'SUCCESS') {
-                return [
-                    'success' => true,
-                    'message' => 'Registrazione completata con successo'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'message' => $result['risultato']
-                ];
-            }
+            // Fetch OUT parameters
+            $output = $this->conn->query("SELECT @p_success as success, @p_message as message")->fetch(PDO::FETCH_ASSOC);
+            $success = (bool) $output['success'];
+            return [
+                'success' => $success,
+                'message' => $output['message']
+            ];
         } catch (PDOException $e) {
             error_log($e->getMessage());
             return [
@@ -308,11 +302,10 @@ class UserCompliant {
             
             $stmt = $this->conn->prepare("
                 SELECT f.*, p.nome as progetto_nome, p.tipo as progetto_tipo, 
-                       r.titolo as ricompensa_titolo, u.nickname as creatore_nickname
-                FROM finanziamenti f
+                       r.titolo as ricompensa_titolo, u.nickname as creatore_nickname                FROM finanziamenti f
                 JOIN progetti p ON f.progetto_id = p.id
                 JOIN utenti u ON p.creatore_id = u.id
-                LEFT JOIN reward r ON f.ricompensa_id = r.id
+                LEFT JOIN reward r ON f.reward_id = r.id
                 WHERE f.utente_id = ?
                 ORDER BY f.data_finanziamento DESC
                 LIMIT ? OFFSET ?

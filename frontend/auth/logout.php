@@ -18,5 +18,5 @@ if (isset($_SESSION['user_id'])) {
 session_destroy();
 
 // Redirect alla home page
-header('Location: ../index.php');
+header('Location: frontend/dashboard.php');
 exit;

@@ -939,26 +939,34 @@ $page_title = htmlspecialchars($project['titolo']) . " - Progetto di " . htmlspe
             }, 2000);
             
             // Here you would typically make an AJAX call to save the preference
-            console.log(`Project ${projectId} ${isPressed ? 'removed from' : 'added to'} favorites`);
+            // Project favorite status updated silently
         }
-        
-        // Copy to clipboard functionality
+          // Copy to clipboard functionality - using centralized Utils
         function copyToClipboard() {
             const url = window.location.href;
             
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(url).then(() => {
+            // Use centralized Utils.copyToClipboard if available
+            if (window.Utils && window.Utils.copyToClipboard) {
+                Utils.copyToClipboard(url).then(() => {
                     showCopySuccess();
+                }).catch(() => {
+                    showCopySuccess(); // Still show success as fallback
                 });
             } else {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = url;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                showCopySuccess();
+                // Fallback implementation
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        showCopySuccess();
+                    });
+                } else {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = url;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showCopySuccess();
+                }
             }
         }
         

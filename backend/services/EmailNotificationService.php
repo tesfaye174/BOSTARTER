@@ -1,7 +1,7 @@
 <?php
 /**
- * Email Notification Service for BOSTARTER
- * Handles email notifications for offline users and batch email processing
+ * Servizio per l'invio di notifiche email
+ * Gestisce la composizione e l'invio delle email di notifica agli utenti
  */
 
 namespace BOSTARTER\Services;

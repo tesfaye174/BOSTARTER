@@ -10,8 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../config/database.php';
 require_once '../services/MongoLogger.php';
+require_once '../utils/Validator.php';
 
-$database = new Database();
+$database = Database::getInstance();
 $db = $database->getConnection();
 $mongoLogger = new MongoLogger();
 
@@ -26,182 +27,86 @@ if ($method === 'GET') {
 
 function handleSearch($db, $mongoLogger) {
     try {
+        // Get and validate search params
         $query = $_GET['q'] ?? '';
         $type = $_GET['type'] ?? 'all'; // all, hardware, software
         $status = $_GET['status'] ?? 'open'; // open, closed, all
-        $sort = $_GET['sort'] ?? 'relevance'; // relevance, newest, oldest, funding, deadline
+        $sort = $_GET['sort'] ?? 'newest';
         $limit = min(50, max(1, intval($_GET['limit'] ?? 20)));
         $offset = max(0, intval($_GET['offset'] ?? 0));
 
         // Log search activity
         session_start();
         if (isset($_SESSION['user_id'])) {
-            $mongoLogger->logActivity($_SESSION['user_id'], 'search', [
-                'query' => $query,
-                'type' => $type,
-                'status' => $status,
-                'sort' => $sort
-            ]);
-        } else {
-            $mongoLogger->logSystem('anonymous_search', [
-                'query' => $query,
-                'type' => $type,
-                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-            ]);
+            $mongoLogger->logActivity($_SESSION['user_id'], 'search', ['query'=>$query]);
         }
 
-        // Build base query
-        $baseQuery = "
-            SELECT p.*, u.username as creator_name,
-                   COALESCE(pf.total_funded, 0) as total_funded,
-                   COALESCE(pf.funding_percentage, 0) as funding_percentage,
-                   COALESCE(pf.backers_count, 0) as backers_count,
-                   DATEDIFF(p.deadline, NOW()) as days_left,
-                   MATCH(p.title, p.description) AGAINST (? IN NATURAL LANGUAGE MODE) as relevance_score
-            FROM PROJECTS p
-            JOIN USERS u ON p.creator_id = u.user_id
-            LEFT JOIN PROJECT_FUNDING_VIEW pf ON p.project_id = pf.project_id
-            WHERE 1=1
-        ";
-
+        // Build simplified search query
+        $baseQuery = "SELECT p.id AS project_id, p.nome AS title, p.descrizione AS description, p.tipo_progetto AS project_type, p.stato AS status, p.budget_richiesto AS funding_goal, p.data_limite AS deadline, p.data_inserimento AS created_at, u.nickname AS creator_name, COALESCE((SELECT SUM(f.importo) FROM finanziamenti f WHERE f.progetto_id = p.id AND f.stato_pagamento='completato'),0) AS total_funded, ROUND(COALESCE((SELECT SUM(f.importo) FROM finanziamenti f WHERE f.progetto_id = p.id AND f.stato_pagamento='completato'),0)/p.budget_richiesto*100,1) AS funding_percentage, (SELECT COUNT(DISTINCT f.utente_id) FROM finanziamenti f WHERE f.progetto_id = p.id AND f.stato_pagamento='completato') AS backers_count, DATEDIFF(p.data_limite, NOW()) AS days_left FROM progetti p JOIN utenti u ON p.creatore_id = u.id WHERE 1=1";
         $params = [];
-        $whereConditions = [];
-
-        // Add search query condition
         if (!empty($query)) {
-            $whereConditions[] = "MATCH(p.title, p.description) AGAINST (? IN NATURAL LANGUAGE MODE)";
-            $params[] = $query;
-            $baseQuery = str_replace('?', '?', $baseQuery); // First ? is for relevance score
-            array_unshift($params, $query); // Add query at beginning for relevance score
-        } else {
-            $baseQuery = str_replace('MATCH(p.title, p.description) AGAINST (? IN NATURAL LANGUAGE MODE) as relevance_score', '0 as relevance_score', $baseQuery);
+            $baseQuery .= " AND (p.nome LIKE ? OR p.descrizione LIKE ?)";
+            $params[] = "%{$query}%";
+            $params[] = "%{$query}%";
         }
-
-        // Add project type filter
         if ($type !== 'all') {
-            $whereConditions[] = "p.project_type = ?";
+            $baseQuery .= " AND p.tipo_progetto = ?";
             $params[] = $type;
         }
-
-        // Add status filter
         if ($status !== 'all') {
-            $whereConditions[] = "p.status = ?";
-            $params[] = $status;
+            $st = $status === 'open' ? 'aperto' : 'chiuso';
+            $baseQuery .= " AND p.stato = ?";
+            $params[] = $st;
         }
-
-        // Add WHERE conditions
-        if (!empty($whereConditions)) {
-            $baseQuery .= " AND " . implode(' AND ', $whereConditions);
-        }
-
         // Add ORDER BY
         switch ($sort) {
+            case 'oldest': $baseQuery .= " ORDER BY p.data_inserimento ASC"; break;
+            case 'funding': $baseQuery .= " ORDER BY total_funded DESC"; break;
+            case 'deadline': $baseQuery .= " ORDER BY p.data_limite ASC"; break;
             case 'newest':
-                $baseQuery .= " ORDER BY p.created_at DESC";
-                break;
-            case 'oldest':
-                $baseQuery .= " ORDER BY p.created_at ASC";
-                break;
-            case 'funding':
-                $baseQuery .= " ORDER BY pf.funding_percentage DESC, p.created_at DESC";
-                break;
-            case 'deadline':
-                $baseQuery .= " ORDER BY p.deadline ASC";
-                break;
-            case 'relevance':
-            default:
-                if (!empty($query)) {
-                    $baseQuery .= " ORDER BY relevance_score DESC, pf.funding_percentage DESC";
-                } else {
-                    $baseQuery .= " ORDER BY p.created_at DESC";
-                }
-                break;
+            default: $baseQuery .= " ORDER BY p.data_inserimento DESC"; break;
         }
-
-        // Add LIMIT and OFFSET
+        // Add LIMIT OFFSET
         $baseQuery .= " LIMIT ? OFFSET ?";
         $params[] = $limit;
         $params[] = $offset;
 
-        // Execute query
         $stmt = $db->prepare($baseQuery);
         $stmt->execute($params);
         $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Get total count for pagination
-        $countQuery = "
-            SELECT COUNT(*) as total
-            FROM PROJECTS p
-            JOIN USERS u ON p.creator_id = u.user_id
-            WHERE 1=1
-        ";
-
+        // Get total count
+        $countQuery = "SELECT COUNT(*) AS total FROM progetti p WHERE 1=1";
         $countParams = [];
         if (!empty($query)) {
-            $countQuery .= " AND MATCH(p.title, p.description) AGAINST (? IN NATURAL LANGUAGE MODE)";
-            $countParams[] = $query;
+            $countQuery .= " AND (p.nome LIKE ? OR p.descrizione LIKE ?)";
+            $countParams[] = "%{$query}%";
+            $countParams[] = "%{$query}%";
         }
-
         if ($type !== 'all') {
-            $countQuery .= " AND p.project_type = ?";
+            $countQuery .= " AND p.tipo_progetto = ?";
             $countParams[] = $type;
         }
-
         if ($status !== 'all') {
-            $countQuery .= " AND p.status = ?";
-            $countParams[] = $status;
+            $st = $status === 'open' ? 'aperto' : 'chiuso';
+            $countQuery .= " AND p.stato = ?";
+            $countParams[] = $st;
         }
-
         $countStmt = $db->prepare($countQuery);
         $countStmt->execute($countParams);
-        $totalCount = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-        // Format results
-        $formattedProjects = array_map(function($project) {
-            return [
-                'project_id' => $project['project_id'],
-                'title' => $project['title'],
-                'description' => $project['description'],
-                'project_type' => $project['project_type'],
-                'status' => $project['status'],
-                'funding_goal' => $project['funding_goal'],
-                'deadline' => $project['deadline'],
-                'created_at' => $project['created_at'],
-                'creator_name' => $project['creator_name'],
-                'total_funded' => floatval($project['total_funded']),
-                'funding_percentage' => floatval($project['funding_percentage']),
-                'backers_count' => intval($project['backers_count']),
-                'days_left' => intval($project['days_left']),
-                'relevance_score' => floatval($project['relevance_score'] ?? 0)
-            ];
-        }, $projects);
+        $totalCount = intval($countStmt->fetch(PDO::FETCH_ASSOC)['total']);
 
         echo json_encode([
-            'success' => true,
-            'projects' => $formattedProjects,
-            'pagination' => [
-                'total' => intval($totalCount),
-                'limit' => $limit,
-                'offset' => $offset,
-                'has_more' => ($offset + $limit) < $totalCount
-            ],
-            'search_params' => [
-                'query' => $query,
-                'type' => $type,
-                'status' => $status,
-                'sort' => $sort
-            ]
+            'success'=>true,
+            'projects'=>$projects,
+            'pagination'=>['total'=>$totalCount,'limit'=>$limit,'offset'=>$offset,'has_more'=>($offset+$limit)<$totalCount],
+            'search_params'=>['query'=>$query,'type'=>$type,'status'=>$status,'sort'=>$sort]
         ]);
 
     } catch (Exception $e) {
-        $mongoLogger->logError('search_error', [
-            'error' => $e->getMessage(),
-            'query' => $_GET['q'] ?? '',
-            'user_id' => $_SESSION['user_id'] ?? null
-        ]);
-        
+        $mongoLogger->logError('search_error',['error'=>$e->getMessage(),'query'=>$_GET['q']??'']);
         http_response_code(500);
-        echo json_encode(['error' => 'Search failed']);
+        echo json_encode(['error'=>'Search failed']);
     }
 }
 

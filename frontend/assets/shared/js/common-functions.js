@@ -8,6 +8,27 @@ window.BostarterCommon = (function () {
     'use strict';
 
     /**
+     * Helper function for date formatting - uses centralized Utils
+     * @param {Date|string} date - Date to format
+     * @returns {Object} Object with day and month
+     */    function formatDate(date) {
+        if (window.Utils && window.Utils.formatDate) {
+            const dateObj = new Date(date);
+            return {
+                day: Utils.formatDate(dateObj, { day: 'numeric' }),
+                month: Utils.formatDate(dateObj, { month: 'short' })
+            };
+        } else {
+            // Fallback implementation
+            const dateObj = new Date(date);
+            return {
+                day: dateObj.getDate(),
+                month: dateObj.toLocaleDateString('it-IT', { month: 'short' })
+            };
+        }
+    }
+
+    /**
      * Gestione filtri unificata
      * @param {string} containerSelector - Selettore per i pulsanti filtro
      * @param {string} itemSelector - Selettore per gli elementi da filtrare

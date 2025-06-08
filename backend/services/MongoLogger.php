@@ -1,4 +1,8 @@
 <?php
+/**
+ * Servizio per la gestione dei log su MongoDB
+ * Permette di registrare eventi e operazioni per il monitoraggio
+ */
 
 class MongoLogger {
     private $isMongoAvailable;

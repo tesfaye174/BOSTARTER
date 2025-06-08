@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 require_once '../config/database.php';
 require_once '../services/MongoLogger.php';
+require_once '../utils/Validator.php';
 
 $database = new Database();
 $db = $database->getConnection();
@@ -309,13 +310,26 @@ function getUserList($db, $mongoLogger) {
 
 function updateUserProfile($db, $mongoLogger, $request) {
     requireAuth();
-    
     try {
         $userId = $request['user_id'] ?? $_SESSION['user_id'];
         
         if (!canAccessProfile($db, $userId)) {
             http_response_code(403);
             echo json_encode(['error' => 'Access denied']);
+            return;
+        }
+
+        // Validazione centralizzata dei campi aggiornabili
+        $validator = new Validator();
+        if (isset($request['password'])) {
+            $validator->minLength(8);
+        }
+        if (isset($request['email'])) {
+            $validator->email();
+        }
+        if (!$validator->isValid()) {
+            http_response_code(400);
+            echo json_encode(['error' => implode(', ', $validator->getErrors())]);
             return;
         }
 

@@ -1,14 +1,14 @@
 <?php
 /**
- * View Projects - Display and filter projects
- * BOSTARTER - Crowdfunding Platform
+ * Visualizza progetti - Mostra e filtra i progetti
+ * BOSTARTER - Piattaforma di Crowdfunding
  */
 
 require_once '../../backend/config/database.php';
 require_once '../../backend/utils/NavigationHelper.php';
 require_once '../components/header.php';
 
-// Get filter parameters
+// Recupera parametri di filtro
 $category = $_GET['category'] ?? '';
 $status = $_GET['status'] ?? 'attivo';
 $sort = $_GET['sort'] ?? 'recent';
@@ -17,30 +17,30 @@ $page = max(1, (int)($_GET['page'] ?? 1));
 $per_page = 12;
 $offset = ($page - 1) * $per_page;
 
-// Base URL for filters to maintain state
+// URL base per i filtri
 $base_filter_url = NavigationHelper::url('projects');
 
 try {
     $database = Database::getInstance();
     $pdo = $database->getConnection();
     
-    // Build WHERE clause
+    // Costruisce la WHERE per i filtri
     $where_conditions = [];
     $params = [];
     
-    // Status filter
+    // Filtro stato
     if ($status && $status !== 'all') {
         $where_conditions[] = "p.stato = ?";
         $params[] = $status;
     }
     
-    // Category filter
+    // Filtro categoria
     if ($category && $category !== 'all') {
         $where_conditions[] = "p.categoria = ?";
         $params[] = $category;
     }
     
-    // Search filter
+    // Filtro ricerca
     if ($search) {
         $where_conditions[] = "(p.titolo LIKE ? OR p.descrizione LIKE ?)";
         $search_term = "%$search%";
@@ -50,7 +50,7 @@ try {
     
     $where_clause = $where_conditions ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
     
-    // Build ORDER BY clause
+    // Costruisce l'ORDER BY per l'ordinamento
     $order_clause = "ORDER BY ";
     switch ($sort) {
         case 'recent':
@@ -72,7 +72,7 @@ try {
             $order_clause .= "p.data_creazione DESC";
     }
     
-    // Get total count for pagination
+    // Recupera il conteggio totale per la paginazione
     $count_sql = "
         SELECT COUNT(*) as total
         FROM progetti p
@@ -84,7 +84,7 @@ try {
     $total_projects = $count_stmt->fetch()['total'];
     $total_pages = ceil($total_projects / $per_page);
     
-    // Get projects
+    // Recupera i progetti
     $sql = "
         SELECT 
             p.id,
@@ -117,7 +117,7 @@ try {
     $stmt->execute($params);
     $projects = $stmt->fetchAll();
     
-    // Get categories for filter dropdown
+    // Recupera le categorie per il filtro
     $categories_stmt = $pdo->prepare("SELECT DISTINCT categoria FROM progetti ORDER BY categoria");
     $categories_stmt->execute();
     $categories = $categories_stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -178,7 +178,7 @@ try {
 </head>
 <body>
     <div class="container mt-4">
-        <!-- Page Header -->
+        <!-- Intestazione Pagina -->
         <div class="row mb-4">
             <div class="col-12 text-center">
                 <h1 class="display-4 mb-3">Esplora i Progetti</h1>
@@ -191,7 +191,7 @@ try {
             </div>
         </div>
 
-        <!-- Filters Section -->
+        <!-- Sezione Filtri -->
         <div class="filter-section">
             <form method="GET" action="<?php echo NavigationHelper::url('projects'); ?>" class="row g-3">
                 <div class="col-md-3">
@@ -234,7 +234,7 @@ try {
             </form>
         </div>
 
-        <!-- Results Info -->
+        <!-- Info Risultati -->
         <div class="row mb-3">
             <div class="col-12">
                 <p class="text-muted">
@@ -246,7 +246,7 @@ try {
             </div>
         </div>
 
-        <!-- Projects Grid -->
+        <!-- Griglia Progetti -->
         <div class="row">
             <?php if (empty($projects)): ?>
                 <div class="col-12 text-center py-5">
@@ -283,7 +283,7 @@ try {
                                     <?= htmlspecialchars(substr($project['descrizione'], 0, 120)) ?>...
                                 </p>
                                 
-                                <!-- Creator Info -->
+                                <!-- Info Creatore -->
                                 <div class="creator-info mb-3">
                                     <small>
                                         <i class="fas fa-user"></i>
@@ -291,7 +291,7 @@ try {
                                     </small>
                                 </div>
                                 
-                                <!-- Progress -->
+                                <!-- Progresso -->
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between mb-1">
                                         <small>€<?= number_format($project['finanziamento_attuale'], 0) ?></small>
@@ -307,7 +307,7 @@ try {
                                     </small>
                                 </div>
                                 
-                                <!-- Stats Row -->
+                                <!-- Righe Statistiche -->
                                 <div class="row text-center small mb-3">
                                     <div class="col-6">
                                         <small class="text-muted">Sostenitori</small>
@@ -323,7 +323,7 @@ try {
                                     </div>
                                 </div>
                                 
-                                <!-- Status Badge -->
+                                <!-- Badge Stato -->
                                 <div class="mt-auto">
                                     <?php
                                     $status_class = match($project['stato']) {
@@ -344,18 +344,18 @@ try {
             <?php endif; ?>
         </div>
 
-        <!-- Pagination -->
+        <!-- Paginazione -->
         <?php if ($total_pages > 1): ?>
             <nav aria-label="Projects pagination" class="mt-5">
                 <ul class="pagination justify-content-center">
-                    <!-- Previous -->
+                    <!-- Precedente -->
                     <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
                         <a class="page-link" href="<?= NavigationHelper::url('projects', array_merge($_GET, ['page' => $page - 1])) ?>">
                             Precedente
                         </a>
                     </li>
                     
-                    <!-- Page Numbers -->
+                    <!-- Numeri di Pagina -->
                     <?php
                     $start_page = max(1, $page - 2);
                     $end_page = min($total_pages, $page + 2);
@@ -389,7 +389,7 @@ try {
                         </li>
                     <?php endif; ?>
                     
-                    <!-- Next -->
+                    <!-- Successivo -->
                     <li class="page-item <?= $page >= $total_pages ? 'disabled' : '' ?>">
                         <a class="page-link" href="<?= NavigationHelper::url('projects', array_merge($_GET, ['page' => $page + 1])) ?>">
                             Successivo
@@ -399,7 +399,7 @@ try {
             </nav>
         <?php endif; ?>
     </div>    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Font Awesome already included in main layout -->
+    <!-- Font Awesome already incluso nel layout principale -->
 </body>
 </html>
 

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Classe per la gestione dell'autenticazione
+ * Implementa funzioni per login, verifica e gestione sessioni utente
+ */
+
 // filepath: c:\xampp\htdocs\BOSTARTER\backend\utils\Auth.php
 
 require_once __DIR__ . '/../config/database.php';

@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../config/database.php';
 require_once '../models/UserCompliant.php';
 require_once '../services/MongoLogger.php';
+require_once '../utils/Validator.php';
 
 $database = Database::getInstance();
 $db = $database->getConnection();
@@ -59,15 +60,20 @@ function handleAuthRequest($userModel, $mongoLogger, $request) {
 
 function handleLogin($userModel, $mongoLogger, $request) {
     try {
-        // Validate input
-        if (!isset($request['nickname']) || !isset($request['password'])) {
+        // Validazione con metodo static standardizzato
+        $validationResult = Validator::validateLogin(
+            $request['email'] ?? '', 
+            $request['password'] ?? ''
+        );
+        
+        if ($validationResult !== true) {
             http_response_code(400);
-            echo json_encode(['error' => 'Nickname and password required']);
+            echo json_encode(['error' => implode(', ', $validationResult)]);
             return;
         }
 
         // Use stored procedure for login
-        $result = $userModel->login($request['nickname'], $request['password']);
+        $result = $userModel->login($request['email'], $request['password']);
 
         if ($result['success']) {
             // Start session
@@ -92,7 +98,7 @@ function handleLogin($userModel, $mongoLogger, $request) {
         } else {
             // Log failed login attempt
             $mongoLogger->logEvent('login_failed', [
-                'nickname' => $request['nickname'],
+                'email' => $request['email'], // Fixed: was using nickname instead of email
                 'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
                 'reason' => $result['message']
             ]);
@@ -105,7 +111,7 @@ function handleLogin($userModel, $mongoLogger, $request) {
         }
     } catch (Exception $e) {
         $mongoLogger->logEvent('login_error', [
-            'nickname' => $request['nickname'] ?? 'unknown',
+            'email' => $request['email'] ?? 'unknown', // Fixed: was using nickname instead of email
             'error' => $e->getMessage()
         ]);
 
@@ -116,39 +122,29 @@ function handleLogin($userModel, $mongoLogger, $request) {
 
 function handleRegister($userModel, $mongoLogger, $request) {
     try {
-        // Validate required fields
-        $requiredFields = ['nickname', 'password', 'email', 'nome', 'cognome', 'data_nascita', 'sesso'];
-        foreach ($requiredFields as $field) {
-            if (!isset($request[$field]) || empty($request[$field])) {
-                http_response_code(400);
-                echo json_encode(['error' => "Campo '$field' obbligatorio"]);
-                return;
-            }
-        }
-
-        // Validate email format
-        if (!filter_var($request['email'], FILTER_VALIDATE_EMAIL)) {
+        // Validazione con metodo static standardizzato
+        $validationResult = Validator::validateRegistration($request);
+        
+        if ($validationResult !== true) {
             http_response_code(400);
-            echo json_encode(['error' => 'Formato email non valido']);
+            echo json_encode(['error' => $validationResult]);
             return;
         }
 
-        // Validate gender
+        // Validazione aggiuntiva su sesso
         if (!in_array($request['sesso'], ['M', 'F'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Sesso deve essere M o F']);
             return;
         }
 
-        // Validate date format
+        // Validazione aggiuntiva su data di nascita
         $date = DateTime::createFromFormat('Y-m-d', $request['data_nascita']);
         if (!$date || $date->format('Y-m-d') !== $request['data_nascita']) {
             http_response_code(400);
             echo json_encode(['error' => 'Formato data nascita non valido (YYYY-MM-DD)']);
             return;
         }
-
-        // Check age (must be at least 18)
         $today = new DateTime();
         $age = $today->diff($date)->y;
         if ($age < 18) {
@@ -206,7 +202,7 @@ function handleRegister($userModel, $mongoLogger, $request) {
 
 function handleAuthCheck($userModel, $mongoLogger) {
     if (!isset($_SESSION['user_id'])) {
-        http_response_code(200); // Changed from 401 to 200 to match test expectations
+        http_response_code(200);
         echo json_encode([
             'success' => false,
             'isValid' => false,

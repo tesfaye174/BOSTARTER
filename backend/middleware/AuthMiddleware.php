@@ -65,8 +65,7 @@ class AuthMiddleware {
         
         return isset($_SESSION['user_id']);
     }
-    
-    public static function sanitizeInput($data) {
+      public static function sanitizeInput($data) {
         if (is_array($data)) {
             return array_map([self::class, 'sanitizeInput'], $data);
         }
@@ -74,6 +73,7 @@ class AuthMiddleware {
         return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
     }
     
+    // Note: This function is duplicated in Validator.php - consider consolidating
     public static function validatePasswordStrength($password) {
         $errors = [];
         
@@ -94,6 +94,8 @@ class AuthMiddleware {
         }
         
         if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            $errors[] = 'Password must contain at least one special character';
+        }
             $errors[] = 'Password must contain at least one special character';
         }
         
