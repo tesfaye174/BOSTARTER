@@ -1,54 +1,70 @@
 <?php
 /**
- * Servizio per la gestione delle performance
- * Fornisce strumenti per l'analisi e il monitoraggio delle prestazioni
+ * Servizio per la gestione delle prestazioni e ottimizzazione
+ * Fornisce strumenti per l'analisi, monitoraggio e cache delle prestazioni
+ * Gestisce cache Redis, Memcached e file per migliorare le performance
  */
 
 namespace BOSTARTER\Services;
 
-use Redis;
-use Memcached;
+require_once __DIR__ . '/../utils/CacheManager.php';
+require_once __DIR__ . '/../config/ConfigurazioneCentralizzata.php';
 
-class PerformanceService {
-    private $db;
-    private $cache;
-    private $cacheType;
-    private $config;
-    
-    const CACHE_PREFIX = 'bostarter:';
-    const DEFAULT_TTL = 3600; // 1 ora
-    
-    public function __construct($db) {
-        $this->db = $db;
-        $this->config = $this->loadConfig();
-        $this->initializeCache();
+use BOSTARTER\Utils\CacheManager;
+use BOSTARTER\Config\ConfigurazioneCentralizzata as Config;
+
+class ServizioPerformance {
+    private $connessioneDatabase;     // Connessione al database principale
+    private $cacheManager;           // Sistema di cache unificato
+      /**
+     * Costruttore del servizio performance
+     * Inizializza la connessione database e il sistema di cache unificato
+     */
+    public function __construct($connessioneDb) {
+        $this->connessioneDatabase = $connessioneDb;
+        
+        // Utilizziamo il CacheManager unificato invece di implementazioni duplicate
+        $this->cacheManager = new CacheManager([
+            'type' => Config::CACHE_TYPE,
+            'ttl' => Config::CACHE_TTL_DEFAULT,
+            'prefix' => Config::CACHE_PREFIX
+        ]);
     }
     
     /**
-     * Carica la configurazione delle performance
+     * Cache dei risultati delle query al database
+     * Utilizza il CacheManager unificato per evitare duplicazioni
      */
-    private function loadConfig() {
+    public function cacheQuery($query, $params = [], $ttl = null) {
+        return $this->cacheManager->cacheQuery($query, $params, $ttl);
+    }
+      /**
+     * Carica la configurazione delle prestazioni dal sistema
+     * Imposta valori predefiniti per cache e performance
+     */
+    private function caricaConfigurazione() {
         return [
-            'cache_enabled' => $_ENV['CACHE_ENABLED'] ?? true,
-            'cache_type' => $_ENV['CACHE_TYPE'] ?? 'redis', // redis, memcached, file
-            'redis_host' => $_ENV['REDIS_HOST'] ?? 'localhost',
-            'redis_port' => $_ENV['REDIS_PORT'] ?? 6379,
-            'redis_password' => $_ENV['REDIS_PASSWORD'] ?? null,
-            'memcached_host' => $_ENV['MEMCACHED_HOST'] ?? 'localhost',
-            'memcached_port' => $_ENV['MEMCACHED_PORT'] ?? 11211,
-            'file_cache_dir' => $_ENV['FILE_CACHE_DIR'] ?? __DIR__ . '/../cache',
-            'query_cache_ttl' => $_ENV['QUERY_CACHE_TTL'] ?? 1800, // 30 minuti
-            'page_cache_ttl' => $_ENV['PAGE_CACHE_TTL'] ?? 3600, // 1 ora
-            'api_cache_ttl' => $_ENV['API_CACHE_TTL'] ?? 600, // 10 minuti
+            'cache_abilitata' => $_ENV['CACHE_ENABLED'] ?? true,
+            'tipo_cache' => $_ENV['CACHE_TYPE'] ?? 'redis', // redis, memcached, file
+            'host_redis' => $_ENV['REDIS_HOST'] ?? 'localhost',
+            'porta_redis' => $_ENV['REDIS_PORT'] ?? 6379,
+            'password_redis' => $_ENV['REDIS_PASSWORD'] ?? null,
+            'host_memcached' => $_ENV['MEMCACHED_HOST'] ?? 'localhost',
+            'porta_memcached' => $_ENV['MEMCACHED_PORT'] ?? 11211,
+            'cartella_cache_file' => $_ENV['FILE_CACHE_DIR'] ?? __DIR__ . '/../cache',
+            'durata_cache_query' => $_ENV['QUERY_CACHE_TTL'] ?? 1800, // 30 minuti
+            'durata_cache_pagina' => $_ENV['PAGE_CACHE_TTL'] ?? 3600, // 1 ora
+            'durata_cache_api' => $_ENV['API_CACHE_TTL'] ?? 600, // 10 minuti
         ];
     }
     
     /**
-     * Inizializza il sistema di cache
+     * Inizializza il sistema di cache selezionato
+     * Configura Redis, Memcached o cache su file
      */
-    private function initializeCache() {
-        if (!$this->config['cache_enabled']) {
-            $this->cache = null;
+    private function inizializzaCache() {
+        if (!$this->configurazione['cache_abilitata']) {
+            $this->sistemaCache = null;
             return;
         }
         
@@ -231,36 +247,7 @@ class PerformanceService {
         } catch (\Exception $e) {
             error_log("Errore nella pulizia della cache: " . $e->getMessage());
             return false;
-        }
-    }
-    
-    /**
-     * Cache dei risultati delle query al database
-     */
-    public function cacheQuery($query, $params = [], $ttl = null) {
-        $cacheKey = 'query:' . md5($query . serialize($params));
-        
-        // Prova a ottenere dalla cache prima
-        $cached = $this->get($cacheKey);
-        if ($cached !== false) {
-            return $cached;
-        }
-        
-        // Esegui la query
-        try {
-            $stmt = $this->db->prepare($query);
-            $stmt->execute($params);
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            
-            // Memorizza il risultato nella cache
-            $this->set($cacheKey, $result, $ttl ?? $this->config['query_cache_ttl']);
-            
-            return $result;
-        } catch (\Exception $e) {
-            error_log("Errore nella cache della query: " . $e->getMessage());
-            return false;
-        }
-    }
+        }    }
     
     /**
      * Ottieni le notifiche dell'utente con caching

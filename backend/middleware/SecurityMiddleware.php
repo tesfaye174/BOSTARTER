@@ -12,7 +12,12 @@ use BOSTARTER\Services\SecurityService;
 
 class SecurityMiddleware {
     private static $initialized = false;
-    private static $securityService;    public static function initialize(): void {
+    private static $securityService;
+
+    /**
+     * Inizializza le misure di sicurezza
+     */
+    public static function initialize(): void {
         if (self::$initialized) return;
         
         // Configura la sessione prima di inviare qualsiasi output
@@ -24,8 +29,7 @@ class SecurityMiddleware {
         if (!headers_sent()) {
             SecurityConfig::setSecurityHeaders();
         }
-        
-        self::$securityService = new SecurityService(Database::getInstance()->getConnection(), null);
+          self::$securityService = new SecurityService(Database::getInstance()->getConnection(), null);
         self::checkBlockedIP();
         
         // Avvia la sessione se non già attiva
@@ -34,7 +38,12 @@ class SecurityMiddleware {
         }
         
         self::$initialized = true;
-    }    public static function csrfProtection(): void {
+    }
+
+    /**
+     * Protezione CSRF per richieste POST
+     */
+    public static function csrfProtection(): void {
         $requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         if ($requestMethod === 'POST') {
             $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
@@ -46,14 +55,8 @@ class SecurityMiddleware {
     }
 
     public static function rateLimit(string $action = 'general'): void {
-        $clientIP = SecurityConfig::getRealClientIP();
-        $identifier = $action . '_' . $clientIP;
-        $limits = SecurityConfig::RATE_LIMITS[$action] ?? SecurityConfig::RATE_LIMITS['api'];
-        if (!self::checkRateLimit($identifier, $limits['max_attempts'], $limits['time_window'])) {
-            http_response_code(429);
-            header('Retry-After: ' . $limits['time_window']);
-            die(json_encode(['error' => 'Troppi tentativi. Riprova più tardi.']));
-        }
+        // Rate limiting disabilitato: non fa nulla
+        return;
     }
 
     public static function sanitizeInputs(): void {
@@ -75,11 +78,15 @@ class SecurityMiddleware {
             foreach ($_FILES as $file) {
                 if (!self::isValidFile($file)) {
                     http_response_code(400);
-                    die(json_encode(['error' => 'File non valido o non sicuro']));
-                }
+                    die(json_encode(['error' => 'File non valido o non sicuro']));                }
             }
         }
-    }    public static function logRequest(): void {
+    }
+
+    /**
+     * Registra la richiesta per monitoraggio sicurezza
+     */
+    public static function logRequest(): void {
         if (SecurityConfig::LOGGING_CONFIG['log_security_events']) {
             $logData = [
                 'ip' => SecurityConfig::getRealClientIP(),

@@ -1,69 +1,135 @@
 <?php
 /**
- * Classe per la gestione centralizzata della validazione dei dati
- * Permette sia validazione statica che a catena (fluent interface)
+ * Classe per la validazione centralizzata e sicura dei dati
+ * Fornisce sia metodi statici che un'interfaccia fluida per validazioni complesse
+ * Aiuta a mantenere i dati puliti e sicuri in tutta l'applicazione
  */
 class Validator {
-    private $errors = [];
-    private $currentField = '';
-    private $currentValue = '';
+    private $errori = [];          // Array degli errori di validazione
+    private $campoCorrente = '';   // Il campo attualmente in validazione
+    private $valoreCorrente = '';  // Il valore attualmente in validazione
 
-    // --- Metodi fluenti (catena) ---
-    public function required($field, $value) {
-        $this->currentField = $field;
-        $this->currentValue = $value;
-        if (empty($value) || trim($value) === '') {
-            $this->errors[$field][] = "Il campo {$field} è obbligatorio";
+    // ===== METODI FLUIDI (INTERFACCIA A CATENA) =====
+    
+    /**
+     * Verifica che un campo sia obbligatorio (non vuoto)
+     * 
+     * @param string $campo Il nome del campo
+     * @param mixed $valore Il valore da validare
+     * @return self Per consentire la catena di metodi
+     */
+    public function obbligatorio($campo, $valore) {
+        $this->campoCorrente = $campo;
+        $this->valoreCorrente = $valore;
+        if (empty($valore) || trim($valore) === '') {
+            $this->errori[$campo][] = "Il campo {$campo} è obbligatorio";
         }
         return $this;
     }
+    
+    /**
+     * Verifica che il valore sia un'email valida
+     * 
+     * @return self Per consentire la catena di metodi
+     */
     public function email() {
-        if (!empty($this->currentValue) && !filter_var($this->currentValue, FILTER_VALIDATE_EMAIL)) {
-            $this->errors[$this->currentField][] = "Il campo {$this->currentField} deve essere un'email valida";
+        if (!empty($this->valoreCorrente) && !filter_var($this->valoreCorrente, FILTER_VALIDATE_EMAIL)) {
+            $this->errori[$this->campoCorrente][] = "Il campo {$this->campoCorrente} deve essere un'email valida";
         }
         return $this;
     }
-    public function minLength($length) {
-        if (!empty($this->currentValue) && strlen($this->currentValue) < $length) {
-            $this->errors[$this->currentField][] = "Il campo {$this->currentField} deve essere di almeno {$length} caratteri";
+    
+    /**
+     * Verifica che il valore abbia una lunghezza minima
+     * 
+     * @param int $lunghezza La lunghezza minima richiesta
+     * @return self Per consentire la catena di metodi
+     */
+    public function lunghezzaMinima($lunghezza) {
+        if (!empty($this->valoreCorrente) && strlen($this->valoreCorrente) < $lunghezza) {
+            $this->errori[$this->campoCorrente][] = "Il campo {$this->campoCorrente} deve essere di almeno {$lunghezza} caratteri";
         }
         return $this;
     }
-    public function maxLength($length) {
-        if (!empty($this->currentValue) && strlen($this->currentValue) > $length) {
-            $this->errors[$this->currentField][] = "Il campo {$this->currentField} non può superare {$length} caratteri";
+    
+    /**
+     * Verifica che il valore non superi una lunghezza massima
+     * 
+     * @param int $lunghezza La lunghezza massima consentita
+     * @return self Per consentire la catena di metodi
+     */
+    public function lunghezzaMassima($lunghezza) {
+        if (!empty($this->valoreCorrente) && strlen($this->valoreCorrente) > $lunghezza) {
+            $this->errori[$this->campoCorrente][] = "Il campo {$this->campoCorrente} non può superare {$lunghezza} caratteri";
         }
         return $this;
     }
-    public function alphanumeric() {
-        if (!empty($this->currentValue) && !ctype_alnum($this->currentValue)) {
-            $this->errors[$this->currentField][] = "Il campo {$this->currentField} può contenere solo lettere e numeri";
+    
+    /**
+     * Verifica che il valore contenga solo caratteri alfanumerici
+     * 
+     * @return self Per consentire la catena di metodi
+     */
+    public function alfanumerico() {
+        if (!empty($this->valoreCorrente) && !ctype_alnum($this->valoreCorrente)) {
+            $this->errori[$this->campoCorrente][] = "Il campo {$this->campoCorrente} può contenere solo lettere e numeri";
         }
         return $this;
     }
-    public function integer() {
-        if (!empty($this->currentValue) && !filter_var($this->currentValue, FILTER_VALIDATE_INT)) {
-            $this->errors[$this->currentField][] = "Il campo {$this->currentField} deve essere un numero intero";
+    
+    /**
+     * Verifica che il valore sia un numero intero
+     * 
+     * @return self Per consentire la catena di metodi
+     */
+    public function intero() {
+        if (!empty($this->valoreCorrente) && !filter_var($this->valoreCorrente, FILTER_VALIDATE_INT)) {
+            $this->errori[$this->campoCorrente][] = "Il campo {$this->campoCorrente} deve essere un numero intero";
         }
         return $this;
     }
-    public function min($value) {
-        if (!empty($this->currentValue) && $this->currentValue < $value) {
-            $this->errors[$this->currentField][] = "Il campo {$this->currentField} deve essere almeno {$value}";
+    
+    /**
+     * Verifica che il valore sia almeno uguale a un minimo
+     * 
+     * @param numeric $valore Il valore minimo consentito
+     * @return self Per consentire la catena di metodi
+     */
+    public function minimo($valore) {
+        if (!empty($this->valoreCorrente) && $this->valoreCorrente < $valore) {
+            $this->errori[$this->campoCorrente][] = "Il campo {$this->campoCorrente} deve essere almeno {$valore}";
         }
         return $this;
     }
-    public function max($value) {
-        if (!empty($this->currentValue) && $this->currentValue > $value) {
-            $this->errors[$this->currentField][] = "Il campo {$this->currentField} non può essere maggiore di {$value}";
+    
+    /**
+     * Verifica che il valore non superi un massimo
+     * 
+     * @param numeric $valore Il valore massimo consentito
+     * @return self Per consentire la catena di metodi
+     */
+    public function massimo($valore) {
+        if (!empty($this->valoreCorrente) && $this->valoreCorrente > $valore) {
+            $this->errori[$this->campoCorrente][] = "Il campo {$this->campoCorrente} non può essere maggiore di {$valore}";
         }
         return $this;
+    }    
+    /**
+     * Verifica se la validazione è stata superata (nessun errore)
+     * 
+     * @return bool True se non ci sono errori, False altrimenti
+     */
+    public function eValido() {
+        return empty($this->errori);
     }
-    public function isValid() {
-        return empty($this->errors);
-    }
-    public function getErrors() {
-        $flatErrors = [];
+    
+    /**
+     * Ottiene tutti gli errori di validazione
+     * 
+     * @return array Array piatto con tutti i messaggi di errore
+     */
+    public function ottieniErrori() {
+        $erroriPiatti = [];
         foreach ($this->errors as $field => $fieldErrors) {
             $flatErrors = array_merge($flatErrors, $fieldErrors);
         }

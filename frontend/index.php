@@ -1,7 +1,34 @@
 <?php
-session_start();
+// Gestione degli errori e caricamento sicuro delle dipendenze
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Production settings - errors disabled for security
+try {
+    // Caricamento sicuro del SecurityMiddleware
+    require_once __DIR__ . '/../backend/middleware/SecurityMiddleware.php';
+    
+    // Verifica che la classe e il metodo esistano prima di chiamarli
+    if (class_exists('SecurityMiddleware') && method_exists('SecurityMiddleware', 'initialize')) {
+        SecurityMiddleware::initialize();
+    } else {
+        // Fallback per inizializzazione di sicurezza base
+        if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.cookie_httponly', 1);
+            ini_set('session.cookie_secure', 1);
+            ini_set('session.use_strict_mode', 1);
+            session_start();
+        }
+        error_log("SecurityMiddleware non disponibile - usando configurazione di sicurezza base");
+    }
+} catch (Exception $e) {
+    error_log("Errore nel caricamento SecurityMiddleware: " . $e->getMessage());
+    // Inizializzazione di sicurezza minimale
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+}
+
+// Impostazioni di produzione - errori disabilitati per sicurezza
 error_reporting(0);
 ini_set('display_errors', 0);
 
@@ -250,246 +277,359 @@ function truncateText($text, $length = 100) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOSTARTER - Piattaforma Crowdfunding Italiana per Progetti Hardware e Software</title>
+    <title>BOSTARTER </title>
     <meta name="description" content="BOSTARTER è la piattaforma italiana di crowdfunding specializzata in progetti Hardware e Software. Scopri, sostieni o lancia il tuo progetto tecnologico innovativo.">
     <meta name="keywords" content="crowdfunding, hardware, software, progetti tecnologici, finanziamento collettivo, startup tech, innovazione, elettronica, applicazioni">
     <meta name="author" content="BOSTARTER">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#3176FF">
-    <link rel="canonical" href="https://www.bostarter.it">
-    <link rel="icon" type="image/svg+xml" href="/BOSTARTER/frontend/images/logo1.svg">
-    <!-- Accessibility improvements -->
-    <meta name="color-scheme" content="light dark">
-    <meta name="supported-color-schemes" content="light dark">
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="BOSTARTER - Crowdfunding per Progetti Hardware e Software">
-    <meta property="og:description" content="La piattaforma italiana per finanziare progetti tecnologici innovativi">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.bostarter.it">
-    <meta property="og:image" content="/BOSTARTER/frontend/images/logo1.svg">
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="BOSTARTER - Crowdfunding Tech">
-    <meta name="twitter:description" content="Piattaforma italiana per progetti Hardware e Software">
-    <meta name="twitter:image" content="/BOSTARTER/frontend/images/logo1.svg">
-    <!-- Performance optimizations -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">    <link rel="stylesheet" href="/BOSTARTER/frontend/css/critical.css">
+    <link rel="canonical" href="https://www.bostarter.it">     <!--  Alcuni file CSS  -->
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/design-system.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/components.css">
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/critical.css">
     <link rel="stylesheet" href="/BOSTARTER/frontend/css/main.css">
     <link rel="stylesheet" href="/BOSTARTER/frontend/css/index-enhancements.css">
     <link rel="stylesheet" href="/BOSTARTER/frontend/css/homepage-enhancements.css">
     <link rel="stylesheet" href="/BOSTARTER/frontend/css/accessibility.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: '#3176FF',
-                        'brand-dark': '#1e4fc4',
-                        primary: '#111827',
-                        secondary: '#ffffff',
-                        tertiary: '#f3f4f6'
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        brand: ['Pacifico', 'cursive']
-                    }
-                }
+    
+    <!-- Icon Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Debug assets existence check (dev only) -->
+    <?php    // Controllo esistenza risorse statiche principali (solo in dev)
+    if (isset($_GET['debug']) && $_GET['debug'] === 'assets') {
+        $assets = [
+            __DIR__ . '/images/logo1.svg',
+            __DIR__ . '/css/design-system.css',
+            __DIR__ . '/css/components.css',
+            __DIR__ . '/css/critical.css',
+            __DIR__ . '/css/main.css',
+            __DIR__ . '/css/index-enhancements.css',
+            __DIR__ . '/css/homepage-enhancements.css',
+            __DIR__ . '/css/accessibility.css',
+        ];
+        foreach ($assets as $asset) {
+            if (!file_exists($asset)) {
+                echo '<div style="background:#ffdddd;color:#a00;padding:8px 16px;margin:8px 0;border:1px solid #a00;font-family:monospace;">Risorsa mancante: ' . htmlspecialchars(basename($asset)) . ' (' . htmlspecialchars($asset) . ')</div>';
             }
         }
-    </script>
+    }
+    ?>
 </head>
+
 <body class="bg-tertiary min-h-screen">
     <!-- Skip Links for Accessibility -->
     <a href="#main-content" class="skip-link focus-visible">Salta al contenuto principale</a>
     <a href="#navigation" class="skip-link focus-visible">Salta alla navigazione</a>
+    
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300" aria-hidden="true">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand"></div>
         <span class="sr-only">Caricamento in corso...</span>
     </div>
+    
     <!-- Notifications Container -->
-    <div id="notifications-container" class="fixed top-4 right-4 z-40 space-y-2 max-w-sm" role="region" aria-live="polite" aria-label="Notifiche"></div>
-    <!-- Header -->
-    <header class="bg-secondary/90 backdrop-blur-md shadow-sm border-b sticky top-0 z-30" role="banner">
-        <nav id="navigation" class="container mx-auto px-4 py-3 flex items-center justify-between" role="navigation" aria-label="Navigazione principale">              <!-- Logo and Brand -->            <a href="/BOSTARTER/frontend/index.php" class="flex items-center font-brand text-2xl text-brand hover:text-brand-dark transition-colors focus-visible" aria-label="BOSTARTER - Torna alla homepage">
-                <img src="/BOSTARTER/frontend/images/logo1.svg" alt="Logo BOSTARTER" class="h-8 w-auto mr-2">
-                
-            </a>
-
-            <!-- Mobile Menu Toggle -->
-            <button id="mobile-menu-toggle" 
-                    class="md:hidden p-2 rounded-lg hover:bg-tertiary transition-colors focus-visible"
-                    aria-label="Apri menu di navigazione"
-                    aria-expanded="false"
-                    aria-controls="mobile-menu"
-                    type="button">
-                <i class="fas fa-bars text-xl text-primary" aria-hidden="true"></i>
-                <span class="sr-only">Menu</span>
-            </button>            <!-- Desktop Navigation - CONFORME AL PDF -->
-            <ul class="hidden md:flex gap-6 font-medium text-lg text-primary" role="menubar">
-                <li role="none">
+    <div id="notifications-container" class="fixed top-4 right-4 z-40 space-y-2 max-w-sm" role="region" aria-live="polite" aria-label="Notifiche"></div>    <!-- Modern Enhanced Header -->
+    <header class="modern-header bg-white/95 backdrop-blur-md shadow-xl border-b border-gray-100 sticky top-0 z-50 transition-all duration-300" role="banner">
+        <nav class="container mx-auto px-4 py-4" role="navigation" aria-label="Navigazione principale">
+            <div class="flex items-center justify-between">
+                <!-- Enhanced Logo/Brand -->
+                <a href="/BOSTARTER/frontend/" class="navbar-brand-enhanced group">
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <div class="w-10 h-10 bg-gradient-to-br from-primary to-primary-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                                <i class="fas fa-rocket text-white text-lg group-hover:animate-pulse" aria-hidden="true"></i>
+                            </div>
+                            <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        </div>
+                        <div class="hidden sm:block">
+                            <h1 class="font-brand text-2xl font-bold bg-gradient-to-r from-primary to-primary-600 bg-clip-text text-transparent">
+                                BOSTARTER
+                            </h1>
+                            <p class="text-xs text-gray-500 -mt-1">Crowdfunding Innovativo</p>
+                        </div>
+                    </div>
+                </a>                <!-- Desktop Navigation Enhanced -->
+                <div class="hidden lg:flex items-center space-x-1" role="menubar">
                     <a href="<?php echo NavigationHelper::url('hardware_projects'); ?>" 
-                       class="hover:text-brand transition-colors focus-visible" 
+                       class="nav-link-enhanced group" 
                        role="menuitem">
-                       <i class="fas fa-microchip mr-2"></i>Hardware</a>
-                </li>
-                <li role="none">
+                        <div class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-primary/5 transition-all duration-200">
+                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                <i class="fas fa-microchip text-white text-sm" aria-hidden="true"></i>
+                            </div>
+                            <span class="font-medium text-gray-700 group-hover:text-primary transition-colors">Hardware</span>
+                        </div>
+                    </a>
                     <a href="<?php echo NavigationHelper::url('software_projects'); ?>" 
-                       class="hover:text-brand transition-colors focus-visible" 
+                       class="nav-link-enhanced group" 
                        role="menuitem">
-                       <i class="fas fa-code mr-2"></i>Software</a>
-                </li>
-                <li role="none">
+                        <div class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-primary/5 transition-all duration-200">
+                            <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                <i class="fas fa-code text-white text-sm" aria-hidden="true"></i>
+                            </div>
+                            <span class="font-medium text-gray-700 group-hover:text-primary transition-colors">Software</span>
+                        </div>
+                    </a>
                     <a href="<?php echo NavigationHelper::url('projects'); ?>" 
-                       class="hover:text-brand transition-colors focus-visible" 
+                       class="nav-link-enhanced group" 
                        role="menuitem">
-                       <i class="fas fa-list mr-2"></i>Tutti i Progetti</a>
-                </li>
-                <li role="none">
+                        <div class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-primary/5 transition-all duration-200">
+                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                <i class="fas fa-list text-white text-sm" aria-hidden="true"></i>
+                            </div>
+                            <span class="font-medium text-gray-700 group-hover:text-primary transition-colors">Tutti i Progetti</span>
+                        </div>
+                    </a>
                     <a href="<?php echo NavigationHelper::url('about'); ?>" 
-                       class="hover:text-brand transition-colors focus-visible" 
+                       class="nav-link-enhanced group" 
                        role="menuitem">
-                       <i class="fas fa-info-circle mr-2"></i>Chi Siamo</a>
-                </li>
-            </ul>            <!-- User Actions -->
-            <div class="hidden md:flex gap-3 items-center" role="group" aria-label="Azioni utente">
-                <?php if (NavigationHelper::isLoggedIn()): ?>
-                    <a href="<?php echo NavigationHelper::url('create_project'); ?>" 
-                       class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors focus-visible"
-                       aria-label="Crea un nuovo progetto">
-                       <i class="fas fa-plus-circle mr-2"></i>Crea Progetto
+                        <div class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-primary/5 transition-all duration-200">
+                            <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                <i class="fas fa-info-circle text-white text-sm" aria-hidden="true"></i>
+                            </div>
+                            <span class="font-medium text-gray-700 group-hover:text-primary transition-colors">Chi Siamo</span>
+                        </div>
                     </a>
-                    <a href="<?php echo NavigationHelper::url('dashboard'); ?>" 
-                       class="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-dark transition-colors focus-visible"
-                       aria-label="Vai alla tua dashboard personale">
-                       <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-                    </a>
-                    <a href="<?php echo NavigationHelper::url('logout'); ?>" 
-                       class="px-4 py-2 border border-brand text-brand rounded-lg hover:bg-brand hover:text-white transition-colors focus-visible"
-                       aria-label="Disconnetti dal tuo account">
-                       <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </a>
-                <?php else: ?>
-                    <a href="<?php echo NavigationHelper::url('login'); ?>" 
-                       class="px-4 py-2 border border-brand text-brand rounded-lg hover:bg-brand hover:text-white transition-colors focus-visible"
-                       aria-label="Accedi al tuo account esistente">
-                       <i class="fas fa-sign-in-alt mr-2"></i>Accedi
-                    </a>
-                    <a href="<?php echo NavigationHelper::url('register'); ?>" 
-                       class="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-dark transition-colors focus-visible"
-                       aria-label="Registrati per creare un nuovo account">
-                       <i class="fas fa-user-plus mr-2"></i>Registrati
-                    </a>
-                <?php endif; ?>
-            </div>
-        </nav>        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="md:hidden hidden bg-secondary border-t" role="menu" aria-label="Menu di navigazione mobile">
-            <div class="px-4 py-3 space-y-3">
-                <a href="<?php echo NavigationHelper::url('hardware_projects'); ?>" 
-                   class="block py-2 text-primary hover:text-brand focus-visible" 
-                   role="menuitem">
-                   <i class="fas fa-microchip mr-2" aria-hidden="true"></i>Hardware
-                </a>
-                <a href="<?php echo NavigationHelper::url('software_projects'); ?>" 
-                   class="block py-2 text-primary hover:text-brand focus-visible" 
-                   role="menuitem">
-                   <i class="fas fa-code mr-2" aria-hidden="true"></i>Software
-                </a>
-                <a href="<?php echo NavigationHelper::url('projects'); ?>" 
-                   class="block py-2 text-primary hover:text-brand focus-visible" 
-                   role="menuitem">
-                   <i class="fas fa-list mr-2" aria-hidden="true"></i>Tutti i Progetti
-                </a>
-                <a href="<?php echo NavigationHelper::url('about'); ?>" 
-                   class="block py-2 text-primary hover:text-brand focus-visible" 
-                   role="menuitem">
-                   <i class="fas fa-info-circle mr-2" aria-hidden="true"></i>Chi Siamo
-                </a>
-                <div class="pt-3 border-t space-y-2" role="group" aria-label="Azioni utente mobile">
-                    <?php if (NavigationHelper::isLoggedIn()): ?>
-                        <a href="<?php echo NavigationHelper::url('create_project'); ?>" 
-                           class="block py-2 text-primary hover:text-brand focus-visible">
-                           <i class="fas fa-plus-circle mr-2"></i>Crea Progetto
-                        </a>
-                        <a href="<?php echo NavigationHelper::url('dashboard'); ?>" 
-                           class="block py-2 text-primary hover:text-brand focus-visible">
-                           <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-                        </a>
-                        <a href="<?php echo NavigationHelper::url('logout'); ?>" 
-                           class="block py-2 text-primary hover:text-brand focus-visible">
-                           <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                        </a>
-                    <?php else: ?>
-                        <a href="<?php echo NavigationHelper::url('login'); ?>"
-                           class="block py-2 text-primary hover:text-brand focus-visible">
-                           <i class="fas fa-sign-in-alt mr-2"></i>Accedi
-                        </a>
-                        <a href="<?php echo NavigationHelper::url('register'); ?>"
-                           class="block py-2 text-primary hover:text-brand focus-visible">
-                           <i class="fas fa-user-plus mr-2"></i>Registrati
-                        </a>
+                </div>
+
+                <!-- User Actions Enhanced -->
+                <div class="flex items-center space-x-3" role="group" aria-label="Azioni utente">
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" 
+                            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus-visible" 
+                            aria-label="Cambia tema">
+                        <i class="ri-sun-line dark:hidden text-xl text-gray-600" aria-hidden="true"></i>
+                        <i class="ri-moon-line hidden dark:block text-xl text-gray-300" aria-hidden="true"></i>
+                    </button>
+
+                    <!-- Notification Bell (for logged in users) -->
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                    <button class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors focus-visible" 
+                            aria-label="Notifiche">
+                        <i class="fas fa-bell text-xl text-gray-600" aria-hidden="true"></i>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                    </button>
                     <?php endif; ?>
+
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <!-- Enhanced User Menu -->
+                        <div class="user-menu-container-enhanced" id="user-menu-container">
+                            <button id="user-menu-button" 
+                                    class="user-menu-button-enhanced group flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-all duration-200"
+                                    aria-label="Menu utente"
+                                    aria-expanded="false"
+                                    aria-haspopup="true">
+                                <div class="relative">
+                                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username'] ?? 'User'); ?>&background=667eea&color=fff" 
+                                         alt="" class="w-10 h-10 rounded-full border-2 border-white shadow-lg" aria-hidden="true">
+                                    <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                                </div>
+                                <div class="hidden md:block text-left">
+                                    <p class="text-sm font-medium text-gray-700"><?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?></p>
+                                    <p class="text-xs text-gray-500">Online</p>
+                                </div>
+                                <i class="fas fa-chevron-down text-sm text-gray-400 group-hover:text-gray-600 transition-all duration-200 group-hover:rotate-180" aria-hidden="true"></i>
+                            </button>
+                            <div id="user-menu-dropdown" class="user-menu-dropdown-enhanced absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 opacity-0 invisible transition-all duration-200">
+                                <div class="px-4 py-3 border-b border-gray-100">
+                                    <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?></p>
+                                    <p class="text-xs text-gray-500">Membro dal 2024</p>
+                                </div>
+                                <a href="<?php echo NavigationHelper::url('dashboard'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-tachometer-alt mr-3 text-blue-500" aria-hidden="true"></i>Dashboard
+                                </a>
+                                <a href="<?php echo NavigationHelper::url('profile'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-user-edit mr-3 text-green-500" aria-hidden="true"></i>Profilo
+                                </a>
+                                <a href="<?php echo NavigationHelper::url('create_project'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-plus-circle mr-3 text-purple-500" aria-hidden="true"></i>Crea Progetto
+                                </a>
+                                <a href="<?php echo NavigationHelper::url('settings'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-cog mr-3 text-gray-500" aria-hidden="true"></i>Impostazioni
+                                </a>
+                                <div class="border-t border-gray-100 mt-1"></div>
+                                <a href="<?php echo NavigationHelper::url('logout'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors">
+                                    <i class="fas fa-sign-out-alt mr-3" aria-hidden="true"></i>Logout
+                                </a>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <!-- Enhanced Auth Buttons -->
+                        <div class="hidden md:flex items-center space-x-3">
+                            <a href="<?php echo NavigationHelper::url('login'); ?>" 
+                               class="btn-auth-outline flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:border-primary hover:text-primary transition-all duration-200"
+                               aria-label="Accedi al tuo account esistente">
+                               <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
+                               <span>Accedi</span>
+                            </a>
+                            <a href="<?php echo NavigationHelper::url('register'); ?>" 
+                               class="btn-auth-primary flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                               aria-label="Registrati per creare un nuovo account">
+                               <i class="fas fa-user-plus" aria-hidden="true"></i>
+                               <span>Registrati</span>
+                            </a>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Enhanced Mobile Menu Toggle -->
+                    <button id="mobile-menu-toggle" 
+                            class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors focus-visible"
+                            aria-label="Apri menu di navigazione"
+                            aria-expanded="false"
+                            aria-controls="mobile-menu"
+                            type="button">
+                        <div class="w-6 h-6 flex flex-col justify-center space-y-1">
+                            <span class="w-full h-0.5 bg-gray-600 rounded transition-all duration-300"></span>
+                            <span class="w-full h-0.5 bg-gray-600 rounded transition-all duration-300"></span>
+                            <span class="w-full h-0.5 bg-gray-600 rounded transition-all duration-300"></span>
+                        </div>
+                        <span class="sr-only">Menu</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Enhanced Mobile Menu -->
+        <div id="mobile-menu" class="mobile-menu-enhanced lg:hidden overflow-hidden transition-all duration-300 max-h-0" role="menu" aria-label="Menu di navigazione mobile">
+            <div class="px-4 py-6 space-y-4 bg-white border-t border-gray-100">
+                <!-- Mobile Navigation Links -->
+                <div class="space-y-2">
+                    <a href="<?php echo NavigationHelper::url('hardware_projects'); ?>" 
+                       class="mobile-nav-link-enhanced flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors" 
+                       role="menuitem">
+                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-microchip text-white text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="font-medium text-gray-700">Hardware</span>
+                    </a>
+                    <a href="<?php echo NavigationHelper::url('software_projects'); ?>" 
+                       class="mobile-nav-link-enhanced flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors" 
+                       role="menuitem">
+                        <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-code text-white text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="font-medium text-gray-700">Software</span>
+                    </a>
+                    <a href="<?php echo NavigationHelper::url('projects'); ?>" 
+                       class="mobile-nav-link-enhanced flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors" 
+                       role="menuitem">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-list text-white text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="font-medium text-gray-700">Tutti i Progetti</span>
+                    </a>
+                    <a href="<?php echo NavigationHelper::url('about'); ?>" 
+                       class="mobile-nav-link-enhanced flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors" 
+                       role="menuitem">
+                        <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-info-circle text-white text-sm" aria-hidden="true"></i>
+                        </div>
+                        <span class="font-medium text-gray-700">Chi Siamo</span>
+                    </a>
+                </div>
+
+                <!-- Mobile Auth Actions -->
+                <div class="pt-4 border-t border-gray-200" role="group" aria-label="Azioni utente mobile">
+                    <?php if (NavigationHelper::isLoggedIn()): ?>
+                        <!-- Logged in mobile menu -->
+                        <div class="space-y-2">
+                            <a href="<?php echo NavigationHelper::url('dashboard'); ?>" 
+                               class="mobile-auth-link-enhanced flex items-center space-x-3 p-3 bg-primary/5 text-primary rounded-lg font-medium">
+                               <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
+                               <span>Dashboard</span>
+                            </a>
+                            <a href="<?php echo NavigationHelper::url('create_project'); ?>" 
+                               class="mobile-auth-link-enhanced flex items-center space-x-3 p-3 bg-green-50 text-green-700 rounded-lg font-medium">
+                               <i class="fas fa-plus-circle" aria-hidden="true"></i>
+                               <span>Crea Progetto</span>
+                            </a>
+                            <a href="<?php echo NavigationHelper::url('profile'); ?>" 
+                               class="mobile-auth-link-enhanced flex items-center space-x-3 p-3 hover:bg-gray-50 text-gray-700 rounded-lg">
+                               <i class="fas fa-user-edit" aria-hidden="true"></i>
+                               <span>Profilo</span>
+                            </a>
+                            <a href="<?php echo NavigationHelper::url('logout'); ?>" 
+                               class="mobile-auth-link-enhanced flex items-center space-x-3 p-3 bg-red-50 text-red-600 rounded-lg font-medium">
+                               <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                               <span>Logout</span>
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <!-- Not logged in mobile menu -->
+                        <div class="space-y-3">
+                            <a href="<?php echo NavigationHelper::url('login'); ?>"
+                               class="mobile-auth-button-enhanced block w-full text-center py-3 border border-gray-300 text-gray-700 rounded-lg hover:border-primary hover:text-primary transition-colors">
+                               <i class="fas fa-sign-in-alt mr-2" aria-hidden="true"></i>Accedi
+                            </a>
+                            <a href="<?php echo NavigationHelper::url('register'); ?>"
+                               class="mobile-auth-button-enhanced block w-full text-center py-3 bg-gradient-to-r from-primary to-primary-600 text-white rounded-lg hover:shadow-lg transition-all">
+                               <i class="fas fa-user-plus mr-2" aria-hidden="true"></i>Registrati
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Mobile Theme Toggle -->
+                <div class="pt-4 border-t border-gray-200">
+                    <button id="mobile-theme-toggle" 
+                            class="w-full flex items-center justify-center space-x-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors" 
+                            aria-label="Cambia tema">
+                        <i class="ri-sun-line dark:hidden text-gray-600" aria-hidden="true"></i>
+                        <i class="ri-moon-line hidden dark:block text-gray-300" aria-hidden="true"></i>
+                        <span class="text-gray-700 dark:text-gray-300">Cambia Tema</span>
+                    </button>
                 </div>
             </div>
         </div>
-    </header>    <!-- Hero Section -->
+    </header><!-- Hero Section -->
     <main id="main-content">
-        <section class="relative bg-gradient-to-br from-brand via-indigo-700 to-purple-800 text-white py-24 overflow-hidden" role="banner">
+        <section class="hero-enhanced" role="banner">
             <!-- Animated Background Elements -->
-            <div class="absolute inset-0 bg-black/20" aria-hidden="true"></div>
-            <div class="absolute top-0 left-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" aria-hidden="true"></div>
-            <div class="absolute bottom-0 right-0 w-96 h-96 bg-purple-400/10 rounded-full blur-3xl animate-pulse" aria-hidden="true" style="animation-delay: 1s;"></div>
-            
-            <div class="relative container mx-auto px-4 text-center">
-                <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in">
-                    Trasforma le tue <span class="text-yellow-300 animate-pulse">idee creative</span><br>
-                    in <span class="text-green-300 bg-gradient-to-r from-green-300 to-emerald-400 bg-clip-text text-transparent">realtà</span>
+            <div class="hero-content-enhanced container mx-auto px-4">
+                <h1 class="hero-title-enhanced">
+                    Trasforma le tue <span class="hero-title-gradient">idee creative</span><br>
+                    in <span class="text-green-300">realtà</span>
                 </h1>
-                <p class="text-xl md:text-2xl mb-8 max-w-4xl mx-auto opacity-90 leading-relaxed">
+                <p class="hero-subtitle-enhanced">
                     La piattaforma italiana di crowdfunding per progetti creativi, artistici e tecnologici.<br>
                     <span class="text-yellow-200 font-medium">Oltre 15 categorie</span> per dare vita alle tue passioni.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8" role="group" aria-label="Azioni principali">
+                <div class="hero-cta-enhanced" role="group" aria-label="Azioni principali">
                     <a href="/BOSTARTER/frontend/create-project.html" 
-                       class="bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-900 px-8 py-4 rounded-lg font-bold text-lg hover:from-yellow-300 hover:to-orange-300 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 focus-visible group"
+                       class="btn-hero-primary group"
                        aria-label="Inizia a creare il tuo progetto">
-                        <i class="fas fa-rocket mr-2 group-hover:animate-bounce" aria-hidden="true"></i>Lancia il tuo progetto
+                        <i class="fas fa-rocket group-hover:animate-bounce" aria-hidden="true"></i>Lancia il tuo progetto
                     </a>
                     <a href="/BOSTARTER/projects/view_projects.php" 
-                       class="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-brand transition-all duration-300 backdrop-blur-sm focus-visible group"
+                       class="btn-hero-secondary group"
                        aria-label="Scopri tutti i progetti disponibili">
-                        <i class="fas fa-search mr-2 group-hover:scale-110 transition-transform duration-300" aria-hidden="true"></i>Esplora progetti
+                        <i class="fas fa-search group-hover:scale-110 transition-transform duration-300" aria-hidden="true"></i>Esplora progetti
                     </a>
                 </div>
                 
                 <!-- Quick Stats in Hero -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto opacity-80">
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-yellow-300"><?php echo $formatted_stats['projects']; ?></div>
-                        <div class="text-sm text-white/80">Progetti</div>
+                <div class="hero-stats-enhanced">
+                    <div class="hero-stat-enhanced">
+                        <div class="hero-stat-number-enhanced"><?php echo $formatted_stats['projects']; ?></div>
+                        <div class="hero-stat-label-enhanced">Progetti</div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-green-300"><?php echo $formatted_stats['funded']; ?></div>
-                        <div class="text-sm text-white/80">Finanziati</div>
+                    <div class="hero-stat-enhanced">
+                        <div class="hero-stat-number-enhanced"><?php echo $formatted_stats['funded']; ?></div>
+                        <div class="hero-stat-label-enhanced">Finanziati</div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-purple-300"><?php echo $formatted_stats['backers']; ?></div>
-                        <div class="text-sm text-white/80">Sostenitori</div>
+                    <div class="hero-stat-enhanced">
+                        <div class="hero-stat-number-enhanced"><?php echo $formatted_stats['backers']; ?></div>
+                        <div class="hero-stat-label-enhanced">Sostenitori</div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-2xl font-bold text-blue-300"><?php echo $formatted_stats['success_rate']; ?></div>
-                        <div class="text-sm text-white/80">Successo</div>
+                    <div class="hero-stat-enhanced">
+                        <div class="hero-stat-number-enhanced"><?php echo $formatted_stats['success_rate']; ?></div>
+                        <div class="hero-stat-label-enhanced">Successo</div>
                     </div>
                 </div>
             </div>
-        </section>        <!-- Advanced Search Section - NUOVA -->
-        <section class="py-16 bg-white border-b" role="region" aria-labelledby="search-heading">
+        </section>        <!-- Advanced Search Section -->
+        <section class="search-section-enhanced py-16" role="region" aria-labelledby="search-heading">
             <div class="container mx-auto px-4">
                 <div class="max-w-4xl mx-auto">
                     <div class="text-center mb-8">
@@ -501,17 +641,17 @@ function truncateText($text, $length = 100) {
                         </p>
                     </div>
 
-                    <div class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 shadow-sm">
+                    <div class="search-container-enhanced p-8">
                         <form class="space-y-6" action="/BOSTARTER/backend/api/search.php" method="GET">
                             <!-- Barra di ricerca principale -->
                             <div class="relative">
                                 <input type="text" 
                                        name="q" 
                                        placeholder="Cerca progetti, creator, tecnologie..." 
-                                       class="w-full px-6 py-4 pl-12 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand focus:border-transparent text-lg shadow-sm">
+                                       class="search-input-enhanced w-full px-6 py-4 pl-12">
                                 <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                                 <button type="submit" 
-                                        class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-brand text-white px-6 py-2 rounded-lg hover:bg-brand-dark transition-colors">
+                                        class="search-btn-enhanced absolute right-2 top-1/2 transform -translate-y-1/2 px-6 py-2">
                                     Cerca
                                 </button>
                             </div>
@@ -964,7 +1104,7 @@ function truncateText($text, $length = 100) {
                 <!-- Call to Action per Testimonials -->
                 <div class="text-center mt-12">
                     <div class="bg-white rounded-2xl p-8 max-w-2xl mx-auto shadow-sm">
-                        <h3 class="text-2xl font-bold text-primary mb-4">Vuoi essere il prossimo?</h3>
+                        <h3 class="text-2xl font-bold mb-4">Vuoi essere il prossimo?</h3>
                         <p class="text-gray-600 mb-6">
                             Unisciti a centinaia di creator che hanno realizzato i loro sogni con BOSTARTER
                         </p>
@@ -1118,87 +1258,9 @@ function truncateText($text, $length = 100) {
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </div>        </section>
 
-    <!-- Recent Projects Section -->
-    <?php if (!empty($recent_projects)): ?>
-    <section class="py-16 bg-tertiary">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-primary mb-4">Progetti Recenti</h2>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-                    Le ultime idee innovative dalla nostra community
-                </p>
-            </div>
-            
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <?php foreach ($recent_projects as $project): ?>
-                <div class="bg-secondary rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
-                    <?php if (!empty($project['image'])): ?>
-                    <img src="<?php echo htmlspecialchars($project['image']); ?>" 
-                         alt="Immagine del progetto <?php echo htmlspecialchars($project['title']); ?>"
-                         class="w-full h-48 object-cover">
-                    <?php else: ?>
-                    <div class="w-full h-48 bg-gradient-to-r from-green-400 to-blue-500 flex items-center justify-center">
-                        <i class="fas <?php echo $project['category'] === 'hardware' ? 'fa-microchip' : 'fa-code'; ?> text-4xl text-white opacity-50"></i>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-xl font-bold text-gray-900">
-                                <?php echo htmlspecialchars($project['title']); ?>
-                            </h3>
-                            <span class="inline-flex px-3 py-1 rounded-full text-sm <?php echo $project['category'] === 'hardware' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'; ?>">
-                                <?php echo ucfirst($project['category']); ?>
-                            </span>
-                        </div>
-                        
-                        <p class="text-gray-600 mb-4">
-                            <?php echo htmlspecialchars(truncateText($project['description'], 120)); ?>
-                        </p>
-                        
-                        <div class="mb-4">
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="font-medium"><?php echo formatCurrency($project['current_funding']); ?></span>
-                                <span class="text-gray-600"><?php echo $project['funding_percentage']; ?>%</span>
-                            </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div class="h-full bg-brand rounded-full transition-all duration-500" 
-                                     style="width: <?php echo min(100, $project['funding_percentage']); ?>%">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span>
-                                <i class="far fa-clock mr-1"></i>
-                                <?php echo getDaysLeftText($project['days_left']); ?>
-                            </span>
-                            <span>
-                                <i class="far fa-user mr-1"></i>
-                                di <?php echo htmlspecialchars($project['creator_name']); ?>
-                            </span>
-                        </div>
-                        
-                        <a href="<?php echo NavigationHelper::url('project_detail', ['id' => $project['id']]); ?>" 
-                           class="block w-full text-center bg-brand text-white mt-4 py-2 rounded-lg hover:bg-brand-dark transition-colors">
-                            Scopri di più
-                        </a>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>            <div class="text-center mt-12">
-                <a href="projects/view_projects.php" 
-                   class="bg-brand text-white px-8 py-3 rounded-lg font-semibold hover:bg-brand-dark transition-colors inline-block focus-visible"
-                   aria-label="Visualizza tutti i progetti disponibili sulla piattaforma">
-                    <i class="fas fa-list mr-2" aria-hidden="true"></i>Vedi Tutti i Progetti
-                </a>
-            </div>
-        </div>
-    </section>
-    <?php endif; ?>    <!-- CTA Section Enhanced -->
+        <!-- CTA Section Enhanced -->
     <section class="py-20 bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 text-white relative overflow-hidden" role="region" aria-labelledby="cta-heading">
         <!-- Background Elements -->
         <div class="absolute inset-0 bg-black/10" aria-hidden="true"></div>
@@ -1269,256 +1331,200 @@ function truncateText($text, $length = 100) {
             </div>
         </div>
     </section>
-    </main>    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12" role="contentinfo">
-        <div class="container mx-auto px-4">
-            <div class="grid md:grid-cols-4 gap-8">
-                <div>
-                    <div class="flex items-center mb-4">
-                        <img src="/frontend/images/logo1.svg" alt="Logo BOSTARTER" class="h-8 w-auto mr-2">
-                        <span class="text-xl font-bold">BOSTARTER</span>
-                    </div>
-                    <p class="text-gray-400 mb-4">
-                        La piattaforma italiana che trasforma idee creative in realtà attraverso il crowdfunding.
-                    </p>
-                    <div class="flex space-x-4" role="list" aria-label="Link ai social media">
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors focus-visible" 
-                           aria-label="Seguici su Facebook" role="listitem">
+    </main>    
+    <!-- Footer -->
+    <?php
+// Enhanced accessible footer component for BOSTARTER
+?>
+<footer class="bg-dark text-light py-5 mt-5" role="contentinfo" aria-label="Informazioni del sito e collegamenti">
+    <div class="container">
+        <div class="row">
+            <!-- Brand Section -->
+            <div class="col-md-4 mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <img src="images/logo1.svg" 
+                         alt="" 
+                         class="me-2" 
+                         style="height: 24px;"
+                         role="img"
+                         aria-hidden="true">
+                    <span class="fs-5 fw-bold">BOSTARTER</span>
+                </div>
+                <p class="text-muted">
+                    La piattaforma italiana che trasforma idee creative in realtà attraverso il crowdfunding.
+                    Supporta innovazione, tecnologia e creatività.
+                </p>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="col-md-2 mb-4">
+                <nav aria-labelledby="explore-heading">
+                    <h6 class="fw-bold mb-3" id="explore-heading">Esplora</h6>
+                    <ul class="list-unstyled" role="list">
+                        <li>
+                            <a href="projects/list.php" 
+                               class="text-muted text-decoration-none"
+                               aria-label="Visualizza tutti i progetti disponibili">
+                                Tutti i Progetti
+                            </a>
+                        </li>
+                        <li>
+                            <a href="projects/category.php?type=hardware" 
+                               class="text-muted text-decoration-none"
+                               aria-label="Esplora progetti hardware">
+                                Hardware
+                            </a>
+                        </li>
+                        <li>
+                            <a href="projects/category.php?type=software" 
+                               class="text-muted text-decoration-none"
+                               aria-label="Esplora progetti software">
+                                Software
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stats/index.php" 
+                               class="text-muted text-decoration-none"
+                               aria-label="Visualizza statistiche della piattaforma">
+                                Statistiche
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <!-- For Creators -->
+            <div class="col-md-2 mb-4">
+                <nav aria-labelledby="creators-heading">
+                    <h6 class="fw-bold mb-3" id="creators-heading">Creatori</h6>
+                    <ul class="list-unstyled" role="list">
+                        <li>
+                            <a href="projects/create.php" 
+                               class="text-muted text-decoration-none"
+                               aria-label="Inizia a creare il tuo progetto">
+                                Crea Progetto
+                            </a>
+                        </li>
+                        <li>
+                            <a href="help/guidelines.php" 
+                               class="text-muted text-decoration-none"
+                               aria-label="Leggi le linee guida per i creatori">
+                                Linee Guida
+                            </a>
+                        </li>
+                        <li>
+                            <a href="help/fees.php" 
+                               class="text-muted text-decoration-none"
+                               aria-label="Informazioni su commissioni e costi">
+                                Commissioni
+                            </a>
+                        </li>
+                        <li>
+                            <a href="help/support.php" 
+                               class="text-muted text-decoration-none"
+                               aria-label="Ottieni supporto e assistenza">
+                                Supporto
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            
+            <!-- Social & Contact -->
+            <div class="col-md-4 mb-4">
+                <section aria-labelledby="social-heading">
+                    <h6 class="fw-bold mb-3" id="social-heading">Seguici</h6>
+                    <div class="d-flex mb-3" role="list" aria-label="Collegamenti social media">
+                        <a href="#" 
+                           class="text-muted me-3 fs-5" 
+                           aria-label="Seguici su Facebook (link esterno)"
+                           rel="noopener noreferrer"
+                           target="_blank">
                             <i class="fab fa-facebook-f" aria-hidden="true"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors focus-visible" 
-                           aria-label="Seguici su Twitter" role="listitem">
+                        <a href="#" 
+                           class="text-muted me-3 fs-5" 
+                           aria-label="Seguici su Twitter (link esterno)"
+                           rel="noopener noreferrer"
+                           target="_blank">
                             <i class="fab fa-twitter" aria-hidden="true"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors focus-visible" 
-                           aria-label="Seguici su Instagram" role="listitem">
+                        <a href="#" 
+                           class="text-muted me-3 fs-5" 
+                           aria-label="Seguici su Instagram (link esterno)"
+                           rel="noopener noreferrer"
+                           target="_blank">
                             <i class="fab fa-instagram" aria-hidden="true"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-white transition-colors focus-visible" 
-                           aria-label="Seguici su LinkedIn" role="listitem">
-                            <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+                        <a href="#" 
+                           class="text-muted me-3 fs-5" 
+                           aria-label="Collegati con noi su LinkedIn (link esterno)"
+                           rel="noopener noreferrer"
+                           target="_blank">
+                            <i class="fab fa-linkedin" aria-hidden="true"></i>
                         </a>
                     </div>
-                </div>
-                
-                <nav aria-labelledby="footer-projects-heading">
-                    <h4 id="footer-projects-heading" class="font-semibold mb-4">Progetti</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="projects/view_projects.php" class="hover:text-white transition-colors focus-visible">Tutti i Progetti</a></li>
-                        <li><a href="projects/view_projects.php?category=hardware" class="hover:text-white transition-colors focus-visible">Hardware</a></li>
-                        <li><a href="projects/view_projects.php?category=software" class="hover:text-white transition-colors focus-visible">Software</a></li>
-                        <li><a href="/frontend/create-project.html" class="hover:text-white transition-colors focus-visible">Crea Progetto</a></li>
-                    </ul>
-                </nav>
-                
-                <nav aria-labelledby="footer-support-heading">
-                    <h4 id="footer-support-heading" class="font-semibold mb-4">Supporto</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#" class="hover:text-white transition-colors focus-visible">Come Funziona</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors focus-visible">FAQ</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors focus-visible">Contatti</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors focus-visible">Centro Assistenza</a></li>
-                    </ul>
-                </nav>
-                
-                <nav aria-labelledby="footer-legal-heading">
-                    <h4 id="footer-legal-heading" class="font-semibold mb-4">Legal</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#" class="hover:text-white transition-colors focus-visible">Termini di Servizio</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors focus-visible">Politica sulla Riservatezza</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors focus-visible">Cookie Policy</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors focus-visible">Licenza</a></li>
-                    </ul>
-                </nav>
-            </div>
-            
-            <div class="mt-12 border-t border-gray-700 pt-8 text-center text-gray-400 text-sm">
-                &copy; 2023 BOSTARTER. Tutti i diritti riservati. | P.IVA 12345678901 | REA RM-1234567
+                    <address class="text-muted small mb-0">
+                        <i class="fas fa-envelope me-2" aria-hidden="true"></i>
+                        <a href="mailto:info@bostarter.it" 
+                           class="text-muted text-decoration-none"
+                           aria-label="Invia email a info@bostarter.it">
+                            info@bostarter.it
+                        </a>
+                    </address>
+                </section>
             </div>
         </div>
-    </footer>    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js" integrity="sha384-DyZv6y6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6g6" crossorigin="anonymous"></script>
-    <script src="/BOSTARTER/frontend/js/main.js"></script>
+        
+        <hr class="my-4" aria-hidden="true">
+        
+        <!-- Copyright and Legal -->
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <p class="text-muted small mb-0" role="contentinfo">
+                    &copy; 2025 BOSTARTER. Tutti i diritti riservati. Made with ❤️ in Italy
+                </p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <nav aria-label="Collegamenti legali">
+                    <a href="legal/privacy.php" 
+                       class="text-muted text-decoration-none small me-3"
+                       aria-label="Leggi la nostra privacy policy">
+                        Privacy Policy
+                    </a>
+                    <a href="legal/terms.php" 
+                       class="text-muted text-decoration-none small"
+                       aria-label="Leggi i termini di servizio">
+                        Termini di Servizio
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <!-- Scripts -->
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <script src="/BOSTARTER/frontend/js/navigation.js"></script>
     
-    <!-- Enhanced JavaScript for Better UX -->
+    <!-- Initialize features -->
     <script>
-        // Enhanced functionality for BOSTARTER homepage
+        // Initialize Modern Header
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize navigation
+            if (typeof BOStarterNavigation !== 'undefined') {
+                window.navigation = new BOStarterNavigation();
+            }
             
-            // 1. Advanced Search Functionality
-            const searchForm = document.querySelector('form[action*="search.php"]');
-            const searchInput = document.querySelector('input[name="q"]');
-            const tagFilters = document.querySelectorAll('.tag-filter');
+            // Welcome notification
+            if (window.boNotifications && !sessionStorage.getItem('welcomeShown')) {
+                setTimeout(() => {
+                    window.boNotifications.info('Benvenuto su BOSTARTER! Esplora progetti innovativi e lancia la tua idea.', 6000);
+                    sessionStorage.setItem('welcomeShown', 'true');
+                }, 1500);
+            }
             
-            // Tag filter functionality
-            tagFilters.forEach(button => {
-                button.addEventListener('click', function() {
-                    const tag = this.getAttribute('data-tag');
-                    
-                    // Toggle active state
-                    this.classList.toggle('bg-brand');
-                    this.classList.toggle('text-white');
-                    this.classList.toggle('border-brand');
-                    
-                    // Update search input
-                    let currentValue = searchInput.value;
-                    if (this.classList.contains('bg-brand')) {
-                        if (!currentValue.includes(tag)) {
-                            searchInput.value = currentValue ? `${currentValue} ${tag}` : tag;
-                        }
-                    } else {
-                        searchInput.value = currentValue.replace(tag, '').replace(/\s+/g, ' ').trim();
-                    }
-                });
-            });
-
-            // 2. Animated Counter for Statistics
-            function animateCounters() {
-                const counters = document.querySelectorAll('[data-counter]');
-                counters.forEach(counter => {
-                    const target = parseInt(counter.getAttribute('data-counter'));
-                    const duration = 2000;
-                    const increment = target / (duration / 16);
-                    let current = 0;
-                    
-                    const timer = setInterval(() => {
-                        current += increment;
-                        if (current >= target) {
-                            current = target;
-                            clearInterval(timer);
-                        }
-                        counter.textContent = Math.floor(current).toLocaleString();
-                    }, 16);
-                });
-            }
-
-            // 3. Intersection Observer for Animations
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('animate-fade-in');
-                        
-                        // Trigger counter animation for stats section
-                        if (entry.target.querySelector('[data-counter]')) {
-                            setTimeout(animateCounters, 300);
-                        }
-                    }
-                });
-            }, observerOptions);
-
-            // Observe sections for animation
-            document.querySelectorAll('section').forEach(section => {
-                observer.observe(section);
-            });
-
-            // 4. Enhanced Project Cards Interaction
-            const projectCards = document.querySelectorAll('article[role="listitem"]');
-            projectCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-8px) scale(1.02)';
-                    this.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0) scale(1)';
-                    this.style.boxShadow = '';
-                });
-            });
-
-            // 5. Category Cards Hover Effects
-            const categoryCards = document.querySelectorAll('.grid .group');
-            categoryCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    const icon = this.querySelector('.bg-gradient-to-br');
-                    if (icon) {
-                        icon.style.transform = 'scale(1.15) rotate(5deg)';
-                    }
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    const icon = this.querySelector('.bg-gradient-to-br');
-                    if (icon) {
-                        icon.style.transform = 'scale(1) rotate(0deg)';
-                    }
-                });
-            });
-
-            // 6. Newsletter Form Enhancement
-            const newsletterForm = document.querySelector('form[action*="newsletter"]');
-            if (newsletterForm) {
-                newsletterForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const email = this.querySelector('input[type="email"]').value;
-                    const button = this.querySelector('button[type="submit"]');
-                    const originalText = button.innerHTML;
-                    
-                    // Loading state
-                    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Iscrizione...';
-                    button.disabled = true;
-                    
-                    // Simulate API call
-                    setTimeout(() => {
-                        button.innerHTML = '<i class="fas fa-check mr-2"></i>Iscritto!';
-                        button.classList.add('bg-green-500');
-                        
-                        // Show success message
-                        showNotification('Iscrizione completata con successo!', 'success');
-                        
-                        // Reset after 3 seconds
-                        setTimeout(() => {
-                            button.innerHTML = originalText;
-                            button.disabled = false;
-                            button.classList.remove('bg-green-500');
-                            this.reset();
-                        }, 3000);
-                    }, 1500);
-                });
-            }
-
-            // 7. Dynamic Notifications System
-            function showNotification(message, type = 'info') {
-                const container = document.getElementById('notifications-container');
-                if (!container) return;
-                
-                const notification = document.createElement('div');
-                notification.className = `notification p-4 rounded-lg shadow-lg transform translate-x-full transition-all duration-300 ${
-                    type === 'success' ? 'bg-green-500 text-white' :
-                    type === 'error' ? 'bg-red-500 text-white' :
-                    type === 'warning' ? 'bg-yellow-500 text-white' :
-                    'bg-blue-500 text-white'
-                }`;
-                
-                notification.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span>${message}</span>
-                        <button class="ml-4 text-white hover:text-gray-200" onclick="this.parentElement.parentElement.remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                
-                container.appendChild(notification);
-                
-                // Animate in
-                setTimeout(() => {
-                    notification.classList.remove('translate-x-full');
-                }, 100);
-                
-                // Auto remove after 5 seconds
-                setTimeout(() => {
-                    notification.classList.add('translate-x-full');
-                    setTimeout(() => notification.remove(), 300);
-                }, 5000);
-            }
-
-            // 8. Smooth Scroll for Navigation Links
+            // Add smooth scrolling to anchor links
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -1531,184 +1537,24 @@ function truncateText($text, $length = 100) {
                     }
                 });
             });
-
-            // 9. Mobile Menu Enhanced
-            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
-            const mobileMenu = document.getElementById('mobile-menu');
             
-            if (mobileMenuToggle && mobileMenu) {
-                mobileMenuToggle.addEventListener('click', function() {
-                    const isOpen = mobileMenu.classList.contains('hidden');
-                    
-                    if (isOpen) {
-                        mobileMenu.classList.remove('hidden');
-                        mobileMenu.style.maxHeight = '0px';
-                        mobileMenu.style.opacity = '0';
+            // Add loading states to buttons
+            document.querySelectorAll('.btn-auth-primary').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!this.classList.contains('loading')) {
+                        const originalText = this.innerHTML;
+                        this.classList.add('loading');
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Caricamento...';
                         
                         setTimeout(() => {
-                            mobileMenu.style.maxHeight = '500px';
-                            mobileMenu.style.opacity = '1';
-                        }, 10);
-                    } else {
-                        mobileMenu.style.maxHeight = '0px';
-                        mobileMenu.style.opacity = '0';
-                        
-                        setTimeout(() => {
-                            mobileMenu.classList.add('hidden');
-                        }, 300);
+                            this.classList.remove('loading');
+                            this.innerHTML = originalText;
+                        }, 2000);
                     }
-                    
-                    // Update ARIA attributes
-                    this.setAttribute('aria-expanded', isOpen);
                 });
-            }
-
-            // 10. Performance: Lazy Loading Images
-            if ('IntersectionObserver' in window) {
-                const imageObserver = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const img = entry.target;
-                            if (img.dataset.src) {
-                                img.src = img.dataset.src;
-                                img.classList.remove('blur-sm');
-                                imageObserver.unobserve(img);
-                            }
-                        }
-                    });
-                });
-
-                document.querySelectorAll('img[data-src]').forEach(img => {
-                    imageObserver.observe(img);
-                });
-            }
-
-            // Welcome message for new visitors
-            if (!localStorage.getItem('visited_before')) {
-                setTimeout(() => {
-                    showNotification('Benvenuto su BOSTARTER! Esplora progetti innovativi e sostieni la creatività italiana.', 'info');
-                    localStorage.setItem('visited_before', 'true');
-                }, 2000);
-            }
+            });
         });
-
-        // 11. Search Suggestions (Auto-complete)
-        function initSearchSuggestions() {
-            const searchInput = document.querySelector('input[name="q"]');
-            if (!searchInput) return;
-
-            const suggestions = [
-                'AI e Machine Learning', 'IoT Casa Intelligente', 'App Mobile Innovative',
-                'Robotica Educativa', 'Energie Rinnovabili', 'Realtà Virtuale',
-                'Blockchain', 'Sostenibilità Ambientale', 'Gaming Indie',
-                'Arte Digitale', 'Musica Elettronica', 'Design Industriale'
-            ];
-
-            let suggestionsContainer = document.getElementById('search-suggestions');
-            if (!suggestionsContainer) {
-                suggestionsContainer = document.createElement('div');
-                suggestionsContainer.id = 'search-suggestions';
-                suggestionsContainer.className = 'absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-b-lg shadow-lg z-10 hidden';
-                searchInput.parentElement.appendChild(suggestionsContainer);
-                searchInput.parentElement.style.position = 'relative';
-            }
-
-            searchInput.addEventListener('input', function() {
-                const query = this.value.toLowerCase();
-                if (query.length < 2) {
-                    suggestionsContainer.classList.add('hidden');
-                    return;
-                }
-
-                const filtered = suggestions.filter(s => 
-                    s.toLowerCase().includes(query)
-                ).slice(0, 5);
-
-                if (filtered.length > 0) {
-                    suggestionsContainer.innerHTML = filtered.map(suggestion => 
-                        `<div class="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0" onclick="selectSuggestion('${suggestion}')">${suggestion}</div>`
-                    ).join('');
-                    suggestionsContainer.classList.remove('hidden');
-                } else {
-                    suggestionsContainer.classList.add('hidden');
-                }
-            });
-
-            // Hide suggestions when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
-                    suggestionsContainer.classList.add('hidden');
-                }
-            });
-        }
-
-        function selectSuggestion(suggestion) {
-            const searchInput = document.querySelector('input[name="q"]');
-            searchInput.value = suggestion;
-            document.getElementById('search-suggestions').classList.add('hidden');
-        }
-
-        // Initialize search suggestions when DOM is ready
-        document.addEventListener('DOMContentLoaded', initSearchSuggestions);
     </script>
-
-    <!-- Schema.org Structured Data for SEO -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "BOSTARTER",
-        "description": "Piattaforma italiana di crowdfunding per progetti creativi, artistici e tecnologici",
-        "url": "https://www.bostarter.it",
-        "logo": "https://www.bostarter.it/frontend/images/logo1.svg",
-        "sameAs": [
-            "https://www.facebook.com/bostarter",
-            "https://www.twitter.com/bostarter",
-            "https://www.instagram.com/bostarter",
-            "https://www.linkedin.com/company/bostarter"
-        ],
-        "contactPoint": {
-            "@type": "ContactPoint",
-            "telephone": "+39-06-12345678",
-            "contactType": "customer service",
-            "areaServed": "IT",
-            "availableLanguage": "Italian"
-        },
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Via Roma 123",
-            "addressLocality": "Roma",
-            "postalCode": "00100",
-            "addressCountry": "IT"
-        },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "reviewCount": "2847",
-            "bestRating": "5",
-            "worstRating": "1"
-        },
-        "offers": {
-            "@type": "Offer",
-            "description": "Servizi di crowdfunding per progetti creativi",
-            "category": "Crowdfunding Platform"
-        }
-    }
-    </script>
-
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "BOSTARTER",
-        "url": "https://www.bostarter.it",
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://www.bostarter.it/search?q={search_term_string}",
-            "query-input": "required name=search_term_string"
-        }
-    }
-    </script>
-
+    
 </body>
 </html>

@@ -107,13 +107,12 @@ class SecurityConfig {
                 header("{$header}: {$value}");
             }
         }
-    }
-      /**
+    }    /**
      * Configura le impostazioni di sessione sicure
      */
     public static function configureSecureSession(): void {
         // Solo impostare le configurazioni se la sessione non è già attiva
-        if (session_status() === PHP_SESSION_NONE) {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
             // Impostazioni di sicurezza della sessione
             ini_set('session.cookie_httponly', 1);
             ini_set('session.cookie_secure', self::isHTTPS() ? 1 : 0);

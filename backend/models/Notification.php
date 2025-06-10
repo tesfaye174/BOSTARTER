@@ -1,22 +1,41 @@
 <?php
 namespace BOSTARTER\Models;
 
-class Notification {
-    private $db;
-    private $table = 'notifications';
+/**
+ * Modello Notifiche - Gestione del sistema di notifiche BOSTARTER
+ * 
+ * Questa classe gestisce tutte le operazioni relative alle notifiche:
+ * - Creazione di nuove notifiche per gli utenti
+ * - Recupero delle notifiche per utente
+ * - Marcatura delle notifiche come lette
+ * - Eliminazione delle notifiche vecchie o non necessarie
+ * 
+ * @author BOSTARTER Team
+ * @version 2.0.0
+ */
+class GestoreNotifiche {
+    // Connessione al database
+    private $database;
+    private $nomeTabella = 'notifications';
 
-    public function __construct($db) {
-        $this->db = $db;
+    /**
+     * Costruttore - Inizializza la connessione al database
+     * 
+     * @param PDO $database Connessione al database
+     */
+    public function __construct($database) {
+        $this->database = $database;
     }
 
     /**
-     * Crea una nuova notifica
-     * @param array $data Dati della notifica
-     * @return array Risultato dell'operazione
+     * Crea una nuova notifica per un utente
+     * 
+     * @param array $datiNotifica Dati della notifica da creare
+     * @return array Risultato dell'operazione con ID della notifica se successo
      */
-    public function create($data) {
+    public function creaNuovaNotifica($datiNotifica) {
         try {
-            $stmt = $this->db->prepare("
+            $statement = $this->database->prepare("
                 INSERT INTO notifications (
                     user_id, 
                     type, 
@@ -28,142 +47,155 @@ class Notification {
                 ) VALUES (?, ?, ?, ?, ?, 0, NOW())
             ");
 
-            $stmt->execute([
-                $data['user_id'],
-                $data['type'],
-                $data['title'],
-                $data['message'],
-                $data['link'] ?? null
+            $statement->execute([
+                $datiNotifica['user_id'],
+                $datiNotifica['type'],
+                $datiNotifica['title'],
+                $datiNotifica['message'],
+                $datiNotifica['link'] ?? null
             ]);
 
             return [
-                'status' => 'success',
-                'message' => 'Notifica creata con successo',
-                'notification_id' => $this->db->lastInsertId()
+                'stato' => 'successo',
+                'messaggio' => 'Notifica creata con successo',
+                'id_notifica' => $this->database->lastInsertId()
             ];
-        } catch (\PDOException $e) {
+            
+        } catch (\PDOException $errore) {
             return [
-                'status' => 'error',
-                'message' => 'Errore durante la creazione della notifica: ' . $e->getMessage()
+                'stato' => 'errore',
+                'messaggio' => 'Si è verificato un errore durante la creazione della notifica: ' . $errore->getMessage()
             ];
-        }
-    }
+        }    }
 
     /**
-     * Ottiene le notifiche non lette di un utente
-     * @param int $userId ID dell'utente
-     * @return array Lista delle notifiche
+     * Recupera le notifiche non lette di un utente
+     * 
+     * @param int $idUtente ID dell'utente
+     * @return array Lista delle notifiche non lette
      */
-    public function getUnread($userId) {
+    public function ottieniNotificheNonLette($idUtente) {
         try {
-            $stmt = $this->db->prepare("
+            $statement = $this->database->prepare("
                 SELECT * FROM notifications 
                 WHERE user_id = ? AND is_read = 0 
                 ORDER BY created_at DESC
             ");
             
-            $stmt->execute([$userId]);
-            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
+            $statement->execute([$idUtente]);
+            return $statement->fetchAll(\PDO::FETCH_ASSOC);
+            
+        } catch (\PDOException $errore) {
+            error_log("Errore nel recupero notifiche non lette: " . $errore->getMessage());
             return [];
         }
     }
 
     /**
      * Marca una notifica come letta
-     * @param int $notificationId ID della notifica
+     * 
+     * @param int $idNotifica ID della notifica da marcare come letta
      * @return array Risultato dell'operazione
      */
-    public function markAsRead($notificationId) {
-        try {
-            $stmt = $this->db->prepare("
+    public function marcaComeLetta($idNotifica) {
+        try {            $statement = $this->database->prepare("
                 UPDATE notifications 
-                SET is_read = 1, read_at = NOW() 
+                SET is_read = 1, read_at = NOW()
                 WHERE id = ?
             ");
             
-            $stmt->execute([$notificationId]);
+            $statement->execute([$idNotifica]);
             
             return [
-                'status' => 'success',
-                'message' => 'Notifica marcata come letta'
+                'stato' => 'successo',
+                'messaggio' => 'Notifica marcata come letta'
             ];
-        } catch (\PDOException $e) {
+            
+        } catch (\PDOException $errore) {
             return [
-                'status' => 'error',
-                'message' => 'Errore durante l\'aggiornamento della notifica: ' . $e->getMessage()
+                'stato' => 'errore',
+                'messaggio' => 'Si è verificato un errore durante l\'aggiornamento della notifica: ' . $errore->getMessage()
             ];
         }
     }
 
     /**
      * Marca tutte le notifiche di un utente come lette
-     * @param int $userId ID dell'utente
+     * 
+     * @param int $idUtente ID dell'utente
      * @return array Risultato dell'operazione
      */
-    public function markAllAsRead($userId) {
+    public function marcaTutteComeLette($idUtente) {
         try {
-            $stmt = $this->db->prepare("
+            $statement = $this->database->prepare("
                 UPDATE notifications 
                 SET is_read = 1, read_at = NOW() 
                 WHERE user_id = ? AND is_read = 0
             ");
             
-            $stmt->execute([$userId]);
+            $statement->execute([$idUtente]);
             
             return [
-                'status' => 'success',
-                'message' => 'Tutte le notifiche sono state marcate come lette'
+                'stato' => 'successo',
+                'messaggio' => 'Tutte le notifiche sono state marcate come lette'
             ];
-        } catch (\PDOException $e) {
+            
+        } catch (\PDOException $errore) {
             return [
-                'status' => 'error',
-                'message' => 'Errore durante l\'aggiornamento delle notifiche: ' . $e->getMessage()
+                'stato' => 'errore',
+                'messaggio' => 'Si è verificato un errore durante l\'aggiornamento delle notifiche: ' . $errore->getMessage()
             ];
         }
     }
 
     /**
-     * Elimina una notifica
-     * @param int $notificationId ID della notifica
-     * @return array Risultato dell'operazione
+     * Elimina una notifica specifica
+     * 
+     * @param int $idNotifica ID della notifica da eliminare     * @return array Risultato dell'operazione
      */
-    public function delete($notificationId) {
+    public function eliminaNotifica($idNotifica) {
         try {
-            $stmt = $this->db->prepare("DELETE FROM notifications WHERE id = ?");
-            $stmt->execute([$notificationId]);
+            $statement = $this->database->prepare("DELETE FROM notifications WHERE id = ?");
+            $statement->execute([$idNotifica]);
             
             return [
-                'status' => 'success',
-                'message' => 'Notifica eliminata con successo'
+                'stato' => 'successo',
+                'messaggio' => 'Notifica eliminata con successo'
             ];
-        } catch (\PDOException $e) {
+            
+        } catch (\PDOException $errore) {
             return [
-                'status' => 'error',
-                'message' => 'Errore durante l\'eliminazione della notifica: ' . $e->getMessage()
+                'stato' => 'errore',
+                'messaggio' => 'Si è verificato un errore durante l\'eliminazione della notifica: ' . $errore->getMessage()
             ];
         }
     }
 
     /**
-     * Ottiene il conteggio delle notifiche non lette
-     * @param int $userId ID dell'utente
+     * Recupera il conteggio delle notifiche non lette per un utente
+     * 
+     * @param int $idUtente ID dell'utente
      * @return int Numero di notifiche non lette
      */
-    public function getUnreadCount($userId) {
+    public function contaNotificheNonLette($idUtente) {
         try {
-            $stmt = $this->db->prepare("
-                SELECT COUNT(*) as count 
+            $statement = $this->database->prepare("
+                SELECT COUNT(*) as conteggio 
                 FROM notifications 
                 WHERE user_id = ? AND is_read = 0
             ");
             
-            $stmt->execute([$userId]);
-            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $statement->execute([$idUtente]);
+            $risultato = $statement->fetch(\PDO::FETCH_ASSOC);
             
-            return $result['count'] ?? 0;
-        } catch (\PDOException $e) {
+            return $risultato['conteggio'] ?? 0;
+            
+        } catch (\PDOException $errore) {
+            error_log("Errore nel conteggio notifiche non lette: " . $errore->getMessage());
             return 0;
         }
     }
-} 
+}
+
+// Alias per compatibilità con il codice esistente
+class_alias('BOSTARTER\Models\GestoreNotifiche', 'BOSTARTER\Models\Notification');

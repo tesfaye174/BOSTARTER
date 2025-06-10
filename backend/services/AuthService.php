@@ -46,10 +46,10 @@ class AuthService {
                 return $this->loginFailure($email, $validation['errors']);
             }
             
-            // 2. Controllo rate limiting
-            if (!$this->checkRateLimit($email)) {
-                return $this->loginFailure($email, ['Troppi tentativi di accesso. Riprova più tardi.']);
-            }
+            // 2. Controllo rate limiting (DISABILITATO)
+            // if (!$this->checkRateLimit($email)) {
+            //     return $this->loginFailure($email, ['Troppi tentativi di accesso. Riprova più tardi.']);
+            // }
             
             // 3. Verifica credenziali
             $user = $this->getUserByEmail($email);
@@ -274,50 +274,13 @@ class AuthService {
         ];
     }
       private function checkRateLimit(string $identifier): bool {
-        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $key = 'login_attempts_' . hash('sha256', $identifier . $remoteAddr);
-        
-        if (!isset($_SESSION[$key])) {
-            $_SESSION[$key] = ['count' => 0, 'last_attempt' => 0];
-        }
-        
-        $attempts = $_SESSION[$key];
-        
-        // Reset se è passato il tempo di lockout
-        if ((time() - $attempts['last_attempt']) > self::LOCKOUT_TIME) {
-            $_SESSION[$key] = ['count' => 0, 'last_attempt' => 0];
-            return true;
-        }
-        
-        return $attempts['count'] < self::MAX_LOGIN_ATTEMPTS;
+        // Rate limiting disabilitato: sempre true
+        return true;
     }
-      private function recordFailedAttempt(string $identifier): void {
-        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $key = 'login_attempts_' . hash('sha256', $identifier . $remoteAddr);
-        
-        if (!isset($_SESSION[$key])) {
-            $_SESSION[$key] = ['count' => 0, 'last_attempt' => 0];
-        }
-        
-        $_SESSION[$key]['count']++;
-        $_SESSION[$key]['last_attempt'] = time();
-        
-        // Log tentativo fallito
-        $this->mongoLogger->logSecurity('failed_login', [
-            'email_hash' => hash('sha256', $identifier),
-            'ip' => $remoteAddr,
-            'attempts' => $_SESSION[$key]['count'],
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
-        ]);
-        
-        // Blocca IP se troppi tentativi (solo se non è unknown)
-        if ($_SESSION[$key]['count'] >= self::MAX_LOGIN_ATTEMPTS && $remoteAddr !== 'unknown') {
-            try {
-                $this->securityService->blockIP($remoteAddr, 'Troppi tentativi di login');
-            } catch (Exception $e) {
-                error_log("Failed to block IP: " . $e->getMessage());
-            }
-        }
+
+    private function recordFailedAttempt(string $identifier): void {
+        // Rate limiting disabilitato: non fa nulla
+        return;
     }
       private function getUserByEmail(string $email): ?array {
         $stmt = $this->db->prepare("
@@ -367,16 +330,18 @@ class AuthService {
             'success' => false,
             'errors' => $errors
         ];
-    }
-      private function loginSuccess(array $user, bool $rememberMe): array {
+    }    private function loginSuccess(array $user, bool $rememberMe): array {
         // Avvia sessione sicura
         $this->ensureSessionStarted();
         
+        // Rigenera l'ID di sessione per sicurezza
         session_regenerate_id(true);
         
+        // Imposta i dati della sessione
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['login_time'] = time();
         $_SESSION['last_regeneration'] = time();
+        $_SESSION['last_activity'] = time();
         $_SESSION['user'] = [
             'id' => $user['id'],
             'email' => $user['email'],

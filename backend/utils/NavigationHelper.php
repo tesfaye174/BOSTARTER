@@ -27,15 +27,34 @@ class NavigationHelper {
             $url .= '?' . http_build_query($params);
         }
         return $url;
-    }
-
-    /**
+    }    /**
      * Verifica se l'utente è loggato (richiede sessione avviata)
      * @return bool
      */
     public static function isLoggedIn() {
-        return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-    }    /**
+        // Assicuriamoci che la sessione sia iniziata
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Controllo di base per evitare loop di redirect
+        if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+            return false;
+        }
+        
+        // Controllo aggiuntivo per timeout di sessione (opzionale)
+        if (isset($_SESSION['login_time'])) {
+            $sessionLifetime = 7200; // 2 ore in secondi
+            if ((time() - $_SESSION['login_time']) > $sessionLifetime) {
+                // Sessione scaduta, pulisci
+                session_unset();
+                session_destroy();
+                return false;
+            }
+        }
+        
+        return true;
+    }/**
      * Verifica se l'utente ha un determinato ruolo
      * @param string $role
      * @return bool

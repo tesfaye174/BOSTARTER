@@ -1,13 +1,16 @@
 <?php
+// Configuriamo gli header per l'API REST
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
+// Gestiamo le richieste OPTIONS per il CORS
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
+// Includiamo tutte le dipendenze necessarie
 require_once '../config/database.php';
 require_once '../models/UserCompliant.php';
 require_once '../services/MongoLogger.php';
@@ -15,70 +18,78 @@ require_once '../services/AuthService.php';
 require_once '../utils/Validator.php';
 require_once '../utils/ApiResponse.php';
 
-// Inizializza i servizi sicuri
+// Inizializziamo tutti i servizi necessari
 $database = Database::getInstance();
-$db = $database->getConnection();
-$userModel = new UserCompliant();
-$mongoLogger = new MongoLogger();
-$authService = new AuthService();
+$connessione = $database->getConnection();
+$modelloUtente = new UserCompliant();
+$logger = new MongoLogger();
+$servizioAuth = new AuthService();
 
-$method = $_SERVER['REQUEST_METHOD'];
-$request = json_decode(file_get_contents('php://input'), true);
+// Otteniamo il metodo HTTP e i dati della richiesta
+$metodo = $_SERVER['REQUEST_METHOD'];
+$richiestaJson = json_decode(file_get_contents('php://input'), true);
 
-switch ($method) {
+// Gestiamo le diverse operazioni in base al metodo HTTP
+switch ($metodo) {
     case 'POST':
-        handleAuthRequest($authService, $mongoLogger, $request);
+        gestisciRichiestaAuth($servizioAuth, $logger, $richiestaJson);
         break;
     case 'GET':
-        handleAuthCheck($authService, $mongoLogger);
+        verificaStatoAuth($servizioAuth, $logger);
         break;
     case 'DELETE':
-        handleLogout($authService, $mongoLogger);
+        gestisciLogout($servizioAuth, $logger);
         break;
     default:
         http_response_code(405);
-        echo json_encode(['error' => 'Method not allowed']);
+        echo json_encode(['errore' => 'Metodo non consentito']);
         break;
 }
 
-function handleAuthRequest($authService, $mongoLogger, $request) {
-    if (!isset($request['action'])) {
+/**
+ * Gestisce le richieste di autenticazione (login e registrazione)
+ */
+function gestisciRichiestaAuth($servizioAuth, $logger, $richiesta) {
+    if (!isset($richiesta['azione'])) {
         http_response_code(400);
-        echo json_encode(['error' => 'Action required']);
+        echo json_encode(['errore' => 'Azione richiesta mancante']);
         return;
     }
 
-    switch ($request['action']) {
+    switch ($richiesta['azione']) {
         case 'login':
-            handleLogin($authService, $mongoLogger, $request);
+            gestisciLogin($servizioAuth, $logger, $richiesta);
             break;
-        case 'register':
-            handleRegister($userModel, $mongoLogger, $request);
+        case 'registrazione':
+            gestisciRegistrazione($modelloUtente, $logger, $richiesta);
             break;
         default:
             http_response_code(400);
-            echo json_encode(['error' => 'Invalid action']);
+            echo json_encode(['errore' => 'Azione non valida']);
             break;
     }
 }
 
-function handleLogin($authService, $mongoLogger, $request) {
+/**
+ * Gestisce il processo di login dell'utente
+ */
+function gestisciLogin($servizioAuth, $logger, $richiesta) {
     try {
-        // Usa AuthService per login sicuro
-        $result = $authService->login(
-            $request['email'] ?? '',
-            $request['password'] ?? '',
-            $request['remember_me'] ?? false,
-            $request['csrf_token'] ?? ''
+        // Utilizziamo il servizio di autenticazione per un login sicuro
+        $risultato = $servizioAuth->login(
+            $richiesta['email'] ?? '',
+            $richiesta['password'] ?? '',
+            $richiesta['ricordami'] ?? false,
+            $richiesta['csrf_token'] ?? ''
         );
 
-        if ($result['success']) {
-            // Log successful login
-            $mongoLogger->logEvent('user_login', [
-                'user_id' => $result['user']['id'],
-                'email' => $result['user']['email'],
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+        if ($risultato['success']) {
+            // Registriamo il login riuscito
+            $logger->registraEvento('login_utente', [
+                'id_utente' => $risultato['user']['id'],
+                'email' => $risultato['user']['email'],
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'sconosciuto',
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'sconosciuto',
                 'login_method' => 'api_compliant'
             ]);
 

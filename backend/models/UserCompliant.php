@@ -1,276 +1,356 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../utils/BaseModel.php';
 
 /**
- * User Model - Compliant with PDF specifications
- * Uses stored procedures for registration and login as required
+ * Modello Utente - Gestione completa degli utenti della piattaforma BOSTARTER
+ * 
+ * Questa classe gestisce tutte le operazioni relative agli utenti:
+ * - Registrazione di nuovi utenti tramite stored procedure
+ * - Autenticazione e login degli utenti esistenti
+ * - Recupero e aggiornamento delle informazioni utente
+ * - Gestione delle competenze e della reputazione
+ * 
+ * @author BOSTARTER Team
+ * @version 2.0.0
  */
-class UserCompliant {
-    private $db;
-    private $conn;
 
+use BOSTARTER\Utils\BaseModel;
+
+class GestoreUtenti extends BaseModel {
+    /**
+     * Costruttore - Inizializza la connessione al database usando la classe base
+     */
     public function __construct() {
-        $this->db = Database::getInstance();
-        $this->conn = $this->db->getConnection();
-    }
-
-    /**
-     * Register a new user using stored procedure
-     */
-    public function register($data) {
+        parent::__construct(); // Eredita la connessione dalla BaseModel
+    }    /**
+     * Registra un nuovo utente nella piattaforma
+     * 
+     * Utilizza la stored procedure sp_registra_utente per garantire
+     * l'integrità dei dati e le validazioni necessarie
+     * 
+     * @param array $datiUtente Dati dell'utente da registrare
+     * @return array Risultato dell'operazione con successo e messaggio
+     */    public function registraNuovoUtente($datiUtente) {
         try {
-            // Call stored procedure for registration
-            $stmt = $this->conn->prepare("CALL sp_registra_utente(?, ?, ?, ?, ?, ?, ?, ?, @p_user_id, @p_success, @p_message)");
-            $stmt->execute([
-                $data['email'],
-                $data['nickname'],
-                $data['password'],
-                $data['nome'],
-                $data['cognome'],
-                date('Y', strtotime($data['data_nascita'])),
-                $data['luogo_nascita'],
-                $data['tipo_utente']
-            ]);
-            // Fetch OUT parameters
-            $output = $this->conn->query("SELECT @p_success as success, @p_message as message")->fetch(PDO::FETCH_ASSOC);
-            $success = (bool) $output['success'];
-            return [
-                'success' => $success,
-                'message' => $output['message']
+            // Utilizziamo il metodo eseguiQuery della BaseModel per gestire errori e logging
+            $query = "CALL sp_registra_utente(?, ?, ?, ?, ?, ?, ?, ?, @p_user_id, @p_success, @p_message)";
+            
+            $parametri = [
+                $datiUtente['email'],
+                $datiUtente['nickname'],
+                $datiUtente['password'],
+                $datiUtente['nome'],
+                $datiUtente['cognome'],
+                date('Y', strtotime($datiUtente['data_nascita'])),
+                $datiUtente['luogo_nascita'],
+                $datiUtente['tipo_utente']
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-            return [
-                'success' => false,
-                'message' => 'Errore durante la registrazione'
-            ];
+            
+            // Eseguiamo la stored procedure
+        $risultato = $this->eseguiQuery($query, $parametri, 'one');
+        
+        if ($risultato === null) {
+            return ['successo' => false, 'messaggio' => 'Errore durante la registrazione'];
         }
+        
+        // Recuperiamo i parametri di output dalla stored procedure
+        $risultatoOperazione = $this->eseguiQuery("SELECT @p_success as successo, @p_message as messaggio", [], 'one');
+        
+        if ($risultatoOperazione === null) {
+            return ['successo' => false, 'messaggio' => 'Errore nel recupero del risultato'];
+        }
+          return [
+            'successo' => (bool) $risultatoOperazione['successo'],
+            'messaggio' => $risultatoOperazione['messaggio']
+        ];
+        
+    } catch (PDOException $errore) {
+        // Registriamo l'errore nel log per il debugging
+        error_log("Errore durante la registrazione utente: " . $errore->getMessage());
+        
+        return [
+            'successo' => false,
+            'messaggio' => 'Si è verificato un errore durante la registrazione. Riprova più tardi.'
+        ];
     }
+}
 
-    /**
-     * Login user using stored procedure
+/**
+ * Autentica un utente esistente nel sistema
+     * 
+     * Utilizza la stored procedure login_utente per verificare
+     * le credenziali e recuperare i dati dell'utente
+     * 
+     * @param string $nickname Nome utente
+     * @param string $password Password dell'utente
+     * @return array Risultato del login con dati utente se successo
      */
-    public function login($nickname, $password) {
+    public function autenticaUtente($nickname, $password) {
         try {
-            $stmt = $this->conn->prepare("CALL login_utente(?, ?, @user_id, @risultato)");
-            $stmt->execute([$nickname, $password]);
+            // Prepariamo la chiamata alla stored procedure per il login
+            $statement = $this->connessione->prepare("CALL login_utente(?, ?, @user_id, @risultato)");
+            $statement->execute([$nickname, $password]);
             
-            $result = $this->conn->query("SELECT @user_id as user_id, @risultato as risultato")->fetch();
+            // Recuperiamo il risultato dell'autenticazione
+            $risultatoLogin = $this->connessione->query("SELECT @user_id as id_utente, @risultato as esito")->fetch();
             
-            if ($result['risultato'] === 'SUCCESS') {
-                // Get user details
-                $userDetails = $this->getUserById($result['user_id']);
+            if ($risultatoLogin['esito'] === 'SUCCESS') {
+                // Se il login è riuscito, recuperiamo i dettagli completi dell'utente
+                $dettagliUtente = $this->ottieniUtentePerId($risultatoLogin['id_utente']);
+                
                 return [
-                    'success' => true,
-                    'user' => $userDetails,
-                    'message' => 'Login effettuato con successo'
+                    'successo' => true,
+                    'utente' => $dettagliUtente,
+                    'messaggio' => 'Accesso effettuato con successo'
                 ];
             } else {
                 return [
-                    'success' => false,
-                    'message' => $result['risultato']
+                    'successo' => false,
+                    'messaggio' => $risultatoLogin['esito']
                 ];
             }
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            
+        } catch (PDOException $errore) {
+            // Registriamo l'errore nel log
+            error_log("Errore durante l'autenticazione: " . $errore->getMessage());
+            
             return [
-                'success' => false,
-                'message' => 'Errore durante il login'
+                'successo' => false,
+                'messaggio' => 'Si è verificato un errore durante l\'accesso. Riprova più tardi.'
             ];
         }
-    }
-
-    /**
-     * Get user by ID
+    }    /**
+     * Recupera i dettagli completi di un utente tramite il suo ID
+     * 
+     * Include informazioni personali, competenze e statistiche dell'utente
+     * 
+     * @param int $idUtente ID dell'utente da recuperare
+     * @return array|null Dati dell'utente o null se non trovato
      */
-    public function getUserById($userId) {
+    public function ottieniUtentePerId($idUtente) {
         try {
-            $stmt = $this->conn->prepare("
+            // Query per recuperare i dati principali dell'utente
+            $statement = $this->connessione->prepare("
                 SELECT id, nickname, email, nome, cognome, data_nascita, sesso, paese, 
                        avatar, biografia, data_registrazione, affidabilita, nr_progetti
                 FROM utenti 
                 WHERE id = ?
             ");
-            $stmt->execute([$userId]);
-            $user = $stmt->fetch();
+            $statement->execute([$idUtente]);
+            $datiUtente = $statement->fetch();
 
-            if ($user) {
-                // Get user skills
-                $stmt = $this->conn->prepare("
+            if ($datiUtente) {                // Recuperiamo anche le competenze dell'utente
+                $statement = $this->connessione->prepare("
                     SELECT c.id, c.nome, c.descrizione, su.livello
                     FROM skill_utente su
                     JOIN competenze c ON su.competenza_id = c.id
                     WHERE su.utente_id = ?
                     ORDER BY c.nome
                 ");
-                $stmt->execute([$userId]);
-                $user['competenze'] = $stmt->fetchAll();
+                $statement->execute([$idUtente]);
+                $datiUtente['competenze'] = $statement->fetchAll();
 
-                // Remove sensitive data
-                unset($user['password']);
+                // Rimuoviamo dati sensibili prima di restituire l'utente
+                unset($datiUtente['password']);
+                
+                return $datiUtente;
             }
-
-            return $user;
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            
             return null;
-        }
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nel recupero utente: " . $errore->getMessage());
+            return null;        }
     }
 
     /**
-     * Get user by nickname
+     * Recupera un utente tramite il suo nickname
+     * 
+     * @param string $nickname Nome utente da cercare
+     * @return array|null Dati dell'utente o null se non trovato
      */
-    public function getUserByNickname($nickname) {
+    public function ottieniUtenteDaNickname($nickname) {
         try {
-            $stmt = $this->conn->prepare("
+            $statement = $this->connessione->prepare("
                 SELECT id, nickname, email, nome, cognome, data_nascita, sesso, paese, 
                        avatar, biografia, data_registrazione, affidabilita, nr_progetti
                 FROM utenti 
                 WHERE nickname = ?
             ");
-            $stmt->execute([$nickname]);
-            return $stmt->fetch();
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            $statement->execute([$nickname]);
+            return $statement->fetch();
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nel recupero utente per nickname: " . $errore->getMessage());
             return null;
         }
     }
 
     /**
-     * Add skill to user using stored procedure
+     * Aggiunge una competenza a un utente tramite stored procedure
+     * 
+     * @param int $idUtente ID dell'utente
+     * @param int $idCompetenza ID della competenza da aggiungere  
+     * @param string $livelloCompetenza Livello di competenza (Principiante, Intermedio, Avanzato)
+     * @return array Risultato dell'operazione
      */
-    public function addSkill($userId, $competenzaId, $livello) {
+    public function aggiungiCompetenzaUtente($idUtente, $idCompetenza, $livelloCompetenza) {
         try {
-            $stmt = $this->conn->prepare("CALL inserisci_skill_utente(?, ?, ?, @risultato)");
-            $stmt->execute([$userId, $competenzaId, $livello]);
+            $statement = $this->connessione->prepare("CALL inserisci_skill_utente(?, ?, ?, @risultato)");
+            $statement->execute([$idUtente, $idCompetenza, $livelloCompetenza]);
             
-            $result = $this->conn->query("SELECT @risultato as risultato")->fetch();
+            $risultatoOperazione = $this->connessione->query("SELECT @risultato as esito")->fetch();
             
-            if ($result['risultato'] === 'SUCCESS') {
+            if ($risultatoOperazione['esito'] === 'SUCCESS') {
                 return [
-                    'success' => true,
-                    'message' => 'Competenza aggiunta con successo'
+                    'successo' => true,                'messaggio' => 'Competenza aggiunta con successo'
                 ];
             } else {
                 return [
-                    'success' => false,
-                    'message' => $result['risultato']
+                    'successo' => false,
+                    'messaggio' => $risultatoOperazione['esito']
                 ];
             }
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nell'aggiunta competenza: " . $errore->getMessage());
             return [
-                'success' => false,
-                'message' => 'Errore durante l\'aggiunta della competenza'
+                'successo' => false,
+                'messaggio' => 'Si è verificato un errore durante l\'aggiunta della competenza'
             ];
         }
     }
 
     /**
-     * Update user profile
+     * Aggiorna il profilo di un utente
+     * 
+     * Permette di modificare solo i campi autorizzati del profilo utente
+     * 
+     * @param int $idUtente ID dell'utente da aggiornare
+     * @param array $datiAggiornamento Dati da aggiornare
+     * @return array Risultato dell'operazione
      */
-    public function updateProfile($userId, $data) {
+    public function aggiornaProfilo($idUtente, $datiAggiornamento) {
         try {
-            $allowedFields = ['email', 'nome', 'cognome', 'sesso', 'paese', 'avatar', 'biografia'];
-            $updates = [];
-            $params = [];
+            // Campi che possono essere aggiornati dall'utente
+            $campiConsentiti = ['email', 'nome', 'cognome', 'sesso', 'paese', 'avatar', 'biografia'];
+            $aggiornamenti = [];
+            $parametri = [];
             
-            foreach ($data as $field => $value) {
-                if (in_array($field, $allowedFields)) {
-                    $updates[] = "$field = ?";
-                    $params[] = $value;
+            // Prepariamo solo i campi validi per l'aggiornamento
+            foreach ($datiAggiornamento as $campo => $valore) {
+                if (in_array($campo, $campiConsentiti)) {
+                    $aggiornamenti[] = "$campo = ?";
+                    $parametri[] = $valore;
                 }
             }
             
-            if (empty($updates)) {
+            if (empty($aggiornamenti)) {
                 return [
-                    'success' => false,
-                    'message' => 'Nessun campo da aggiornare'
+                    'successo' => false,
+                    'messaggio' => 'Nessun campo valido da aggiornare'
                 ];
             }
             
-            $params[] = $userId;
-            $sql = "UPDATE utenti SET " . implode(', ', $updates) . " WHERE id = ?";
+            // Aggiungiamo l'ID utente come ultimo parametro
+            $parametri[] = $idUtente;
+            $query = "UPDATE utenti SET " . implode(', ', $aggiornamenti) . " WHERE id = ?";
             
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute($params);
+            $statement = $this->connessione->prepare($query);
+            $statement->execute($parametri);
             
             return [
-                'success' => true,
-                'message' => 'Profilo aggiornato con successo'
+                'successo' => true,
+                'messaggio' => 'Profilo aggiornato con successo'
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+              } catch (PDOException $errore) {
+            error_log("Errore nell'aggiornamento profilo: " . $errore->getMessage());
             return [
-                'success' => false,
-                'message' => 'Errore durante l\'aggiornamento del profilo'
+                'successo' => false,
+                'messaggio' => 'Si è verificato un errore durante l\'aggiornamento del profilo'
             ];
         }
-    }    /**
-     * Change user password - SECURE VERSION
+    }
+
+    /**
+     * Cambia la password di un utente - VERSIONE SICURA
+     * 
+     * Verifica la password corrente e aggiorna con un hash sicuro
+     * 
+     * @param int $idUtente ID dell'utente
+     * @param string $passwordCorrente Password attuale dell'utente
+     * @param string $nuovaPassword Nuova password da impostare
+     * @return array Risultato dell'operazione
      */
-    public function changePassword($userId, $currentPassword, $newPassword) {
+    public function cambiaPassword($idUtente, $passwordCorrente, $nuovaPassword) {
         try {
-            // Recupera hash password corrente
-            $stmt = $this->conn->prepare("
+            // Recuperiamo l'hash della password corrente dal database
+            $statement = $this->connessione->prepare("
                 SELECT password_hash FROM utenti 
                 WHERE id = ?
             ");
-            $stmt->execute([$userId]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            $statement->execute([$idUtente]);
+            $utenteCorrente = $statement->fetch(PDO::FETCH_ASSOC);
             
-            if (!$user) {
+            if (!$utenteCorrente) {
                 return [
-                    'success' => false,
-                    'message' => 'Utente non trovato'
+                    'successo' => false,
+                    'messaggio' => 'Utente non trovato'
                 ];
             }
             
-            // Verifica password corrente con password_verify (SICURO)
-            if (!password_verify($currentPassword, $user['password_hash'])) {
+            // Verifichiamo che la password corrente sia corretta usando password_verify (SICURO)
+            if (!password_verify($passwordCorrente, $utenteCorrente['password_hash'])) {
                 return [
-                    'success' => false,
-                    'message' => 'Password corrente non corretta'
+                    'successo' => false,
+                    'messaggio' => 'La password corrente non è corretta'
                 ];
             }
             
-            // Hash sicuro della nuova password
-            $newPasswordHash = password_hash($newPassword, PASSWORD_ARGON2ID, [
-                'memory_cost' => 65536,
-                'time_cost' => 4,
-                'threads' => 3
+            // Creiamo un hash sicuro della nuova password usando Argon2ID
+            $hashNuovaPassword = password_hash($nuovaPassword, PASSWORD_ARGON2ID, [
+                'memory_cost' => 65536,  // 64 MB di memoria
+                'time_cost' => 4,        // 4 iterazioni                'threads' => 3           // 3 thread paralleli
             ]);
             
-            // Aggiorna con hash sicuro
-            $stmt = $this->conn->prepare("
+            // Aggiorniamo la password nel database con l'hash sicuro
+            $statement = $this->connessione->prepare("
                 UPDATE utenti 
                 SET password_hash = ? 
                 WHERE id = ?
             ");
-            $stmt->execute([$newPasswordHash, $userId]);
+            $statement->execute([$hashNuovaPassword, $idUtente]);
             
             return [
-                'success' => true,
-                'message' => 'Password cambiata con successo'
+                'successo' => true,
+                'messaggio' => 'Password cambiata con successo'
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nel cambio password: " . $errore->getMessage());
             return [
-                'success' => false,
-                'message' => 'Errore durante il cambio password'
+                'successo' => false,
+                'messaggio' => 'Si è verificato un errore durante il cambio password'
             ];
         }
     }
 
     /**
-     * Get user's projects
+     * Recupera i progetti di un utente con paginazione
+     * 
+     * @param int $idUtente ID dell'utente
+     * @param int $pagina Numero di pagina (default: 1)
+     * @param int $elementiPerPagina Numero di progetti per pagina (default: 10)
+     * @return array Lista dei progetti dell'utente
      */
-    public function getUserProjects($userId, $page = 1, $perPage = 10) {
+    public function ottieniProgettiUtente($idUtente, $pagina = 1, $elementiPerPagina = 10) {
         try {
-            $offset = ($page - 1) * $perPage;
+            $offset = ($pagina - 1) * $elementiPerPagina;
             
-            $stmt = $this->conn->prepare("
+            // Query per recuperare i progetti dell'utente con statistiche di finanziamento
+            $statement = $this->connessione->prepare("
                 SELECT p.*, 
                        (SELECT COALESCE(SUM(importo), 0) FROM finanziamenti f WHERE f.progetto_id = p.id) as totale_finanziamenti
                 FROM progetti p
@@ -278,45 +358,51 @@ class UserCompliant {
                 ORDER BY p.data_creazione DESC
                 LIMIT ? OFFSET ?
             ");
-            $stmt->execute([$userId, $perPage, $offset]);
-            $projects = $stmt->fetchAll();
-
-            // Calculate additional fields
-            foreach ($projects as &$project) {
-                $project['percentuale_completamento'] = $project['budget_richiesto'] > 0 
-                    ? ($project['totale_finanziamenti'] / $project['budget_richiesto']) * 100 
+            $statement->execute([$idUtente, $elementiPerPagina, $offset]);
+            $progetti = $statement->fetchAll();            // Calcoliamo campi aggiuntivi per ogni progetto
+            foreach ($progetti as &$progetto) {
+                $progetto['percentuale_completamento'] = $progetto['budget_richiesto'] > 0 
+                    ? ($progetto['totale_finanziamenti'] / $progetto['budget_richiesto']) * 100 
                     : 0;
-                $project['giorni_rimanenti'] = max(0, floor((strtotime($project['data_scadenza']) - time()) / (60 * 60 * 24)));
+                $progetto['giorni_rimanenti'] = max(0, floor((strtotime($progetto['data_scadenza']) - time()) / (60 * 60 * 24)));
             }
 
-            // Get total count
-            $stmt = $this->conn->prepare("SELECT COUNT(*) FROM progetti WHERE creatore_id = ?");
-            $stmt->execute([$userId]);
-            $total = $stmt->fetchColumn();
+            // Contiamo il totale dei progetti per la paginazione
+            $statement = $this->connessione->prepare("SELECT COUNT(*) FROM progetti WHERE creatore_id = ?");
+            $statement->execute([$idUtente]);
+            $totaleProjetti = $statement->fetchColumn();
 
             return [
-                'progetti' => $projects,
-                'totale' => $total,
-                'pagina' => $page,
-                'per_pagina' => $perPage,
-                'totale_pagine' => ceil($total / $perPage)
+                'progetti' => $progetti,
+                'totale' => $totaleProjetti,
+                'pagina' => $pagina,
+                'per_pagina' => $elementiPerPagina,
+                'totale_pagine' => ceil($totaleProjetti / $elementiPerPagina)
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nel recupero progetti utente: " . $errore->getMessage());
             return null;
         }
     }
 
     /**
-     * Get user's funding history
+     * Recupera la cronologia dei finanziamenti di un utente
+     * 
+     * @param int $idUtente ID dell'utente
+     * @param int $pagina Numero di pagina (default: 1)
+     * @param int $elementiPerPagina Numero di finanziamenti per pagina (default: 10)
+     * @return array Lista dei finanziamenti dell'utente
      */
-    public function getUserFundings($userId, $page = 1, $perPage = 10) {
+    public function ottieniFinanziamentiUtente($idUtente, $pagina = 1, $elementiPerPagina = 10) {
         try {
-            $offset = ($page - 1) * $perPage;
+            $offset = ($pagina - 1) * $elementiPerPagina;
             
-            $stmt = $this->conn->prepare("
-                SELECT f.*, p.nome as progetto_nome, p.tipo as progetto_tipo, 
-                       r.titolo as ricompensa_titolo, u.nickname as creatore_nickname                FROM finanziamenti f
+            // Query per recuperare i finanziamenti con dettagli dei progetti
+            $statement = $this->connessione->prepare("
+                SELECT f.*, p.nome as nome_progetto, p.tipo as tipo_progetto, 
+                       r.titolo as titolo_ricompensa, u.nickname as nickname_creatore
+                FROM finanziamenti f
                 JOIN progetti p ON f.progetto_id = p.id
                 JOIN utenti u ON p.creatore_id = u.id
                 LEFT JOIN reward r ON f.reward_id = r.id
@@ -324,37 +410,43 @@ class UserCompliant {
                 ORDER BY f.data_finanziamento DESC
                 LIMIT ? OFFSET ?
             ");
-            $stmt->execute([$userId, $perPage, $offset]);
-            $fundings = $stmt->fetchAll();
+            $statement->execute([$idUtente, $elementiPerPagina, $offset]);            $finanziamenti = $statement->fetchAll();
 
-            // Get total count
-            $stmt = $this->conn->prepare("SELECT COUNT(*) FROM finanziamenti WHERE utente_id = ?");
-            $stmt->execute([$userId]);
-            $total = $stmt->fetchColumn();
+            // Contiamo il totale dei finanziamenti per la paginazione
+            $statement = $this->connessione->prepare("SELECT COUNT(*) FROM finanziamenti WHERE utente_id = ?");
+            $statement->execute([$idUtente]);
+            $totaleFinanziamenti = $statement->fetchColumn();
 
             return [
-                'finanziamenti' => $fundings,
-                'totale' => $total,
-                'pagina' => $page,
-                'per_pagina' => $perPage,
-                'totale_pagine' => ceil($total / $perPage)
+                'finanziamenti' => $finanziamenti,
+                'totale' => $totaleFinanziamenti,
+                'pagina' => $pagina,
+                'per_pagina' => $elementiPerPagina,
+                'totale_pagine' => ceil($totaleFinanziamenti / $elementiPerPagina)
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nel recupero finanziamenti utente: " . $errore->getMessage());
             return null;
         }
     }
 
     /**
-     * Get user's applications (for software projects)
+     * Recupera le candidature di un utente per progetti software
+     * 
+     * @param int $idUtente ID dell'utente
+     * @param int $pagina Numero di pagina (default: 1)
+     * @param int $elementiPerPagina Numero di candidature per pagina (default: 10)
+     * @return array Lista delle candidature dell'utente
      */
-    public function getUserApplications($userId, $page = 1, $perPage = 10) {
+    public function ottieniCandidatureUtente($idUtente, $pagina = 1, $elementiPerPagina = 10) {
         try {
-            $offset = ($page - 1) * $perPage;
+            $offset = ($pagina - 1) * $elementiPerPagina;
             
-            $stmt = $this->conn->prepare("
-                SELECT c.*, p.nome as progetto_nome, ps.nome as profilo_nome,
-                       u.nickname as creatore_nickname
+            // Query per recuperare le candidature con dettagli dei progetti
+            $statement = $this->connessione->prepare("
+                SELECT c.*, p.nome as nome_progetto, ps.nome as nome_profilo,
+                       u.nickname as nickname_creatore
                 FROM candidature c
                 JOIN profili_software ps ON c.profilo_id = ps.id
                 JOIN progetti p ON ps.progetto_id = p.id
@@ -363,87 +455,102 @@ class UserCompliant {
                 ORDER BY c.data_candidatura DESC
                 LIMIT ? OFFSET ?
             ");
-            $stmt->execute([$userId, $perPage, $offset]);
-            $applications = $stmt->fetchAll();
+            $statement->execute([$idUtente, $elementiPerPagina, $offset]);
+            $candidature = $statement->fetchAll();
 
-            // Get total count
-            $stmt = $this->conn->prepare("SELECT COUNT(*) FROM candidature WHERE utente_id = ?");
-            $stmt->execute([$userId]);
-            $total = $stmt->fetchColumn();
+            // Contiamo il totale delle candidature per la paginazione
+            $statement = $this->connessione->prepare("SELECT COUNT(*) FROM candidature WHERE utente_id = ?");
+            $statement->execute([$idUtente]);
+            $totaleCandidature = $statement->fetchColumn();
 
             return [
-                'candidature' => $applications,
-                'totale' => $total,
-                'pagina' => $page,
-                'per_pagina' => $perPage,
-                'totale_pagine' => ceil($total / $perPage)
+                'candidature' => $candidature,
+                'totale' => $totaleCandidature,
+                'pagina' => $pagina,
+                'per_pagina' => $elementiPerPagina,
+                'totale_pagine' => ceil($totaleCandidature / $elementiPerPagina)
             ];
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nel recupero candidature utente: " . $errore->getMessage());
             return null;
         }
     }
 
     /**
-     * Check if user exists by email or nickname
+     * Verifica se un utente esiste già tramite email o nickname
+     * 
+     * @param string|null $email Email da verificare
+     * @param string|null $nickname Nickname da verificare
+     * @return bool True se l'utente esiste, false altrimenti
      */
-    public function userExists($email = null, $nickname = null) {
+    public function utenteEsiste($email = null, $nickname = null) {
         try {
+            // Verifichiamo l'email se fornita
             if ($email) {
-                $stmt = $this->conn->prepare("SELECT id FROM utenti WHERE email = ?");
-                $stmt->execute([$email]);
-                if ($stmt->fetch()) return true;
+                $statement = $this->connessione->prepare("SELECT id FROM utenti WHERE email = ?");
+                $statement->execute([$email]);
+                if ($statement->fetch()) return true;
             }
 
+            // Verifichiamo il nickname se fornito
             if ($nickname) {
-                $stmt = $this->conn->prepare("SELECT id FROM utenti WHERE nickname = ?");
-                $stmt->execute([$nickname]);
-                if ($stmt->fetch()) return true;
+                $statement = $this->connessione->prepare("SELECT id FROM utenti WHERE nickname = ?");
+                $statement->execute([$nickname]);
+                if ($statement->fetch()) return true;
             }
 
             return false;
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nella verifica esistenza utente: " . $errore->getMessage());
             return false;
         }
     }
 
     /**
-     * Get user statistics
+     * Recupera le statistiche complete di un utente
+     * 
+     * @param int $idUtente ID dell'utente
+     * @return array Statistiche dell'utente
      */
-    public function getUserStats($userId) {
+    public function ottieniStatisticheUtente($idUtente) {
         try {
-            $stats = [];
+            $statistiche = [];
 
-            // Total projects created
-            $stmt = $this->conn->prepare("SELECT COUNT(*) FROM progetti WHERE creatore_id = ?");
-            $stmt->execute([$userId]);
-            $stats['progetti_creati'] = $stmt->fetchColumn();
+            // Numero totale di progetti creati
+            $statement = $this->connessione->prepare("SELECT COUNT(*) FROM progetti WHERE creatore_id = ?");
+            $statement->execute([$idUtente]);
+            $statistiche['progetti_creati'] = $statement->fetchColumn();
 
-            // Total funding given
-            $stmt = $this->conn->prepare("SELECT COALESCE(SUM(importo), 0) FROM finanziamenti WHERE utente_id = ?");
-            $stmt->execute([$userId]);
-            $stats['totale_finanziato'] = $stmt->fetchColumn();
+            // Importo totale finanziato dall'utente
+            $statement = $this->connessione->prepare("SELECT COALESCE(SUM(importo), 0) FROM finanziamenti WHERE utente_id = ?");
+            $statement->execute([$idUtente]);
+            $statistiche['totale_finanziato'] = $statement->fetchColumn();
 
-            // Total funding received
-            $stmt = $this->conn->prepare("
+            // Importo totale ricevuto dai progetti dell'utente
+            $statement = $this->connessione->prepare("
                 SELECT COALESCE(SUM(f.importo), 0)
                 FROM finanziamenti f
                 JOIN progetti p ON f.progetto_id = p.id
                 WHERE p.creatore_id = ?
             ");
-            $stmt->execute([$userId]);
-            $stats['totale_ricevuto'] = $stmt->fetchColumn();
+            $statement->execute([$idUtente]);
+            $statistiche['totale_ricevuto'] = $statement->fetchColumn();
 
-            // Total applications
-            $stmt = $this->conn->prepare("SELECT COUNT(*) FROM candidature WHERE utente_id = ?");
-            $stmt->execute([$userId]);
-            $stats['candidature_inviate'] = $stmt->fetchColumn();
+            // Numero totale di candidature inviate
+            $statement = $this->connessione->prepare("SELECT COUNT(*) FROM candidature WHERE utente_id = ?");
+            $statement->execute([$idUtente]);
+            $statistiche['candidature_inviate'] = $statement->fetchColumn();
 
-            return $stats;
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
-            return null;
+            return $statistiche;
+            
+        } catch (PDOException $errore) {
+            error_log("Errore nel recupero statistiche utente: " . $errore->getMessage());
+            return [];
         }
     }
 }
+
+// Alias per compatibilità con il codice esistente
+class_alias('GestoreUtenti', 'UserCompliant');

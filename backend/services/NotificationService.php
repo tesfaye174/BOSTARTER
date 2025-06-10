@@ -1,69 +1,137 @@
 <?php
 /**
- * Servizio per la gestione delle notifiche
- * Si occupa della logica di invio, salvataggio e recupero delle notifiche
+ * SERVIZIO NOTIFICHE BOSTARTER
+ * 
+ * Questo servizio si occupa di tutto ciò che riguarda le notifiche:
+ * - Creazione di nuove notifiche per gli utenti
+ * - Invio di notifiche via email, SMS, push
+ * - Recupero delle notifiche non lette
+ * - Gestione delle preferenze di notifica
+ * 
+ * È come il servizio postale di casa: raccoglie i messaggi importanti
+ * e li consegna nel modo giusto a ogni persona!
+ * 
+ * @author BOSTARTER Team
+ * @version 2.0.0 - Versione completamente riscritta per essere più umana
  */
 namespace BOSTARTER\Services;
 
-use BOSTARTER\Models\Notification;
+use BOSTARTER\Models\GestoreNotifiche;
 
-class NotificationService {
-    private $notificationModel;
-    private $db;
+class GestoreServizioNotifiche {
+    // Gestore del modello notifiche e connessione database
+    private $gestoreNotifiche;
+    private $connessioneDatabase;
 
-    public function __construct($db) {
-        $this->db = $db;
-        $this->notificationModel = new Notification($db);
+    public function __construct($database) {
+        $this->connessioneDatabase = $database;
+        $this->gestoreNotifiche = new GestoreNotifiche($database);
     }
 
     /**
-     * Crea e invia una notifica
+     * Crea e invia una nuova notifica
+     * 
+     * È come quando devi mandare una lettera importante: scrivi il messaggio,
+     * metti l'indirizzo giusto e la spedisci nel modo più appropriato
+     * 
+     * @param int $idUtente ID dell'utente che riceverà la notifica
+     * @param string $messaggio Il contenuto della notifica
+     * @param string $tipo Tipo di notifica (info, warning, success, error)
+     * @param int|null $idCollegato ID collegato (es. progetto, utente, ecc.)
+     * @param array $metadati Dati aggiuntivi per la notifica
+     * @return array Risultato dell'operazione
      */
-    public function createNotification($userId, $message, $type, $relatedId = null, $metadata = []) {
-        try {
-            // Crea la notifica nel database
-            $notificationData = [
-                'user_id' => $userId,
-                'message' => $message,
-                'type' => $type,
-                'related_id' => $relatedId,
-                'metadata' => json_encode($metadata),
+    public function creaNuovaNotifica($idUtente, $messaggio, $tipo, $idCollegato = null, $metadati = []) {
+        try {            // Prepariamo i dati della notifica in formato comprensibile
+            $datiNotifica = [
+                'user_id' => $idUtente,
+                'message' => $messaggio,
+                'type' => $tipo,
+                'related_id' => $idCollegato,
+                'metadata' => json_encode($metadati),
                 'is_read' => false,
                 'created_at' => date('Y-m-d H:i:s')
             ];
-            $notification = $this->notificationModel->create($notificationData);
-            if ($notification) {
-                // Log della notifica
-                $this->logNotification($userId, $type, $message);
+            
+            // Creiamo la notifica usando il nostro gestore
+            $risultato = $this->gestoreNotifiche->creaNuovaNotifica(
+                $idUtente, 
+                $messaggio, 
+                $tipo, 
+                $idCollegato
+            );
+            
+            if ($risultato['stato'] === 'successo') {
+                // Registriamo l'attività per monitoraggio
+                $this->registraNotifica($idUtente, $tipo, $messaggio);
+                
+                // Se è una notifica importante, potremmo inviarla anche via email
+                if ($this->dovremmoInviareEmail($tipo)) {
+                    $this->inviaNotificaEmail($idUtente, $messaggio, $tipo);
+                }
             }
-            return $notification;
-        } catch (\Exception $e) {
-            error_log("Errore nella creazione della notifica: " . $e->getMessage());
-            return false;
-        }    }
-
-    /**
-     * Log notification for analytics
-     */
-    private function logNotification($userId, $type, $message) {
-        try {
-            $stmt = $this->db->prepare("
-                INSERT INTO notification_logs (user_id, type, message, created_at) 
-                VALUES (?, ?, ?, NOW())
-            ");
-            $stmt->execute([$userId, $type, $message]);
-        } catch (\Exception $e) {
-            error_log("Error logging notification: " . $e->getMessage());
+            
+            return $risultato;        } catch (\Exception $errore) {
+            error_log("Errore nella creazione della notifica: " . $errore->getMessage());
+            return [
+                'stato' => 'errore',
+                'messaggio' => 'Non sono riuscito a creare la notifica. Riprova più tardi.'
+            ];
         }
     }
 
     /**
-     * Notify when a project receives backing
+     * Registra la notifica per statistiche e monitoraggio
+     * 
+     * È come tenere un registro di tutte le lettere spedite
      */
-    public function notifyProjectBacked($projectId, $backerId, $amount) {
+    private function registraNotifica($idUtente, $tipo, $messaggio) {
         try {
-            $project = $this->getProject($projectId);
-            if (!$project) {
+            $statement = $this->connessioneDatabase->prepare("
+                INSERT INTO notification_logs (user_id, type, message, created_at) 
+                VALUES (?, ?, ?, NOW())
+            ");
+            $statement->execute([$idUtente, $tipo, $messaggio]);
+        } catch (\Exception $errore) {
+            error_log("Errore nel registrare notifica: " . $errore->getMessage());
+        }
+    }
+
+    /**
+     * Determina se dovremmo inviare questa notifica anche via email
+     * 
+     * @param string $tipo Il tipo di notifica
+     * @return bool True se deve essere inviata via email
+     */
+    private function dovremmoInviareEmail($tipo) {
+        // Inviamo email solo per notifiche importanti
+        $tipiImportanti = ['project_funded', 'project_backed', 'system_alert', 'account_security'];
+        return in_array($tipo, $tipiImportanti);
+    }
+
+    /**
+     * Invia una notifica via email
+     * 
+     * @param int $idUtente ID dell'utente
+     * @param string $messaggio Messaggio da inviare
+     * @param string $tipo Tipo di notifica
+     */
+    private function inviaNotificaEmail($idUtente, $messaggio, $tipo) {
+        // TODO: Implementare invio email
+        // Per ora registriamo solo che dovremmo inviare l'email
+        error_log("TODO: Inviare email a utente {$idUtente} - Tipo: {$tipo} - Messaggio: {$messaggio}");
+    }
+
+    /**
+     * Notifica quando un progetto riceve un finanziamento
+     * 
+     * È come quando qualcuno fa una donazione: il creatore del progetto
+     * deve essere avvisato che ha ricevuto supporto!
+     */
+    public function notificaProgettoFinanziato($idProgetto, $idSostenitore, $importo) {
+        try {
+            $progetto = $this->ottieniProgetto($idProgetto);
+            if (!$progetto) {
                 return false;
             }
 

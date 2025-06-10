@@ -1,85 +1,100 @@
 <?php
+// Includiamo le dipendenze necessarie
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
 /**
- * Modello Project - Conforme alle specifiche PDF
- * Utilizza stored procedure per tutte le operazioni richieste
+ * Modello per gestire i progetti sulla piattaforma BOSTARTER
+ * Questo modello è conforme alle specifiche del documento PDF
+ * Utilizza stored procedure per tutte le operazioni richieste dal database
  */
 class ProjectCompliant {
-    private $db;
-    private $conn;
+    private $database;        // Istanza del database
+    private $connessione;     // Connessione PDO
 
+    /**
+     * Costruttore della classe
+     * Inizializza la connessione al database
+     */
     public function __construct() {
-        $this->db = Database::getInstance();
-        $this->conn = $this->db->getConnection();
+        $this->database = Database::getInstance();
+        $this->connessione = $this->database->getConnection();
     }
 
     /**
-     * Crea un nuovo progetto tramite stored procedure
+     * Crea un nuovo progetto sulla piattaforma
+     * Supporta solo progetti di tipo hardware o software come da specifiche
+     * 
+     * @param array $datiProgetto Array contenente tutti i dati del progetto
+     * @return array Risultato dell'operazione con successo/errore
      */
-    public function create($data) {
+    public function creaProgetto($datiProgetto) {
         try {
-            // Valida il tipo di progetto (solo hardware o software consentiti)
-            if (!in_array($data['tipo'], ['hardware', 'software'])) {
+            // Controlliamo che il tipo di progetto sia valido (solo hardware o software)
+            if (!in_array($datiProgetto['tipo'], ['hardware', 'software'])) {
                 return [
-                    'success' => false,
-                    'message' => 'Tipo progetto non valido. Solo hardware o software permessi.'
+                    'successo' => false,
+                    'messaggio' => 'Tipo progetto non valido. Sono ammessi solo progetti hardware o software.'
                 ];
             }
 
-            // Crea il progetto in base al tipo
-            if ($data['tipo'] === 'hardware') {
-                return $this->createHardwareProject($data);
+            // Creiamo il progetto in base al tipo specificato
+            if ($datiProgetto['tipo'] === 'hardware') {
+                return $this->creaProgettoHardware($datiProgetto);
             } else {
-                return $this->createSoftwareProject($data);
+                return $this->creaProgettoSoftware($datiProgetto);
             }
-        } catch (PDOException $e) {
-            error_log($e->getMessage());
+        } catch (PDOException $errore) {
+            // Registriamo l'errore nel log per il debugging
+            error_log('Errore nella creazione del progetto: ' . $errore->getMessage());
             return [
-                'success' => false,
-                'message' => 'Errore durante la creazione del progetto'
+                'successo' => false,
+                'messaggio' => 'Si è verificato un errore durante la creazione del progetto'
             ];
         }
     }
 
     /**
-     * Crea un progetto hardware
+     * Crea un progetto di tipo hardware
+     * I progetti hardware hanno caratteristiche specifiche come componenti fisici
+     * 
+     * @param array $dati Dati specifici per il progetto hardware
+     * @return array Risultato dell'operazione
      */
-    private function createHardwareProject($data) {
+    private function creaProgettoHardware($dati) {
         try {
-            $this->conn->beginTransaction();
+            // Iniziamo una transazione per garantire consistenza dei dati
+            $this->connessione->beginTransaction();
 
-            // Inserisci il progetto base
-            $stmt = $this->conn->prepare("
+            // Inseriamo il progetto base nella tabella progetti
+            $statement = $this->connessione->prepare("
                 INSERT INTO progetti (
                     nome, descrizione, budget_richiesto, data_scadenza,
                     tipo, immagine_principale, video_presentazione, creatore_id
                 ) VALUES (?, ?, ?, ?, 'hardware', ?, ?, ?)
             ");
-            
-            $stmt->execute([
-                $data['nome'],
-                $data['descrizione'],
-                $data['budget_richiesto'],
-                $data['data_scadenza'],
-                $data['immagine_principale'] ?? null,
-                $data['video_presentazione'] ?? null,
-                $data['creatore_id']
+              $statement->execute([
+                $dati['nome'],
+                $dati['descrizione'],
+                $dati['budget_richiesto'],
+                $dati['data_scadenza'],
+                $dati['immagine_principale'] ?? null,
+                $dati['video_presentazione'] ?? null,
+                $dati['creatore_id']
             ]);
             
-            $projectId = $this->conn->lastInsertId();
+            $idProgetto = $this->connessione->lastInsertId();
 
-            // Inserisci i componenti hardware
-            if (!empty($data['componenti'])) {
-                $stmt = $this->conn->prepare("
+            // Inseriamo i componenti hardware specifici se presenti
+            if (!empty($dati['componenti'])) {
+                $statementComponenti = $this->connessione->prepare("
                     INSERT INTO componenti_hardware (progetto_id, nome, descrizione, quantita, prezzo_unitario)
                     VALUES (?, ?, ?, ?, ?)
                 ");
                 
-                foreach ($data['componenti'] as $componente) {
-                    $stmt->execute([
-                        $projectId,
+                foreach ($dati['componenti'] as $componente) {
+                    $statementComponenti->execute([
+                        $idProgetto,
                         $componente['nome'],
                         $componente['descrizione'],
                         $componente['quantita'],
@@ -88,20 +103,22 @@ class ProjectCompliant {
                 }
             }
 
-            // Inserisci le ricompense
-            if (!empty($data['ricompense'])) {
-                $this->insertRewards($projectId, $data['ricompense']);
+            // Inseriamo le ricompense associate al progetto
+            if (!empty($dati['ricompense'])) {
+                $this->inserisciRicompense($idProgetto, $dati['ricompense']);
             }
 
-            $this->conn->commit();
+            // Confermiamo tutte le operazioni
+            $this->connessione->commit();
             return [
-                'success' => true,
-                'progetto_id' => $projectId,
-                'message' => 'Progetto hardware creato con successo'
+                'successo' => true,
+                'id_progetto' => $idProgetto,
+                'messaggio' => 'Progetto hardware creato con successo'
             ];
-        } catch (PDOException $e) {
-            $this->conn->rollBack();
-            throw $e;
+        } catch (PDOException $errore) {
+            // In caso di errore, annulliamo tutte le operazioni
+            $this->connessione->rollBack();
+            throw $errore;
         }
     }
 

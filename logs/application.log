@@ -31,3 +31,134 @@
 [2025-06-08 22:02:02] ACTIVITY: User : projects_viewed {"filters":{"category":"","search":"","sort":"recent","page":1},"results_count":0,"total_available":0}
 [2025-06-09 00:13:49] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-09 00:13:49","session_duration":8603}
 [2025-06-09 00:14:09] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-09 00:46:47] ACTIVITY: User : projects_viewed {"filters":{"category":"","search":"","sort":"recent","page":1},"results_count":0,"total_available":0}
+[2025-06-09 00:50:11] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-09 00:50:11","session_duration":2162}
+[2025-06-09 00:50:35] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-09 01:20:31] ACTIVITY: User 34: user_login {"email":"test_login@bostarter.it","ip":"unknown","user_agent":"unknown","remember_me":false}
+[2025-06-09 01:20:54] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-09 01:20:54","session_duration":1819}
+[2025-06-09 01:21:24] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-09 01:22:25] ACTIVITY: User 34: user_login {"email":"test_login@bostarter.it","ip":"unknown","user_agent":"unknown","remember_me":false}
+[2025-06-09 01:22:42] ACTIVITY: User 34: user_login {"email":"test_login@bostarter.it","ip":"unknown","user_agent":"unknown","remember_me":false}
+[2025-06-09 01:22:42] ACTIVITY: User 34: user_logout {"logout_time":"2025-06-09 01:22:42","session_duration":0}
+[2025-06-09 01:42:44] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-09 01:42:44"}
+[2025-06-09 01:45:05] ACTIVITY: User 38: user_login {"email":"test@bostarter.com","ip":"unknown","user_agent":"unknown","remember_me":false}
+[2025-06-09 01:45:35] ACTIVITY: User 25: dashboard_access {"timestamp":"2025-06-09 01:45:35"}
+[2025-06-09 01:45:49] ACTIVITY: User 38: user_login {"email":"test@bostarter.com","ip":"127.0.0.1","user_agent":"PHP-Test","remember_me":false}
+[2025-06-09 01:45:51] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 01:45:51"}
+[2025-06-09 01:46:05] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 01:46:05"}
+[2025-06-09 01:46:38] ACTIVITY: User 38: user_login {"email":"test@bostarter.com","ip":"127.0.0.1","user_agent":"Mozilla\/5.0 Test Browser","remember_me":false}
+[2025-06-09 01:47:04] ACTIVITY: User 38: user_login {"email":"test@bostarter.com","ip":"127.0.0.1","user_agent":"Test","remember_me":false}
+[2025-06-09 10:03:08] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 10:03:08"}
+[2025-06-09 10:36:43] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 10:36:43"}
+[2025-06-09 12:13:28] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 12:13:28"}
+[2025-06-09 12:21:01] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 12:21:01"}
+[2025-06-09 12:22:48] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 12:22:48"}
+[2025-06-09 12:28:41] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 12:28:41"}
+[2025-06-09 12:29:05] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-09 12:29:05","session_duration":40061}
+[2025-06-09 12:29:28] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-09 12:35:30] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 12:35:30"}
+[2025-06-09 12:51:08] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 12:51:08"}
+[2025-06-09 12:54:53] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 12:54:53"}
+[2025-06-09 12:58:13] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 12:58:13"}
+[2025-06-09 13:00:00] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:00:00"}
+[2025-06-09 13:01:47] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:01:47"}
+[2025-06-09 13:16:05] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:16:05"}
+[2025-06-09 13:20:52] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:20:52"}
+[2025-06-09 13:20:53] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:20:53"}
+[2025-06-09 13:21:00] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:21:00"}
+[2025-06-09 13:21:10] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:21:10"}
+[2025-06-09 13:23:47] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:23:47"}
+[2025-06-09 13:23:49] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:23:49"}
+[2025-06-09 13:32:19] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:32:19"}
+[2025-06-09 13:37:03] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:37:03"}
+[2025-06-09 13:52:32] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 13:52:32"}
+[2025-06-09 14:19:56] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:19:56"}
+[2025-06-09 14:24:15] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:24:15"}
+[2025-06-09 14:24:46] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:24:46"}
+[2025-06-09 14:25:11] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:25:11"}
+[2025-06-09 14:25:30] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-09 14:25:30"}
+[2025-06-09 14:25:34] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:25:34"}
+[2025-06-09 14:25:36] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-09 14:25:36","session_duration":6968}
+[2025-06-09 14:26:08] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-09 14:26:19] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:26:19"}
+[2025-06-09 14:27:45] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:27:45"}
+[2025-06-09 14:31:04] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:31:04"}
+[2025-06-09 14:31:20] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:31:20"}
+[2025-06-09 14:31:24] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:31:24"}
+[2025-06-09 14:31:25] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:31:25"}
+[2025-06-09 14:31:41] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:31:41"}
+[2025-06-09 14:31:47] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 14:31:47"}
+[2025-06-09 21:33:24] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-09 21:33:24"}
+[2025-06-10 01:46:34] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 01:46:34"}
+[2025-06-10 01:46:43] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 01:46:43"}
+[2025-06-10 01:46:47] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 01:46:47"}
+[2025-06-10 01:46:50] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 01:46:50"}
+[2025-06-10 01:46:54] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 01:46:54"}
+[2025-06-10 01:56:50] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 01:56:50"}
+[2025-06-10 01:58:01] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 01:58:01"}
+[2025-06-10 01:59:06] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 01:59:06"}
+[2025-06-10 02:01:04] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:01:04"}
+[2025-06-10 02:01:17] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:01:17"}
+[2025-06-10 02:02:46] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:02:46"}
+[2025-06-10 02:04:21] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:04:21"}
+[2025-06-10 02:04:29] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:04:29"}
+[2025-06-10 02:09:59] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:09:59"}
+[2025-06-10 02:10:21] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:10:21"}
+[2025-06-10 02:11:01] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:11:01"}
+[2025-06-10 02:14:57] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:14:57"}
+[2025-06-10 02:17:47] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:17:47"}
+[2025-06-10 02:21:10] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:21:10"}
+[2025-06-10 02:21:27] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:21:27"}
+[2025-06-10 02:21:30] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:21:30"}
+[2025-06-10 02:21:32] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:21:32"}
+[2025-06-10 02:21:33] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:21:33"}
+[2025-06-10 02:21:56] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:21:56"}
+[2025-06-10 02:22:01] ACTIVITY: User 25: user_logout {"logout_time":"2025-06-10 02:22:01","session_duration":42953}
+[2025-06-10 02:22:26] ACTIVITY: User 25: user_login {"email":"tesfaye1@gmail.com","ip":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/136.0.0.0 Safari\/537.36","remember_me":false}
+[2025-06-10 02:25:15] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:25:15"}
+[2025-06-10 02:25:21] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:25:21"}
+[2025-06-10 02:27:22] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:27:22"}
+[2025-06-10 02:28:53] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:28:53"}
+[2025-06-10 02:29:30] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:29:30"}
+[2025-06-10 02:47:13] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:47:13"}
+[2025-06-10 02:47:20] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:47:20"}
+[2025-06-10 02:47:22] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:47:22"}
+[2025-06-10 02:47:25] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-10 02:47:25"}
+[2025-06-10 02:47:29] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:47:29"}
+[2025-06-10 02:47:38] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:47:38"}
+[2025-06-10 02:47:40] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 02:47:40"}
+[2025-06-10 11:59:11] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 11:59:11"}
+[2025-06-10 12:01:50] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:01:50"}
+[2025-06-10 12:04:58] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:04:58"}
+[2025-06-10 12:08:34] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:08:34"}
+[2025-06-10 12:09:20] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-10 12:09:20"}
+[2025-06-10 12:09:23] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:09:23"}
+[2025-06-10 12:09:28] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-10 12:09:28"}
+[2025-06-10 12:09:30] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:09:30"}
+[2025-06-10 12:12:20] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:12:20"}
+[2025-06-10 12:12:26] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:12:26"}
+[2025-06-10 12:12:34] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:12:34"}
+[2025-06-10 12:12:37] ACTIVITY: User 25: projects_browse {"timestamp":"2025-06-10 12:12:37","filters":{"type":null,"search":null,"sort":"newest"},"page":1}
+[2025-06-10 12:12:42] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:12:42"}
+[2025-06-10 12:12:50] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:12:50"}
+[2025-06-10 12:15:03] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:15:03"}
+[2025-06-10 12:15:20] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 12:15:20"}
+[2025-06-10 12:16:57] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:16:57"}
+[2025-06-10 12:30:41] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 12:30:41"}
+[2025-06-10 12:31:04] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 12:31:04"}
+[2025-06-10 12:55:18] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 12:55:18"}
+[2025-06-10 13:00:53] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:00:53"}
+[2025-06-10 13:03:55] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:03:55"}
+[2025-06-10 13:04:00] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:04:00"}
+[2025-06-10 13:04:03] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:04:03"}
+[2025-06-10 13:04:04] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 13:04:04"}
+[2025-06-10 13:05:26] ATTIVITA_UTENTE: Utente 25: accesso_dashboard {"timestamp":"2025-06-10 13:05:26"}
+[2025-06-10 13:05:28] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:05:28"}
+[2025-06-10 13:05:33] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:05:33"}
+[2025-06-10 13:08:05] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:08:05"}
+[2025-06-10 13:08:10] ACTIVITY: User 25: project_create_page_access {"timestamp":"2025-06-10 13:08:10"}
+[2025-06-10 13:12:03] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:12:03"}
+[2025-06-10 13:12:11] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:12:11"}
+[2025-06-10 13:12:14] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:12:14"}
+[2025-06-10 13:12:17] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:12:17"}
+[2025-06-10 13:22:43] ACTIVITY: User 25: homepage_visit {"timestamp":"2025-06-10 13:22:43"}

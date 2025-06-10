@@ -1,7 +1,10 @@
 <?php
-session_start();
+require_once '../../backend/middleware/SecurityMiddleware.php';
 require_once '../../backend/config/database.php';
 require_once '../../backend/services/MongoLogger.php';
+
+// Initialize secure session through SecurityMiddleware
+SecurityMiddleware::initialize();
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");

@@ -3,8 +3,10 @@ require_once __DIR__ . '/../../backend/config/config.php';
 require_once __DIR__ . '/../../backend/config/database.php';
 require_once __DIR__ . '/../../backend/utils/NavigationHelper.php';
 require_once __DIR__ . '/../../backend/services/MongoLogger.php';
+require_once __DIR__ . '/../../backend/middleware/SecurityMiddleware.php';
 
-session_start();
+// Initialize secure session through SecurityMiddleware
+SecurityMiddleware::initialize();
 
 // Se l'utente è già loggato, redirect alla dashboard
 if (NavigationHelper::isLoggedIn()) {
@@ -26,29 +28,6 @@ if (!isset($_SESSION['csrf_token_time']) || (time() - $_SESSION['csrf_token_time
 // Additional form token (not session-dependent)
 $form_token = hash('sha256', session_id() . ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown') . date('Y-m-d-H'));
 
-// Rate limiting per tentativi di registrazione
-$max_attempts = 3;
-$lockout_time = 30 * 60; // 30 minuti
-$attempts_key = 'register_attempts_' . ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
-
-if (!isset($_SESSION[$attempts_key])) {
-    $_SESSION[$attempts_key] = ['count' => 0, 'last_attempt' => 0];
-}
-
-// Controlla se l'IP è attualmente bloccato
-$is_locked_out = false;
-$minutes_remaining = 0;
-if ($_SESSION[$attempts_key]['count'] >= $max_attempts) {
-    $time_since_last = time() - $_SESSION[$attempts_key]['last_attempt'];
-    if ($time_since_last < $lockout_time) {
-        $is_locked_out = true;
-        $minutes_remaining = ceil(($lockout_time - $time_since_last) / 60);
-    } else {
-        // Reset tentativi dopo il periodo di lockout
-        $_SESSION[$attempts_key] = ['count' => 0, 'last_attempt' => 0];
-    }
-}
-
 $error = '';
 $success = '';
 $formData = [
@@ -63,137 +42,117 @@ $formData = [
 ];
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-    // Controlla rate limiting prima di tutto
-    if ($is_locked_out) {
-        $error = "Troppi tentativi di registrazione. Riprova tra $minutes_remaining minuti.";
+    // Verifica token CSRF
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $error = 'Token di sicurezza non valido. Riprova.';
     } else {
-        // Verifica token CSRF
-        if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
-            $error = 'Token di sicurezza non valido. Riprova.';
-            $_SESSION[$attempts_key]['count']++;
-            $_SESSION[$attempts_key]['last_attempt'] = time();
+        // Sanitizza e valida i dati del form
+        $formData = [
+            'email' => filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL),
+            'nickname' => htmlspecialchars(trim($_POST['nickname'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'nome' => htmlspecialchars(trim($_POST['nome'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'cognome' => htmlspecialchars(trim($_POST['cognome'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'anno_nascita' => filter_var($_POST['anno_nascita'] ?? '', FILTER_SANITIZE_NUMBER_INT),
+            'luogo_nascita' => htmlspecialchars(trim($_POST['luogo_nascita'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'sesso' => htmlspecialchars($_POST['sesso'] ?? '', ENT_QUOTES, 'UTF-8'),
+            'tipo_utente' => htmlspecialchars($_POST['tipo_utente'] ?? 'standard', ENT_QUOTES, 'UTF-8')
+        ];
+        $password = $_POST['password'] ?? '';
+        $password_confirm = $_POST['password_confirm'] ?? '';
+        // Validazione centralizzata usando Validator
+        require_once __DIR__ . '/../../backend/utils/Validator.php';
+        // Prepara i dati per la validazione (formato compatibile con backend)
+        $registrationData = [
+            'email' => $formData['email'],
+            'nickname' => $formData['nickname'],
+            'password' => $password,
+            'nome' => $formData['nome'],
+            'cognome' => $formData['cognome'],
+            'data_nascita' => $formData['anno_nascita'] . '-01-01', // Adatta il formato
+            'sesso' => $formData['sesso'] === 'Altro' ? 'O' : $formData['sesso']
+        ];
+        $validationResult = Validator::validateRegistration($registrationData);
+        $validation_errors = [];
+        if ($validationResult !== true) {
+            $validation_errors = is_array($validationResult) ? array_values($validationResult) : [$validationResult];
+        }
+        // Validazioni aggiuntive specifiche per questo form
+        if (empty($formData['luogo_nascita'])) {
+            $validation_errors[] = 'Luogo di nascita è obbligatorio';
+        } elseif (strlen($formData['luogo_nascita']) > 100) {
+            $validation_errors[] = 'Luogo di nascita troppo lungo (max 100 caratteri)';
+        }
+        if (!in_array($formData['tipo_utente'], ['standard', 'creator'])) {
+            $validation_errors[] = 'Tipo utente non valido';
+        }
+        if ($password !== $password_confirm) {
+            $validation_errors[] = 'Le password non coincidono';
+        }
+        if (!isset($_POST['terms']) || $_POST['terms'] !== 'on') {
+            $validation_errors[] = 'Devi accettare i Termini e Condizioni';
+        }
+        if (!empty($validation_errors)) {
+            $error = implode('<br>', $validation_errors);
         } else {
-            // Sanitizza e valida i dati del form
-            $formData = [
-                'email' => filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL),
-                'nickname' => htmlspecialchars(trim($_POST['nickname'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'nome' => htmlspecialchars(trim($_POST['nome'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'cognome' => htmlspecialchars(trim($_POST['cognome'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'anno_nascita' => filter_var($_POST['anno_nascita'] ?? '', FILTER_SANITIZE_NUMBER_INT),
-                'luogo_nascita' => htmlspecialchars(trim($_POST['luogo_nascita'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'sesso' => htmlspecialchars($_POST['sesso'] ?? '', ENT_QUOTES, 'UTF-8'),
-                'tipo_utente' => htmlspecialchars($_POST['tipo_utente'] ?? 'standard', ENT_QUOTES, 'UTF-8')
-            ];
-            
-            $password = $_POST['password'] ?? '';
-            $password_confirm = $_POST['password_confirm'] ?? '';
-            
-            // Validazione centralizzata usando Validator
-            require_once __DIR__ . '/../../backend/utils/Validator.php';
-            
-            // Prepara i dati per la validazione (formato compatibile con backend)
-            $registrationData = [
-                'email' => $formData['email'],
-                'nickname' => $formData['nickname'],
-                'password' => $password,
-                'nome' => $formData['nome'],
-                'cognome' => $formData['cognome'],
-                'data_nascita' => $formData['anno_nascita'] . '-01-01', // Adatta il formato
-                'sesso' => $formData['sesso'] === 'Altro' ? 'O' : $formData['sesso']
-            ];
-            
-            $validationResult = Validator::validateRegistration($registrationData);
-            $validation_errors = [];
-            
-            if ($validationResult !== true) {
-                $validation_errors = is_array($validationResult) ? array_values($validationResult) : [$validationResult];
-            }
-            
-            // Validazioni aggiuntive specifiche per questo form
-            if (empty($formData['luogo_nascita'])) {
-                $validation_errors[] = 'Luogo di nascita è obbligatorio';
-            } elseif (strlen($formData['luogo_nascita']) > 100) {
-                $validation_errors[] = 'Luogo di nascita troppo lungo (max 100 caratteri)';
-            }
-            
-            if (!in_array($formData['tipo_utente'], ['standard', 'creator'])) {
-                $validation_errors[] = 'Tipo utente non valido';
-            }
-            
-            if ($password !== $password_confirm) {
-                $validation_errors[] = 'Le password non coincidono';
-            }
-            
-            if (!isset($_POST['terms']) || $_POST['terms'] !== 'on') {
-                $validation_errors[] = 'Devi accettare i Termini e Condizioni';
-            }
-            
-            if (!empty($validation_errors)) {
-                $error = implode('<br>', $validation_errors);
-                $_SESSION[$attempts_key]['count']++;
-                $_SESSION[$attempts_key]['last_attempt'] = time();
-            } else {
-                // Registrazione nel database
-                $db = Database::getInstance();
-                $conn = $db->getConnection();
-                try {
-                    // Controlla se l'email o il nickname esistono già
-                    $stmt = $conn->prepare("SELECT COUNT(*) FROM utenti WHERE email = ? OR nickname = ?");
-                    $stmt->execute([$formData['email'], $formData['nickname']]);
-                    $exists = $stmt->fetchColumn();
-                    if ($exists > 0) {
-                        $error = 'Email o nickname già registrati.';
-                        $_SESSION[$attempts_key]['count']++;
-                        $_SESSION[$attempts_key]['last_attempt'] = time();
-                    } else {                        // Inserisci nuovo utente
-                        $hashed_password = password_hash($password, PASSWORD_DEFAULT);                        $insert = $conn->prepare("INSERT INTO utenti (email, nickname, password_hash, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                        $insert->execute([
-                            $formData['email'],
-                            $formData['nickname'],
-                            $hashed_password,
-                            $formData['nome'],
-                            $formData['cognome'],
-                            $formData['anno_nascita'],
-                            $formData['luogo_nascita'],
-                            $formData['tipo_utente']
-                        ]);
-                        $user_id = $conn->lastInsertId();
-                        // Login automatico
-                        $_SESSION['user_id'] = $user_id;
-                        $_SESSION['user'] = [
-                            'id' => $user_id,
+            // Registrazione nel database
+            $db = Database::getInstance();
+            $conn = $db->getConnection();
+            try {
+                // Controlla se l'email o il nickname esistono già
+                $stmt = $conn->prepare("SELECT COUNT(*) FROM utenti WHERE email = ? OR nickname = ?");
+                $stmt->execute([$formData['email'], $formData['nickname']]);
+                $exists = $stmt->fetchColumn();
+                if ($exists > 0) {
+                    $error = 'Email o nickname già registrati.';
+                } else {
+                    // Inserisci nuovo utente
+                    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                    $insert = $conn->prepare("INSERT INTO utenti (email, nickname, password_hash, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $insert->execute([
+                        $formData['email'],
+                        $formData['nickname'],
+                        $hashed_password,
+                        $formData['nome'],
+                        $formData['cognome'],
+                        $formData['anno_nascita'],
+                        $formData['luogo_nascita'],
+                        $formData['tipo_utente']
+                    ]);
+                    $user_id = $conn->lastInsertId();
+                    // Login automatico
+                    $_SESSION['user_id'] = $user_id;
+                    $_SESSION['user'] = [
+                        'id' => $user_id,
+                        'email' => $formData['email'],
+                        'username' => $formData['nickname'],
+                        'tipo_utente' => $formData['tipo_utente'],
+                        'nome' => $formData['nome'],
+                        'cognome' => $formData['cognome']
+                    ];
+                    // Logging MongoDB
+                    try {
+                        $mongoLogger = new MongoLogger();
+                        $mongoLogger->logActivity('user_register', [
+                            'user_id' => $user_id,
                             'email' => $formData['email'],
-                            'username' => $formData['nickname'],
-                            'tipo_utente' => $formData['tipo_utente'],
-                            'nome' => $formData['nome'],
-                            'cognome' => $formData['cognome']
-                        ];
-                        // Logging MongoDB
-                        try {
-                            $mongoLogger = new MongoLogger();
-                            $mongoLogger->logActivity('user_register', [
-                                'user_id' => $user_id,
-                                'email' => $formData['email'],
-                                'register_time' => date('Y-m-d H:i:s'),
-                                'ip_address' => $_SERVER['REMOTE_ADDR'],
-                                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-                                'register_method' => 'web_form'
-                            ]);
-                        } catch (Exception $e) {
-                            error_log("MongoDB logging failed: " . $e->getMessage());
-                        }
-                        // Reset tentativi dopo registrazione riuscita
-                        $_SESSION[$attempts_key] = ['count' => 0, 'last_attempt' => 0];
-                        // Redirect PHP immediato per affidabilità
-                        NavigationHelper::redirect('dashboard');
-                        // UX: Mostra messaggio e redirect dopo 2 secondi (fallback, non verrà mai eseguito se il redirect PHP funziona)
-                        // echo '<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="2;url=/BOSTARTER/frontend/dashboard.php"><title>Registrazione completata</title><link rel="stylesheet" href="/BOSTARTER/frontend/css/auth-register.css"></head><body class="registration-page"><div class="min-h-screen flex items-center justify-center"><div class="registration-card text-center"><h2 class="gradient-text text-2xl mb-4">Registrazione completata!</h2><p class="mb-4">Benvenuto su BOSTARTER.<br>Verrai reindirizzato alla dashboard...</p><div class="loading-spinner mx-auto"></div></div></div></body></html>';
-                        // exit;
+                            'register_time' => date('Y-m-d H:i:s'),
+                            'ip_address' => $_SERVER['REMOTE_ADDR'],
+                            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                            'register_method' => 'web_form'
+                        ]);
+                    } catch (Exception $e) {
+                        error_log("MongoDB logging failed: " . $e->getMessage());
                     }
-                } catch (Exception $e) {
-                    $error = 'Errore durante la registrazione. Riprova più tardi.';
-                    error_log("Registration error: " . $e->getMessage());
+                    // Reset tentativi dopo registrazione riuscita
+                    // Redirect PHP immediato per affidabilità
+                    NavigationHelper::redirect('dashboard');
+                    // UX: Mostra messaggio e redirect dopo 2 secondi (fallback, non verrà mai eseguito se il redirect PHP funziona)
+                    // echo '<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="2;url=/BOSTARTER/frontend/dashboard.php"><title>Registrazione completata</title><link rel="stylesheet" href="/BOSTARTER/frontend/css/auth-register.css"></head><body class="registration-page"><div class="min-h-screen flex items-center justify-center"><div class="registration-card text-center"><h2 class="gradient-text text-2xl mb-4">Registrazione completata!</h2><p class="mb-4">Benvenuto su BOSTARTER.<br>Verrai reindirizzato alla dashboard...</p><div class="loading-spinner mx-auto"></div></div></div></body></html>';
+                    // exit;
                 }
+            } catch (Exception $e) {
+                $error = 'Errore durante la registrazione. Riprova più tardi.';
+                error_log("Registration error: " . $e->getMessage());
             }
         }
     }
@@ -238,13 +197,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 </p>
             </div>
 
-            <!-- Rate Limiting Warning -->
-            <?php if ($is_locked_out): ?>
-                <div class="alert alert-error mb-4" role="alert">
-                    <i class="fas fa-exclamation-triangle mr-2"></i> <?= $error ?>
-                </div>
-            <?php endif; ?>
-
             <!-- Error Messages -->
             <?php if ($error): ?>
                 <div class="alert alert-error mb-4" role="alert" aria-live="polite">
@@ -260,7 +212,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             <?php endif; ?>
 
             <!-- Registration Form -->
-            <form id="registerForm" method="POST" class="space-y-6" novalidate <?= $is_locked_out ? 'style=\"pointer-events: none; opacity: 0.5;\"' : '' ?> autocomplete="on">
+            <form id="registerForm" method="POST" class="space-y-6" novalidate autocomplete="on">
                 <!-- CSRF Token -->
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                 <!-- Form Progress -->

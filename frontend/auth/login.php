@@ -4,9 +4,20 @@
  * Utilizza il nuovo sistema di autenticazione centralizzato
  */
 
+session_start(); // Inizia sessione prima di includere i file
+
 require_once __DIR__ . '/../../backend/middleware/SecurityMiddleware.php';
 require_once __DIR__ . '/../../backend/controllers/AuthController.php';
 require_once __DIR__ . '/../../backend/utils/NavigationHelper.php';
+
+// Protezione contro loop di redirect
+$redirect_count = $_SESSION['redirect_count'] ?? 0;
+if ($redirect_count > 3) {
+    // Troppi redirect, pulisci la sessione
+    session_unset();
+    session_destroy();
+    session_start();
+}
 
 // Inizializza middleware di sicurezza
 SecurityMiddleware::applyAll([
@@ -16,19 +27,22 @@ SecurityMiddleware::applyAll([
     'sanitize' => true
 ]);
 
-// Inizializza controller
-$authController = new AuthController();
+// Inizializa controller
+$authController = new \BOSTARTER\Controllers\GestoreAutenticazione();
 
-// Redirect se già loggato
-$authController->requireGuest();
+// Controllo se l'utente è già loggato - ma solo se non siamo in un loop
+if ($redirect_count <= 1 && NavigationHelper::isLoggedIn()) {
+    // Reset contatore e redirect alla dashboard
+    unset($_SESSION['redirect_count']);
+    NavigationHelper::redirect('dashboard');
+}
 
 $error = '';
 $success = '';
 $remember_email = $_COOKIE['remember_email'] ?? '';
 
 // Gestione form
-$requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-if ($requestMethod === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $authController->login();
     
     if ($result['success']) {

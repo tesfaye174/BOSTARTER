@@ -1,0 +1,5 @@
+/* Register-specific styles */
+.register-form { display: flex; flex-direction: column; }
+.register-form label { font-weight: 500; }
+.register-form input { margin-bottom: 0.7rem; }
+.register-form p { text-align: center; margin-top: 1rem; }
