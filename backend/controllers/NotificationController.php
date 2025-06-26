@@ -1,32 +1,35 @@
 <?php
 namespace BOSTARTER\Controllers;
 
-/**
- * GESTORE NOTIFICHE BOSTARTER
+/*****************************************
+ * Controller Notifiche BOSTARTER
  * 
- * Questo controller gestisce tutte le notifiche del sistema:
- * - Mostra le notifiche agli utenti
- * - Marca le notifiche come lette
- * - Elimina notifiche vecchie
- * - Conta quelle non lette
+ * Questo controller implementa il sistema di gestione delle notifiche:
+ * - Recupero notifiche per utente (lette/non lette)
+ * - Marcatura notifiche come lette (singola o massiva)
+ * - Eliminazione notifiche
+ * - Conteggio notifiche non lette (per badge UI)
  * 
- * È come la cassetta delle lettere di casa: ricevi messaggi importanti
- * e poi decidi quando leggerli e quando buttarli via!
+ * Implementa controlli di sicurezza per garantire che un utente
+ * possa accedere solo alle proprie notifiche.
  * 
  * @author BOSTARTER Team
- * @version 2.0.0 - Versione completamente riscritta per essere più umana
+ * @version 2.0.0
+ * @since 1.8.5 - Implementazione paginazione e ottimizzazione query
  */
 
 use BOSTARTER\Models\GestoreNotifiche;
 use BOSTARTER\Utils\BaseController;
 
-class GestoreNotificheController extends BaseController
+class NotificationController extends BaseController
 {
-    // Modello per le notifiche
+    // Istanza del modello per le notifiche
     private $gestoreNotifiche;
 
     /**
-     * Costruttore - Prepara il nostro gestore delle notifiche
+     * Costruttore - Inizializza la connessione database e il modello notifiche
+     * 
+     * @throws PDOException Se la connessione al database fallisce
      */
     public function __construct() {
         parent::__construct(); // Inizializza la connessione database e logger dalla classe base
@@ -34,21 +37,25 @@ class GestoreNotificheController extends BaseController
     }
 
     /**
-     * Recupera tutte le notifiche che l'utente non ha ancora letto
+     * Recupera tutte le notifiche non lette di un utente specifico
      * 
-     * È come aprire la cassetta delle lettere e vedere solo le buste ancora sigillate
+     * Questo metodo ottimizza le query mostrando solo le notifiche ancora
+     * non visualizzate dall'utente, ordinate per data di creazione
+     * (più recenti prima).
      * 
-     * @param int $idUtente ID dell'utente di cui vogliamo le notifiche
-     * @return array Risultato dell'operazione con le notifiche trovate
+     * @param int $userId ID dell'utente di cui recuperare le notifiche
+     * @return array Risultato dell'operazione con array di notifiche e conteggio
+     * @throws Exception In caso di errori di accesso al database
      */
-    public function ottieniNotificheNonLette($idUtente) {
+    public function getUnreadNotifications($userId) {
         try {
             // Validazione parametri usando il metodo della classe base
-            $validazione = $this->validaParametri(['idUtente'], ['idUtente' => $idUtente]);            if ($validazione !== true) {
+            $validazione = $this->validaParametri(['idUtente'], ['idUtente' => $userId]);            
+            if ($validazione !== true) {
                 return $this->rispostaStandardizzata(false, 'Parametri mancanti: ' . implode(', ', $validazione));
             }
             
-            $notificheTrovate = $this->gestoreNotifiche->ottieniNotificheNonLette($idUtente);
+            $notificheTrovate = $this->gestoreNotifiche->ottieniNotificheNonLette($userId);
             
             return $this->rispostaStandardizzata(true, 'Notifiche recuperate con successo', [
                 'notifiche' => $notificheTrovate,
@@ -62,17 +69,23 @@ class GestoreNotificheController extends BaseController
     }
 
     /**
-     * Recupera tutte le notifiche dell'utente (lette e non lette)
+     * Recupera tutte le notifiche dell'utente con paginazione
      * 
-     * @param int $idUtente ID dell'utente
-     * @param int $pagina Pagina per la paginazione (default: 1)
-     * @param int $quantita Quante notifiche per pagina (default: 20)
-     * @return array Risultato dell'operazione
+     * Implementa un sistema di paginazione efficiente per evitare
+     * problemi di performance quando un utente ha molte notifiche.
+     * I risultati includono metadati di paginazione per facilitare
+     * l'implementazione dell'UI.
+     * 
+     * @param int $userId ID dell'utente
+     * @param int $page Numero di pagina richiesta (default: 1)
+     * @param int $perPage Numero di elementi per pagina (default: 20)
+     * @return array Risultato dell'operazione con notifiche e metadati paginazione
+     * @throws Exception In caso di errori di database
      */
-    public function ottieniTutteLeNotifiche($idUtente, $pagina = 1, $quantita = 20) {
+    public function getAllNotifications($userId, $page = 1, $perPage = 20) {
         try {
             // Calcoliamo l'offset per la paginazione
-            $spostamento = ($pagina - 1) * $quantita;
+            $offset = ($page - 1) * $perPage;
             
             $statement = $this->connessioneDatabase->prepare("
                 SELECT * FROM notifications 
@@ -81,29 +94,29 @@ class GestoreNotificheController extends BaseController
                 LIMIT ? OFFSET ?
             ");
             
-            $statement->execute([$idUtente, $quantita, $spostamento]);
+            $statement->execute([$userId, $perPage, $offset]);
             $notifiche = $statement->fetchAll(\PDO::FETCH_ASSOC);
             
             // Contiamo anche il totale per la paginazione
             $statementConteggio = $this->connessioneDatabase->prepare("
                 SELECT COUNT(*) as totale FROM notifications WHERE user_id = ?
             ");
-            $statementConteggio->execute([$idUtente]);
+            $statementConteggio->execute([$userId]);
             $totale = $statementConteggio->fetch(\PDO::FETCH_ASSOC)['totale'];
             
             return [
                 'stato' => 'successo',
                 'dati' => $notifiche,
                 'paginazione' => [
-                    'pagina_corrente' => $pagina,
-                    'per_pagina' => $quantita,
+                    'pagina_corrente' => $page,
+                    'per_pagina' => $perPage,
                     'totale' => $totale,
-                    'pagine_totali' => ceil($totale / $quantita)
+                    'pagine_totali' => ceil($totale / $perPage)
                 ]
             ];
             
         } catch (\Exception $errore) {
-            error_log("Errore nel recupero di tutte le notifiche per utente {$idUtente}: " . $errore->getMessage());
+            error_log("Errore nel recupero di tutte le notifiche per utente {$userId}: " . $errore->getMessage());
             
             return [
                 'stato' => 'errore',
@@ -113,26 +126,29 @@ class GestoreNotificheController extends BaseController
     }
 
     /**
-     * Marca una notifica come letta
+     * Marca una notifica specifica come letta
      * 
-     * È come quando apri una lettera: da quel momento non è più "da leggere"
+     * Include controlli di sicurezza per verificare la proprietà
+     * della notifica e impedire manipolazioni non autorizzate.
+     * L'operazione registra anche il timestamp di lettura.
      * 
-     * @param int $idNotifica ID della notifica da marcare
-     * @param int $idUtente ID dell'utente (per sicurezza)
+     * @param int $notificationId ID della notifica da marcare
+     * @param int $userId ID dell'utente (per verifica proprietà)
      * @return array Risultato dell'operazione
+     * @throws Exception In caso di errori di accesso al database
      */
-    public function marcaComeLetta($idNotifica, $idUtente = null) {
+    public function markAsRead($notificationId, $userId = null) {
         try {
             // Se abbiamo l'ID utente, facciamo un controllo di sicurezza extra
-            if ($idUtente !== null) {
+            if ($userId !== null) {
                 $statement = $this->connessioneDatabase->prepare("
                     SELECT user_id FROM notifications WHERE id = ?
                 ");
-                $statement->execute([$idNotifica]);
+                $statement->execute([$notificationId]);
                 $notifica = $statement->fetch(\PDO::FETCH_ASSOC);
                 
                 // Controlliamo che la notifica appartenga davvero all'utente
-                if (!$notifica || $notifica['user_id'] != $idUtente) {
+                if (!$notifica || $notifica['user_id'] != $userId) {
                     return [
                         'stato' => 'errore',
                         'messaggio' => 'Non puoi modificare questa notifica!'
@@ -140,11 +156,11 @@ class GestoreNotificheController extends BaseController
                 }
             }
             
-            $risultato = $this->gestoreNotifiche->marcaComeLetta($idNotifica);
+            $risultato = $this->gestoreNotifiche->marcaComeLetta($notificationId);
             return $risultato;
             
         } catch (\Exception $errore) {
-            error_log("Errore nel marcare notifica {$idNotifica} come letta: " . $errore->getMessage());
+            error_log("Errore nel marcare notifica {$notificationId} come letta: " . $errore->getMessage());
             
             return [
                 'stato' => 'errore',
@@ -154,30 +170,33 @@ class GestoreNotificheController extends BaseController
     }
 
     /**
-     * Marca TUTTE le notifiche dell'utente come lette
+     * Marca tutte le notifiche di un utente come lette (operazione massiva)
      * 
-     * È come svuotare la cassetta delle lettere tutta in una volta
+     * Esegue un'operazione di aggiornamento in batch sul database
+     * per ottimizzare le performance quando ci sono molte notifiche da
+     * aggiornare contemporaneamente.
      * 
-     * @param int $idUtente ID dell'utente
+     * @param int $userId ID dell'utente
      * @return array Risultato dell'operazione
+     * @throws Exception In caso di errori di database
      */
-    public function marcaTutteComeLette($idUtente) {
+    public function markAllAsRead($userId) {
         try {
-            $risultato = $this->gestoreNotifiche->marcaTutteComeLette($idUtente);
+            $risultato = $this->gestoreNotifiche->marcaTutteComeLette($userId);
             
             // Aggiungiamo informazioni più dettagliate
             if ($risultato['stato'] === 'successo') {
-                $risultato['messaggio'] = 'Perfetto! Tutte le tue notifiche sono ora marcate come lette.';
+                $risultato['messaggio'] = 'Tutte le notifiche sono state marcate come lette con successo';
             }
             
             return $risultato;
             
         } catch (\Exception $errore) {
-            error_log("Errore nel marcare tutte le notifiche come lette per utente {$idUtente}: " . $errore->getMessage());
+            error_log("Errore nel marcare tutte le notifiche come lette per utente {$userId}: " . $errore->getMessage());
             
             return [
                 'stato' => 'errore',
-                'messaggio' => 'Ops! Non riesco a marcare tutte le notifiche. Riprova tra poco.'
+                'messaggio' => 'Si è verificato un errore durante l\'aggiornamento delle notifiche'
             ];
         }
     }
@@ -185,23 +204,25 @@ class GestoreNotificheController extends BaseController
     /**
      * Elimina una notifica specifica
      * 
-     * Come buttare via una lettera che non ti serve più
+     * Include controlli di sicurezza per verificare la proprietà
+     * della notifica prima di permettere l'eliminazione.
      * 
-     * @param int $idNotifica ID della notifica da eliminare
-     * @param int $idUtente ID dell'utente (per sicurezza)
+     * @param int $notificationId ID della notifica da eliminare
+     * @param int $userId ID dell'utente (per verifica proprietà)
      * @return array Risultato dell'operazione
+     * @throws Exception In caso di errori di accesso al database
      */
-    public function eliminaNotifica($idNotifica, $idUtente = null) {
+    public function deleteNotification($notificationId, $userId = null) {
         try {
             // Controllo di sicurezza: solo il proprietario può eliminare la notifica
-            if ($idUtente !== null) {
+            if ($userId !== null) {
                 $statement = $this->connessioneDatabase->prepare("
                     SELECT user_id FROM notifications WHERE id = ?
                 ");
-                $statement->execute([$idNotifica]);
+                $statement->execute([$notificationId]);
                 $notifica = $statement->fetch(\PDO::FETCH_ASSOC);
                 
-                if (!$notifica || $notifica['user_id'] != $idUtente) {
+                if (!$notifica || $notifica['user_id'] != $userId) {
                     return [
                         'stato' => 'errore',
                         'messaggio' => 'Non puoi eliminare questa notifica!'
@@ -209,11 +230,11 @@ class GestoreNotificheController extends BaseController
                 }
             }
             
-            $risultato = $this->gestoreNotifiche->eliminaNotifica($idNotifica);
+            $risultato = $this->gestoreNotifiche->eliminaNotifica($notificationId);
             return $risultato;
             
         } catch (\Exception $errore) {
-            error_log("Errore nell'eliminazione notifica {$idNotifica}: " . $errore->getMessage());
+            error_log("Errore nell'eliminazione notifica {$notificationId}: " . $errore->getMessage());
             
             return [
                 'stato' => 'errore',

@@ -5,9 +5,8 @@
  * Cron job script for processing queued email notifications
  * 
  * Usage: php process-email-queue.php [--batch-size=50] [--verbose]
- * 
- * Recommended cron schedule:
- * */5 * * * * /usr/bin/php /path/to/bostarter/backend/cron/process-email-queue.php >/dev/null 2>&1
+ *  * Recommended cron schedule:
+ * Run every 5 minutes: /usr/bin/php /path/to/bostarter/backend/cron/process-email-queue.php >/dev/null 2>&1
  */
 
 // Prevent direct web access

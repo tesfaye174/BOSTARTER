@@ -26,35 +26,47 @@ if (!NavigationHelper::isLoggedIn()) {
 }
 
 // Reset contatore se arriviamo qui con successo
-unset($_SESSION['redirect_count']);
+unset(
+    $_SESSION['redirect_count']
+);
 
-// Inizializziamo la connessione al database e i servizi
+// Inizializza la connessione al database
 $database = Database::getInstance();
 $connessioneDb = $database->getConnection();
-$logger = new MongoLogger();
 
-// Registriamo l'accesso alla dashboard per monitoraggio
-$logger->registraAttivitaUtente($_SESSION['user_id'], 'accesso_dashboard', [
-    'timestamp' => date('Y-m-d H:i:s')
-]);
-
-// Otteniamo le informazioni complete dell'utente
-$queryUtente = "SELECT * FROM utenti WHERE id = :user_id";
-$statementUtente = $connessioneDb->prepare($queryUtente);
-$statementUtente->bindParam(':user_id', $_SESSION['user_id']);
-$statementUtente->execute();
-$utente = $statementUtente->fetch(PDO::FETCH_ASSOC);
-
-// Verifichiamo che l'utente esista ancora nel database
-if (!$utente) {
-    // Se l'utente non esiste più, distruggiamo la sessione
-    session_destroy();
-    NavigationHelper::redirect('login', ['error' => 'Utente non trovato']);
+// Inizializza MongoDB Logger
+$mongoLogger = null;
+try {
+    $mongoLogger = new MongoLogger();
+} catch (Exception $e) {
+    error_log("Errore inizializzazione MongoLogger: " . $e->getMessage());
 }
 
-// Impostiamo valori predefiniti per i campi mancanti dell'utente
-$utente['username'] = $utente['nickname'] ?? $utente['nome'] ?? 'Utente';
-$utente['user_type'] = $utente['tipo_utente'] ?? 'standard';
+// Ottieni informazioni utente dalla sessione
+$utente = [
+    'id' => $_SESSION['user_id'] ?? null,
+    'username' => $_SESSION['username'] ?? 'User',
+    'email' => $_SESSION['email'] ?? 'user@example.com',
+    'user_type' => $_SESSION['user_type'] ?? 'user',
+    'data_registrazione' => $_SESSION['data_registrazione'] ?? date('Y-m-d')
+];
+
+// Inizializza MongoDB Logger
+$mongoLogger = null;
+try {
+    $mongoLogger = new MongoLogger();
+} catch (Exception $e) {
+    error_log("Errore inizializzazione MongoLogger: " . $e->getMessage());
+}
+
+// Ottieni informazioni utente dalla sessione
+$utente = [
+    'id' => $_SESSION['user_id'] ?? null,
+    'username' => $_SESSION['username'] ?? 'User',
+    'email' => $_SESSION['email'] ?? 'user@example.com',
+    'user_type' => $_SESSION['user_type'] ?? 'user',
+    'data_registrazione' => $_SESSION['data_registrazione'] ?? date('Y-m-d')
+];
 
 // Inizializziamo le variabili per la dashboard
 $progetti_in_evidenza = [];
@@ -177,7 +189,8 @@ try {
     $projects_query = "SELECT p.*, 
                               COALESCE(pf.totale_finanziato, 0) as totale_finanziato,
                               COALESCE(pf.percentuale_finanziamento, 0) as percentuale_finanziamento,
-                              COALESCE(pf.numero_sostenitori, 0) as numero_sostenitori,                       DATEDIFF(p.data_limite, NOW()) as giorni_rimasti
+                              COALESCE(pf.numero_sostenitori, 0) as numero_sostenitori,
+                              DATEDIFF(p.data_limite, NOW()) as giorni_rimasti
                        FROM progetti p
                        LEFT JOIN view_progetti pf ON p.id = pf.progetto_id
                        WHERE p.creatore_id = :user_id
@@ -187,10 +200,12 @@ try {
     $projects_stmt->execute();
     $user_projects = $projects_stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
-        'error' => 'Failed to fetch user projects: ' . $e->getMessage(),
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
+    if ($mongoLogger) {
+        $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
+            'error' => 'Failed to fetch user projects: ' . $e->getMessage(),
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
     $user_projects = [];
 }
 
@@ -202,17 +217,20 @@ try {
                        JOIN progetti p ON f.progetto_id = p.id
                        JOIN utenti u ON p.creatore_id = u.id
                        LEFT JOIN reward r ON f.reward_id = r.id
-                       WHERE f.utente_id = :user_id                       ORDER BY f.data_finanziamento DESC
+                       WHERE f.utente_id = :user_id
+                       ORDER BY f.data_finanziamento DESC
                        LIMIT 10";
     $fundings_stmt = $connessioneDb->prepare($fundings_query);
     $fundings_stmt->bindParam(':user_id', $_SESSION['user_id']);
     $fundings_stmt->execute();
     $user_fundings = $fundings_stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
-        'error' => 'Failed to fetch user fundings: ' . $e->getMessage(),
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
+    if ($mongoLogger) {
+        $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
+            'error' => 'Failed to fetch user fundings: ' . $e->getMessage(),
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
     $user_fundings = [];
 }
 
@@ -231,10 +249,12 @@ try {
     $applications_stmt->execute();
     $user_applications = $applications_stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
-        'error' => 'Failed to fetch user applications: ' . $e->getMessage(),
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
+    if ($mongoLogger) {
+        $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
+            'error' => 'Failed to fetch user applications: ' . $e->getMessage(),
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
     $user_applications = [];
 }
 
@@ -257,16 +277,19 @@ try {
                          JOIN progetti p ON c.progetto_id = p.id
                          JOIN profili_software ps ON c.profilo_id = ps.id
                          WHERE c.utente_id = ?
-                         ORDER BY data_attivita DESC                       LIMIT 10";
+                         ORDER BY data_attivita DESC
+                         LIMIT 10";
     $activities_stmt = $connessioneDb->prepare($activities_query);
     $activities_stmt->execute([$_SESSION['user_id'], $_SESSION['user_id'], $_SESSION['user_id']]);
     $recent_activities = $activities_stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
-        'error' => 'Failed to fetch recent activities: ' . $e->getMessage(),
-        'query' => 'recent_activities',
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
+    if ($mongoLogger) {
+        $mongoLogger->logActivity($_SESSION['user_id'], 'dashboard_error', [
+            'error' => 'Failed to fetch recent activities: ' . $e->getMessage(),
+            'query' => 'recent_activities',
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
     $recent_activities = [];
 }
 
@@ -288,29 +311,19 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
     <link rel="preload" href="/BOSTARTER/frontend/js/dashboard.js" as="script">
     <link rel="preload" href="/BOSTARTER/frontend/css/dashboard.css" as="style">
       <!-- Core CSS -->
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/critical.css">
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/main.css">
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/color-system.css">
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/components.css">
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/utilities.css">
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/accessibility.css">
-    
-    <!-- Dashboard-specific CSS -->
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/dashboard.css">
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/notifications.css">
-    <link rel="stylesheet" href="/BOSTARTER/frontend/css/animations.css">
-    
+    <link rel="stylesheet" href="/BOSTARTER/frontend/css/unified-styles.css">
+    <!-- Only the unified CSS is now loaded. All other CSS files have been archived. -->
     <!-- Optimized fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-    
-    <!-- Optimized icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">    <!-- Optimized icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="js/tailwind-config.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- CSS -->    <link rel="stylesheet" href="css/main.css">
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Dashboard specific CSS -->
+    <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/dashboard-custom.css">
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -318,7 +331,7 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
     <a href="#main-content" class="skip-link" tabindex="0">Go to main content</a>
 
     <!-- Notifications container -->
-    <div id="notifications-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm" role="alert" aria-live="polite"></div>    <!-- Modern Dashboard Header -->
+    <div id="notifications-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm" role="alert" aria-live="polite"></div><!-- Modern Dashboard Header -->
     <header class="bg-white/80 dark:bg-gray-800/80 shadow-sm sticky top-0 z-50 transition-colors duration-300 backdrop-blur-sm">
         <nav class="container mx-auto px-4 py-3" role="navigation" aria-label="Navigazione principale dashboard">
             <div class="flex items-center justify-between">
@@ -433,10 +446,10 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                     <a href="projects/create.php" class="flex items-center px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors" role="menuitem">
                         <i class="fas fa-plus mr-3" aria-hidden="true"></i>
                         Crea Progetto
-                    </a>
-                    <a href="stats/top_creators.php" class="flex items-center px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors" role="menuitem">
+                    </a>                    <a href="stats/top_creators.php" class="flex items-center px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors" role="menuitem">
                         <i class="fas fa-chart-bar mr-3" aria-hidden="true"></i>
-                        Statistiche                    </a>
+                        Statistiche
+                    </a>
                     <?php if ($utente['user_type'] === 'admin'): ?>
                     <a href="admin/add_skill.php" class="flex items-center px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors" role="menuitem">
                         <i class="fas fa-cog mr-3" aria-hidden="true"></i>
@@ -445,153 +458,6 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                     <?php endif; ?>
                 </div>
             </nav>
-            
-                <!-- User Actions Enhanced -->
-                <div class="flex items-center space-x-3" role="group" aria-label="Azioni utente">
-                    <!-- Theme Toggle -->
-                    <button id="theme-toggle" 
-                            class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus-visible" 
-                            aria-label="Cambia tema">
-                        <i class="ri-sun-line dark:hidden text-xl text-gray-600" aria-hidden="true"></i>
-                        <i class="ri-moon-line hidden dark:block text-xl text-gray-300" aria-hidden="true"></i>
-                    </button>
-
-                    <!-- Notification Bell (for logged in users) -->
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                    <button class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors focus-visible" 
-                            aria-label="Notifiche">
-                        <i class="fas fa-bell text-xl text-gray-600" aria-hidden="true"></i>
-                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-                    </button>
-                    <?php endif; ?>
-
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <!-- Enhanced User Menu -->
-                        <div class="user-menu-container-enhanced" id="user-menu-container">
-                            <button id="user-menu-button" 
-                                    class="user-menu-button-enhanced group flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-all duration-200"
-                                    aria-label="Menu utente"
-                                    aria-expanded="false"
-                                    aria-haspopup="true">
-                                <div class="relative">
-                                    <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($_SESSION['username'] ?? 'User'); ?>&background=667eea&color=fff" 
-                                         alt="" class="w-10 h-10 rounded-full border-2 border-white shadow-lg" aria-hidden="true">
-                                    <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
-                                </div>
-                                <div class="hidden md:block text-left">
-                                    <p class="text-sm font-medium text-gray-700"><?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?></p>
-                                    <p class="text-xs text-gray-500">Online</p>
-                                </div>
-                                <i class="fas fa-chevron-down text-sm text-gray-400 group-hover:text-gray-600 transition-all duration-200 group-hover:rotate-180" aria-hidden="true"></i>
-                            </button>
-                            <div id="user-menu-dropdown" class="user-menu-dropdown-enhanced absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 opacity-0 invisible transition-all duration-200">
-                                <div class="px-4 py-3 border-b border-gray-100">
-                                    <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?></p>
-                                    <p class="text-xs text-gray-500">Membro dal 2024</p>
-                                </div>
-                                <a href="<?php echo NavigationHelper::url('dashboard'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
-                                    <i class="fas fa-tachometer-alt mr-3 text-blue-500" aria-hidden="true"></i>Dashboard
-                                </a>
-                                <a href="<?php echo NavigationHelper::url('profile'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
-                                    <i class="fas fa-user-edit mr-3 text-green-500" aria-hidden="true"></i>Profilo
-                                </a>
-                                <a href="<?php echo NavigationHelper::url('create_project'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
-                                    <i class="fas fa-plus-circle mr-3 text-purple-500" aria-hidden="true"></i>Crea Progetto
-                                </a>
-                                <a href="<?php echo NavigationHelper::url('settings'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
-                                    <i class="fas fa-cog mr-3 text-gray-500" aria-hidden="true"></i>Impostazioni
-                                </a>
-                                <div class="border-t border-gray-100 mt-1"></div>
-                                <a href="<?php echo NavigationHelper::url('logout'); ?>" class="user-menu-item-enhanced flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors">
-                                    <i class="fas fa-sign-out-alt mr-3" aria-hidden="true"></i>Logout
-                                </a>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        
-                    <!-- Enhanced Mobile Menu Toggle -->
-                    <button id="mobile-menu-toggle" 
-                            class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors focus-visible"
-                            aria-label="Apri menu di navigazione"
-                            aria-expanded="false"
-                            aria-controls="mobile-menu"
-                            type="button">
-                        <div class="w-6 h-6 flex flex-col justify-center space-y-1">
-                            <span class="w-full h-0.5 bg-gray-600 rounded transition-all duration-300"></span>
-                            <span class="w-full h-0.5 bg-gray-600 rounded transition-all duration-300"></span>
-                            <span class="w-full h-0.5 bg-gray-600 rounded transition-all duration-300"></span>
-                        </div>                        <span class="sr-only">Menu</span>
-                    </button>
-                <?php endif; ?>
-                </div>
-            </div>
-        </nav><!-- Enhanced Mobile Menu -->
-        <div id="mobile-menu" class="mobile-menu-enhanced lg:hidden overflow-hidden transition-all duration-300 max-h-0" role="menu" aria-label="Menu di navigazione mobile">
-            <div class="px-4 py-6 space-y-4 bg-white border-t border-gray-100">
-                <!-- Mobile Navigation Links -->
-                <div class="space-y-2">
-                    <a href="<?php echo NavigationHelper::url('hardware_projects'); ?>" 
-                       class="mobile-nav-link-enhanced flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors" 
-                       role="menuitem">
-                        <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-microchip text-white text-sm" aria-hidden="true"></i>
-                        </div>
-                        <span class="font-medium text-gray-700">Hardware</span>
-                    </a>
-                    <a href="<?php echo NavigationHelper::url('software_projects'); ?>" 
-                       class="mobile-nav-link-enhanced flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors" 
-                       role="menuitem">
-                        <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-code text-white text-sm" aria-hidden="true"></i>
-                        </div>
-                        <span class="font-medium text-gray-700">Software</span>
-                    </a>
-                    <a href="<?php echo NavigationHelper::url('projects'); ?>" 
-                       class="mobile-nav-link-enhanced flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors" 
-                       role="menuitem">
-                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-list text-white text-sm" aria-hidden="true"></i>
-                        </div>
-                        <span class="font-medium text-gray-700">Tutti i Progetti</span>
-                    </a>
-                    <a href="<?php echo NavigationHelper::url('about'); ?>" 
-                       class="mobile-nav-link-enhanced flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors" 
-                       role="menuitem">
-                        <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-info-circle text-white text-sm" aria-hidden="true"></i>
-                        </div>
-                        <span class="font-medium text-gray-700">Chi Siamo</span>
-                    </a>
-                </div>
-
-                <!-- Mobile Auth Actions -->
-                <div class="pt-4 border-t border-gray-200" role="group" aria-label="Azioni utente mobile">
-                    <?php if (NavigationHelper::isLoggedIn()): ?>
-                        <!-- Logged in mobile menu -->
-                        <div class="space-y-2">
-                            <a href="<?php echo NavigationHelper::url('dashboard'); ?>" 
-                               class="mobile-auth-link-enhanced flex items-center space-x-3 p-3 bg-primary/5 text-primary rounded-lg font-medium">
-                               <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
-                               <span>Dashboard</span>
-                            </a>
-                            <a href="<?php echo NavigationHelper::url('create_project'); ?>" 
-                               class="mobile-auth-link-enhanced flex items-center space-x-3 p-3 bg-green-50 text-green-700 rounded-lg font-medium">
-                               <i class="fas fa-plus-circle" aria-hidden="true"></i>
-                               <span>Crea Progetto</span>
-                            </a>
-                            <a href="<?php echo NavigationHelper::url('profile'); ?>" 
-                               class="mobile-auth-link-enhanced flex items-center space-x-3 p-3 hover:bg-gray-50 text-gray-700 rounded-lg">
-                               <i class="fas fa-user-edit" aria-hidden="true"></i>
-                               <span>Profilo</span>
-                            </a>
-                            <a href="<?php echo NavigationHelper::url('logout'); ?>" 
-                               class="mobile-auth-link-enhanced flex items-center space-x-3 p-3 bg-red-50 text-red-600 rounded-lg font-medium">
-                               <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-                               <span>Logout</span>
-                            </a>                        </div>
-                    <?php else: ?>
-                        <!-- Guest content could go here -->
-                    <?php endif; ?>
         </nav>
     </header>
 
@@ -918,56 +784,56 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
                 </div>
             </div>
             <div class="p-6">
-                <div class="space-y-6">
-                    <!-- Theme Settings -->
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Appearance</h3>
-                        <div class="space-y-3">
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-700 dark:text-gray-300">Dark Mode</span>
-                                <input type="checkbox" id="settings-dark-mode" class="toggle-switch" onchange="toggleThemeFromSettings()">
-                            </label>
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-700 dark:text-gray-300">Animations</span>
-                                <input type="checkbox" id="settings-animations" class="toggle-switch" checked onchange="toggleAnimations()">
-                            </label>
-                        </div>
+                <form id="dashboard-settings-form">
+                    <div class="space-y-6">
+                        <!-- Theme Settings -->
+                        <fieldset>
+                            <legend class="text-lg font-medium text-gray-900 dark:text-white mb-3">Appearance</legend>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between">
+                                    <span class="text-gray-700 dark:text-gray-300">Dark Mode</span>
+                                    <input type="checkbox" id="settings-dark-mode" class="toggle-switch" onchange="toggleThemeFromSettings()">
+                                </label>
+                                <label class="flex items-center justify-between">
+                                    <span class="text-gray-700 dark:text-gray-300">Animations</span>
+                                    <input type="checkbox" id="settings-animations" class="toggle-switch" checked onchange="toggleAnimations()">
+                                </label>
+                            </div>
+                        </fieldset>
+                        <!-- Notification Settings -->
+                        <fieldset>
+                            <legend class="text-lg font-medium text-gray-900 dark:text-white mb-3">Notifications</legend>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between">
+                                    <span class="text-gray-700 dark:text-gray-300">Project Updates</span>
+                                    <input type="checkbox" id="settings-project-notifications" class="toggle-switch" checked>
+                                </label>
+                                <label class="flex items-center justify-between">
+                                    <span class="text-gray-700 dark:text-gray-300">Funding Alerts</span>
+                                    <input type="checkbox" id="settings-funding-notifications" class="toggle-switch" checked>
+                                </label>
+                                <label class="flex items-center justify-between">
+                                    <span class="text-gray-700 dark:text-gray-300">Email Notifications</span>
+                                    <input type="checkbox" id="settings-email-notifications" class="toggle-switch">
+                                </label>
+                            </div>
+                        </fieldset>
+                        <!-- Dashboard Layout -->
+                        <fieldset>
+                            <legend class="text-lg font-medium text-gray-900 dark:text-white mb-3">Dashboard Layout</legend>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between">
+                                    <span class="text-gray-700 dark:text-gray-300">Compact View</span>
+                                    <input type="checkbox" id="settings-compact-view" class="toggle-switch" onchange="toggleCompactView()">
+                                </label>
+                                <label class="flex items-center justify-between">
+                                    <span class="text-gray-700 dark:text-gray-300">Auto-refresh Data</span>
+                                    <input type="checkbox" id="settings-auto-refresh" class="toggle-switch" checked onchange="toggleAutoRefresh()">
+                                </label>
+                            </div>
+                        </fieldset>
                     </div>
-                    
-                    <!-- Notification Settings -->
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Notifications</h3>
-                        <div class="space-y-3">
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-700 dark:text-gray-300">Project Updates</span>
-                                <input type="checkbox" id="settings-project-notifications" class="toggle-switch" checked>
-                            </label>
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-700 dark:text-gray-300">Funding Alerts</span>
-                                <input type="checkbox" id="settings-funding-notifications" class="toggle-switch" checked>
-                            </label>
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-700 dark:text-gray-300">Email Notifications</span>
-                                <input type="checkbox" id="settings-email-notifications" class="toggle-switch">
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Dashboard Layout -->
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Dashboard Layout</h3>
-                        <div class="space-y-3">
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-700 dark:text-gray-300">Compact View</span>
-                                <input type="checkbox" id="settings-compact-view" class="toggle-switch" onchange="toggleCompactView()">
-                            </label>
-                            <label class="flex items-center justify-between">
-                                <span class="text-gray-700 dark:text-gray-300">Auto-refresh Data</span>
-                                <input type="checkbox" id="settings-auto-refresh" class="toggle-switch" checked onchange="toggleAutoRefresh()">
-                            </label>
-                        </div>
-                    </div>
-                </div>
+                </form>
             </div>
             <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-between">
                 <button onclick="resetSettings()" 
@@ -998,14 +864,132 @@ $successful_projects = count(array_filter($user_projects, function($p) { return 
     
     <!-- Chart Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     
     <!-- Dashboard Core -->
-    <script src="js/dashboard.js" type="module"></script>
+    <script src="/BOSTARTER/frontend/js/bostarter-unified.js"></script>
     
     <!-- Dashboard Initialization -->
     <script src="js/dashboard-init.js"></script>
-      <!-- Performance Monitoring -->
+    
+    <!-- Performance Monitoring -->
     <script src="js/performance.js" async></script>
+    
+    <!-- Fix: Dark mode toggle initialization -->
+    <script>
+    // Inizializza il toggle dark mode se la funzione è disponibile
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof inizializzaToggleTema === 'function') {
+            inizializzaToggleTema();
+        } else if (window.BOSTARTER && BOSTARTER.ThemeManager && typeof BOSTARTER.ThemeManager.inizializza === 'function') {
+            BOSTARTER.ThemeManager.inizializza();
+        }
+        // Aggiorna icona bottone dark mode
+        const btn = document.getElementById('theme-toggle');
+        if (btn) {
+            function updateThemeIcon() {
+                const isDark = document.documentElement.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+                btn.querySelector('.ri-sun-line').style.display = isDark ? 'none' : '';
+                btn.querySelector('.ri-moon-line').style.display = isDark ? '' : 'none';
+            }
+            updateThemeIcon();
+            btn.addEventListener('click', function() {
+                setTimeout(updateThemeIcon, 100); // delay per permettere il cambio tema
+            });
+        }
+    });
+    </script>
+    
+    <!-- Dashboard specific functions -->
+    <script>
+        // Dashboard refresh functionality
+        function refreshDashboard() {
+            location.reload();
+        }
+        
+        // Modal functionality
+        function closeModalOnOutsideClick(event) {
+            if (event.target === event.currentTarget) {
+                document.getElementById('profileModal').style.display = 'none';
+            }
+        }
+        
+        function closeSettingsModalOnOutsideClick(event) {
+            if (event.target === event.currentTarget) {
+                document.getElementById('settingsModal').style.display = 'none';
+            }
+        }
+        
+        // Settings functionality
+        function toggleThemeFromSettings() {
+            if (window.themeManager) {
+                window.themeManager.toggle();
+            }
+        }
+        
+        function toggleAnimations() {
+            const enabled = document.getElementById('settings-animations').checked;
+            document.body.classList.toggle('no-animations', !enabled);
+        }
+        
+        function toggleCompactView() {
+            const enabled = document.getElementById('settings-compact-view').checked;
+            document.body.classList.toggle('compact-view', enabled);
+        }
+        
+        function toggleAutoRefresh() {
+            const enabled = document.getElementById('settings-auto-refresh').checked;
+            console.log('Auto-refresh:', enabled ? 'enabled' : 'disabled');
+        }
+        
+        function resetSettings() {
+            // Reset all settings to default
+            document.getElementById('settings-dark-mode').checked = false;
+            document.getElementById('settings-animations').checked = true;
+            document.getElementById('settings-project-notifications').checked = true;
+            document.getElementById('settings-funding-notifications').checked = true;
+            document.getElementById('settings-email-notifications').checked = false;
+            document.getElementById('settings-compact-view').checked = false;
+            document.getElementById('settings-auto-refresh').checked = true;
+        }
+        
+        function saveSettings() {
+            // Here you would save settings to localStorage or server
+            const settings = {
+                darkMode: document.getElementById('settings-dark-mode').checked,
+                animations: document.getElementById('settings-animations').checked,
+                projectNotifications: document.getElementById('settings-project-notifications').checked,
+                fundingNotifications: document.getElementById('settings-funding-notifications').checked,
+                emailNotifications: document.getElementById('settings-email-notifications').checked,
+                compactView: document.getElementById('settings-compact-view').checked,
+                autoRefresh: document.getElementById('settings-auto-refresh').checked
+            };
+            
+            localStorage.setItem('dashboardSettings', JSON.stringify(settings));
+            document.getElementById('settingsModal').style.display = 'none';
+            
+            // Show success notification if available
+            if (window.showNotification) {
+                window.showNotification('Settings saved successfully!', 'success');
+            }
+        }
+        
+        // Load saved settings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedSettings = localStorage.getItem('dashboardSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                document.getElementById('settings-dark-mode').checked = settings.darkMode || false;
+                document.getElementById('settings-animations').checked = settings.animations !== false;
+                document.getElementById('settings-project-notifications').checked = settings.projectNotifications !== false;
+                document.getElementById('settings-funding-notifications').checked = settings.fundingNotifications !== false;
+                document.getElementById('settings-email-notifications').checked = settings.emailNotifications || false;
+                document.getElementById('settings-compact-view').checked = settings.compactView || false;
+                document.getElementById('settings-auto-refresh').checked = settings.autoRefresh !== false;
+            }
+            
+            // Update current year in footer
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+        });
+    </script>
 </body>
 </html>

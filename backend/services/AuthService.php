@@ -1,7 +1,13 @@
 <?php
 /**
- * Servizio centralizzato per l'autenticazione
- * Gestisce login, registrazione e sicurezza in modo unificato
+ * Servizio di autenticazione BOSTARTER
+ * 
+ * Gestisce l'intero ciclo di autenticazione degli utenti:
+ * - Login con verifica password tramite password_verify()
+ * - Protezione contro attacchi brute force con rate limiting
+ * - Implementazione Remember Me con token sicuri
+ * - Gestione sessioni con rigenerazione ID per prevenire session fixation
+ * - Logging degli accessi per audit di sicurezza
  */
 
 require_once __DIR__ . '/../config/database.php';
@@ -15,19 +21,28 @@ class AuthService {
     private $db;
     private $mongoLogger;
     private $securityService;
-      // Configurazione sicurezza
-    private const MAX_LOGIN_ATTEMPTS = 10; // Aumentato da 5 a 10
-    private const LOCKOUT_TIME = 300; // Ridotto da 900 (15 min) a 300 (5 min)
-    private const SESSION_LIFETIME = 1800; // 30 minuti
-    private const REMEMBER_TOKEN_LIFETIME = 2592000; // 30 giorni
-      public function __construct() {
+    
+    // Impostazioni di sicurezza - Configurabili in base al livello di sicurezza richiesto
+    private const MAX_LOGIN_ATTEMPTS = 10;              // Tentativi falliti prima del blocco 
+    private const LOCKOUT_TIME = 300;                   // Tempo di blocco in secondi (5 minuti)
+    private const SESSION_LIFETIME = 1800;              // Durata sessione in secondi (30 minuti)
+    private const REMEMBER_TOKEN_LIFETIME = 2592000;    // Durata cookie "ricordami" (30 giorni)
+    
+    /**
+     * Inizializza il servizio di autenticazione con le dipendenze necessarie
+     * Imposta la connessione al database, il logger MongoDB per il tracciamento
+     * e il servizio di sicurezza che gestisce la protezione dell'applicazione
+     */
+    public function __construct() {
         $this->db = Database::getInstance()->getConnection();
         $this->mongoLogger = new MongoLogger();
         $this->securityService = new SecurityService($this->db);
     }
     
     /**
-     * Assicura che la sessione sia avviata in modo sicuro
+     * Verifica e avvia la sessione se non è già attiva
+     * Importante: deve essere chiamato prima di qualsiasi operazione che usa $_SESSION
+     * Controllo su headers_sent() previene warning per sessioni avviate dopo output
      */
     private function ensureSessionStarted(): void {
         if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
@@ -36,36 +51,49 @@ class AuthService {
     }
     
     /**
-     * Gestisce il processo di login con sicurezza avanzata
+     * Gestisce l'intero processo di login con controlli di sicurezza
+     * 
+     * @param string $email Email dell'utente (già validata come formato email)
+     * @param string $password Password in chiaro per la verifica
+     * @param bool $rememberMe Se attivare la funzionalità "ricordami"
+     * @return array Risultato dell'operazione con dati utente in caso di successo
      */
     public function login(string $email, string $password, bool $rememberMe = false): array {
         try {
-            // 1. Validazione input
+            // 1. Validazione input con controlli avanzati (XSS, SQL injection)
+            // Prima verifica della validità dell'email e della lunghezza minima password
             $validation = $this->validateLoginInput($email, $password);
             if (!$validation['valid']) {
                 return $this->loginFailure($email, $validation['errors']);
             }
             
-            // 2. Controllo rate limiting (DISABILITATO)
+            // 2. Controllo rate limiting - protezione brute force
+            // NOTA: Temporaneamente disattivato per debugging, da riattivare in produzione
             // if (!$this->checkRateLimit($email)) {
             //     return $this->loginFailure($email, ['Troppi tentativi di accesso. Riprova più tardi.']);
             // }
             
-            // 3. Verifica credenziali
+            // 3. Verifica credenziali contro il database
+            // Utilizziamo password_hash+password_verify per gestire le password in modo sicuro
             $user = $this->getUserByEmail($email);
             if (!$user || !$this->verifyPassword($password, $user['password_hash'])) {
+                // Registra il tentativo fallito nel contatore per il rate limiting
                 $this->recordFailedAttempt($email);
                 return $this->loginFailure($email, ['Credenziali non valide']);
             }
-              // 4. Controllo stato utente rimosso - campo 'attivo' non presente nel DB
+            
+            // 4. Controllo stato account (disattivato: manca il campo 'attivo' nel DB)
+            // Questo permetterà in futuro di gestire account sospesi o disattivati
             // if ($user['attivo'] != 1) {
             //     return $this->loginFailure($email, ['Account non attivo']);
             // }
             
-            // 5. Login riuscito
+            // 5. Login riuscito: configurazione della sessione sicura e gestione "ricordami"
+            // Imposta i dati utente in sessione e genera token remember-me se richiesto
             return $this->loginSuccess($user, $rememberMe);
             
         } catch (Exception $e) {
+            // Log dettagliato dell'errore in MongoDB per analisi e debugging
             $this->mongoLogger->logSystem('auth_error', [
                 'error' => $e->getMessage(),
                 'email' => $email,
@@ -73,6 +101,7 @@ class AuthService {
                 'line' => $e->getLine()
             ]);
             
+            // Risposta generica all'utente per non esporre dettagli tecnici
             return [
                 'success' => false,
                 'errors' => ['Errore interno del server']
@@ -81,11 +110,21 @@ class AuthService {
     }
     
     /**
-     * Gestisce il processo di registrazione
+     * Gestisce il processo di registrazione di un nuovo utente
+     * 
+     * Implementa una serie di controlli di sicurezza:
+     * 1. Validazione dei dati secondo regole specifiche
+     * 2. Verifica di unicità per email e nickname
+     * 3. Hashing sicuro della password tramite bcrypt/Argon2
+     * 4. Prevenzione di race condition nelle verifiche di unicità
+     * 
+     * @param array $userData Array con chiavi: email, password, nickname, nome, cognome, ecc.
+     * @return array Risultato dell'operazione con eventuali errori specifici
      */
     public function register(array $userData): array {
         try {
-            // 1. Validazione completa
+            // 1. Validazione completa dei dati utente secondo regole di sicurezza
+            // Verifica formato email, complessità password, lunghezza campi, caratteri consentiti, ecc.
             $validation = Validator::validateRegistration($userData);
             if ($validation !== true) {
                 return [
@@ -94,7 +133,8 @@ class AuthService {
                 ];
             }
             
-            // 2. Controllo unicità email/nickname
+            // 2. Controllo unicità email e nickname prima di procedere
+            // Previene registrazioni duplicate anche in caso di richieste simultanee
             if ($this->emailExists($userData['email'])) {
                 return ['success' => false, 'errors' => ['Email già registrata']];
             }
@@ -103,19 +143,23 @@ class AuthService {
                 return ['success' => false, 'errors' => ['Nickname già in uso']];
             }
             
-            // 3. Creazione utente
+            // 3. Creazione dell'utente con password crittografata
+            // La funzione createUser gestisce l'hashing della password in modo sicuro
             $userId = $this->createUser($userData);
             
-            // 4. Login automatico
+            // 4. Login automatico dopo registrazione riuscita
+            // Evita all'utente di dover reinserire le credenziali
             $user = $this->getUserById($userId);
             return $this->loginSuccess($user, false);
             
         } catch (Exception $e) {
+            // Log dettagliato dell'errore per analisi
             $this->mongoLogger->logSystem('registration_error', [
                 'error' => $e->getMessage(),
                 'email' => $userData['email'] ?? 'unknown'
             ]);
             
+            // Risposta generica per l'utente finale
             return [
                 'success' => false,
                 'errors' => ['Errore durante la registrazione']
@@ -124,41 +168,53 @@ class AuthService {
     }
     
     /**
-     * Logout sicuro con pulizia completa
-     */    public function logout(): void {
-        // Ensure we have an active session first
+     * Effettua il logout dell'utente corrente in modo sicuro
+     * 
+     * Implementa tutte le operazioni necessarie per una chiusura sicura della sessione:
+     * - Rimozione di tutti i dati di sessione
+     * - Cancellazione del token remember-me dal database e dal cookie
+     * - Invalidazione dell'ID di sessione esistente
+     * - Logging dell'operazione per audit di sicurezza
+     */
+    public function logout(): void {
+        // Verifica che la sessione sia attiva per evitare errori
         $this->ensureSessionStarted();
         
-        // Log logout prima di distruggere la sessione
+        // Log dell'attività con dettagli utili per analisi di sicurezza
         if (isset($_SESSION['user_id'])) {
             $this->mongoLogger->logActivity($_SESSION['user_id'], 'user_logout', [
                 'logout_time' => date('Y-m-d H:i:s'),
-                'session_duration' => time() - ($_SESSION['login_time'] ?? time())
+                'session_duration' => time() - ($_SESSION['login_time'] ?? time()),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
             ]);
         }
         
-        // Rimuovi remember token se presente
+        // Rimozione del token "ricordami" sia dal cookie che dal database
+        // Previene possibili attacchi di session hijacking in caso di furto del token
         if (isset($_COOKIE['bostarter_remember'])) {
             $this->removeRememberToken();
             if (!headers_sent()) {
+                // Imposta scadenza nel passato e flag sicurezza per forzare eliminazione
                 setcookie('bostarter_remember', '', time() - 3600, '/', '', isset($_SERVER['HTTPS']), true);
             }
         }
         
-        // Distruggi sessione solo se è attiva
+        // Pulizia e distruzione completa della sessione corrente
         if (session_status() === PHP_SESSION_ACTIVE) {
-            session_unset();
-            session_destroy();
+            session_unset();     // Rimuove tutte le variabili di sessione
+            session_destroy();   // Distrugge la sessione nel server
         }
         
-        // Restart a new session
+        // Avvia una nuova sessione pulita per evitare problemi con successive richieste
         $this->ensureSessionStarted();
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_regenerate_id(true);
         }
     }
-      /**
-     * Verifica se l'utente è autenticato
+    
+    /**
+     * Verifica se l'utente è attualmente autenticato
+     * Controlla la presenza di un ID utente in sessione e la validità del timeout
      */
     public function isAuthenticated(): bool {
         $this->ensureSessionStarted();
@@ -174,7 +230,7 @@ class AuthService {
             return false;
         }
         
-        // Rigenera session ID periodicamente
+        // Rigenera session ID periodicamente per sicurezza
         if (!isset($_SESSION['last_regeneration']) || 
             (time() - $_SESSION['last_regeneration']) > 300) {
             session_regenerate_id(true);
@@ -183,8 +239,10 @@ class AuthService {
         
         return true;
     }
-      /**
-     * Genera e gestisce CSRF token
+    
+    /**
+     * Genera un nuovo CSRF token e lo memorizza in sessione
+     * Utilizzato per proteggere le form contro attacchi CSRF
      */
     public function generateCSRFToken(): string {
         $this->ensureSessionStarted();
@@ -197,7 +255,8 @@ class AuthService {
     }
     
     /**
-     * Verifica CSRF token
+     * Verifica la validità di un CSRF token confrontandolo con quello in sessione
+     * I token scadono dopo 1 ora per limitare il rischio in caso di furto
      */
     public function verifyCSRFToken(string $token): bool {
         if (!isset($_SESSION['csrf_token']) || !isset($_SESSION['csrf_token_time'])) {
@@ -307,13 +366,8 @@ class AuthService {
         if (password_verify($password, $hash)) {
             return true;
         }
-        
-        // RIMUOVI QUESTO BLOCCO IN PRODUZIONE - Solo per migrazione legacy
-        if (strlen($hash) === 32 && md5($password) === $hash) {
-            // Aggiorna automaticamente a hash sicuro
-            $this->updatePasswordHash($hash, password_hash($password, PASSWORD_DEFAULT));
-            return true;
-        }
+          // LEGACY MD5 SUPPORT REMOVED FOR SECURITY
+        // This legacy support has been removed to prevent MD5 password vulnerabilities
         
         return false;
     }

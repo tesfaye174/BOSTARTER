@@ -1,20 +1,38 @@
 <?php
 /**
- * Classe per la validazione centralizzata e sicura dei dati
- * Fornisce sia metodi statici che un'interfaccia fluida per validazioni complesse
- * Aiuta a mantenere i dati puliti e sicuri in tutta l'applicazione
+ * Sistema di validazione dati per BOSTARTER
+ * 
+ * Implementa un sistema completo di validazione dei dati in ingresso
+ * con due modalità di utilizzo:
+ * 1. API Fluida (Builder pattern) per validazioni complesse e concatenate
+ * 2. Metodi statici per validazioni immediate e specifiche
+ * 
+ * Tutte le validazioni gestiscono in modo appropriato i valori nulli e vuoti.
+ * I messaggi di errore sono già formattati per la presentazione all'utente.
+ * 
+ * @author BOSTARTER Team
+ * @version 2.1.0
+ * @since 2.0.0 - Implementazione dell'API fluida
  */
 class Validator {
-    private $errori = [];          // Array degli errori di validazione
-    private $campoCorrente = '';   // Il campo attualmente in validazione
-    private $valoreCorrente = '';  // Il valore attualmente in validazione
+    /** @var array $errori Array associativo di errori di validazione [campo => [errori]] */
+    private $errori = [];
+    
+    /** @var string $campoCorrente Nome del campo attualmente in validazione */
+    private $campoCorrente = '';
+    
+    /** @var mixed $valoreCorrente Valore attualmente in validazione */
+    private $valoreCorrente = '';
 
     // ===== METODI FLUIDI (INTERFACCIA A CATENA) =====
     
     /**
-     * Verifica che un campo sia obbligatorio (non vuoto)
+     * Inizia la validazione di un campo verificando che non sia vuoto
      * 
-     * @param string $campo Il nome del campo
+     * Punto di ingresso principale per la validazione a catena (Builder pattern).
+     * Verifica che il campo non sia vuoto, null, o contenga solo spazi.
+     * 
+     * @param string $campo Il nome del campo da validare
      * @param mixed $valore Il valore da validare
      * @return self Per consentire la catena di metodi
      */
@@ -28,7 +46,10 @@ class Validator {
     }
     
     /**
-     * Verifica che il valore sia un'email valida
+     * Verifica che il valore sia un'email valida secondo standard RFC
+     * 
+     * Utilizza il filtro FILTER_VALIDATE_EMAIL per garantire la conformità
+     * alle specifiche RFC per gli indirizzi email.
      * 
      * @return self Per consentire la catena di metodi
      */
@@ -40,9 +61,12 @@ class Validator {
     }
     
     /**
-     * Verifica che il valore abbia una lunghezza minima
+     * Verifica che il valore abbia almeno la lunghezza minima specificata
      * 
-     * @param int $lunghezza La lunghezza minima richiesta
+     * Utile per validare password, username e altri campi con requisiti
+     * minimi di lunghezza.
+     * 
+     * @param int $lunghezza La lunghezza minima richiesta in caratteri
      * @return self Per consentire la catena di metodi
      */
     public function lunghezzaMinima($lunghezza) {
@@ -53,9 +77,12 @@ class Validator {
     }
     
     /**
-     * Verifica che il valore non superi una lunghezza massima
+     * Verifica che il valore non superi la lunghezza massima specificata
      * 
-     * @param int $lunghezza La lunghezza massima consentita
+     * Importante per prevenire overflow nei campi del database e
+     * garantire la visualizzazione corretta dei dati nell'UI.
+     * 
+     * @param int $lunghezza La lunghezza massima consentita in caratteri
      * @return self Per consentire la catena di metodi
      */
     public function lunghezzaMassima($lunghezza) {
@@ -68,6 +95,9 @@ class Validator {
     /**
      * Verifica che il valore contenga solo caratteri alfanumerici
      * 
+     * Utile per username, codici e altri campi che non devono contenere
+     * caratteri speciali.
+     * 
      * @return self Per consentire la catena di metodi
      */
     public function alfanumerico() {
@@ -78,7 +108,10 @@ class Validator {
     }
     
     /**
-     * Verifica che il valore sia un numero intero
+     * Verifica che il valore sia un numero intero valido
+     * 
+     * Utilizza il filtro FILTER_VALIDATE_INT per garantire che il valore
+     * sia effettivamente un intero, anche quando fornito come stringa.
      * 
      * @return self Per consentire la catena di metodi
      */
@@ -90,7 +123,10 @@ class Validator {
     }
     
     /**
-     * Verifica che il valore sia almeno uguale a un minimo
+     * Verifica che il valore numerico sia almeno pari al minimo specificato
+     * 
+     * Utile per importi, età, quantità minime e altri valori numerici
+     * con limite inferiore.
      * 
      * @param numeric $valore Il valore minimo consentito
      * @return self Per consentire la catena di metodi
@@ -103,7 +139,10 @@ class Validator {
     }
     
     /**
-     * Verifica che il valore non superi un massimo
+     * Verifica che il valore numerico non superi il massimo specificato
+     * 
+     * Utile per limitare importi, percentuali e altri valori numerici
+     * con limite superiore.
      * 
      * @param numeric $valore Il valore massimo consentito
      * @return self Per consentire la catena di metodi
@@ -113,9 +152,13 @@ class Validator {
             $this->errori[$this->campoCorrente][] = "Il campo {$this->campoCorrente} non può essere maggiore di {$valore}";
         }
         return $this;
-    }    
+    }
+    
     /**
-     * Verifica se la validazione è stata superata (nessun errore)
+     * Verifica se la validazione è stata superata (nessun errore rilevato)
+     * 
+     * Metodo finale della catena di validazione che determina se
+     * tutti i controlli sono stati superati.
      * 
      * @return bool True se non ci sono errori, False altrimenti
      */
@@ -124,19 +167,36 @@ class Validator {
     }
     
     /**
-     * Ottiene tutti gli errori di validazione
+     * Restituisce tutti gli errori di validazione come array piatto
+     * 
+     * Converte l'array associativo degli errori in un array lineare
+     * per facilitare la visualizzazione all'utente.
      * 
      * @return array Array piatto con tutti i messaggi di errore
-     */
+     */    
     public function ottieniErrori() {
         $erroriPiatti = [];
-        foreach ($this->errors as $field => $fieldErrors) {
-            $flatErrors = array_merge($flatErrors, $fieldErrors);
+        foreach ($this->errori as $campo => $erroriCampo) {
+            $erroriPiatti = array_merge($erroriPiatti, $erroriCampo);
         }
-        return $flatErrors;
+        return $erroriPiatti;
     }
 
-    // --- Static validation methods (compatibilità vecchia logica) ---
+    // ===== METODI STATICI DI VALIDAZIONE =====
+    
+    /**
+     * Valida i dati di un progetto 
+     * 
+     * Verifica tutti i campi richiesti per la creazione di un progetto:
+     * - Nome e descrizione (obbligatori e non vuoti)
+     * - ID creatore (deve essere numerico)
+     * - Budget (deve essere un numero positivo)
+     * - Tipo di progetto (obbligatorio)
+     * - Data di fine (deve essere valida e futura)
+     *
+     * @param array $data Array associativo con i dati del progetto
+     * @return bool|array True se valido, altrimenti array di errori
+     */
     public static function validateProjectData($data) {
         $errors = [];
 
@@ -163,8 +223,8 @@ class Validator {
         if (!isset($data['end_date']) || !strtotime($data['end_date'])) {
             $errors[] = 'La data di fine non è valida';
         } else {
-            $end_date = new DateTime($data['end_date']);
-            $now = new DateTime();
+            $end_date = new \DateTime($data['end_date']);
+            $now = new \DateTime();
             if ($end_date <= $now) {
                 $errors[] = 'La data di fine deve essere successiva alla data attuale';
             }
@@ -173,6 +233,17 @@ class Validator {
         return empty($errors) ? true : $errors;
     }
 
+    /**
+     * Valida i dati di una ricompensa di progetto
+     * 
+     * Verifica tutti i campi richiesti per la creazione di una ricompensa:
+     * - ID progetto (deve essere numerico)
+     * - Titolo e descrizione (obbligatori e non vuoti)
+     * - Importo (deve essere un numero positivo)
+     *
+     * @param array $data Array associativo con i dati della ricompensa
+     * @return bool|array True se valido, altrimenti array di errori
+     */
     public static function validateRewardData($data) {
         $errors = [];
 
@@ -195,6 +266,16 @@ class Validator {
         return empty($errors) ? true : $errors;
     }
 
+    /**
+     * Valida i dati di un finanziamento progetto
+     * 
+     * Verifica tutti i campi richiesti per registrare un finanziamento:
+     * - ID progetto e ID utente (devono essere numerici)
+     * - Importo (deve essere un numero positivo maggiore di zero)
+     *
+     * @param array $data Array associativo con i dati del finanziamento
+     * @return bool|array True se valido, altrimenti array di errori
+     */
     public static function validateFundData($data) {
         $errors = [];
 
@@ -220,14 +301,19 @@ class Validator {
         } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $errors['email'] = 'Email non valida';
         }
-        
-        // Validazione password con regole robuste
+          // Validazione password con regole robuste AGGIORNATE
         if (!isset($data['password']) || empty($data['password'])) {
             $errors['password'] = 'Password obbligatoria';
         } elseif (strlen($data['password']) < 8) {
             $errors['password'] = 'La password deve essere di almeno 8 caratteri';
-        } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/', $data['password'])) {
+        } elseif (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]{8,}$/', $data['password'])) {
             $errors['password'] = 'La password deve contenere almeno una lettera maiuscola, una minuscola, un numero e un carattere speciale';
+        }
+        
+        // Verifica password comuni
+        $commonPasswords = ['password', '123456', '12345678', 'qwerty', 'abc123', 'password123', 'admin', 'letmein'];
+        if (isset($data['password']) && in_array(strtolower($data['password']), $commonPasswords)) {
+            $errors['password'] = 'Password troppo comune, scegline una più sicura';
         }
         
         // Validazione nickname

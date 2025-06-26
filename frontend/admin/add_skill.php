@@ -3,62 +3,72 @@
  * Pagina per la gestione delle competenze (solo per amministratori)
  */
 
-session_start();
+require_once __DIR__ . '/../../backend/middleware/SecurityMiddleware.php';
 require_once __DIR__ . '/../../backend/config/database.php';
 require_once __DIR__ . '/../../backend/config/config.php';
 require_once __DIR__ . '/../../backend/services/MongoLogger.php';
+require_once __DIR__ . '/../../backend/utils/FrontendSecurity.php';
 
-// Verifica autenticazione
-if (!isset($_SESSION['user_id'])) {
-    header('Location: /frontend/auth/login.php');
-    exit;
-}
+// Initialize secure session through SecurityMiddleware
+SecurityMiddleware::initialize();
+
+// Security headers
+FrontendSecurity::setSecurityHeaders();
+
+// Verifica autenticazione e ruolo admin
+FrontendSecurity::requireRole('admin');
+
+// CSRF Token generation
+$csrf_token = FrontendSecurity::getCSRFToken();
 
 $db = Database::getInstance();
 $conn = $db->getConnection();
 $mongoLogger = new MongoLogger();
-
-// Verifica che l'utente sia amministratore
-$stmt = $conn->prepare("SELECT tipo_utente FROM utenti WHERE id = ?");
-$stmt->execute([$_SESSION['user_id']]);
-$user = $stmt->fetch();
-
-if (!$user || $user['tipo_utente'] !== 'admin') {
-    header('Location: /frontend/dashboard.php');
-    exit;
-}
 
 $error = '';
 $success = '';
 
 // Gestione aggiunta nuova competenza
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add') {
-    $nome = trim($_POST['nome'] ?? '');
-    $descrizione = trim($_POST['descrizione'] ?? '');
-    $categoria = trim($_POST['categoria'] ?? '');
-    $security_code = trim($_POST['security_code'] ?? '');
-    
-    // Validazioni
-    if (empty($nome)) {
-        $error = 'Il nome della competenza è obbligatorio.';
-    } elseif (strlen($nome) < 2) {
-        $error = 'Il nome deve contenere almeno 2 caratteri.';
-    } elseif (strlen($nome) > 100) {
-        $error = 'Il nome non può superare i 100 caratteri.';
-    } elseif (empty($categoria)) {
-        $error = 'La categoria è obbligatoria.';
-    } elseif (empty($security_code)) {
-        $error = 'Il codice di sicurezza è obbligatorio.';
-    } elseif ($security_code !== 'ADMIN2024') {
-        $error = 'Codice di sicurezza non valido.';
-        
-        // Log tentativo di accesso non autorizzato
-        $mongoLogger->logActivity($_SESSION['user_id'], 'admin_security_code_failed', [
-            'attempted_code' => $security_code,
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
-        ]);
+    // CSRF Token verification
+    if (!FrontendSecurity::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error = 'Token di sicurezza non valido. Riprova.';
+        FrontendSecurity::logSecurityEvent('csrf_token_invalid', ['action' => 'add_skill']);
     } else {
+        // Rate limiting
+        if (!FrontendSecurity::checkRateLimit('add_skill', 3, 300)) {
+            $error = 'Troppi tentativi. Riprova tra 5 minuti.';
+            FrontendSecurity::logSecurityEvent('rate_limit_exceeded', ['action' => 'add_skill']);
+        } else {
+            // Input validation and sanitization
+            $nome = FrontendSecurity::sanitizeInput($_POST['nome'] ?? '');
+            $descrizione = FrontendSecurity::sanitizeInput($_POST['descrizione'] ?? '');
+            $categoria = FrontendSecurity::sanitizeInput($_POST['categoria'] ?? '');
+            
+            // Validazione con regole centralizzate
+            $validationRules = [
+                'nome' => [
+                    'required' => true,
+                    'min_length' => 2,
+                    'max_length' => 100
+                ],
+                'categoria' => [
+                    'required' => true,
+                    'min_length' => 2,
+                    'max_length' => 50
+                ],
+                'descrizione' => [
+                    'max_length' => 500
+                ]
+            ];
+            
+            $inputData = ['nome' => $nome, 'categoria' => $categoria, 'descrizione' => $descrizione];
+            $validationResult = FrontendSecurity::validateInput($inputData, $validationRules);
+            
+            if ($validationResult !== true) {
+                $error = implode('. ', $validationResult);
+                FrontendSecurity::incrementRateLimit('add_skill');
+            } else {
         try {
             // Verifica se la competenza esiste già
             $stmt = $conn->prepare("SELECT id FROM competenze WHERE LOWER(nome) = LOWER(?)");

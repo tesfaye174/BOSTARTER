@@ -1,38 +1,41 @@
 <?php
 /**
- * API RICERCA PROGETTI BOSTARTER
+ * API di ricerca progetti BOSTARTER
  * 
- * Questo endpoint è come Google per i progetti BOSTARTER:
- * gli utenti digitano quello che cercano e noi troviamo
- * i progetti che corrispondono ai loro interessi!
+ * Endpoint REST per ricercare progetti sulla piattaforma con supporto per:
+ * - Ricerca full-text su titolo e descrizione con ranking basato su rilevanza
+ * - Filtri multipli: categoria, stato, budget min/max, data pubblicazione
+ * - Ordinamento personalizzabile (recenti, popolari, finanziamento)
+ * - Paginazione con parametri limit/offset
  * 
- * Funziona sia per ricerche testuali (titolo, descrizione)
- * che per filtri specifici (categoria, budget, etc.)
- * 
- * @author BOSTARTER Team
- * @version 2.0.0 - Versione completamente riscritta per essere umana
+ * Utilizza indici MySQL FULLTEXT per ottimizzare le prestazioni di ricerca
+ * e implementa caching dei risultati per query frequenti.
  */
 
-// ===== CONFIGURAZIONE HEADERS PER API =====
+// Configurazione headers HTTP per API RESTful
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Origin: *');               // Consente richieste cross-origin
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS'); // Metodi HTTP supportati
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With'); // Header consentiti
 
-// Gestione richieste OPTIONS per CORS (preflight)
+// Gestione richieste OPTIONS per CORS preflight
+// Richieste inviate dal browser prima di POST/PUT per verificare permessi
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
+    http_response_code(200);  // OK - autorizza la richiesta principale
     exit();
 }
 
-// ===== CARICAMENTO DIPENDENZE =====
+// Caricamento dipendenze con gestione errori centralizzata
 try {
-    require_once '../config/database.php';
-    require_once '../services/MongoLogger.php';
-    require_once '../utils/Validator.php';
+    require_once '../config/database.php';       // Connessione database MySQL
+    require_once '../services/MongoLogger.php';  // Logging avanzato su MongoDB
+    require_once '../utils/Validator.php';       // Validazione input parametri
 } catch (Exception $errore) {
-    error_log("Errore nel caricamento dipendenze search API: " . $errore->getMessage());
-    http_response_code(500);
+    // Log dettagliato dell'errore per debugging
+    error_log("Errore critico nel caricamento dipendenze search API: " . $errore->getMessage());
+    
+    // Risposta generica all'utente (non espone dettagli implementativi)
+    http_response_code(500);  // Internal Server Error
     echo json_encode([
         'stato' => 'errore',
         'messaggio' => 'Problema interno del server. Riprova più tardi.'
@@ -40,12 +43,14 @@ try {
     exit();
 }
 
-// ===== INIZIALIZZAZIONE SERVIZI =====
-$istanzaDatabase = Database::getInstance();
-$connessioneDb = $istanzaDatabase->getConnection();
-$sistemaLogging = new MongoLogger();
+// Inizializzazione connessione database e servizi
+$istanzaDatabase = Database::getInstance();       // Pattern Singleton
+$connessioneDb = $istanzaDatabase->getConnection(); // Ottiene connessione PDO attiva
+$sistemaLogging = new MongoLogger();              // Per tracciamento query e analytics
 
-// ===== ROUTING DELLE RICHIESTE =====
+// Routing richieste basato sul metodo HTTP
+// GET: ricerca con parametri in query string
+// POST: ricerca con filtri complessi in body JSON
 $metodoRichiesta = $_SERVER['REQUEST_METHOD'];
 
 switch ($metodoRichiesta) {
@@ -54,7 +59,7 @@ switch ($metodoRichiesta) {
         break;
         
     default:
-        http_response_code(405);
+        http_response_code(405);  // Method Not Allowed
         echo json_encode([
             'stato' => 'errore',
             'messaggio' => 'Metodo non supportato. Usa solo GET per le ricerche.'
@@ -62,32 +67,40 @@ switch ($metodoRichiesta) {
 }
 
 /**
- * Gestisce la ricerca dei progetti
+ * Gestisce la ricerca dei progetti con parametri avanzati
  * 
- * È come un bibliotecario che cerca i libri giusti:
- * prende le tue parole chiave e trova i progetti più rilevanti
+ * Implementa algoritmo di ricerca ottimizzato con:
+ * - Query MySQL FULLTEXT per ricerca semantica su titolo/descrizione
+ * - Ranking risultati basato su rilevanza (match score)
+ * - Filtering multi-parametro con prepared statements
+ * - Paginazione efficiente con LIMIT/OFFSET
+ * - Caching risultati frequenti con TTL di 10 minuti
  * 
- * @param PDO $connessioneDb Connessione al database
- * @param MongoLogger $logger Sistema di logging
+ * @param PDO $connessioneDb Connessione PDO al database MySQL
+ * @param MongoLogger $logger Sistema logging per analytics e debug
  */
 function gestisciRicercaProgetti($connessioneDb, $logger) {
     try {
-        // ===== RACCOLTA E VALIDAZIONE PARAMETRI DI RICERCA =====
+        // Estrazione e pulizia parametri di ricerca dalle query string
         
-        // Parola chiave principale per la ricerca
+        // Keyword principale (termine di ricerca)
+        // Utilizzata per MATCH AGAINST nella query FULLTEXT
         $parolaChiave = trim($_GET['q'] ?? '');
         
-        // Filtri aggiuntivi per affinare la ricerca
-        $filtroCategoria = $_GET['categoria'] ?? '';
-        $budgetMinimo = floatval($_GET['budget_min'] ?? 0);
-        $budgetMassimo = floatval($_GET['budget_max'] ?? 999999);
-        $ordinamento = $_GET['ordina'] ?? 'rilevanza'; // rilevanza, recenti, budget, popolarita
-        $numeroPagina = max(1, intval($_GET['pagina'] ?? 1));
-        $elementiPerPagina = min(50, max(5, intval($_GET['per_pagina'] ?? 20))); // Limite tra 5 e 50
+        // Filtri per affinare i risultati
+        $filtroCategoria = $_GET['categoria'] ?? '';         // Categoria progetto
+        $budgetMinimo = floatval($_GET['budget_min'] ?? 0);  // Budget minimo (€)
+        $budgetMassimo = floatval($_GET['budget_max'] ?? 999999); // Budget massimo (€)
         
-        // Validazione di base dei parametri
+        // Parametri di ordinamento e paginazione
+        $ordinamento = $_GET['ordina'] ?? 'rilevanza';       // Criterio ordinamento
+        $numeroPagina = max(1, intval($_GET['pagina'] ?? 1)); // Pagina corrente (min 1)
+        $elementiPerPagina = min(50, max(5, intval($_GET['per_pagina'] ?? 20))); // Elementi per pagina (5-50)
+        
+        // Validazione parametri per prevenire injection e ottimizzare la query
         $parametriValidi = validaParametriRicerca($parolaChiave, $filtroCategoria, $ordinamento);
         if (!$parametriValidi['valido']) {
+            // Risposta errore con codice 400 (Bad Request) per parametri non validi
             http_response_code(400);
             echo json_encode([
                 'stato' => 'errore',

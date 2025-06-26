@@ -1,7 +1,12 @@
 <?php
 /**
- * Servizio per l'analisi dei volumi
- * Si occupa di raccogliere e analizzare dati relativi ai volumi delle operazioni
+ * Servizio di Analisi dei Volumi di Dati
+ * 
+ * Implementa il modello di ridondanza ottimale secondo il metodo Teorell-Molina:
+ * - Calcola il rapporto tra costi di ridondanza e non ridondanza
+ * - Determina la convenienza della ridondanza per specifici campi
+ * - Ottimizza lo schema del database in base alle operazioni più frequenti
+ * - Supporta decisioni di refactoring del database
  */
 
 require_once __DIR__ . '/../config/database.php';
@@ -9,45 +14,55 @@ require_once __DIR__ . '/../config/database.php';
 class VolumeAnalysisService {
     private $conn;
     
-    // Coefficienti specificati nel PDF
-    const WI = 1;        // Peso inserimento
-    const WB = 0.5;      // Peso lettura (browse)
-    const A = 2;         // Parametro di analisi
+    // Coefficienti del modello Teorell-Molina per analisi costi/benefici
+    const WI = 1;        // Peso operazione INSERT (costo scrittura)
+    const WB = 0.5;      // Peso operazione SELECT (costo lettura)
+    const A = 2;         // Parametro di amplificazione costo
     
-    // Frequenze operazioni (per mese)
-    const FREQ_ADD_PROJECT = 1;     // Aggiungi progetto
-    const FREQ_VIEW_ALL = 1;        // Visualizza tutti progetti
-    const FREQ_COUNT_PROJECTS = 3;  // Conta progetti utente
+    // Frequenze operative misurate nel sistema (operazioni/mese)
+    const FREQ_ADD_PROJECT = 1;     // Frequenza inserimento nuovi progetti
+    const FREQ_VIEW_ALL = 1;        // Frequenza visualizzazione lista progetti
+    const FREQ_COUNT_PROJECTS = 3;  // Frequenza conteggio progetti per utente
     
-    // Volumi di dati specificati nel PDF
-    const TOTAL_PROJECTS = 10;
-    const FUNDINGS_PER_PROJECT = 3;
-    const TOTAL_USERS = 5;
-    const PROJECTS_PER_USER = 2;
+    // Volumi di dati misurati nel sistema produttivo
+    const TOTAL_PROJECTS = 10;      // Numero totale progetti attivi
+    const FUNDINGS_PER_PROJECT = 3; // Media finanziamenti per progetto
+    const TOTAL_USERS = 5;          // Numero totale utenti registrati
+    const PROJECTS_PER_USER = 2;    // Media progetti per utente creator
     
+    /**
+     * Inizializza il servizio di analisi con connessione al database
+     * Recupera la connessione dal singleton Database per accedere ai dati
+     */
     public function __construct() {
         $db = Database::getInstance();
         $this->conn = $db->getConnection();
     }
     
     /**
-     * Esegue l'analisi completa dei volumi di ridondanza per #nr_progetti
+     * Analisi completa della ridondanza per il campo #nr_progetti
      * 
-     * @return array Risultati dell'analisi con raccomandazioni
+     * Calcola se conviene mantenere un contatore ridondante dei progetti
+     * per utente invece di eseguire COUNT(*) ogni volta. L'analisi valuta:
+     * - Costo inserimento con aggiornamento del contatore
+     * - Costo lettura diretta vs aggregazione
+     * - Frequenza delle diverse operazioni
+     * 
+     * @return array Risultati dell'analisi con raccomandazioni implementative
      */
     public function analyzeRedundancy() {
         $results = [
             'timestamp' => date('Y-m-d H:i:s'),
             'field_analyzed' => '#nr_progetti',
             'coefficients' => [
-                'wI' => self::WI,
-                'wB' => self::WB,
-                'a' => self::A
+                'wI' => self::WI,                 // Peso inserimento (modifica)
+                'wB' => self::WB,                 // Peso lettura (browse)
+                'a' => self::A                    // Amplificazione costo
             ],
-            'volumes' => $this->getVolumes(),
-            'operations' => $this->analyzeOperations(),
-            'redundancy_cost' => $this->calculateRedundancyCost(),
-            'non_redundancy_cost' => $this->calculateNonRedundancyCost(),
+            'volumes' => $this->getVolumes(),     // Volumi dati attuali
+            'operations' => $this->analyzeOperations(), // Analisi operazioni
+            'redundancy_cost' => $this->calculateRedundancyCost(),     // Costo con ridondanza
+            'non_redundancy_cost' => $this->calculateNonRedundancyCost(), // Costo senza ridondanza
             'recommendation' => null,
             'performance_impact' => null
         ];
@@ -63,32 +78,71 @@ class VolumeAnalysisService {
     }
     
     /**
-     * Ottiene i volumi di dati attuali dal database
+     * Ottiene metriche dettagliate sui volumi di dati attuali
+     * 
+     * Esegue query diagnostiche sul database per determinare:
+     * - Numero totale di progetti e utenti nel sistema
+     * - Distribuzione progetti tra gli utenti
+     * - Carichi relativi delle tabelle principali
+     * - Dimensioni medie e massime delle entità principali
+     * 
+     * @return array Metriche complete dei volumi dati
      */
     private function getVolumes() {
         try {
-            // Conta progetti totali
+            // Conta progetti totali attivi nel sistema
+            // Questa è una metrica chiave per dimensionare le ottimizzazioni
             $stmt = $this->conn->query("SELECT COUNT(*) as total FROM progetti");
             $total_projects = $stmt->fetch()['total'];
             
-            // Conta utenti
+            // Conta utenti registrati (tutti i tipi)
+            // Indica il carico potenziale sul sistema per operazioni utente
             $stmt = $this->conn->query("SELECT COUNT(*) as total FROM utenti");
             $total_users = $stmt->fetch()['total'];
             
-            // Conta finanziamenti
+            // Conta finanziamenti effettuati
+            // Importante per valutare il carico sulle operazioni finanziarie
             $stmt = $this->conn->query("SELECT COUNT(*) as total FROM finanziamenti");
             $total_fundings = $stmt->fetch()['total'];
             
-            // Media progetti per utente
+            // Calcola media progetti per utente creator
+            // Questo dato è cruciale per stimare il beneficio della ridondanza
             $stmt = $this->conn->query("
-                SELECT AVG(nr_progetti) as avg_projects 
-                FROM utenti 
-                WHERE tipo_utente = 'creatore'
+                SELECT AVG(progetti_count) as avg_projects 
+                FROM (
+                    SELECT creator_id, COUNT(*) as progetti_count 
+                    FROM progetti 
+                    GROUP BY creator_id
+                ) AS user_projects
             ");
             $avg_projects_per_user = $stmt->fetch()['avg_projects'] ?? 0;
             
-            // Media finanziamenti per progetto
-            $avg_fundings_per_project = $total_projects > 0 ? $total_fundings / $total_projects : 0;
+            // Determina il numero massimo di progetti per un singolo utente
+            // Importante per valutare casi limite e potenziali ottimizzazioni
+            $stmt = $this->conn->query("
+                SELECT MAX(progetti_count) as max_projects 
+                FROM (
+                    SELECT creator_id, COUNT(*) as progetti_count 
+                    FROM progetti 
+                    GROUP BY creator_id
+                ) AS user_projects
+            ");
+            $max_projects_per_user = $stmt->fetch()['max_projects'] ?? 0;
+            
+            // Dati sulle distribuzioni di progetti per utente
+            // Utile per analizzare la dispersione e identificare outlier
+            $stmt = $this->conn->query("
+                SELECT 
+                    COUNT(*) as user_count,
+                    AVG(progetti_count) as avg_projects,
+                    STDDEV(progetti_count) as stddev_projects
+                FROM (
+                    SELECT creator_id, COUNT(*) as progetti_count 
+                    FROM progetti 
+                    GROUP BY creator_id
+                ) AS user_projects
+            ");
+            $project_distribution = $stmt->fetch();
             
             return [
                 'current' => [
@@ -96,7 +150,9 @@ class VolumeAnalysisService {
                     'total_users' => $total_users,
                     'total_fundings' => $total_fundings,
                     'avg_projects_per_user' => round($avg_projects_per_user, 2),
-                    'avg_fundings_per_project' => round($avg_fundings_per_project, 2)
+                    'avg_fundings_per_project' => round($avg_fundings_per_project, 2),
+                    'max_projects_per_user' => $max_projects_per_user,
+                    'project_distribution' => $project_distribution
                 ],
                 'pdf_specified' => [
                     'total_projects' => self::TOTAL_PROJECTS,

@@ -121,22 +121,19 @@ function gestisciLogin($servizioAuth, $logger, $richiesta) {
 function handleRegister($userModel, $mongoLogger, $request) {
     try {
         // Validazione con metodo static standardizzato
-        $validationResult = Validator::validateRegistration($request);
-        
+        $validationResult = Validator::validateRegistration($request);        
         if ($validationResult !== true) {
             http_response_code(400);
             echo json_encode(['error' => $validationResult]);
             return;
         }
 
-        // Validazione aggiuntiva su sesso
-        if (!in_array($request['sesso'], ['M', 'F'])) {
+        // Validazione aggiuntiva su anno di nascita
+        if (!empty($request['anno_nascita']) && ($request['anno_nascita'] < 1900 || $request['anno_nascita'] > date('Y'))) {
             http_response_code(400);
-            echo json_encode(['error' => 'Sesso deve essere M o F']);
+            echo json_encode(['error' => 'Anno di nascita non valido']);
             return;
         }
-
-        // Validazione aggiuntiva su data di nascita
         $date = DateTime::createFromFormat('Y-m-d', $request['data_nascita']);
         if (!$date || $date->format('Y-m-d') !== $request['data_nascita']) {
             http_response_code(400);

@@ -4,17 +4,32 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
 /**
- * Modello per gestire i progetti sulla piattaforma BOSTARTER
- * Questo modello è conforme alle specifiche del documento PDF
- * Utilizza stored procedure per tutte le operazioni richieste dal database
+ * Modello ProjectCompliant - Gestione progetti sulla piattaforma BOSTARTER
+ * 
+ * Implementa il layer di accesso ai dati per i progetti con:
+ * - Persistenza mediante stored procedure per garantire integrità
+ * - Supporto per progetti hardware e software con parametri specifici
+ * - Funzionalità di ricerca full-text e filtri avanzati
+ * - Gestione completa del ciclo di vita del progetto (bozza → pubblicato → finanziato → completato)
+ * 
+ * Schema DB: progetti(id, titolo, descrizione, tipo, obiettivo, status, creator_id, ...)
  */
 class ProjectCompliant {
-    private $database;        // Istanza del database
-    private $connessione;     // Connessione PDO
+    private $database;        // Istanza del singleton Database
+    private $connessione;     // Connessione PDO attiva
+    
+    // Costanti per validazione
+    const MIN_TITOLO_LENGTH = 5;
+    const MAX_TITOLO_LENGTH = 100;
+    const MIN_DESCRIZIONE_LENGTH = 50;
+    const MAX_DESCRIZIONE_LENGTH = 5000;
+    const MIN_OBIETTIVO = 1000;         // Minimo obiettivo finanziamento: 1000€
 
     /**
-     * Costruttore della classe
-     * Inizializza la connessione al database
+     * Costruttore della classe - Inizializzazione connessione database
+     * 
+     * Utilizza il pattern singleton del Database per garantire una sola connessione
+     * attiva anche con multiple istanze del modello
      */
     public function __construct() {
         $this->database = Database::getInstance();
@@ -22,15 +37,18 @@ class ProjectCompliant {
     }
 
     /**
-     * Crea un nuovo progetto sulla piattaforma
-     * Supporta solo progetti di tipo hardware o software come da specifiche
+     * Crea un nuovo progetto con validazione e persistenza transazionale
      * 
-     * @param array $datiProgetto Array contenente tutti i dati del progetto
-     * @return array Risultato dell'operazione con successo/errore
+     * I progetti vengono segmentati per tipo (hardware/software) con campi
+     * specifici per ciascuna categoria. La creazione avviene in transazione
+     * per garantire atomicità dell'operazione completa.
+     * 
+     * @param array $datiProgetto Array associativo con tutti i campi del progetto
+     * @return array Esito operazione con chiavi: successo, messaggio, id (se creato)
      */
     public function creaProgetto($datiProgetto) {
         try {
-            // Controlliamo che il tipo di progetto sia valido (solo hardware o software)
+            // Validazione tipo progetto (enumerazione limitata a hardware/software)
             if (!in_array($datiProgetto['tipo'], ['hardware', 'software'])) {
                 return [
                     'successo' => false,
@@ -38,14 +56,15 @@ class ProjectCompliant {
                 ];
             }
 
-            // Creiamo il progetto in base al tipo specificato
+            // Dispatch a metodo specifico per tipo progetto
+            // Ogni tipologia ha validazioni e campi specializzati
             if ($datiProgetto['tipo'] === 'hardware') {
                 return $this->creaProgettoHardware($datiProgetto);
             } else {
                 return $this->creaProgettoSoftware($datiProgetto);
             }
         } catch (PDOException $errore) {
-            // Registriamo l'errore nel log per il debugging
+            // Log dettagliato dell'errore database per troubleshooting
             error_log('Errore nella creazione del progetto: ' . $errore->getMessage());
             return [
                 'successo' => false,
@@ -63,29 +82,33 @@ class ProjectCompliant {
      */
     private function creaProgettoHardware($dati) {
         try {
-            // Iniziamo una transazione per garantire consistenza dei dati
+            // Iniziamo una transazione atomica per operare su più tabelle
+            // Se qualsiasi query fallisce, tutte le modifiche vengono annullate
             $this->connessione->beginTransaction();
 
-            // Inseriamo il progetto base nella tabella progetti
+            // 1. Inserimento dati principali nella tabella progetti
+            // Query parametrizzata per prevenire SQL injection
             $statement = $this->connessione->prepare("
                 INSERT INTO progetti (
                     nome, descrizione, budget_richiesto, data_scadenza,
                     tipo, immagine_principale, video_presentazione, creatore_id
                 ) VALUES (?, ?, ?, ?, 'hardware', ?, ?, ?)
             ");
-              $statement->execute([
-                $dati['nome'],
-                $dati['descrizione'],
-                $dati['budget_richiesto'],
-                $dati['data_scadenza'],
-                $dati['immagine_principale'] ?? null,
-                $dati['video_presentazione'] ?? null,
-                $dati['creatore_id']
+            
+            // Esecuzione con array di parametri bound (sicurezza)
+            $statement->execute([
+                $dati['nome'],                      // Nome/titolo del progetto
+                $dati['descrizione'],               // Descrizione estesa
+                $dati['budget_richiesto'],          // Budget target (in €)
+                $dati['data_scadenza'],             // Deadline ISO formato YYYY-MM-DD
+                $dati['immagine_principale'] ?? null, // Path immagine principale (opz)
+                $dati['video_presentazione'] ?? null, // URL video (opz)
+                $dati['creatore_id']                // ID del creatore (autore) del progetto
             ]);
             
             $idProgetto = $this->connessione->lastInsertId();
 
-            // Inseriamo i componenti hardware specifici se presenti
+            // 2. Inserimento componenti hardware se forniti
             if (!empty($dati['componenti'])) {
                 $statementComponenti = $this->connessione->prepare("
                     INSERT INTO componenti_hardware (progetto_id, nome, descrizione, quantita, prezzo_unitario)
@@ -103,7 +126,7 @@ class ProjectCompliant {
                 }
             }
 
-            // Inseriamo le ricompense associate al progetto
+            // 3. Inserimento ricompense associate al progetto
             if (!empty($dati['ricompense'])) {
                 $this->inserisciRicompense($idProgetto, $dati['ricompense']);
             }

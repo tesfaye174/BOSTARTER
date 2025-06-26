@@ -1,5 +1,0 @@
-/* Login-specific styles */
-.login-form { display: flex; flex-direction: column; }
-.login-form label { font-weight: 500; }
-.login-form input { margin-bottom: 0.7rem; }
-.login-form p { text-align: center; margin-top: 1rem; }

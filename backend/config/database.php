@@ -4,10 +4,18 @@ require_once __DIR__ . '/config.php';
 
 /**
  * Classe per gestire la connessione al database MySQL
+ * 
+ * Questa classe rappresenta il "ponte" tra la nostra applicazione e il database.
  * Implementa il pattern Singleton per assicurare una sola connessione attiva
+ * evitando così sprechi di risorse e potenziali conflitti.
+ * 
+ * Offre metodi semplificati per eseguire query e gestire transazioni in modo sicuro.
+ * 
+ * @author BOSTARTER Team
+ * @version 2.0.0
  */
 class Database {
-    private static $istanza = null;  // L'unica istanza della classe
+    private static $istanza = null;  // L'unica istanza della classe (pattern Singleton)
     private $connessione;            // La connessione PDO al database
     
     /**
@@ -52,7 +60,7 @@ class Database {
     /**
      * Restituisce la connessione PDO per eseguire query
      * 
-     * @return PDO L'oggetto connessione
+     * @return PDO L'oggetto connessione attivo
      */
     public function getConnection() {
         return $this->connessione;
@@ -60,7 +68,10 @@ class Database {
     
     /**
      * Inizia una transazione nel database
-     * Utile quando dobbiamo eseguire più operazioni che devono avere successo tutte insieme
+     * 
+     * Le transazioni sono come "operazioni protette": se una parte fallisce, 
+     * nulla viene salvato. È come fare la spesa: o compri tutto o non compri niente.
+     * Utile quando dobbiamo eseguire più operazioni che devono avere successo tutte insieme.
      * 
      * @return bool True se la transazione è iniziata correttamente
      */
@@ -71,6 +82,9 @@ class Database {
     /**
      * Conferma tutte le operazioni della transazione corrente
      * 
+     * È come il "salvataggio definitivo" di tutto ciò che abbiamo fatto
+     * nella transazione. A questo punto i dati sono effettivamente nel database.
+     * 
      * @return bool True se il commit è andato a buon fine
      */
     public function confermaTransazione() {
@@ -79,6 +93,9 @@ class Database {
     
     /**
      * Annulla tutte le operazioni della transazione corrente
+     * 
+     * In caso di errori o problemi, possiamo annullare tutto e tornare
+     * allo stato iniziale, come se niente fosse successo.
      * 
      * @return bool True se il rollback è andato a buon fine
      */
@@ -89,6 +106,8 @@ class Database {
     /**
      * Ottiene l'ID dell'ultimo record inserito
      * 
+     * Utile dopo aver inserito un nuovo record per sapere quale ID gli è stato assegnato
+     * 
      * @return string L'ID dell'ultimo insert
      */
     public function ultimoIdInserito() {
@@ -96,6 +115,8 @@ class Database {
     }    
     /**
      * Esegue una query SQL semplice
+     * 
+     * Metodo base per eseguire una query senza parametri
      * 
      * @param string $sql La query da eseguire
      * @return PDOStatement Il risultato della query
@@ -107,6 +128,8 @@ class Database {
     /**
      * Prepara una query SQL per l'esecuzione sicura
      * 
+     * La preparazione della query è fondamentale per prevenire attacchi SQL injection
+     * 
      * @param string $sql La query da preparare
      * @return PDOStatement Lo statement preparato
      */
@@ -116,6 +139,8 @@ class Database {
     
     /**
      * Esegue una query preparata con parametri
+     * 
+     * Metodo completo che prepara ed esegue una query con parametri in un solo passaggio
      * 
      * @param string $sql La query da eseguire
      * @param array $parametri I parametri da associare alla query
@@ -128,6 +153,8 @@ class Database {
     
     /**
      * Esegue una query e restituisce un singolo risultato
+     * 
+     * Ideale per query che devono restituire un solo record, come "trova utente per ID"
      * 
      * @param string $sql La query da eseguire
      * @param array $parametri I parametri da associare alla query
@@ -142,6 +169,9 @@ class Database {
     /**
      * Esegue una query e restituisce tutti i risultati
      * 
+     * Perfetto per ottenere liste di elementi, come "tutti i progetti attivi"
+     * o "tutti gli utenti registrati nell'ultimo mese"
+     * 
      * @param string $sql La query da eseguire
      * @param array $parametri I parametri da associare alla query
      * @return array L'array di tutti i risultati
@@ -154,6 +184,9 @@ class Database {
     
     /**
      * Esegue una query e restituisce un singolo valore
+     * 
+     * Utile per operazioni come conteggi o calcoli aggregati: 
+     * "quanti utenti abbiamo?" o "qual è la media delle donazioni?"
      * 
      * @param string $sql La query da eseguire
      * @param array $parametri I parametri da associare alla query
@@ -168,6 +201,8 @@ class Database {
     /**
      * Conta il numero di righe interessate dall'ultima operazione
      * 
+     * Utile per sapere quanti record sono stati modificati, inseriti o eliminati
+     * 
      * @param string $sql La query da eseguire
      * @param array $parametri I parametri da associare alla query
      * @return int Il numero di righe
@@ -180,6 +215,9 @@ class Database {
     
     /**
      * Inserisce un nuovo record in una tabella
+     * 
+     * Metodo semplificato per inserire dati in una tabella senza dover scrivere SQL
+     * Costruisce automaticamente la query INSERT con i campi e valori forniti
      * 
      * @param string $tabella Il nome della tabella
      * @param array $dati I dati da inserire (chiave => valore)
@@ -199,9 +237,12 @@ class Database {
     /**
      * Aggiorna record esistenti in una tabella
      * 
+     * Metodo semplificato per modificare dati esistenti senza scrivere SQL
+     * Costruisce automaticamente la query UPDATE con i campi, valori e condizioni fornite
+     * 
      * @param string $tabella Il nome della tabella
      * @param array $dati I dati da aggiornare (chiave => valore)
-     * @param string $condizione La condizione WHERE
+     * @param string $condizione La condizione WHERE (es. "id = ?")
      * @param array $parametriCondizione I parametri per la condizione WHERE
      * @return bool True se l'aggiornamento è riuscito
      */
@@ -219,8 +260,12 @@ class Database {
     /**
      * Elimina record da una tabella
      * 
+     * Metodo semplificato per eliminare dati senza scrivere SQL
+     * ATTENZIONE: usare con cautela e sempre con una condizione WHERE,
+     * altrimenti si rischia di cancellare tutti i dati della tabella!
+     * 
      * @param string $tabella Il nome della tabella
-     * @param string $condizione La condizione WHERE
+     * @param string $condizione La condizione WHERE (es. "id = ?")
      * @param array $parametri I parametri per la condizione WHERE
      * @return bool True se l'eliminazione è riuscita
      */
@@ -231,11 +276,17 @@ class Database {
     
     /**
      * Impedisce la clonazione dell'istanza (pattern Singleton)
+     * 
+     * Metodo protettivo che garantisce che non si possano creare copie
+     * dell'oggetto Database attraverso il clone
      */
     private function __clone() {}
     
     /**
      * Impedisce la deserializzazione dell'istanza (pattern Singleton)
+     * 
+     * Ulteriore protezione per garantire l'unicità dell'istanza Database
+     * anche quando si usa la serializzazione
      */
     public function __wakeup() {}
 }

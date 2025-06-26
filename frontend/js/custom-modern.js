@@ -1,0 +1,40 @@
+// BOSTARTER - Script Moderno con Bootstrap
+document.addEventListener('DOMContentLoaded', function () {
+    // Mobile menu toggle (Bootstrap collapse)
+    const mobileToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileToggle && mobileMenu) {
+        mobileToggle.addEventListener('click', function () {
+            mobileMenu.classList.toggle('show');
+        });
+    }
+    // User menu dropdown (Bootstrap dropdown)
+    const userMenuBtn = document.getElementById('user-menu-button');
+    const userMenuDropdown = document.getElementById('user-menu-dropdown');
+    if (userMenuBtn && userMenuDropdown) {
+        userMenuBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            userMenuDropdown.classList.toggle('show');
+            this.setAttribute('aria-expanded', userMenuDropdown.classList.contains('show'));
+        });
+        document.addEventListener('click', function (e) {
+            if (!userMenuBtn.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+                userMenuDropdown.classList.remove('show');
+                userMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+            document.body.classList.toggle('dark');
+        });
+    }
+    // Loading overlay
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        window.showLoading = () => loadingOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        window.hideLoading = () => loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+    }
+});

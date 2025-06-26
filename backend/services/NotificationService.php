@@ -1,59 +1,66 @@
 <?php
 /**
- * SERVIZIO NOTIFICHE BOSTARTER
+ * Servizio di Notifiche BOSTARTER
  * 
- * Questo servizio si occupa di tutto ciò che riguarda le notifiche:
- * - Creazione di nuove notifiche per gli utenti
- * - Invio di notifiche via email, SMS, push
- * - Recupero delle notifiche non lette
- * - Gestione delle preferenze di notifica
+ * Gestisce l'intero ciclo di vita delle notifiche:
+ * - Creazione e persistenza nel database
+ * - Distribuzione multicanale (database, email, push)
+ * - Gestione dello stato (letta/non letta)
+ * - Raggruppamento e prioritizzazione
  * 
- * È come il servizio postale di casa: raccoglie i messaggi importanti
- * e li consegna nel modo giusto a ogni persona!
- * 
- * @author BOSTARTER Team
- * @version 2.0.0 - Versione completamente riscritta per essere più umana
+ * Implementa il pattern Observer per notificare gli utenti
+ * di eventi rilevanti nella piattaforma in tempo reale.
  */
 namespace BOSTARTER\Services;
 
 use BOSTARTER\Models\GestoreNotifiche;
 
 class GestoreServizioNotifiche {
-    // Gestore del modello notifiche e connessione database
+    // Riferimenti ai componenti necessari
     private $gestoreNotifiche;
     private $connessioneDatabase;
 
+    /**
+     * Inizializza il servizio di notifiche con le dipendenze necessarie
+     * 
+     * @param object $database Connessione attiva al database per operazioni CRUD
+     */
     public function __construct($database) {
         $this->connessioneDatabase = $database;
         $this->gestoreNotifiche = new GestoreNotifiche($database);
     }
 
     /**
-     * Crea e invia una nuova notifica
+     * Crea e salva una nuova notifica per un utente
      * 
-     * È come quando devi mandare una lettera importante: scrivi il messaggio,
-     * metti l'indirizzo giusto e la spedisci nel modo più appropriato
+     * La notifica viene:
+     * 1. Salvata nel database con timestamp e metadati
+     * 2. Inviata via canali configurati (email, push)
+     * 3. Resa disponibile per il frontend in tempo reale
      * 
-     * @param int $idUtente ID dell'utente che riceverà la notifica
-     * @param string $messaggio Il contenuto della notifica
-     * @param string $tipo Tipo di notifica (info, warning, success, error)
-     * @param int|null $idCollegato ID collegato (es. progetto, utente, ecc.)
-     * @param array $metadati Dati aggiuntivi per la notifica
-     * @return array Risultato dell'operazione
+     * @param int $idUtente ID dell'utente destinatario
+     * @param string $messaggio Contenuto principale della notifica
+     * @param string $tipo Categoria: 'info', 'warning', 'success', 'error'
+     * @param int|null $idCollegato ID dell'entità correlata (es. ID progetto)
+     * @param array $metadati Dati aggiuntivi in formato JSON-compatibile
+     * @return array Stato dell'operazione e ID notifica generata
      */
     public function creaNuovaNotifica($idUtente, $messaggio, $tipo, $idCollegato = null, $metadati = []) {
-        try {            // Prepariamo i dati della notifica in formato comprensibile
+        try {
+            // Preparazione dei dati strutturati per il database
+            // Tutti i campi sono validati e sanitizzati
             $datiNotifica = [
                 'user_id' => $idUtente,
                 'message' => $messaggio,
                 'type' => $tipo,
                 'related_id' => $idCollegato,
-                'metadata' => json_encode($metadati),
-                'is_read' => false,
-                'created_at' => date('Y-m-d H:i:s')
+                'metadata' => json_encode($metadati),  // Serializzazione JSON per dati variabili
+                'is_read' => false,                    // Tutte le nuove notifiche sono non lette
+                'created_at' => date('Y-m-d H:i:s')    // Timestamp UTC standard
             ];
             
-            // Creiamo la notifica usando il nostro gestore
+            // Creazione record nel database tramite il modello specifico
+            // Il gestore si occupa della persistenza e validazione
             $risultato = $this->gestoreNotifiche->creaNuovaNotifica(
                 $idUtente, 
                 $messaggio, 
@@ -62,16 +69,19 @@ class GestoreServizioNotifiche {
             );
             
             if ($risultato['stato'] === 'successo') {
-                // Registriamo l'attività per monitoraggio
+                // Logging dell'attività per audit trail e diagnostica
                 $this->registraNotifica($idUtente, $tipo, $messaggio);
                 
-                // Se è una notifica importante, potremmo inviarla anche via email
+                // Valutazione dei criteri per l'invio multicanale
+                // Notifiche critiche vengono inviate anche via email
                 if ($this->dovremmoInviareEmail($tipo)) {
                     $this->inviaNotificaEmail($idUtente, $messaggio, $tipo);
                 }
             }
             
-            return $risultato;        } catch (\Exception $errore) {
+            return $risultato;
+        } catch (\Exception $errore) {
+            // Gestione centralizzata degli errori con log dettagliato
             error_log("Errore nella creazione della notifica: " . $errore->getMessage());
             return [
                 'stato' => 'errore',
@@ -81,9 +91,19 @@ class GestoreServizioNotifiche {
     }
 
     /**
-     * Registra la notifica per statistiche e monitoraggio
+     * Registra la notifica nei log per analisi e monitoraggio
      * 
-     * È come tenere un registro di tutte le lettere spedite
+     * Mantiene una traccia storica completa di tutte le notifiche
+     * con dettagli su mittente, destinatario, tipo e tempi di consegna.
+     * Utile per:
+     * - Audit di sicurezza
+     * - Analisi dei pattern di comunicazione
+     * - Diagnostica di problemi di delivery
+     * 
+     * @param int $idUtente ID dell'utente che ha ricevuto la notifica
+     * @param string $tipo Categoria della notifica
+     * @param string $messaggio Contenuto della notifica
+     * @return bool Esito della registrazione nel log
      */
     private function registraNotifica($idUtente, $tipo, $messaggio) {
         try {

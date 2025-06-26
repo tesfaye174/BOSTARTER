@@ -95,15 +95,14 @@ class ServizioSicurezza {
                     INDEX idx_timestamp (timestamp_evento)
                 ) ENGINE=InnoDB COMMENT='Registro degli eventi di sicurezza'
             ");
-            
-            // Tabella per gestire i rate limits
+              // Tabella per gestire i rate limits
             $this->connessioneDatabase->exec("
                 CREATE TABLE IF NOT EXISTS rate_limits (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     chiave_identificativa VARCHAR(255) NOT NULL COMMENT 'Chiave univoca per il limite',
                     contatore_richieste INT DEFAULT 1 COMMENT 'Numero di richieste effettuate',
                     finestra_temporale TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Inizio della finestra temporale',
-                    scadenza TIMESTAMP NOT NULL COMMENT 'Quando scade questo limite',
+                    scadenza TIMESTAMP NULL DEFAULT NULL COMMENT 'Quando scade questo limite',
                     UNIQUE KEY uk_chiave (chiave_identificativa)
                 ) ENGINE=InnoDB COMMENT='Gestione dei limiti di richieste'
             ");
@@ -403,6 +402,44 @@ class ServizioSicurezza {
         } catch (\Exception $errore) {
             error_log("Errore nel recupero statistiche sicurezza: " . $errore->getMessage());
             return [];
+        }
+    }
+    
+    /**
+     * Verifica se un indirizzo IP è attualmente bloccato
+     * 
+     * @param string $indirizzoIP L'indirizzo IP da controllare
+     * @return bool True se l'IP è bloccato, false altrimenti
+     */
+    public function isIPBlocked(string $indirizzoIP): bool {
+        try {
+            // Controlla prima nella cache per velocità
+            if ($this->sistemaCache) {
+                $chiaveCache = self::PREFISSO_IP_BLOCCATI . $indirizzoIP;
+                $bloccato = $this->sistemaCache->get($chiaveCache);
+                if ($bloccato !== false) {
+                    return (bool)$bloccato;
+                }
+            }
+            
+            // Controlla nel database
+            $query = "SELECT COUNT(*) FROM blocchi_ip 
+                     WHERE indirizzo_ip = ? 
+                     AND (scadenza_blocco IS NULL OR scadenza_blocco > NOW())";
+            $stmt = $this->connessioneDatabase->prepare($query);
+            $stmt->execute([$indirizzoIP]);
+            $isBlocked = $stmt->fetchColumn() > 0;
+            
+            // Salva il risultato in cache per 5 minuti
+            if ($this->sistemaCache) {
+                $this->sistemaCache->set($chiaveCache, $isBlocked, 300);
+            }
+            
+            return $isBlocked;
+            
+        } catch (\Exception $e) {
+            error_log("Errore controllo IP bloccato: " . $e->getMessage());
+            return false; // In caso di errore, permettiamo l'accesso
         }
     }
 }

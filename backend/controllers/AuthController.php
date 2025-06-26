@@ -4,16 +4,19 @@ namespace BOSTARTER\Controllers;
 /**
  * GESTORE AUTENTICAZIONE BOSTARTER
  * 
- * Questo controller si occupa di tutto ciò che riguarda l'entrata e l'uscita degli utenti:
- * - Login (accesso al sito)
- * - Registrazione (creazione di nuovi account)
- * - Logout (uscita sicura)
- * - Controllo dei permessi
+ * Questo controller è il guardiano dell'applicazione! Si occupa di:
+ * - Verificare l'identità degli utenti (login)
+ * - Registrare nuovi utenti nella piattaforma
+ * - Gestire l'uscita sicura dal sistema (logout)
+ * - Controllare i permessi per le diverse azioni
+ * - Proteggere le risorse riservate
  * 
- * È come il portiere di un edificio: decide chi può entrare e chi no!
+ * È come il portiere di un edificio: decide chi può entrare, 
+ * registra i nuovi inquilini e si assicura che chi esce lo faccia 
+ * senza portarsi via le chiavi.
  * 
  * @author BOSTARTER Team
- * @version 2.0.0 - Versione completamente riscritta per essere più umana
+ * @version 2.0.0 - Versione completamente riscritta per maggiore sicurezza
  */
 
 require_once __DIR__ . '/../services/AuthService.php';
@@ -23,26 +26,35 @@ require_once __DIR__ . '/../utils/BaseController.php';
 use BOSTARTER\Utils\BaseController;
 
 class GestoreAutenticazione extends BaseController
-{    // Il servizio che fa il lavoro pesante di autenticazione
+{
+    // Il servizio che si occupa delle operazioni di autenticazione
     private $servizioAutenticazione;
     
     /**
-     * Costruttore - Prepara il nostro gestore
+     * Costruttore - Prepara il controller per il suo lavoro
+     * 
+     * Inizializza tutte le dipendenze necessarie per gestire
+     * l'autenticazione in modo sicuro ed efficiente.
      */
     public function __construct() {
         parent::__construct(); // Inizializza connessione DB e logger dalla classe base
         $this->servizioAutenticazione = new \AuthService();
     }
-      /**
-     * Gestisce l'accesso dell'utente al sito
+    
+    /**
+     * Gestisce l'accesso dell'utente al sistema
      * 
-     * Come un portiere che controlla le credenziali prima di far entrare qualcuno
+     * Questo metodo è il nostro "controllore d'accesso":
+     * - Riceve e valida le credenziali (email e password)
+     * - Le verifica contro il database
+     * - Se valide, crea una sessione sicura per l'utente
+     * - Se non valide, respinge il tentativo di accesso
      * 
-     * @return array Risultato del tentativo di login
+     * @return array Risultato dell'operazione con dati utente o errori
      */
     public function eseguiLogin(): array {
         try {
-            // Validazione parametri usando il metodo della classe base
+            // Validazione dei parametri necessari usando il metodo della classe base
             $validazione = $this->validaParametri(['email', 'password'], $_POST);
             if ($validazione !== true) {
                 return $this->rispostaStandardizzata(false, 'Dati mancanti o non validi', null, $validazione);
@@ -53,36 +65,49 @@ class GestoreAutenticazione extends BaseController
                 return $this->rispostaStandardizzata(false, 'Ops! Devi usare il modulo di login per accedere');
             }
             
-            // Verifichiamo il token di sicurezza (protezione contro attacchi)
+            // Verifichiamo il token CSRF (protezione contro attacchi Cross-Site Request Forgery)
+            // Questo impedisce che siti malevoli possano far inviare richieste non autorizzate
             $tokenSicurezza = $_POST['csrf_token'] ?? '';
             if (!$this->servizioAutenticazione->verifyCSRFToken($tokenSicurezza)) {
                 return $this->rispostaStandardizzata(false, 'Token di sicurezza non valido. Ricarica la pagina e riprova.');
             }
             
-            // Puliamo e prepariamo i dati dell'utente
+            // Puliamo e prepariamo i dati dell'utente per evitare caratteri indesiderati
+            // e potenziali attacchi di injection
             $emailPulita = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
             $passwordInserita = $_POST['password'] ?? '';
             $ricordaCredenziali = isset($_POST['remember_me']);
             
             // Deleghiamo al servizio di autenticazione il compito di verificare le credenziali
+            // Questo servizio contiene la logica complessa di verifica e creazione sessione
             $risultato = $this->servizioAutenticazione->login($emailPulita, $passwordInserita, $ricordaCredenziali);
             
+            // Restituiamo una risposta standardizzata con l'esito dell'operazione
             return $this->rispostaStandardizzata(
                 $risultato['success'] ?? false,
                 $risultato['message'] ?? 'Operazione completata',
                 $risultato['user'] ?? null,
-                $risultato['errors'] ?? []
+                $risultato['errors'] ?? null
             );
             
         } catch (\Exception $e) {
+            // Gestiamo qualsiasi errore imprevisto in modo centralizzato
             return $this->gestisciErrore($e, 'Errore durante il login');
         }
     }
-      /**
+      
+    /**
      * Gestisce la registrazione di un nuovo utente
      * 
+     * Questo metodo è la porta d'ingresso alla piattaforma per i nuovi utenti.
+     * Si occupa di:
+     * - Raccogliere e validare tutti i dati dell'utente
+     * - Verificare che non esistano già utenti con la stessa email
+     * - Creare il nuovo account in modo sicuro
+     * - Inviare email di benvenuto e conferma
+     * 
      * È come aprire un nuovo conto in banca: raccogliamo tutti i dati necessari,
-     * li controlliamo per bene, e se tutto è a posto creiamo il nuovo account
+     * li controlliamo attentamente, e se tutto è a posto creiamo il nuovo account.
      * 
      * @return array Risultato del tentativo di registrazione
      */
@@ -105,8 +130,7 @@ class GestoreAutenticazione extends BaseController
             if (!$this->servizioAutenticazione->verifyCSRFToken($tokenSicurezza)) {
                 return $this->rispostaStandardizzata(false, 'Token di sicurezza non valido. Ricarica la pagina e riprova.');
             }
-            
-            // Raccogliamo e puliamo tutti i dati del nuovo utente
+              // Raccogliamo e puliamo tutti i dati del nuovo utente
             $datiUtente = [
                 'email' => filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL),
                 'nickname' => htmlspecialchars(trim($_POST['nickname'] ?? ''), ENT_QUOTES, 'UTF-8'),
@@ -115,9 +139,7 @@ class GestoreAutenticazione extends BaseController
                 'cognome' => htmlspecialchars(trim($_POST['cognome'] ?? ''), ENT_QUOTES, 'UTF-8'),
                 'anno_nascita' => filter_var($_POST['anno_nascita'] ?? '', FILTER_SANITIZE_NUMBER_INT),
                 'luogo_nascita' => htmlspecialchars(trim($_POST['luogo_nascita'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'sesso' => htmlspecialchars($_POST['sesso'] ?? '', ENT_QUOTES, 'UTF-8'),
-                'tipo_utente' => htmlspecialchars($_POST['tipo_utente'] ?? 'standard', ENT_QUOTES, 'UTF-8'),
-                'data_nascita' => ($_POST['anno_nascita'] ?? '') . '-01-01'
+                'tipo_utente' => htmlspecialchars($_POST['tipo_utente'] ?? 'standard', ENT_QUOTES, 'UTF-8')
             ];
             
             // Verifichiamo che le password coincidano (doppio controllo di sicurezza)
@@ -200,74 +222,8 @@ class GestoreAutenticazione extends BaseController
             return; // Non fare redirect se ci sono troppi tentativi
         }
         
-        if ($this->controllaSeLoggato()) {
-            $_SESSION['redirect_count'] = $redirect_count + 1;
+        if ($this->controllaSeLoggato()) {            $_SESSION['redirect_count'] = $redirect_count + 1;
             \NavigationHelper::redirect('dashboard');
         }
     }
-    
-    // ======================================
-    // METODI DI COMPATIBILITÀ CON IL VECCHIO CODICE
-    // ======================================
-    // Questi metodi permettono al vecchio codice di continuare a funzionare
-    // mentre migriamo gradualmente ai nuovi nomi italiani
-    
-    /**
-     * Alias per richiedeOspite() - compatibilità
-     */
-    public function requireGuest(): void {
-        $this->richiedeOspite();
-    }
-    
-    /**
-     * Alias per richiedeAutenticazione() - compatibilità  
-     */
-    public function requireAuth(): void {
-        $this->richiedeAutenticazione();
-    }
-    
-    /**
-     * Alias per eseguiLogin() - compatibilità
-     */
-    public function login(): array {
-        return $this->eseguiLogin();
-    }
-    
-    /**
-     * Alias per registraNuovoUtente() - compatibilità
-     */
-    public function register(): array {
-        return $this->registraNuovoUtente();
-    }
-    
-    /**
-     * Alias per eseguiLogout() - compatibilità
-     */
-    public function logout(): void {
-        $this->eseguiLogout();
-    }
-    
-    /**
-     * Alias per controllaSeLoggato() - compatibilità
-     */
-    public function isAuthenticated(): bool {
-        return $this->controllaSeLoggato();
-    }
-      /**
-     * Alias per ottieniTokenSicurezza() - compatibilità
-     */
-    public function generateCSRFToken(): string {
-        return $this->ottieniTokenSicurezza();
-    }
-    
-    /**
-     * Alias per ottieniTokenSicurezza() - compatibilità (nome alternativo)
-     */
-    public function getCSRFToken(): string {
-        return $this->ottieniTokenSicurezza();
-    }
 }
-
-// Alias per compatibilità con il codice esistente
-// In questo modo il vecchio codice continua a funzionare mentre migriamo al nuovo
-class_alias('BOSTARTER\Controllers\GestoreAutenticazione', 'AuthController');

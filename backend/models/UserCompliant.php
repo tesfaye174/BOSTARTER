@@ -6,68 +6,87 @@ require_once __DIR__ . '/../utils/BaseModel.php';
 /**
  * Modello Utente - Gestione completa degli utenti della piattaforma BOSTARTER
  * 
- * Questa classe gestisce tutte le operazioni relative agli utenti:
- * - Registrazione di nuovi utenti tramite stored procedure
- * - Autenticazione e login degli utenti esistenti
- * - Recupero e aggiornamento delle informazioni utente
- * - Gestione delle competenze e della reputazione
+ * Questa classe è il cuore della gestione utenti della piattaforma:
+ * - Registra nuovi utenti in modo sicuro tramite stored procedure
+ * - Si occupa del login e della verifica delle credenziali
+ * - Gestisce l'aggiornamento dei profili utente
+ * - Tiene traccia delle competenze e della reputazione
+ * 
+ * Implementa tutte le best practice di sicurezza necessarie per la gestione
+ * di dati sensibili degli utenti.
  * 
  * @author BOSTARTER Team
  * @version 2.0.0
  */
 
+// Utilizziamo il namespace della classe base per chiarezza
 use BOSTARTER\Utils\BaseModel;
 
 class GestoreUtenti extends BaseModel {
     /**
      * Costruttore - Inizializza la connessione al database usando la classe base
+     * 
+     * Crea un'istanza pronta per lavorare con il database BOSTARTER
      */
     public function __construct() {
-        parent::__construct(); // Eredita la connessione dalla BaseModel
-    }    /**
+        parent::__construct(); // Ereditiamo la connessione dalla classe BaseModel
+    }
+
+    /**
      * Registra un nuovo utente nella piattaforma
      * 
-     * Utilizza la stored procedure sp_registra_utente per garantire
-     * l'integrità dei dati e le validazioni necessarie
+     * Questo metodo è la porta d'ingresso per i nuovi utenti.
+     * Utilizziamo una stored procedure per garantire che tutte le verifiche 
+     * di integrità vengano eseguite direttamente a livello database.
      * 
-     * @param array $datiUtente Dati dell'utente da registrare
+     * La password verrà automaticamente crittografata nella stored procedure.
+     * 
+     * @param array $datiUtente Array con tutti i dati dell'utente da registrare
      * @return array Risultato dell'operazione con successo e messaggio
-     */    public function registraNuovoUtente($datiUtente) {
+     */
+    public function registraNuovoUtente($datiUtente) {
         try {
             // Utilizziamo il metodo eseguiQuery della BaseModel per gestire errori e logging
             $query = "CALL sp_registra_utente(?, ?, ?, ?, ?, ?, ?, ?, @p_user_id, @p_success, @p_message)";
             
+            // Prepariamo i parametri per la stored procedure
             $parametri = [
                 $datiUtente['email'],
                 $datiUtente['nickname'],
-                $datiUtente['password'],
+                $datiUtente['password'],    // La password verrà crittografata nella stored procedure
                 $datiUtente['nome'],
                 $datiUtente['cognome'],
-                date('Y', strtotime($datiUtente['data_nascita'])),
+                date('Y', strtotime($datiUtente['data_nascita'])),  // Estraiamo solo l'anno di nascita
                 $datiUtente['luogo_nascita'],
-                $datiUtente['tipo_utente']
+                $datiUtente['tipo_utente']  // Tipo utente: creator, backer, etc.
             ];
             
-            // Eseguiamo la stored procedure
+            // Eseguiamo la stored procedure con i dati dell'utente
         $risultato = $this->eseguiQuery($query, $parametri, 'one');
         
+        // Verifichiamo se l'esecuzione della stored procedure è riuscita
         if ($risultato === null) {
             return ['successo' => false, 'messaggio' => 'Errore durante la registrazione'];
         }
         
         // Recuperiamo i parametri di output dalla stored procedure
+        // che contengono l'esito dell'operazione e un eventuale messaggio
         $risultatoOperazione = $this->eseguiQuery("SELECT @p_success as successo, @p_message as messaggio", [], 'one');
         
+        // Verifichiamo se è stato possibile recuperare il risultato
         if ($risultatoOperazione === null) {
             return ['successo' => false, 'messaggio' => 'Errore nel recupero del risultato'];
         }
-          return [
+          
+        // Restituiamo il risultato al controller
+        return [
             'successo' => (bool) $risultatoOperazione['successo'],
             'messaggio' => $risultatoOperazione['messaggio']
         ];
         
     } catch (PDOException $errore) {
         // Registriamo l'errore nel log per il debugging
+        // ma nascondiamo i dettagli tecnici all'utente finale per sicurezza
         error_log("Errore durante la registrazione utente: " . $errore->getMessage());
         
         return [
@@ -79,14 +98,18 @@ class GestoreUtenti extends BaseModel {
 
 /**
  * Autentica un utente esistente nel sistema
-     * 
-     * Utilizza la stored procedure login_utente per verificare
-     * le credenziali e recuperare i dati dell'utente
-     * 
-     * @param string $nickname Nome utente
-     * @param string $password Password dell'utente
-     * @return array Risultato del login con dati utente se successo
-     */
+ * 
+ * Questo metodo verifica le credenziali fornite contro il database
+ * e, se valide, restituisce i dati dell'utente. È il cuore del
+ * processo di login.
+ * 
+ * Utilizza una stored procedure per garantire sicurezza e
+ * coerenza delle operazioni a livello database.
+ * 
+ * @param string $email Email dell'utente
+ * @param string $password Password in chiaro (sarà verificata contro l'hash)
+ * @return array|null Dati dell'utente o null se autenticazione fallita
+ */
     public function autenticaUtente($nickname, $password) {
         try {
             // Prepariamo la chiamata alla stored procedure per il login
@@ -130,11 +153,10 @@ class GestoreUtenti extends BaseModel {
      * @return array|null Dati dell'utente o null se non trovato
      */
     public function ottieniUtentePerId($idUtente) {
-        try {
-            // Query per recuperare i dati principali dell'utente
+        try {            // Query per recuperare i dati principali dell'utente
             $statement = $this->connessione->prepare("
-                SELECT id, nickname, email, nome, cognome, data_nascita, sesso, paese, 
-                       avatar, biografia, data_registrazione, affidabilita, nr_progetti
+                SELECT id, nickname, email, nome, cognome, anno_nascita, luogo_nascita,
+                       tipo_utente, created_at, affidabilita, nr_progetti
                 FROM utenti 
                 WHERE id = ?
             ");
@@ -172,10 +194,9 @@ class GestoreUtenti extends BaseModel {
      * @return array|null Dati dell'utente o null se non trovato
      */
     public function ottieniUtenteDaNickname($nickname) {
-        try {
-            $statement = $this->connessione->prepare("
-                SELECT id, nickname, email, nome, cognome, data_nascita, sesso, paese, 
-                       avatar, biografia, data_registrazione, affidabilita, nr_progetti
+        try {            $statement = $this->connessione->prepare("
+                SELECT id, nickname, email, nome, cognome, anno_nascita, luogo_nascita,
+                       tipo_utente, created_at, affidabilita, nr_progetti
                 FROM utenti 
                 WHERE nickname = ?
             ");
@@ -235,7 +256,7 @@ class GestoreUtenti extends BaseModel {
     public function aggiornaProfilo($idUtente, $datiAggiornamento) {
         try {
             // Campi che possono essere aggiornati dall'utente
-            $campiConsentiti = ['email', 'nome', 'cognome', 'sesso', 'paese', 'avatar', 'biografia'];
+            $campiConsentiti = ['email', 'nome', 'cognome', 'luogo_nascita', 'tipo_utente'];
             $aggiornamenti = [];
             $parametri = [];
             
@@ -260,12 +281,12 @@ class GestoreUtenti extends BaseModel {
             
             $statement = $this->connessione->prepare($query);
             $statement->execute($parametri);
-            
-            return [
+              return [
                 'successo' => true,
                 'messaggio' => 'Profilo aggiornato con successo'
             ];
-              } catch (PDOException $errore) {
+            
+        } catch (PDOException $errore) {
             error_log("Errore nell'aggiornamento profilo: " . $errore->getMessage());
             return [
                 'successo' => false,
@@ -357,9 +378,10 @@ class GestoreUtenti extends BaseModel {
                 WHERE p.creatore_id = ?
                 ORDER BY p.data_creazione DESC
                 LIMIT ? OFFSET ?
-            ");
-            $statement->execute([$idUtente, $elementiPerPagina, $offset]);
-            $progetti = $statement->fetchAll();            // Calcoliamo campi aggiuntivi per ogni progetto
+            ");            $statement->execute([$idUtente, $elementiPerPagina, $offset]);
+            $progetti = $statement->fetchAll();
+            
+            // Calcoliamo campi aggiuntivi per ogni progetto
             foreach ($progetti as &$progetto) {
                 $progetto['percentuale_completamento'] = $progetto['budget_richiesto'] > 0 
                     ? ($progetto['totale_finanziamenti'] / $progetto['budget_richiesto']) * 100 
@@ -541,9 +563,7 @@ class GestoreUtenti extends BaseModel {
             // Numero totale di candidature inviate
             $statement = $this->connessione->prepare("SELECT COUNT(*) FROM candidature WHERE utente_id = ?");
             $statement->execute([$idUtente]);
-            $statistiche['candidature_inviate'] = $statement->fetchColumn();
-
-            return $statistiche;
+            $statistiche['candidature_inviate'] = $statement->fetchColumn();            return $statistiche;
             
         } catch (PDOException $errore) {
             error_log("Errore nel recupero statistiche utente: " . $errore->getMessage());
@@ -551,6 +571,3 @@ class GestoreUtenti extends BaseModel {
         }
     }
 }
-
-// Alias per compatibilità con il codice esistente
-class_alias('GestoreUtenti', 'UserCompliant');

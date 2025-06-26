@@ -1,0 +1,741 @@
+[24-Jun-2025 14:06:16 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function loadDependencySafe() in C:\xampp\htdocs\BOSTARTER\frontend\index.php:86
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 86
+[24-Jun-2025 14:06:17 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function loadDependencySafe() in C:\xampp\htdocs\BOSTARTER\frontend\index.php:86
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 86
+[24-Jun-2025 14:06:20 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function loadDependencySafe() in C:\xampp\htdocs\BOSTARTER\frontend\index.php:86
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 86
+[24-Jun-2025 14:06:22 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function loadDependencySafe() in C:\xampp\htdocs\BOSTARTER\frontend\index.php:86
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 86
+[24-Jun-2025 14:06:23 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function loadDependencySafe() in C:\xampp\htdocs\BOSTARTER\frontend\index.php:86
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 86
+[24-Jun-2025 14:06:51 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function loadDependencySafe() in C:\xampp\htdocs\BOSTARTER\frontend\index.php:86
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 86
+[24-Jun-2025 14:10:01 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:18:46 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:21:12 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:21:12 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PerformanceHelper" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:318
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 318
+[24-Jun-2025 14:21:45 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:21:45 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PerformanceHelper" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:318
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 318
+[24-Jun-2025 14:22:47 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:22:47 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PerformanceHelper" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:318
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 318
+[24-Jun-2025 14:25:02 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:25:02 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PerformanceHelper" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:318
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 318
+[24-Jun-2025 14:26:08 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:26:08 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PerformanceHelper" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:318
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 318
+[24-Jun-2025 14:26:13 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:26:13 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PerformanceHelper" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:318
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 318
+[24-Jun-2025 14:27:21 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[24-Jun-2025 14:27:21 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PerformanceHelper" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:318
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 318
+[25-Jun-2025 10:49:17 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 10:49:17 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PerformanceHelper" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:318
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 318
+[25-Jun-2025 10:55:20 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 10:55:20 Europe/Berlin] Errore caricamento dipendenza utils/PerformanceHelper.php: File non trovato: utils/PerformanceHelper.php
+[25-Jun-2025 10:55:20 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[25-Jun-2025 10:55:20 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 10:55:20 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "CacheManager" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:325
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 325
+[25-Jun-2025 10:56:14 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 10:56:14 Europe/Berlin] Errore caricamento dipendenza utils/PerformanceHelper.php: File non trovato: utils/PerformanceHelper.php
+[25-Jun-2025 10:56:14 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[25-Jun-2025 10:56:14 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 10:56:14 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "CacheManager" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:325
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 325
+[25-Jun-2025 10:56:41 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 10:56:41 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 10:56:41 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "CacheManager" not found in C:\xampp\htdocs\BOSTARTER\frontend\index.php:323
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 323
+[25-Jun-2025 10:59:47 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 10:59:47 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 10:59:47 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 10:59:47 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:03:45 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 11:03:45 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[25-Jun-2025 11:03:45 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:03:45 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:03:45 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:08:45 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 11:08:45 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[25-Jun-2025 11:08:45 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:08:45 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:08:45 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:09:16 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 11:09:16 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[25-Jun-2025 11:09:16 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:09:16 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:09:16 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:11:19 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 11:11:19 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[25-Jun-2025 11:11:19 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:11:20 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:11:20 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:27:39 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 11:27:39 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[25-Jun-2025 11:27:39 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:27:40 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:27:40 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:29:21 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[25-Jun-2025 11:29:21 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[25-Jun-2025 11:29:21 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:29:21 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[25-Jun-2025 11:29:21 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:26 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 10:07:26 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 10:07:26 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:26 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:26 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:40 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 10:07:40 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 10:07:40 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:40 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:41 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:56 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 10:07:56 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 10:07:57 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:57 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:07:57 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:08:34 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 10:08:34 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 10:08:34 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:08:34 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:08:34 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:09:09 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 10:09:09 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 10:09:10 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:09:10 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:09:10 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:09:50 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 10:09:50 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 10:09:50 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:09:50 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:09:50 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:10:02 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 10:10:02 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 10:10:02 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:10:02 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:10:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:10:17 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 10:10:17 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 10:10:17 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:10:17 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 10:10:17 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:03:06 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:03:06 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:03:06 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:03:06 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:03:06 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:03:06 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:03:06 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:03:17 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:03:17 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:03:17 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:03:17 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:03:17 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:03:17 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:03:17 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:04:55 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:04:55 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:04:55 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:04:55 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:04:55 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:04:56 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:04:56 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:04:58 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:04:58 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:04:58 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:04:58 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:04:58 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:04:58 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:04:58 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:00 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:05:00 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:05:00 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:05:00 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:05:00 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:01 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:01 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:01 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:05:01 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:05:01 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:05:01 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:05:02 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:02 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:02 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:03 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:05:03 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:05:03 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:05:03 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:05:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:05:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:38 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:17:38 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:17:38 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:17:38 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:17:38 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:38 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:17:38 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:38 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:47 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:17:47 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:17:47 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:17:47 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:17:47 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:47 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:17:47 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:47 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:51 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:17:51 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:17:51 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:17:51 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:17:51 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:51 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:17:51 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:51 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:52 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:17:52 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:17:52 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:17:52 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:17:52 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:52 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:17:52 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:52 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:55 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:17:55 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:17:55 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:17:55 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:17:55 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:55 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:17:55 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:55 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:56 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:17:56 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:17:56 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:17:56 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:17:56 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:56 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:17:56 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:56 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:59 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:17:59 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:17:59 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:17:59 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:17:59 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:17:59 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:17:59 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:00 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:02 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:18:02 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:18:02 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:18:02 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:18:02 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:02 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:03 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:05 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:18:05 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:18:05 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:18:05 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:18:06 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:06 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:18:06 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:06 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:18 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:18:18 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:18:18 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:18:18 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:18:18 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:18 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:18:19 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:18:19 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:22:15 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:22:15 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:22:15 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:22:15 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:22:15 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:22:15 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:22:15 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:22:15 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:26:21 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:26:21 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:26:21 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:26:21 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:26:21 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:26:21 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:26:21 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:26:21 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:26:54 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:26:54 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:26:54 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:26:54 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:26:54 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:26:54 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:26:55 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:26:55 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:27:46 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: Unclosed '[' on line 138
+[26-Jun-2025 11:27:46 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:27:46 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:27:46 Europe/Berlin] Errore inizializzazione sicurezza: Class "SecurityConfig" not found
+[26-Jun-2025 11:27:46 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:27:46 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:27:46 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:27:46 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:28:30 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:28:30 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:28:30 Europe/Berlin] Errore inizializzazione sicurezza: Call to undefined method SecurityConfig::setSecurityHeaders()
+[26-Jun-2025 11:28:30 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:28:30 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:28:30 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:28:30 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:35:53 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:35:53 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:35:53 Europe/Berlin] Errore inizializzazione sicurezza: Call to undefined method SecurityConfig::setSecurityHeaders()
+[26-Jun-2025 11:35:53 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:35:53 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:35:53 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:35:53 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:15 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:39:15 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:39:15 Europe/Berlin] Errore inizializzazione sicurezza: Call to undefined method SecurityConfig::getRealClientIP()
+[26-Jun-2025 11:39:15 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:15 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:39:15 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:16 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:35 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:39:35 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:39:35 Europe/Berlin] Errore inizializzazione sicurezza: Call to undefined method SecurityConfig::getRealClientIP()
+[26-Jun-2025 11:39:36 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:36 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:39:36 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:36 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:46 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:39:46 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:39:46 Europe/Berlin] Errore inizializzazione sicurezza: Call to undefined method SecurityConfig::isWhitelistedIP()
+[26-Jun-2025 11:39:46 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:46 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:39:46 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:46 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:56 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:39:56 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:39:56 Europe/Berlin] Errore inizializzazione sicurezza: Call to undefined method SecurityConfig::isWhitelistedIP()
+[26-Jun-2025 11:39:56 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:56 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:39:56 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:39:56 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:18 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:41:18 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:41:19 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:19 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:41:19 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:19 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:29 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:41:29 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:41:29 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:29 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:41:29 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:29 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:47 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:41:47 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:41:48 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:48 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:41:48 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:41:48 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:42:25 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:42:25 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:42:25 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:42:25 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:42:25 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:42:25 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:44:58 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:44:58 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:44:58 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:44:58 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:44:59 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:44:59 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:45:04 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 11:45:04 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 11:45:04 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:45:04 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 11:45:04 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 11:45:04 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 14:42:34 Europe/Berlin] Errore caricamento dipendenza utils/ResourceOptimizer.php: File non trovato: utils/ResourceOptimizer.php
+[26-Jun-2025 14:42:34 Europe/Berlin] Errore caricamento dipendenza utils/CacheManager.php: File non trovato: utils/CacheManager.php
+[26-Jun-2025 14:42:34 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 14:42:34 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[26-Jun-2025 14:42:34 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16
+[26-Jun-2025 14:42:34 Europe/Berlin] Errore caricamento dati: SQLSTATE[42000]: Syntax error or access violation: 1064 You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '::FLOAT / 
+                    NULLIF(COUNT(*), 0) * 100
+                ),...' at line 16

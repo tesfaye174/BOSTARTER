@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../backend/controllers/AuthController.php';
 $authController = new \BOSTARTER\Controllers\GestoreAutenticazione();
 
 // Esegui logout
-$authController->logout();
+$authController->eseguiLogout();
 
 session_start();
 session_unset();

@@ -156,7 +156,8 @@ class GestoreRicompense {
                 ];
             }
             
-            // Aggiungiamo l'ID della ricompensa come ultimo parametro            $parametri[] = $idRicompensa;
+            // Aggiungiamo l'ID della ricompensa come ultimo parametro
+            $parametri[] = $idRicompensa;
             $query = "UPDATE reward SET " . implode(', ', $aggiornamenti) . " WHERE id = ?";
             
             $statement = $this->connessione->prepare($query);
