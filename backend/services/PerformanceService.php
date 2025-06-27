@@ -7,48 +7,87 @@
 
 namespace BOSTARTER\Services;
 
-require_once __DIR__ . '/../utils/CacheManager.php';
-require_once __DIR__ . '/../config/ConfigurazioneCentralizzata.php';
+require_once __DIR__ . '/../config/database.php';
 
-use BOSTARTER\Utils\CacheManager;
-use BOSTARTER\Config\ConfigurazioneCentralizzata as Config;
+// Implementazione cache semplificata interna
+class SimpleCacheManager {
+    private static $cache = [];
+    private static $cacheDir = null;
+    
+    public static function init() {
+        self::$cacheDir = __DIR__ . '/../../cache/';
+        if (!is_dir(self::$cacheDir)) {
+            mkdir(self::$cacheDir, 0755, true);
+        }
+    }
+    
+    public static function get($key) {
+        if (isset(self::$cache[$key])) {
+            return self::$cache[$key];
+        }
+        
+        $file = self::$cacheDir . md5($key) . '.cache';
+        if (file_exists($file) && time() - filemtime($file) < 3600) {
+            $data = file_get_contents($file);
+            self::$cache[$key] = unserialize($data);
+            return self::$cache[$key];
+        }
+        
+        return false;
+    }
+    
+    public static function set($key, $value, $ttl = 3600) {
+        self::init();
+        self::$cache[$key] = $value;
+        $file = self::$cacheDir . md5($key) . '.cache';
+        file_put_contents($file, serialize($value));
+    }
+}
 
 class ServizioPerformance {
     private $connessioneDatabase;     // Connessione al database principale
-    private $cacheManager;           // Sistema di cache unificato
-      /**
+    private $cache;                   // Sistema di cache semplificato
+    
+    /**
      * Costruttore del servizio performance
-     * Inizializza la connessione database e il sistema di cache unificato
+     * Inizializza la connessione database e il sistema di cache semplificato
      */
-    public function __construct($connessioneDb) {
-        $this->connessioneDatabase = $connessioneDb;
-        
-        // Utilizziamo il CacheManager unificato invece di implementazioni duplicate
-        $this->cacheManager = new CacheManager([
-            'type' => Config::CACHE_TYPE,
-            'ttl' => Config::CACHE_TTL_DEFAULT,
-            'prefix' => Config::CACHE_PREFIX
-        ]);
+    public function __construct($connessioneDb = null) {
+        $this->connessioneDatabase = $connessioneDb ?? Database::getInstance()->getConnection();
+        SimpleCacheManager::init();
+        $this->cache = new SimpleCacheManager();
     }
     
     /**
      * Cache dei risultati delle query al database
-     * Utilizza il CacheManager unificato per evitare duplicazioni
+     * Utilizza cache semplificata per evitare duplicazioni
      */
     public function cacheQuery($query, $params = [], $ttl = null) {
-        return $this->cacheManager->cacheQuery($query, $params, $ttl);
+        $cacheKey = md5($query . serialize($params));
+        
+        $cached = SimpleCacheManager::get($cacheKey);
+        if ($cached !== false) {
+            return $cached;
+        }
+        
+        $stmt = $this->connessioneDatabase->prepare($query);
+        $stmt->execute($params);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        SimpleCacheManager::set($cacheKey, $result, $ttl ?? 3600);
+        return $result;
     }
-      /**
-     * Carica la configurazione delle prestazioni dal sistema
-     * Imposta valori predefiniti per cache e performance
+    /**
+     * Carica la configurazione delle prestazioni con valori predefiniti
      */
     private function caricaConfigurazione() {
         return [
             'cache_abilitata' => $_ENV['CACHE_ENABLED'] ?? true,
-            'tipo_cache' => $_ENV['CACHE_TYPE'] ?? 'redis', // redis, memcached, file
-            'host_redis' => $_ENV['REDIS_HOST'] ?? 'localhost',
-            'porta_redis' => $_ENV['REDIS_PORT'] ?? 6379,
-            'password_redis' => $_ENV['REDIS_PASSWORD'] ?? null,
+            'tipo_cache' => 'file', // Utilizziamo cache su file semplificata
+            'durata_cache_default' => 3600,
+            'durata_cache_progetti' => 1800,
+            'durata_cache_utenti' => 900,
+            'durata_cache_statistiche' => 3600,
             'host_memcached' => $_ENV['MEMCACHED_HOST'] ?? 'localhost',
             'porta_memcached' => $_ENV['MEMCACHED_PORT'] ?? 11211,
             'cartella_cache_file' => $_ENV['FILE_CACHE_DIR'] ?? __DIR__ . '/../cache',

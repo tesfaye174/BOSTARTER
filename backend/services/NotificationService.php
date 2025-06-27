@@ -13,7 +13,7 @@
  */
 namespace BOSTARTER\Services;
 
-use BOSTARTER\Models\GestoreNotifiche;
+use BOSTARTER\Models\Notification;
 
 class GestoreServizioNotifiche {
     // Riferimenti ai componenti necessari
@@ -27,7 +27,7 @@ class GestoreServizioNotifiche {
      */
     public function __construct($database) {
         $this->connessioneDatabase = $database;
-        $this->gestoreNotifiche = new GestoreNotifiche($database);
+        $this->gestoreNotifiche = new Notification($database);
     }
 
     /**

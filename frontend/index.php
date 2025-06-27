@@ -80,18 +80,86 @@ final class DependencyLoader {
 }
 
 // Caricamento delle dipendenze principali
-$coreDependencies = [
+
+// Global fallback for legacy loadDependencySafe, routing to new DependencyLoader
+if (!function_exists('loadDependencySafe')) {
+    function loadDependencySafe(string $path, ?string $className = null): bool {
+        // Assuming $path might sometimes be a full path or a relative path
+        // We need to make it relative to the backend directory for DependencyLoader
+        
+        // Remove known base paths to normalize
+        $backendBasePath = __DIR__ . '/../backend/';
+        $frontendBasePath = __DIR__ . '/';
+
+        if (strpos($path, $backendBasePath) === 0) {
+            $relativePath = substr($path, strlen($backendBasePath));
+        } elseif (strpos($path, $frontendBasePath . 'utils/') === 0) { // For frontend utils
+            $relativePath = substr($path, strlen($frontendBasePath));
+        } elseif (strpos($path, 'utils/') === 0 || strpos($path, 'middleware/') === 0 || strpos($path, 'config/') === 0 || strpos($path, 'services/') === 0 || strpos($path, 'models/') === 0 || strpos($path, 'controllers/') === 0 ) {
+            // If it's already a path relative to backend (e.g., 'utils/MyUtil.php')
+            $relativePath = $path;
+        } else {
+            // If it's a simple filename, assume it's in a common backend directory or needs specific handling.
+            // This part might need refinement if paths are diverse.
+            // For now, let's log an error if the path isn't recognized.
+            error_log("loadDependencySafe: Unhandled path format '{$path}'. Assuming it's relative to backend.");
+            $relativePath = $path; 
+        }
+        
+        // Check if the path is for a frontend utility
+        if (strpos($relativePath, 'frontend/utils/') === 0) {
+            $fullPath = __DIR__ . '/' . substr($relativePath, strlen('frontend/'));
+            if (file_exists($fullPath)) {
+                require_once $fullPath;
+                if ($className && !class_exists($className)) {
+                     error_log("loadDependencySafe: Class {$className} not found after including frontend util {$relativePath}");
+                     return false;
+                }
+                return true;
+            } else {
+                error_log("loadDependencySafe: Frontend util file not found {$relativePath}");
+                return false;
+            }
+        }
+        // Otherwise, assume it's a backend path for DependencyLoader
+        return DependencyLoader::load($relativePath, $className);
+    }
+}
+
+// Direct loading for frontend utilities
+$frontendUtilFiles = [
+    'utils/ResourceOptimizer.php' => 'ResourceOptimizer',
+    'utils/CacheManager.php' => 'CacheManager',
+    'utils/PerformanceHelper.php' => 'PerformanceHelper' // Will be created
+];
+
+foreach ($frontendUtilFiles as $path => $className) {
+    $fullPath = __DIR__ . '/' . $path; // Assumes path is like 'utils/FileName.php'
+    if (file_exists($fullPath)) {
+        require_once $fullPath;
+        if ($className && !class_exists($className) && $className !== null) { // Allow null class name
+            error_log("Error loading frontend utility: Class {$className} not found in {$fullPath}");
+        }
+    } else {
+        // Only log error if it's not the PerformanceHelper we are about to create (or other expected missing files)
+        if ($path !== 'utils/PerformanceHelper.php') {
+             error_log("Error loading frontend utility: File not found {$fullPath}");
+        }
+    }
+}
+
+// Caricamento delle dipendenze backend principali
+$backendCoreDependencies = [
     'config/database.php' => 'Database',
     'services/MongoLogger.php' => 'MongoLogger',
     'utils/NavigationHelper.php' => 'NavigationHelper',
     'middleware/SecurityMiddleware.php' => 'SecurityMiddleware',
     'utils/FrontendSecurity.php' => 'FrontendSecurity',
-    'utils/ResourceOptimizer.php' => null,
-    'utils/CacheManager.php' => 'CacheManager'
+    // ResourceOptimizer and CacheManager are moved to direct frontend loading
 ];
 
-foreach ($coreDependencies as $path => $class) {
-    DependencyLoader::load($path, $class);
+foreach ($backendCoreDependencies as $path => $class) {
+    DependencyLoader::load($path, $class); // This is for backend dependencies
 }
 
 // ===============================
@@ -201,7 +269,7 @@ final class ProjectDataLoader {
                 SUM(ps.funding) as total_funding,
                 COUNT(DISTINCT f.utente_id) as total_backers,
                 ROUND(
-                    (COUNT(CASE WHEN ps.funding >= ps.budget_richiesto THEN 1 END)::FLOAT / 
+                    (COUNT(CASE WHEN ps.funding >= ps.budget_richiesto THEN 1 END) * 1.0 / 
                     NULLIF(COUNT(*), 0) * 100
                 ), 2) as success_rate
             FROM project_stats ps

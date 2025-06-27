@@ -1,0 +1,39 @@
+{
+    "css": {
+        "critical": [
+            "../css/main-styles.css"
+        ],
+        "animations": [
+            "../css/animations.css"
+        ]
+    },
+    "js": {
+        "main": [
+            "../js/main.js"
+        ],
+        "vendor": [
+            "../js/notifications.js"
+        ]
+    },
+    "images": {
+        "optimize": true,
+        "formats": [
+            "webp",
+            "original"
+        ],
+        "sizes": [
+            320,
+            640,
+            960,
+            1280,
+            1920
+        ],
+        "quality": 85
+    },
+    "build_options": {
+        "minify": true,
+        "cache_busting": true,
+        "gzip": false,
+        "source_maps": false
+    }
+}

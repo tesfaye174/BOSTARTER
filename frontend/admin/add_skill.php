@@ -50,95 +50,185 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                 'nome' => [
                     'required' => true,
                     'min_length' => 2,
-                    'max_length' => 100
+                    'max_length' => 50,
+                    'pattern' => '/^[a-zA-Z0-9\s\-\+\#\.]+$/',
+                    'error_messages' => [
+                        'required' => 'Il nome della competenza è obbligatorio',
+                        'min_length' => 'Il nome deve essere di almeno 2 caratteri',
+                        'max_length' => 'Il nome non può superare i 50 caratteri',
+                        'pattern' => 'Il nome contiene caratteri non validi'
+                    ]
+                ],
+                'descrizione' => [
+                    'required' => true,
+                    'min_length' => 10,
+                    'max_length' => 500,
+                    'error_messages' => [
+                        'required' => 'La descrizione è obbligatoria',
+                        'min_length' => 'La descrizione deve essere di almeno 10 caratteri',
+                        'max_length' => 'La descrizione non può superare i 500 caratteri'
+                    ]
                 ],
                 'categoria' => [
                     'required' => true,
-                    'min_length' => 2,
-                    'max_length' => 50
-                ],
-                'descrizione' => [
-                    'max_length' => 500
+                    'in_array' => ['Programming', 'Design', 'Marketing', 'Business', 'Other'],
+                    'error_messages' => [
+                        'required' => 'La categoria è obbligatoria',
+                        'in_array' => 'Categoria non valida'
+                    ]
                 ]
             ];
-            
-            $inputData = ['nome' => $nome, 'categoria' => $categoria, 'descrizione' => $descrizione];
-            $validationResult = FrontendSecurity::validateInput($inputData, $validationRules);
-            
-            if ($validationResult !== true) {
-                $error = implode('. ', $validationResult);
-                FrontendSecurity::incrementRateLimit('add_skill');
-            } else {
-        try {
-            // Verifica se la competenza esiste già
-            $stmt = $conn->prepare("SELECT id FROM competenze WHERE LOWER(nome) = LOWER(?)");
-            $stmt->execute([$nome]);
-            
-            if ($stmt->fetch()) {
-                $error = 'Una competenza con questo nome esiste già.';
-            } else {
-                // Inserisci la nuova competenza
-                $stmt = $conn->prepare("
-                    INSERT INTO competenze (nome, descrizione, categoria)
-                    VALUES (?, ?, ?)
-                ");
+
+            // Validation
+            $validationErrors = [];
+            foreach ($validationRules as $field => $rules) {
+                $value = $$field ?? '';
                 
-                $stmt->execute([$nome, $descrizione, $categoria]);
-                  // Log MongoDB
-                $mongoLogger->logActivity($_SESSION['user_id'], 'admin_add_skill', [
-                    'skill_name' => $nome,
-                    'category' => $categoria,
-                    'security_code_verified' => true
-                ]);
-                
-                $success = 'Competenza aggiunta con successo!';
-                
-                // Reset form
-                $_POST = [];
+                if ($rules['required'] && empty($value)) {
+                    $validationErrors[$field] = $rules['error_messages']['required'];
+                    continue;
+                }
+
+                if (isset($rules['min_length']) && strlen($value) < $rules['min_length']) {
+                    $validationErrors[$field] = $rules['error_messages']['min_length'];
+                }
+
+                if (isset($rules['max_length']) && strlen($value) > $rules['max_length']) {
+                    $validationErrors[$field] = $rules['error_messages']['max_length'];
+                }
+
+                if (isset($rules['pattern']) && !preg_match($rules['pattern'], $value)) {
+                    $validationErrors[$field] = $rules['error_messages']['pattern'];
+                }
+
+                if (isset($rules['in_array']) && !in_array($value, $rules['in_array'])) {
+                    $validationErrors[$field] = $rules['error_messages']['in_array'];
+                }
             }
-        } catch (Exception $e) {
-            $error = 'Errore durante l\'inserimento: ' . $e->getMessage();
-            
-            $mongoLogger->logActivity($_SESSION['user_id'], 'admin_add_skill_error', [
-                'error' => $e->getMessage()
-            ]);
+
+            if (empty($validationErrors)) {
+                try {
+                    // Begin transaction
+                    $conn->beginTransaction();
+
+                    // Check if skill already exists
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM competenze WHERE LOWER(nome) = LOWER(?) AND categoria = ?");
+                    $stmt->execute([strtolower($nome), $categoria]);
+                    
+                    if ($stmt->fetchColumn() > 0) {
+                        throw new Exception("Una competenza con questo nome già esiste in questa categoria");
+                    }
+
+                    // Insert new skill
+                    $stmt = $conn->prepare("
+                        INSERT INTO competenze (nome, descrizione, categoria, data_creazione)
+                        VALUES (?, ?, ?, NOW())
+                    ");
+                    
+                    if ($stmt->execute([$nome, $descrizione, $categoria])) {
+                        // Log the action
+                        $mongoLogger->logAction('add_skill', [
+                            'skill_name' => $nome,
+                            'category' => $categoria,
+                            'admin_id' => $_SESSION['user_id']
+                        ]);
+                        
+                        $conn->commit();
+                        $success = "Competenza aggiunta con successo!";
+                        
+                        // Clear form data
+                        unset($nome, $descrizione, $categoria);
+                    } else {
+                        throw new Exception("Errore durante l'inserimento della competenza");
+                    }
+                } catch (Exception $e) {
+                    $conn->rollBack();
+                    $error = $e->getMessage();
+                    
+                    // Log the error
+                    $mongoLogger->logError('add_skill_error', [
+                        'error' => $e->getMessage(),
+                        'admin_id' => $_SESSION['user_id']
+                    ]);
+                }
+            } else {
+                $error = implode('<br>', $validationErrors);
+            }
         }
     }
 }
 
 // Gestione eliminazione competenza
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'delete') {
-    $skill_id = intval($_POST['skill_id'] ?? 0);
-    
-    if ($skill_id) {
-        try {            // Verifica se la competenza è utilizzata in progetti
-            $stmt = $conn->prepare("
-                SELECT COUNT(*) as count 
-                FROM profili_software ps 
-                WHERE ps.id IN (
-                    SELECT DISTINCT profilo_id 
-                    FROM skill_richieste_profilo 
-                    WHERE competenza_id = ?
-                )
-            ");
-            $stmt->execute([$skill_id]);
-            $usage = $stmt->fetch();
-            
-            if ($usage['count'] > 0) {
-                $error = 'Impossibile eliminare: la competenza è utilizzata in ' . $usage['count'] . ' progetti.';
-            } else {
-                // Elimina la competenza
-                $stmt = $conn->prepare("DELETE FROM competenze WHERE id = ?");
+    // CSRF Token verification
+    if (!FrontendSecurity::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error = 'Token di sicurezza non valido. Riprova.';
+        FrontendSecurity::logSecurityEvent('csrf_token_invalid', ['action' => 'delete_skill']);
+    } else {
+        // Rate limiting
+        if (!FrontendSecurity::checkRateLimit('delete_skill', 3, 300)) {
+            $error = 'Troppi tentativi. Riprova tra 5 minuti.';
+            FrontendSecurity::logSecurityEvent('rate_limit_exceeded', ['action' => 'delete_skill']);
+        } else {
+            try {
+                $skill_id = filter_input(INPUT_POST, 'skill_id', FILTER_VALIDATE_INT);
+                
+                if (!$skill_id) {
+                    throw new Exception('ID competenza non valido');
+                }
+
+                // Begin transaction
+                $conn->beginTransaction();
+
+                // Check if skill is in use
+                $stmt = $conn->prepare("
+                    SELECT COUNT(*) 
+                    FROM utenti_competenze 
+                    WHERE id_competenza = ?
+                ");
                 $stmt->execute([$skill_id]);
                 
-                $mongoLogger->logActivity($_SESSION['user_id'], 'admin_delete_skill', [
-                    'skill_id' => $skill_id
-                ]);
+                if ($stmt->fetchColumn() > 0) {
+                    throw new Exception('Non è possibile eliminare questa competenza perché è utilizzata da alcuni utenti');
+                }
+
+                // Delete skill
+                $stmt = $conn->prepare("
+                    DELETE FROM competenze 
+                    WHERE id = ? 
+                    AND NOT EXISTS (
+                        SELECT 1 
+                        FROM progetti_competenze 
+                        WHERE id_competenza = competenze.id
+                    )
+                ");
                 
-                $success = 'Competenza eliminata con successo!';
+                if ($stmt->execute([$skill_id])) {
+                    if ($stmt->rowCount() > 0) {
+                        // Log the action
+                        $mongoLogger->logAction('delete_skill', [
+                            'skill_id' => $skill_id,
+                            'admin_id' => $_SESSION['user_id']
+                        ]);
+                        
+                        $conn->commit();
+                        $success = "Competenza eliminata con successo!";
+                    } else {
+                        throw new Exception('Non è possibile eliminare questa competenza perché è utilizzata in alcuni progetti');
+                    }
+                } else {
+                    throw new Exception("Errore durante l'eliminazione della competenza");
+                }
+            } catch (Exception $e) {
+                $conn->rollBack();
+                $error = $e->getMessage();
+                
+                // Log the error
+                $mongoLogger->logError('delete_skill_error', [
+                    'error' => $e->getMessage(),
+                    'admin_id' => $_SESSION['user_id']
+                ]);
             }
-        } catch (Exception $e) {
-            $error = 'Errore durante l\'eliminazione: ' . $e->getMessage();
         }
     }
 }
@@ -150,22 +240,23 @@ $stmt = $conn->prepare("
         c.nome,
         c.descrizione,
         c.categoria,
-        c.created_at as data_creazione,
-        COUNT(DISTINCT srp.profilo_id) as progetti_count
+        c.data_creazione,
+        COUNT(DISTINCT uc.id_utente) as num_utenti,
+        COUNT(DISTINCT pc.id_progetto) as num_progetti
     FROM competenze c
-    LEFT JOIN skill_richieste_profilo srp ON c.id = srp.competenza_id
-    LEFT JOIN profili_software ps ON srp.profilo_id = ps.id
-    GROUP BY c.id, c.nome, c.descrizione, c.categoria, c.created_at
+    LEFT JOIN utenti_competenze uc ON c.id = uc.id_competenza
+    LEFT JOIN progetti_competenze pc ON c.id = pc.id_competenza
+    GROUP BY c.id, c.nome, c.descrizione, c.categoria
     ORDER BY c.categoria, c.nome
 ");
 
 $stmt->execute();
-$competenze = $stmt->fetchAll();
+$competenze = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Raggruppa per categoria
-$categories = [];
+// Raggruppa per categoria per una migliore organizzazione
+$competenze_per_categoria = [];
 foreach ($competenze as $competenza) {
-    $categories[$competenza['categoria']][] = $competenza;
+    $competenze_per_categoria[$competenza['categoria']][] = $competenza;
 }
 
 // Statistiche generali
@@ -186,294 +277,189 @@ $stats = $stmt->fetch();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Competenze - Admin - BOSTARTER</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Gestione Competenze - BOSTARTER Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="/frontend/css/style.css" rel="stylesheet">
+    <style>
+        .skill-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .skill-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stats-badge {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .delete-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .skill-card:hover .delete-btn {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/frontend/">
-                <i class="fas fa-rocket me-2"></i>BOSTARTER
-                <span class="badge bg-light text-danger ms-2">ADMIN</span>
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="/frontend/dashboard.php">
-                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                </a>
-                <a class="nav-link" href="/frontend/auth/logout.php">
-                    <i class="fas fa-sign-out-alt me-1"></i>Logout
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/frontend/">Home</a></li>
-                <li class="breadcrumb-item"><a href="/frontend/dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item active">Gestione Competenze</li>
-            </ol>
-        </nav>
-
-        <!-- Header con Statistiche -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card bg-danger text-white">
-                    <div class="card-body">
-                        <h1 class="h3 mb-3">
-                            <i class="fas fa-cogs me-2"></i>
-                            Gestione Competenze
-                        </h1>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-tools fa-2x me-3"></i>
-                                    <div>
-                                        <h4 class="mb-0"><?php echo $stats['total_skills']; ?></h4>
-                                        <small>Competenze Totali</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-tags fa-2x me-3"></i>
-                                    <div>
-                                        <h4 class="mb-0"><?php echo $stats['total_categories']; ?></h4>
-                                        <small>Categorie</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-project-diagram fa-2x me-3"></i>
-                                    <div>
-                                        <h4 class="mb-0"><?php echo $stats['used_in_projects']; ?></h4>
-                                        <small>Progetti Attivi</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <?php if ($error): ?>
-            <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <?php echo htmlspecialchars($error); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($success): ?>
-            <div class="alert alert-success alert-dismissible fade show">
-                <i class="fas fa-check-circle me-2"></i>
-                <?php echo htmlspecialchars($success); ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-        <div class="row">
-            <!-- Form Aggiunta Competenza -->
-            <div class="col-lg-4">
-                <div class="card">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-10">
+                <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-plus me-2"></i>
-                            Aggiungi Competenza
-                        </h5>
+                        <h1 class="h4 mb-0">Gestione Competenze</h1>
                     </div>
                     <div class="card-body">
-                        <form method="POST" id="addSkillForm">
+                        <?php if ($error): ?>
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <?php echo $error; ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if ($success): ?>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <?php echo $success; ?>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Form aggiunta competenza -->
+                        <form method="POST" class="needs-validation" novalidate>
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                             <input type="hidden" name="action" value="add">
                             
-                            <div class="mb-3">
-                                <label for="nome" class="form-label">
-                                    Nome Competenza <span class="text-danger">*</span>
-                                </label>
-                                <input 
-                                    type="text" 
-                                    class="form-control" 
-                                    id="nome" 
-                                    name="nome"
-                                    maxlength="100"
-                                    value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>"
-                                    required
-                                >
-                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="nome" name="nome" required
+                                               pattern="[a-zA-Z0-9\s\-\+\#\.]{2,50}"
+                                               value="<?php echo isset($nome) ? htmlspecialchars($nome) : ''; ?>">
+                                        <label for="nome">Nome Competenza</label>
+                                        <div class="invalid-feedback">
+                                            Nome non valido (2-50 caratteri, lettere, numeri e simboli base)
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="categoria" name="categoria" required>
+                                            <option value="" disabled selected>Seleziona categoria</option>
+                                            <option value="Programming">Programming</option>
+                                            <option value="Design">Design</option>
+                                            <option value="Marketing">Marketing</option>
+                                            <option value="Business">Business</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                        <label for="categoria">Categoria</label>
+                                        <div class="invalid-feedback">
+                                            Seleziona una categoria valida
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <div class="mb-3">
-                                <label for="categoria" class="form-label">
-                                    Categoria <span class="text-danger">*</span>
-                                </label>
-                                <select class="form-select" id="categoria" name="categoria" required>
-                                    <option value="">Seleziona categoria</option>
-                                    <option value="Programming" <?php echo ($_POST['categoria'] ?? '') == 'Programming' ? 'selected' : ''; ?>>Programming</option>
-                                    <option value="Web Development" <?php echo ($_POST['categoria'] ?? '') == 'Web Development' ? 'selected' : ''; ?>>Web Development</option>
-                                    <option value="Mobile Development" <?php echo ($_POST['categoria'] ?? '') == 'Mobile Development' ? 'selected' : ''; ?>>Mobile Development</option>
-                                    <option value="Database" <?php echo ($_POST['categoria'] ?? '') == 'Database' ? 'selected' : ''; ?>>Database</option>
-                                    <option value="DevOps" <?php echo ($_POST['categoria'] ?? '') == 'DevOps' ? 'selected' : ''; ?>>DevOps</option>
-                                    <option value="Design" <?php echo ($_POST['categoria'] ?? '') == 'Design' ? 'selected' : ''; ?>>Design</option>
-                                    <option value="Testing" <?php echo ($_POST['categoria'] ?? '') == 'Testing' ? 'selected' : ''; ?>>Testing</option>
-                                    <option value="Security" <?php echo ($_POST['categoria'] ?? '') == 'Security' ? 'selected' : ''; ?>>Security</option>
-                                    <option value="AI/ML" <?php echo ($_POST['categoria'] ?? '') == 'AI/ML' ? 'selected' : ''; ?>>AI/ML</option>
-                                    <option value="Other" <?php echo ($_POST['categoria'] ?? '') == 'Other' ? 'selected' : ''; ?>>Altro</option>
-                                </select>
-                            </div>                            <div class="mb-3">
-                                <label for="descrizione" class="form-label">Descrizione</label>
-                                <textarea 
-                                    class="form-control" 
-                                    id="descrizione" 
-                                    name="descrizione"
-                                    rows="3"
-                                    maxlength="500"
-                                    placeholder="Descrizione opzionale della competenza"
-                                ><?php echo htmlspecialchars($_POST['descrizione'] ?? ''); ?></textarea>
-                                <div class="form-text">
-                                    <span id="descCharCount">0</span>/500 caratteri
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary h-100 w-100">
+                                        <i class="fas fa-plus-circle me-2"></i>
+                                        Aggiungi Competenza
+                                    </button>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea class="form-control" id="descrizione" name="descrizione" 
+                                                  style="height: 100px" required minlength="10" maxlength="500"
+                                                  ><?php echo isset($descrizione) ? htmlspecialchars($descrizione) : ''; ?></textarea>
+                                        <label for="descrizione">Descrizione</label>
+                                        <div class="invalid-feedback">
+                                            La descrizione deve essere tra 10 e 500 caratteri
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="mb-3">
-                                <label for="security_code" class="form-label">
-                                    Codice di Sicurezza <span class="text-danger">*</span>
-                                </label>
-                                <input 
-                                    type="password" 
-                                    class="form-control" 
-                                    id="security_code" 
-                                    name="security_code"
-                                    maxlength="20"
-                                    placeholder="Inserisci il codice di sicurezza amministrativo"
-                                    required
-                                >
-                                <div class="form-text">
-                                    <i class="fas fa-shield-alt me-1"></i>
-                                    Richiesto per confermare l'aggiunta di nuove competenze
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-plus me-2"></i>Aggiungi Competenza
-                            </button>
                         </form>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Lista Competenze -->
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list me-2"></i>
-                            Competenze Esistenti
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <?php if (empty($competenze)): ?>
-                            <div class="text-center text-muted py-4">
-                                <i class="fas fa-tools fa-3x mb-3"></i>
-                                <p>Nessuna competenza trovata.</p>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach ($categories as $categoria => $skills): ?>
-                                <div class="mb-4">
-                                    <h6 class="text-primary border-bottom pb-2">
-                                        <i class="fas fa-tag me-2"></i>
-                                        <?php echo htmlspecialchars($categoria); ?>
-                                        <span class="badge bg-primary ms-2"><?php echo count($skills); ?></span>
-                                    </h6>
-                                    
-                                    <div class="row">
-                                        <?php foreach ($skills as $skill): ?>
-                                            <div class="col-md-6 mb-3">
-                                                <div class="card border-start border-3 border-primary">
-                                                    <div class="card-body p-3">
-                                                        <div class="d-flex justify-content-between align-items-start">
-                                                            <div class="flex-grow-1">
-                                                                <h6 class="mb-1"><?php echo htmlspecialchars($skill['nome']); ?></h6>
-                                                                <?php if ($skill['descrizione']): ?>
-                                                                    <p class="text-muted small mb-1">
-                                                                        <?php echo htmlspecialchars($skill['descrizione']); ?>
-                                                                    </p>
-                                                                <?php endif; ?>
-                                                                <div class="d-flex align-items-center text-muted small">
-                                                                    <i class="fas fa-project-diagram me-1"></i>
-                                                                    <?php echo $skill['progetti_count']; ?> progetti
-                                                                    <span class="mx-2">•</span>
-                                                                    <i class="fas fa-calendar me-1"></i>
-                                                                    <?php echo date('d/m/Y', strtotime($skill['data_creazione'])); ?>
-                                                                </div>
-                                                            </div>
-                                                            <div class="ms-2">
-                                                                <?php if ($skill['progetti_count'] == 0): ?>
-                                                                    <button 
-                                                                        class="btn btn-sm btn-outline-danger"
-                                                                        onclick="deleteSkill(<?php echo $skill['id']; ?>, '<?php echo htmlspecialchars($skill['nome']); ?>')"
-                                                                        title="Elimina competenza"
-                                                                    >
-                                                                        <i class="fas fa-trash"></i>
+                        <!-- Lista competenze -->
+                        <div class="mt-5">
+                            <h2 class="h5 mb-4">Competenze Esistenti</h2>
+                            
+                            <?php foreach ($competenze_per_categoria as $categoria => $competenze_categoria): ?>
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h3 class="h6 mb-0"><?php echo htmlspecialchars($categoria); ?></h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                                            <?php foreach ($competenze_categoria as $competenza): ?>
+                                                <div class="col">
+                                                    <div class="card h-100 skill-card">
+                                                        <div class="card-body">
+                                                            <h4 class="h6 card-title d-flex justify-content-between align-items-center">
+                                                                <?php echo htmlspecialchars($competenza['nome']); ?>
+                                                                <form method="POST" class="d-inline" 
+                                                                      onsubmit="return confirm('Sei sicuro di voler eliminare questa competenza?');">
+                                                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                                                    <input type="hidden" name="action" value="delete">
+                                                                    <input type="hidden" name="skill_id" value="<?php echo $competenza['id']; ?>">
+                                                                    <button type="submit" class="btn btn-link text-danger p-0 delete-btn" 
+                                                                            title="Elimina competenza">
+                                                                        <i class="fas fa-trash-alt"></i>
                                                                     </button>
-                                                                <?php else: ?>
-                                                                    <span class="badge bg-success">In uso</span>
-                                                                <?php endif; ?>
+                                                                </form>
+                                                            </h4>
+                                                            <p class="card-text small mb-2">
+                                                                <?php echo htmlspecialchars($competenza['descrizione']); ?>
+                                                            </p>
+                                                            <div class="d-flex gap-2">
+                                                                <span class="badge bg-primary stats-badge">
+                                                                    <i class="fas fa-users me-1"></i>
+                                                                    <?php echo $competenza['num_utenti']; ?> utenti
+                                                                </span>
+                                                                <span class="badge bg-info stats-badge">
+                                                                    <i class="fas fa-project-diagram me-1"></i>
+                                                                    <?php echo $competenza['num_progetti']; ?> progetti
+                                                                </span>
                                                             </div>
+                                                        </div>
+                                                        <div class="card-footer bg-transparent">
+                                                            <small class="text-muted">
+                                                                <i class="far fa-calendar-alt me-1"></i>
+                                                                Aggiunta il <?php echo date('d/m/Y', strtotime($competenza['data_creazione'])); ?>
+                                                            </small>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        <?php endforeach; ?>
+                                            <?php endforeach; ?>
+                                        </div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
-                        <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Form nascosto per eliminazione -->
-    <form id="deleteForm" method="POST" style="display: none;">
-        <input type="hidden" name="action" value="delete">
-        <input type="hidden" name="skill_id" id="deleteSkillId">
-    </form>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const descrizioneInput = document.getElementById('descrizione');
-            const descCharCount = document.getElementById('descCharCount');
+        // Form validation
+        (() => {
+            'use strict';
 
-            // Conteggio caratteri descrizione
-            function updateDescCharCount() {
-                const count = descrizioneInput.value.length;
-                descCharCount.textContent = count;
-                
-                if (count > 450) {
-                    descCharCount.className = 'text-warning fw-bold';
-                } else {
-                    descCharCount.className = '';
-                }
-            }
-
-            descrizioneInput.addEventListener('input', updateDescCharCount);
-            updateDescCharCount();
-        });
-
-        function deleteSkill(skillId, skillName) {
-            if (confirm(`Sei sicuro di voler eliminare la competenza "${skillName}"?\n\nQuesta azione non può essere annullata.`)) {
-                document.getElementById('deleteSkillId').value = skillId;
-                document.getElementById('deleteForm').submit();
-            }
-        }
+            const forms = document.querySelectorAll('.needs-validation');
+            
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                });
+            });
+        })();
     </script>
 </body>
 </html>

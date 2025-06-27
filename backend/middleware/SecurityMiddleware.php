@@ -23,40 +23,149 @@ class SecurityMiddleware {
     /**
      * Inizializza tutte le misure di sicurezza in un punto centralizzato
      * 
-     * Metodo principale da chiamare all'inizio di ogni richiesta HTTP.
-     * Applica le protezioni nell'ordine corretto per massimizzare efficacia:
-     * 1. Configurazione sessione sicura prima di qualsiasi output
-     * 2. Impostazione headers HTTP di sicurezza
-     * 3. Controllo IP bloccati
-     * 4. Inizializzazione sessione crittografata
+     * @throws SecurityException Se l'inizializzazione fallisce
+     * @return void
      */
     public static function initialize(): void {
-        // Evita inizializzazioni multiple nella stessa richiesta
-        if (self::$initialized) return;
-        
-        // Configurazione sicura cookie di sessione prima dell'output HTTP
-        // (HttpOnly, SameSite, Secure flags, ecc.)
-        if (session_status() === PHP_SESSION_NONE) {
-            SecurityConfig::configureSecureSession();
+        if (self::$initialized) {
+            return;
         }
-        
-        // Impostazione headers HTTP di sicurezza
-        // Richiede che non sia stato inviato alcun output al browser
-        if (!headers_sent()) {
-            SecurityConfig::setSecurityHeaders();
+
+        try {
+            // Inizializza il servizio di sicurezza
+            self::$securityService = new SecurityService();
+
+            // 1. Configurazione sicura della sessione
+            self::initializeSecureSession();
+
+            // 2. Impostazione degli header di sicurezza
+            self::setSecurityHeaders();
+
+            // 3. Controllo IP malevoli
+            self::checkMaliciousIP();
+
+            // 4. Inizializzazione protezione CSRF
+            self::initializeCsrfProtection();
+
+            // 5. Configurazione sanitizzazione input
+            self::configureSanitization();
+
+            self::$initialized = true;
+
+        } catch (Exception $e) {
+            throw new SecurityException('Security initialization failed: ' . $e->getMessage());
         }
-        
-        // Inizializzazione servizio di sicurezza con database
-        self::$securityService = new SecurityService(Database::getInstance()->getConnection(), null);
-        // Controllo IP nella blacklist prima di procedere
-        self::checkBlockedIP();
-        
-        // Avvio sessione sicura se non già attiva
+    }
+
+    /**
+     * Configura la sessione con impostazioni di sicurezza avanzate
+     */
+    private static function initializeSecureSession(): void {
+        // Previeni attacchi di session fixation
         if (session_status() === PHP_SESSION_NONE) {
+            ini_set('session.use_strict_mode', '1');
+            ini_set('session.use_only_cookies', '1');
+            ini_set('session.cookie_secure', '1');
+            ini_set('session.cookie_httponly', '1');
+            ini_set('session.cookie_samesite', 'Strict');
+            ini_set('session.gc_maxlifetime', '3600'); // 1 ora
+            ini_set('session.use_trans_sid', '0');
+            
             session_start();
         }
+
+        // Rigenera l'ID sessione periodicamente
+        if (!isset($_SESSION['last_regeneration']) || 
+            time() - $_SESSION['last_regeneration'] > 300) { // 5 minuti
+            session_regenerate_id(true);
+            $_SESSION['last_regeneration'] = time();
+        }
+    }
+
+    /**
+     * Imposta gli header HTTP di sicurezza
+     */
+    private static function setSecurityHeaders(): void {
+        $cspDirectives = [
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+            "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
+            "img-src 'self' data: https:",
+            "connect-src 'self'",
+            "frame-ancestors 'none'",
+            "form-action 'self'",
+            "base-uri 'self'",
+            "object-src 'none'"
+        ];
+
+        header("Content-Security-Policy: " . implode('; ', $cspDirectives));
+        header("X-Content-Type-Options: nosniff");
+        header("X-Frame-Options: DENY");
+        header("X-XSS-Protection: 1; mode=block");
+        header("Referrer-Policy: strict-origin-when-cross-origin");
+        header("Permissions-Policy: geolocation=(), microphone=(), camera=()");
         
-        self::$initialized = true;
+        if (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') {
+            header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
+        }
+    }
+
+    /**
+     * Verifica se l'IP corrente è considerato malevolo
+     * 
+     * @throws SecurityException Se l'IP è bloccato
+     */
+    private static function checkMaliciousIP(): void {
+        $ip = $_SERVER['REMOTE_ADDR'];
+        
+        // Controlla blacklist
+        if (self::$securityService->isIPBlacklisted($ip)) {
+            throw new SecurityException('Access denied: IP is blacklisted');
+        }
+
+        // Controlla rate limiting
+        if (!self::$securityService->checkRateLimit($ip)) {
+            throw new SecurityException('Access denied: Rate limit exceeded');
+        }
+
+        // Controlla comportamenti sospetti
+        if (self::$securityService->isSuspiciousActivity($ip)) {
+            self::$securityService->logSuspiciousActivity($ip);
+            if (self::$securityService->shouldBlockIP($ip)) {
+                self::$securityService->blacklistIP($ip);
+                throw new SecurityException('Access denied: Suspicious activity detected');
+            }
+        }
+    }
+
+    /**
+     * Inizializza la protezione CSRF
+     */
+    private static function initializeCsrfProtection(): void {
+        if (!isset($_SESSION['csrf_token']) || 
+            !isset($_SESSION['csrf_token_time']) || 
+            time() - $_SESSION['csrf_token_time'] > 3600) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            $_SESSION['csrf_token_time'] = time();
+        }
+    }
+
+    /**
+     * Configura la sanitizzazione automatica degli input
+     */
+    private static function configureSanitization(): void {
+        filter_var_array($_GET, FILTER_SANITIZE_STRING);
+        filter_var_array($_POST, FILTER_SANITIZE_STRING);
+        
+        // Configurazione sanitizzazione personalizzata per tipi specifici
+        self::$securityService->setSanitizationRules([
+            'email' => FILTER_SANITIZE_EMAIL,
+            'url' => FILTER_SANITIZE_URL,
+            'html' => function($input) {
+                return htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+            }
+        ]);
     }
 
     /**
@@ -258,5 +367,199 @@ class SecurityMiddleware {
             $_SESSION[$postKey] = 0;
         }
         return false;
+    }
+
+    /**
+     * Verifica l'autenticazione dell'utente
+     * 
+     * @throws SecurityException Se l'utente non è autenticato
+     * @return bool
+     */
+    public static function requireAuthentication(): bool {
+        if (!isset($_SESSION['user_id'])) {
+            throw new SecurityException('Authentication required');
+        }
+
+        // Verifica validità sessione
+        if (!self::isValidSession()) {
+            self::terminateSession();
+            throw new SecurityException('Invalid session');
+        }
+
+        return true;
+    }
+
+    /**
+     * Verifica il ruolo dell'utente
+     * 
+     * @param string|array $requiredRoles Ruolo o array di ruoli richiesti
+     * @throws SecurityException Se l'utente non ha il ruolo richiesto
+     * @return bool
+     */
+    public static function requireRole($requiredRoles): bool {
+        self::requireAuthentication();
+
+        $userRole = $_SESSION['user']['tipo_utente'] ?? null;
+        
+        if (!$userRole) {
+            throw new SecurityException('User role not defined');
+        }
+
+        $requiredRoles = (array)$requiredRoles;
+        
+        if (!in_array($userRole, $requiredRoles)) {
+            throw new SecurityException('Insufficient permissions');
+        }
+
+        return true;
+    }
+
+    /**
+     * Verifica la validità del token CSRF
+     * 
+     * @param string $token Token CSRF da verificare
+     * @throws SecurityException Se il token non è valido
+     * @return bool
+     */
+    public static function validateCsrfToken(string $token): bool {
+        if (!isset($_SESSION['csrf_token']) || 
+            !hash_equals($_SESSION['csrf_token'], $token)) {
+            throw new SecurityException('Invalid CSRF token');
+        }
+
+        return true;
+    }
+
+    /**
+     * Verifica se una sessione è valida
+     * 
+     * @return bool
+     */
+    private static function isValidSession(): bool {
+        // Verifica fingerprint del browser
+        $currentFingerprint = self::generateBrowserFingerprint();
+        if (!isset($_SESSION['browser_fingerprint']) || 
+            $_SESSION['browser_fingerprint'] !== $currentFingerprint) {
+            return false;
+        }
+
+        // Verifica timeout sessione
+        if (isset($_SESSION['last_activity']) && 
+            time() - $_SESSION['last_activity'] > 1800) { // 30 minuti
+            return false;
+        }
+
+        // Aggiorna timestamp ultima attività
+        $_SESSION['last_activity'] = time();
+
+        return true;
+    }
+
+    /**
+     * Genera un fingerprint del browser
+     * 
+     * @return string
+     */
+    private static function generateBrowserFingerprint(): string {
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+        $acceptEncoding = $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
+        
+        return hash('sha256', $userAgent . $acceptLanguage . $acceptEncoding);
+    }
+
+    /**
+     * Termina la sessione in modo sicuro
+     */
+    public static function terminateSession(): void {
+        $_SESSION = array();
+
+        if (isset($_COOKIE[session_name()])) {
+            setcookie(session_name(), '', time() - 3600, '/', '', true, true);
+        }
+
+        session_destroy();
+    }
+
+    /**
+     * Sanitizza un array di input in base alle regole definite
+     * 
+     * @param array $input Array di input da sanitizzare
+     * @param array $rules Regole di sanitizzazione
+     * @return array
+     */
+    public static function sanitizeInput(array $input, array $rules = []): array {
+        $sanitized = [];
+        
+        foreach ($input as $key => $value) {
+            if (isset($rules[$key])) {
+                if (is_callable($rules[$key])) {
+                    $sanitized[$key] = $rules[$key]($value);
+                } else {
+                    $sanitized[$key] = filter_var($value, $rules[$key]);
+                }
+            } else {
+                $sanitized[$key] = filter_var($value, FILTER_SANITIZE_STRING);
+            }
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * Valida un array di input in base alle regole definite
+     * 
+     * @param array $input Array di input da validare
+     * @param array $rules Regole di validazione
+     * @return array Array di errori di validazione
+     */
+    public static function validateInput(array $input, array $rules): array {
+        $errors = [];
+        
+        foreach ($rules as $field => $fieldRules) {
+            $value = $input[$field] ?? null;
+            
+            foreach ($fieldRules as $rule => $ruleValue) {
+                switch ($rule) {
+                    case 'required':
+                        if ($ruleValue && empty($value)) {
+                            $errors[$field][] = "Field is required";
+                        }
+                        break;
+                        
+                    case 'min_length':
+                        if (strlen($value) < $ruleValue) {
+                            $errors[$field][] = "Minimum length is $ruleValue";
+                        }
+                        break;
+                        
+                    case 'max_length':
+                        if (strlen($value) > $ruleValue) {
+                            $errors[$field][] = "Maximum length is $ruleValue";
+                        }
+                        break;
+                        
+                    case 'pattern':
+                        if (!preg_match($ruleValue, $value)) {
+                            $errors[$field][] = "Invalid format";
+                        }
+                        break;
+                        
+                    case 'in_array':
+                        if (!in_array($value, $ruleValue)) {
+                            $errors[$field][] = "Invalid value";
+                        }
+                        break;
+                        
+                    case 'custom':
+                        if (is_callable($ruleValue) && !$ruleValue($value)) {
+                            $errors[$field][] = "Validation failed";
+                        }
+                        break;
+                }
+            }
+        }
+
+        return $errors;
     }
 }

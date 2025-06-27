@@ -18,7 +18,7 @@ namespace BOSTARTER\Controllers;
  * @since 1.8.5 - Implementazione paginazione e ottimizzazione query
  */
 
-use BOSTARTER\Models\GestoreNotifiche;
+use BOSTARTER\Models\Notification;
 use BOSTARTER\Utils\BaseController;
 
 class NotificationController extends BaseController
@@ -33,7 +33,7 @@ class NotificationController extends BaseController
      */
     public function __construct() {
         parent::__construct(); // Inizializza la connessione database e logger dalla classe base
-        $this->gestoreNotifiche = new GestoreNotifiche($this->connessioneDatabase);
+        $this->gestoreNotifiche = new Notification($this->connessioneDatabase);
     }
 
     /**

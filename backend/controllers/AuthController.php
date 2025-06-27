@@ -27,155 +27,224 @@ use BOSTARTER\Utils\BaseController;
 
 class GestoreAutenticazione extends BaseController
 {
-    // Il servizio che si occupa delle operazioni di autenticazione
-    private $servizioAutenticazione;
+    /** @var AuthService $authService Servizio di autenticazione */
+    private AuthService $authService;
     
+    /** @var MongoLogger $logger Logger per tracciare le operazioni */
+    private MongoLogger $logger;
+    
+    /** @var array $config Configurazione di sicurezza */
+    private array $config;
+    
+    /** @var int MAX_LOGIN_ATTEMPTS Numero massimo di tentativi di login */
+    private const MAX_LOGIN_ATTEMPTS = 5;
+    
+    /** @var int LOCKOUT_DURATION Durata del blocco in secondi */
+    private const LOCKOUT_DURATION = 900; // 15 minuti
+    
+    /** @var int PASSWORD_MIN_LENGTH Lunghezza minima password */
+    private const PASSWORD_MIN_LENGTH = 8;
+
     /**
-     * Costruttore - Prepara il controller per il suo lavoro
+     * Costruttore - Inizializza i servizi necessari
      * 
-     * Inizializza tutte le dipendenze necessarie per gestire
-     * l'autenticazione in modo sicuro ed efficiente.
+     * @throws Exception Se l'inizializzazione fallisce
      */
-    public function __construct() {
-        parent::__construct(); // Inizializza connessione DB e logger dalla classe base
-        $this->servizioAutenticazione = new \AuthService();
+    public function __construct()
+    {
+        parent::__construct();
+        
+        $this->authService = new AuthService();
+        $this->logger = new MongoLogger();
+        $this->config = require __DIR__ . '/../config/auth_config.php';
+        
+        // Inizializza protezioni di sicurezza
+        $this->initializeSecurityMeasures();
     }
-    
+
     /**
-     * Gestisce l'accesso dell'utente al sistema
-     * 
-     * Questo metodo è il nostro "controllore d'accesso":
-     * - Riceve e valida le credenziali (email e password)
-     * - Le verifica contro il database
-     * - Se valide, crea una sessione sicura per l'utente
-     * - Se non valide, respinge il tentativo di accesso
-     * 
-     * @return array Risultato dell'operazione con dati utente o errori
+     * Inizializza le misure di sicurezza
      */
-    public function eseguiLogin(): array {
+    private function initializeSecurityMeasures(): void
+    {
+        // Rate limiting per tentative di login
+        if (!isset($_SESSION['login_attempts'])) {
+            $_SESSION['login_attempts'] = [];
+        }
+        
+        // Pulizia tentativi vecchi
+        $this->cleanOldAttempts();
+    }
+
+    /**
+     * Gestisce il processo di login con protezioni avanzate
+     * 
+     * @param string $email Email dell'utente
+     * @param string $password Password dell'utente
+     * @param bool $rememberMe Flag per ricordare l'utente
+     * @return array Risultato dell'operazione
+     */
+    public function gestisciLogin(string $email, string $password, bool $rememberMe = false): array
+    {
         try {
-            // Validazione dei parametri necessari usando il metodo della classe base
-            $validazione = $this->validaParametri(['email', 'password'], $_POST);
-            if ($validazione !== true) {
-                return $this->rispostaStandardizzata(false, 'Dati mancanti o non validi', null, $validazione);
+            // Validazione input
+            $validation = $this->validateLoginInput($email, $password);
+            if (!$validation['valid']) {
+                return $this->createErrorResponse($validation['message']);
             }
 
-            // Controlliamo che sia una richiesta POST (per sicurezza)
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                return $this->rispostaStandardizzata(false, 'Ops! Devi usare il modulo di login per accedere');
+            // Controllo rate limiting
+            if ($this->isRateLimited($email)) {
+                $this->logger->logUserAction('login_rate_limited', [
+                    'email' => $email,
+                    'ip' => $_SERVER['REMOTE_ADDR']
+                ], 'warning');
+                
+                return $this->createErrorResponse('Too many login attempts. Please try again later.');
             }
-            
-            // Verifichiamo il token CSRF (protezione contro attacchi Cross-Site Request Forgery)
-            // Questo impedisce che siti malevoli possano far inviare richieste non autorizzate
-            $tokenSicurezza = $_POST['csrf_token'] ?? '';
-            if (!$this->servizioAutenticazione->verifyCSRFToken($tokenSicurezza)) {
-                return $this->rispostaStandardizzata(false, 'Token di sicurezza non valido. Ricarica la pagina e riprova.');
+
+            // Controllo account bloccato
+            if ($this->isAccountLocked($email)) {
+                $this->logger->logUserAction('login_account_locked', [
+                    'email' => $email,
+                    'ip' => $_SERVER['REMOTE_ADDR']
+                ], 'warning');
+                
+                return $this->createErrorResponse('Account is temporarily locked due to multiple failed attempts.');
             }
+
+            // Tentativo di autenticazione
+            $authResult = $this->authService->authenticate($email, $password);
             
-            // Puliamo e prepariamo i dati dell'utente per evitare caratteri indesiderati
-            // e potenziali attacchi di injection
-            $emailPulita = filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL);
-            $passwordInserita = $_POST['password'] ?? '';
-            $ricordaCredenziali = isset($_POST['remember_me']);
-            
-            // Deleghiamo al servizio di autenticazione il compito di verificare le credenziali
-            // Questo servizio contiene la logica complessa di verifica e creazione sessione
-            $risultato = $this->servizioAutenticazione->login($emailPulita, $passwordInserita, $ricordaCredenziali);
-            
-            // Restituiamo una risposta standardizzata con l'esito dell'operazione
-            return $this->rispostaStandardizzata(
-                $risultato['success'] ?? false,
-                $risultato['message'] ?? 'Operazione completata',
-                $risultato['user'] ?? null,
-                $risultato['errors'] ?? null
-            );
-            
-        } catch (\Exception $e) {
-            // Gestiamo qualsiasi errore imprevisto in modo centralizzato
-            return $this->gestisciErrore($e, 'Errore durante il login');
+            if ($authResult['success']) {
+                // Reset tentativi di login
+                $this->resetLoginAttempts($email);
+                
+                // Inizializzazione sessione sicura
+                $this->initializeSecureSession($authResult['user'], $rememberMe);
+                
+                // Log del login riuscito
+                $this->logger->logUserAction('login_success', [
+                    'user_id' => $authResult['user']['id'],
+                    'email' => $email,
+                    'remember_me' => $rememberMe
+                ], 'info');
+
+                return $this->createSuccessResponse('Login successful', [
+                    'user' => $this->sanitizeUserData($authResult['user']),
+                    'redirect_url' => $this->getRedirectUrl($authResult['user'])
+                ]);
+                
+            } else {
+                // Registra tentativo fallito
+                $this->recordFailedAttempt($email);
+                
+                $this->logger->logUserAction('login_failed', [
+                    'email' => $email,
+                    'reason' => $authResult['message'] ?? 'Invalid credentials',
+                    'ip' => $_SERVER['REMOTE_ADDR']
+                ], 'warning');
+
+                return $this->createErrorResponse($authResult['message'] ?? 'Invalid credentials');
+            }
+
+        } catch (Exception $e) {
+            $this->logger->logError('Login error: ' . $e->getMessage(), [
+                'email' => $email,
+                'ip' => $_SERVER['REMOTE_ADDR']
+            ]);
+
+            return $this->createErrorResponse('An error occurred during login. Please try again.');
         }
     }
-      
+
     /**
      * Gestisce la registrazione di un nuovo utente
      * 
-     * Questo metodo è la porta d'ingresso alla piattaforma per i nuovi utenti.
-     * Si occupa di:
-     * - Raccogliere e validare tutti i dati dell'utente
-     * - Verificare che non esistano già utenti con la stessa email
-     * - Creare il nuovo account in modo sicuro
-     * - Inviare email di benvenuto e conferma
-     * 
-     * È come aprire un nuovo conto in banca: raccogliamo tutti i dati necessari,
-     * li controlliamo attentamente, e se tutto è a posto creiamo il nuovo account.
-     * 
-     * @return array Risultato del tentativo di registrazione
+     * @param array $userData Dati dell'utente
+     * @return array Risultato dell'operazione
      */
-    public function registraNuovoUtente(): array {
+    public function gestisciRegistrazione(array $userData): array
+    {
         try {
-            // Validazione parametri base usando la classe base
-            $parametriRichiesti = ['email', 'nickname', 'password', 'nome', 'cognome'];
-            $validazione = $this->validaParametri($parametriRichiesti, $_POST);
-            if ($validazione !== true) {
-                return $this->rispostaStandardizzata(false, 'Dati mancanti o non validi', null, $validazione);
+            // Validazione dati di registrazione
+            $validation = $this->validateRegistrationData($userData);
+            if (!$validation['valid']) {
+                return $this->createErrorResponse($validation['message'], $validation['errors']);
             }
 
-            // Anche qui, solo richieste POST per sicurezza
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                return $this->rispostaStandardizzata(false, 'Utilizza il modulo di registrazione per creare un account');
+            // Controllo esistenza utente
+            if ($this->authService->userExists($userData['email'])) {
+                $this->logger->logUserAction('registration_email_exists', [
+                    'email' => $userData['email'],
+                    'ip' => $_SERVER['REMOTE_ADDR']
+                ], 'warning');
+
+                return $this->createErrorResponse('An account with this email already exists.');
             }
+
+            // Hash sicuro della password
+            $userData['password'] = $this->hashPassword($userData['password']);
+
+            // Creazione utente
+            $result = $this->authService->createUser($userData);
             
-            // Controllo del token di sicurezza
-            $tokenSicurezza = $_POST['csrf_token'] ?? '';
-            if (!$this->servizioAutenticazione->verifyCSRFToken($tokenSicurezza)) {
-                return $this->rispostaStandardizzata(false, 'Token di sicurezza non valido. Ricarica la pagina e riprova.');
+            if ($result['success']) {
+                $this->logger->logUserAction('registration_success', [
+                    'user_id' => $result['user_id'],
+                    'email' => $userData['email']
+                ], 'info');
+
+                // Invia email di benvenuto
+                $this->sendWelcomeEmail($userData['email'], $userData['nome']);
+
+                return $this->createSuccessResponse('Registration successful! Please check your email for confirmation');
+                
+            } else {
+                return $this->createErrorResponse($result['message'] ?? 'Registration failed');
             }
-              // Raccogliamo e puliamo tutti i dati del nuovo utente
-            $datiUtente = [
-                'email' => filter_var(trim($_POST['email'] ?? ''), FILTER_SANITIZE_EMAIL),
-                'nickname' => htmlspecialchars(trim($_POST['nickname'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'password' => $_POST['password'] ?? '',
-                'nome' => htmlspecialchars(trim($_POST['nome'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'cognome' => htmlspecialchars(trim($_POST['cognome'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'anno_nascita' => filter_var($_POST['anno_nascita'] ?? '', FILTER_SANITIZE_NUMBER_INT),
-                'luogo_nascita' => htmlspecialchars(trim($_POST['luogo_nascita'] ?? ''), ENT_QUOTES, 'UTF-8'),
-                'tipo_utente' => htmlspecialchars($_POST['tipo_utente'] ?? 'standard', ENT_QUOTES, 'UTF-8')
-            ];
-            
-            // Verifichiamo che le password coincidano (doppio controllo di sicurezza)
-            $confermaPassword = $_POST['password_confirm'] ?? '';
-            if ($datiUtente['password'] !== $confermaPassword) {
-                return $this->rispostaStandardizzata(false, 'Le due password inserite non coincidono. Ricontrollale!');
-            }
-              // Controlliamo che l'utente abbia accettato i termini e condizioni
-            $terminiAccettati = isset($_POST['terms']) && $_POST['terms'] === 'on';
-            if (!$terminiAccettati) {
-                return $this->rispostaStandardizzata(false, 'Devi accettare i Termini e Condizioni per registrarti');
-            }
-            
-            // Tutto a posto! Passiamo al servizio di autenticazione per creare l'account
-            $risultato = $this->servizioAutenticazione->register($datiUtente);
-            
-            return $this->rispostaStandardizzata(
-                $risultato['success'] ?? false,
-                $risultato['message'] ?? 'Operazione completata',
-                $risultato['user'] ?? null,
-                $risultato['errors'] ?? []
-            );
-            
-        } catch (\Exception $e) {
-            return $this->gestisciErrore($e, 'Errore durante la registrazione');
+
+        } catch (Exception $e) {
+            $this->logger->logError('Registration error: ' . $e->getMessage(), [
+                'email' => $userData['email'] ?? 'unknown',
+                'ip' => $_SERVER['REMOTE_ADDR']
+            ]);
+
+            return $this->createErrorResponse('An error occurred during registration. Please try again.');
         }
     }
-    
+
     /**
-     * Fa uscire l'utente dal sito in modo sicuro
+     * Gestisce il logout sicuro
      * 
-     * Come quando esci da casa e chiudi la porta a chiave
+     * @return array Risultato dell'operazione
      */
-    public function eseguiLogout(): void {
-        $this->servizioAutenticazione->logout();
-        \NavigationHelper::redirect('login');
+    public function eseguiLogout(): array
+    {
+        try {
+            $userId = $_SESSION['user_id'] ?? null;
+            
+            if ($userId) {
+                $this->logger->logUserAction('logout', [
+                    'user_id' => $userId
+                ], 'info');
+            }
+
+            // Invalida token remember me se presente
+            if (isset($_COOKIE['remember_token'])) {
+                $this->authService->invalidateRememberToken($_COOKIE['remember_token']);
+                setcookie('remember_token', '', time() - 3600, '/', '', true, true);
+            }
+
+            // Distruggi sessione in modo sicuro
+            $this->destroySecureSession();
+
+            return $this->createSuccessResponse('Logout successful');
+
+        } catch (Exception $e) {
+            $this->logger->logError('Logout error: ' . $e->getMessage());
+            return $this->createErrorResponse('An error occurred during logout');
+        }
     }
     
     /**
@@ -225,5 +294,373 @@ class GestoreAutenticazione extends BaseController
         if ($this->controllaSeLoggato()) {            $_SESSION['redirect_count'] = $redirect_count + 1;
             \NavigationHelper::redirect('dashboard');
         }
+    }
+
+    /**
+     * Valida i dati di input per il login
+     * 
+     * @param string $email
+     * @param string $password
+     * @return array
+     */
+    private function validateLoginInput(string $email, string $password): array
+    {
+        $errors = [];
+
+        // Validazione email
+        if (empty($email)) {
+            $errors['email'] = 'Email is required';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Invalid email format';
+        }
+
+        // Validazione password
+        if (empty($password)) {
+            $errors['password'] = 'Password is required';
+        } elseif (strlen($password) < self::PASSWORD_MIN_LENGTH) {
+            $errors['password'] = 'Password is too short';
+        }
+
+        return [
+            'valid' => empty($errors),
+            'message' => empty($errors) ? '' : 'Validation failed',
+            'errors' => $errors
+        ];
+    }
+
+    /**
+     * Valida i dati di registrazione
+     * 
+     * @param array $userData
+     * @return array
+     */
+    private function validateRegistrationData(array $userData): array
+    {
+        $errors = [];
+        $required = ['nome', 'cognome', 'email', 'password', 'confirm_password'];
+
+        // Controllo campi obbligatori
+        foreach ($required as $field) {
+            if (empty($userData[$field])) {
+                $errors[$field] = ucfirst($field) . ' is required';
+            }
+        }
+
+        // Validazione email
+        if (!empty($userData['email']) && !filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Invalid email format';
+        }
+
+        // Validazione password
+        if (!empty($userData['password'])) {
+            $passwordValidation = $this->validatePassword($userData['password']);
+            if (!$passwordValidation['valid']) {
+                $errors['password'] = $passwordValidation['message'];
+            }
+        }
+
+        // Conferma password
+        if (!empty($userData['password']) && !empty($userData['confirm_password'])) {
+            if ($userData['password'] !== $userData['confirm_password']) {
+                $errors['confirm_password'] = 'Passwords do not match';
+            }
+        }
+
+        // Validazione nome e cognome
+        if (!empty($userData['nome']) && !preg_match('/^[a-zA-ZÀ-ÿ\s]{2,30}$/', $userData['nome'])) {
+            $errors['nome'] = 'Name must be 2-30 characters and contain only letters';
+        }
+
+        if (!empty($userData['cognome']) && !preg_match('/^[a-zA-ZÀ-ÿ\s]{2,30}$/', $userData['cognome'])) {
+            $errors['cognome'] = 'Surname must be 2-30 characters and contain only letters';
+        }
+
+        return [
+            'valid' => empty($errors),
+            'message' => empty($errors) ? '' : 'Validation failed',
+            'errors' => $errors
+        ];
+    }
+
+    /**
+     * Valida la robustezza della password
+     * 
+     * @param string $password
+     * @return array
+     */
+    private function validatePassword(string $password): array
+    {
+        $errors = [];
+
+        if (strlen($password) < self::PASSWORD_MIN_LENGTH) {
+            $errors[] = 'Password must be at least ' . self::PASSWORD_MIN_LENGTH . ' characters';
+        }
+
+        if (!preg_match('/[A-Z]/', $password)) {
+            $errors[] = 'Password must contain at least one uppercase letter';
+        }
+
+        if (!preg_match('/[a-z]/', $password)) {
+            $errors[] = 'Password must contain at least one lowercase letter';
+        }
+
+        if (!preg_match('/[0-9]/', $password)) {
+            $errors[] = 'Password must contain at least one number';
+        }
+
+        if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            $errors[] = 'Password must contain at least one special character';
+        }
+
+        // Controllo password comuni
+        if ($this->isCommonPassword($password)) {
+            $errors[] = 'This password is too common. Please choose a more secure one';
+        }
+
+        return [
+            'valid' => empty($errors),
+            'message' => empty($errors) ? '' : implode('. ', $errors)
+        ];
+    }
+
+    /**
+     * Controlla se la password è troppo comune
+     * 
+     * @param string $password
+     * @return bool
+     */
+    private function isCommonPassword(string $password): bool
+    {
+        $commonPasswords = [
+            'password', 'password123', '123456', '123456789', 'qwerty',
+            'abc123', 'password1', 'admin', 'letmein', 'welcome'
+        ];
+
+        return in_array(strtolower($password), $commonPasswords);
+    }
+
+    /**
+     * Controlla se l'utente ha superato il limite di tentativi
+     * 
+     * @param string $email
+     * @return bool
+     */
+    private function isRateLimited(string $email): bool
+    {
+        $attempts = $_SESSION['login_attempts'][$email] ?? [];
+        $recentAttempts = array_filter($attempts, function($attempt) {
+            return (time() - $attempt) < 300; // 5 minuti
+        });
+
+        return count($recentAttempts) >= self::MAX_LOGIN_ATTEMPTS;
+    }
+
+    /**
+     * Controlla se l'account è bloccato
+     * 
+     * @param string $email
+     * @return bool
+     */
+    private function isAccountLocked(string $email): bool
+    {
+        return $this->authService->isAccountLocked($email);
+    }
+
+    /**
+     * Registra un tentativo di login fallito
+     * 
+     * @param string $email
+     */
+    private function recordFailedAttempt(string $email): void
+    {
+        if (!isset($_SESSION['login_attempts'][$email])) {
+            $_SESSION['login_attempts'][$email] = [];
+        }
+
+        $_SESSION['login_attempts'][$email][] = time();
+
+        // Blocca account dopo troppi tentativi
+        $attempts = $_SESSION['login_attempts'][$email];
+        $recentAttempts = array_filter($attempts, function($attempt) {
+            return (time() - $attempt) < 300;
+        });
+
+        if (count($recentAttempts) >= self::MAX_LOGIN_ATTEMPTS) {
+            $this->authService->lockAccount($email, self::LOCKOUT_DURATION);
+        }
+    }
+
+    /**
+     * Reset dei tentativi di login per un utente
+     * 
+     * @param string $email
+     */
+    private function resetLoginAttempts(string $email): void
+    {
+        unset($_SESSION['login_attempts'][$email]);
+        $this->authService->unlockAccount($email);
+    }
+
+    /**
+     * Pulisce i tentativi vecchi
+     */
+    private function cleanOldAttempts(): void
+    {
+        if (!isset($_SESSION['login_attempts'])) {
+            return;
+        }
+
+        foreach ($_SESSION['login_attempts'] as $email => $attempts) {
+            $_SESSION['login_attempts'][$email] = array_filter($attempts, function($attempt) {
+                return (time() - $attempt) < 3600; // 1 ora
+            });
+
+            if (empty($_SESSION['login_attempts'][$email])) {
+                unset($_SESSION['login_attempts'][$email]);
+            }
+        }
+    }
+
+    /**
+     * Inizializza una sessione sicura
+     * 
+     * @param array $user Dati utente
+     * @param bool $rememberMe Flag remember me
+     */
+    private function initializeSecureSession(array $user, bool $rememberMe): void
+    {
+        // Rigenera ID sessione per prevenire session fixation
+        session_regenerate_id(true);
+
+        // Imposta dati sessione
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user'] = $this->sanitizeUserData($user);
+        $_SESSION['login_time'] = time();
+        $_SESSION['last_activity'] = time();
+        $_SESSION['browser_fingerprint'] = $this->generateBrowserFingerprint();
+
+        // Gestione remember me
+        if ($rememberMe) {
+            $this->setRememberMeCookie($user['id']);
+        }
+    }
+
+    /**
+     * Genera un fingerprint del browser
+     * 
+     * @return string
+     */
+    private function generateBrowserFingerprint(): string
+    {
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+        $acceptEncoding = $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
+        
+        return hash('sha256', $userAgent . $acceptLanguage . $acceptEncoding);
+    }
+
+    /**
+     * Imposta il cookie remember me
+     * 
+     * @param int $userId
+     */
+    private function setRememberMeCookie(int $userId): void
+    {
+        $token = bin2hex(random_bytes(32));
+        $expires = time() + (30 * 24 * 60 * 60); // 30 giorni
+
+        $this->authService->storeRememberToken($userId, $token, $expires);
+        
+        setcookie(
+            'remember_token',
+            $token,
+            $expires,
+            '/',
+            '',
+            true, // Secure
+            true  // HttpOnly
+        );
+    }
+
+    /**
+     * Distrugge la sessione in modo sicuro
+     */
+    private function destroySecureSession(): void
+    {
+        $_SESSION = array();
+
+        if (isset($_COOKIE[session_name()])) {
+            setcookie(session_name(), '', time() - 3600, '/');
+        }
+
+        session_destroy();
+    }
+
+    /**
+     * Sanitizza i dati utente per la sessione
+     * 
+     * @param array $user
+     * @return array
+     */
+    private function sanitizeUserData(array $user): array
+    {
+        return [
+            'id' => $user['id'],
+            'nome' => htmlspecialchars($user['nome'], ENT_QUOTES, 'UTF-8'),
+            'cognome' => htmlspecialchars($user['cognome'], ENT_QUOTES, 'UTF-8'),
+            'email' => $user['email'],
+            'tipo_utente' => $user['tipo_utente'],
+            'avatar' => $user['avatar'] ?? null
+        ];
+    }
+
+    /**
+     * Determina l'URL di redirect dopo il login
+     * 
+     * @param array $user
+     * @return string
+     */
+    private function getRedirectUrl(array $user): string
+    {
+        // URL di redirect salvato
+        if (isset($_SESSION['redirect_after_login'])) {
+            $url = $_SESSION['redirect_after_login'];
+            unset($_SESSION['redirect_after_login']);
+            return $url;
+        }
+
+        // Redirect basato sul ruolo
+        return match($user['tipo_utente']) {
+            'amministratore' => '/admin/dashboard.php',
+            'creatore' => '/creator/dashboard.php',
+            default => '/dashboard.php'
+        };
+    }
+
+    /**
+     * Hash sicuro della password
+     * 
+     * @param string $password
+     * @return string
+     */
+    private function hashPassword(string $password): string
+    {
+        return password_hash($password, PASSWORD_ARGON2ID, [
+            'memory_cost' => 65536, // 64 MB
+            'time_cost' => 4,       // 4 iterations
+            'threads' => 3          // 3 threads
+        ]);
+    }
+
+    /**
+     * Invia email di benvenuto
+     * 
+     * @param string $email
+     * @param string $nome
+     */
+    private function sendWelcomeEmail(string $email, string $nome): void
+    {
+        // TODO: Implementare invio email
+        // Placeholder per il servizio email
     }
 }

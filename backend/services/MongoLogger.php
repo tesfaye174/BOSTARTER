@@ -17,424 +17,322 @@
  */
 
 class MongoLogger {
-    /** @var bool $mongoDisponibile Flag che indica se MongoDB è disponibile */
-    private $mongoDisponibile;
+    /** @var bool $mongoAvailable Flag che indica se MongoDB è disponibile */
+    private bool $mongoAvailable;
     
-    /** @var MongoDB\Driver\Manager $gestoreConnessione Gestore delle connessioni MongoDB */
-    private $gestoreConnessione;
+    /** @var MongoDB\Driver\Manager $connectionManager Gestore delle connessioni MongoDB */
+    private $connectionManager;
     
-    /** @var string $fileLog Percorso assoluto del file di log di fallback */
-    private $fileLog;
+    /** @var string $logFile Percorso assoluto del file di log di fallback */
+    private string $logFile;
+    
+    /** @var array $config Configurazione del logger */
+    private array $config;
+    
+    /** @var array $buffer Buffer per il batch logging */
+    private array $buffer = [];
+    
+    /** @var int $bufferSize Dimensione massima del buffer prima del flush */
+    private const BUFFER_SIZE = 100;
+    
+    /** @var array $logLevels Livelli di log supportati */
+    private const LOG_LEVELS = [
+        'emergency' => 0,
+        'alert'     => 1,
+        'critical'  => 2,
+        'error'     => 3,
+        'warning'   => 4,
+        'notice'    => 5,
+        'info'      => 6,
+        'debug'     => 7
+    ];
+    
+    /** @var array $collections Mapping delle collezioni per tipo di log */
+    private const COLLECTIONS = [
+        'user_actions' => 'user_logs',
+        'system'      => 'system_logs',
+        'security'    => 'security_logs',
+        'performance' => 'performance_logs',
+        'errors'      => 'error_logs'
+    ];
     
     /**
-     * Costruttore - Inizializza il sistema di logging
+     * Costruttore - Inizializza il sistema di logging con configurazione avanzata
      * 
-     * Tenta la connessione a MongoDB e, in caso di fallimento,
-     * configura il sistema di fallback su file garantendo che esista
-     * la cartella per i log.
+     * @throws MongoDBException Se la connessione fallisce e non è possibile creare il file di fallback
      */
     public function __construct() {
-        // Verifichiamo la disponibilità dell'estensione MongoDB PHP
-        $this->mongoDisponibile = class_exists('MongoDB\Driver\Manager');
-        
-        if ($this->mongoDisponibile) {
-            try {
-                // Tentiamo la connessione al server MongoDB locale
-                // In un ambiente di produzione si dovrebbero usare credenziali da config
-                $this->gestoreConnessione = new \MongoDB\Driver\Manager("mongodb://localhost:27017");
-            } catch (\Exception $errore) {
-                // Fallback su log file in caso di errore di connessione
-                $this->mongoDisponibile = false;
-                error_log("Errore connessione MongoDB: " . $errore->getMessage());
-            }
-        }
-        
-        // Configurazione del sistema di log su file come fallback
-        $this->fileLog = __DIR__ . '/../../logs/application.log';
-        $cartellaLog = dirname($this->fileLog);
-        if (!is_dir($cartellaLog)) {
-            // Creazione dinamica della cartella di log se non esiste
-            mkdir($cartellaLog, 0755, true);
-        }
-    }
-    
-    /**
-     * Scrive un messaggio nel file di log di fallback
-     * 
-     * Metodo privato utilizzato quando MongoDB non è disponibile
-     * o quando si verifica un errore durante la scrittura su MongoDB.
-     * Il formato di log include timestamp ISO8601, livello, messaggio e dati JSON.
-     * 
-     * @param string $livello Livello di gravità del log (info, warning, error, debug, ecc.)
-     * @param string $messaggio Descrizione testuale dell'evento
-     * @param array $dati Array associativo con dati contestuali aggiuntivi
-     * @return void
-     */
-    private function scriviSuFile($livello, $messaggio, $dati = []) {
-        $dataOra = date('Y-m-d H:i:s');
-        $rigaLog = sprintf(
-            "[%s] %s: %s %s\n",
-            $dataOra,
-            strtoupper($livello),
-            $messaggio,
-            !empty($dati) ? json_encode($dati) : ''
-        );
-        
-        // Scrittura atomica con lock esclusivo per evitare corruzioni
-        file_put_contents($this->fileLog, $rigaLog, FILE_APPEND | LOCK_EX);
-    }
-    
-    /**
-     * Registra un'azione utente nel sistema di logging
-     * 
-     * Traccia operazioni come creazione progetti, finanziamenti,
-     * commenti, modifiche profilo, ecc. Memorizza l'IP e user-agent
-     * per analisi di sicurezza e comportamento utente.
-     * 
-     * @param string $azione Identificativo dell'azione eseguita
-     * @param array $dettagli Array associativo con informazioni specifiche dell'azione
-     * @return void
-     */
-    public function registraAzione($azione, $dettagli = []) {
-        if ($this->mongoDisponibile) {
-            try {
-                // Utilizziamo MongoDB BulkWrite per performance ottimali
-                $operazioneScrittura = new \MongoDB\Driver\BulkWrite;
-                $operazioneScrittura->insert([
-                    'tipo' => 'azione',
-                    'azione' => $azione,
-                    'dettagli' => $dettagli,
-                    'timestamp' => new \MongoDB\BSON\UTCDateTime(),  // Timestamp nativo MongoDB
-                    'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
-                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
-                ]);
-                $this->gestoreConnessione->executeBulkWrite('bostarter.logs', $operazioneScrittura);
-            } catch (\Exception $errore) {
-                // Fallback su file in caso di errore MongoDB
-                $this->scriviSuFile('azione', $azione, array_merge($dettagli, ['errore' => $errore->getMessage()]));
-            }
-        } else {
-            // MongoDB non disponibile, utilizziamo direttamente il file
-            $this->scriviSuFile('azione', $azione, $dettagli);
-        }
-    }
-    
-    /**
-     * Registra eventi di sistema come avvii, arresti, manutenzione
-     * 
-     * A differenza dei log utente, questi log non includono IP e user-agent,
-     * ma registrano dettagli sul server e sull'ambiente di esecuzione.
-     * 
-     * @param string $evento Identificativo dell'evento di sistema
-     * @param array $dettagli Array associativo con informazioni specifiche dell'evento
-     * @return void
-     */
-    public function registraEventoSistema($evento, $dettagli = []) {
-        if ($this->mongoDisponibile) {
-            try {
-                $operazioneScrittura = new \MongoDB\Driver\BulkWrite;
-                $operazioneScrittura->insert([
-                    'tipo' => 'sistema',
-                    'evento' => $evento,
-                    'dettagli' => $dettagli,
-                    'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-                    'server' => $_SERVER['SERVER_NAME'] ?? null
-                ]);
-                $this->gestoreConnessione->executeBulkWrite('bostarter.logs', $operazioneScrittura);
-            } catch (\Exception $errore) {
-                $this->scriviSuFile('sistema', $evento, array_merge($dettagli, ['errore' => $errore->getMessage()]));
-            }
-        } else {
-            $this->scriviSuFile('sistema', $evento, $dettagli);
-        }
-    }
-    
-    /**
-     * Registra errori dell'applicazione per il debugging e il monitoraggio
-     * 
-     * Traccia eccezioni, errori SQL, problemi di validazione e altri errori
-     * includendo dettagli tecnici utili per il troubleshooting.
-     * 
-     * @param string $errore Descrizione dell'errore o messaggio di eccezione
-     * @param array $dettagli Stack trace, contesto o altri dati utili al debug
-     * @return void
-     */
-    public function registraErrore($errore, $dettagli = []) {
-        if ($this->mongoDisponibile) {
-            try {
-                $operazioneScrittura = new \MongoDB\Driver\BulkWrite;
-                $operazioneScrittura->insert([
-                    'tipo' => 'errore',
-                    'errore' => $errore,
-                    'dettagli' => $dettagli,
-                    'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-                    'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
-                    'url' => $_SERVER['REQUEST_URI'] ?? null
-                ]);
-                $this->gestoreConnessione->executeBulkWrite('bostarter.logs', $operazioneScrittura);
-            } catch (\Exception $e) {
-                $this->scriviSuFile('errore', $errore, array_merge($dettagli, ['errore_mongo' => $e->getMessage()]));
-            }
-        } else {
-            $this->scriviSuFile('errore', $errore, $dettagli);
-        }
-    }
-    
-    /**
-     * Registra attività utente nel sistema con tracciamento dettagliato
-     * 
-     * Questo metodo centralizzato gestisce log strutturati per attività
-     * ad esempio login, registrazione, modifiche profilo, ecc.
-     * 
-     * @param int $userId ID dell'utente che ha eseguito l'attività
-     * @param string $activity Tipo di attività eseguita
-     * @param array $details Dettagli specifici dell'attività
-     * @return void
-     */
-    public function logActivity($userId, $activity, $details = []) {
-        if ($this->mongoDisponibile) {
-            try {
-                $bulk = new \MongoDB\Driver\BulkWrite;
-                $bulk->insert([
-                    'type' => 'user_activity',
-                    'user_id' => $userId,
-                    'activity' => $activity,
-                    'details' => $details,
-                    'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-                    'ip' => $_SERVER['REMOTE_ADDR'] ?? null
-                ]);
-                $this->gestoreConnessione->executeBulkWrite('bostarter.logs', $bulk);
-            } catch (\Exception $e) {
-                $this->scriviSuFile('activity', "User $userId: $activity", array_merge($details, ['error' => $e->getMessage()]));
-            }
-        } else {
-            $this->scriviSuFile('activity', "User $userId: $activity", $details);
-        }
-    }
-    
-    /**
-     * Registra la registrazione di un nuovo utente con informazioni specifiche
-     * 
-     * Tracciamento di nuovi account creati per analisi di crescita,
-     * monitoraggio anti-frode e statistiche di acquisizione.
-     * 
-     * @param int $userId ID del nuovo utente registrato
-     * @param string $email Indirizzo email dell'utente
-     * @param array $details Dettagli aggiuntivi della registrazione
-     * @return void
-     */
-    public function logUserRegistration($userId, $email, $details = []) {
-        $this->logActivity($userId, 'user_registration', array_merge([
-            'email' => $email,
-            'registration_time' => date('Y-m-d H:i:s')
-        ], $details));
-    }
-    
-    /**
-     * Registra gli accessi utente al sistema per audit di sicurezza
-     * 
-     * Traccia i login riusciti per analisi di sicurezza,
-     * monitoraggio attività sospette e statistiche di utilizzo.
-     * 
-     * @param int $userId ID dell'utente che ha eseguito l'accesso
-     * @param string $email Email dell'utente per riferimento
-     * @param array $details Dettagli aggiuntivi del login (device, browser, ecc.)
-     * @return void
-     */
-    public function logUserLogin($userId, $email, $details = []) {
-        $this->logActivity($userId, 'user_login', array_merge([
-            'email' => $email,
-            'login_time' => date('Y-m-d H:i:s')
-        ], $details));
-    }
-    
-    /**
-     * Registra eventi di sicurezza per audit e monitoraggio
-     * 
-     * Traccia tentativi di accesso falliti, attacchi potenziali,
-     * modifiche a dati sensibili e altre attività rilevanti per la sicurezza.
-     * 
-     * @param string $event Tipo di evento di sicurezza
-     * @param array $details Dettagli specifici dell'evento
-     * @return void
-     */
-    public function logSecurity($event, $details = []) {
-        if ($this->mongoDisponibile) {
-            try {
-                $bulk = new \MongoDB\Driver\BulkWrite;
-                $bulk->insert([
-                    'type' => 'security',
-                    'event' => $event,
-                    'details' => $details,
-                    'timestamp' => new \MongoDB\BSON\UTCDateTime(),
-                    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
-                ]);
-                $this->gestoreConnessione->executeBulkWrite('bostarter.logs', $bulk);
-            } catch (\Exception $e) {
-                $this->scriviSuFile('security', $event, array_merge($details, ['error' => $e->getMessage()]));
-            }
-        } else {
-            $this->scriviSuFile('security', $event, $details);
-        }
-    }
-    
-    /**
-     * Esegue query di ricerca sui log MongoDB per analisi e debug
-     * 
-     * Permette di interrogare il database dei log con filtri complessi
-     * per analisi, troubleshooting e reportistica. Non disponibile
-     * quando si utilizza il fallback su file.
-     * 
-     * @param array $filtro Condizioni di filtro in formato MongoDB
-     * @param array $ordinamento Criteri di ordinamento risultati
-     * @param int $limite Numero massimo di risultati da restituire
-     * @return array|null Risultati della query o null se MongoDB non disponibile
-     * @throws \Exception Se si verificano errori durante la query
-     */
-    public function cercaLog($filtro = [], $ordinamento = ['timestamp' => -1], $limite = 100) {
-        if (!$this->mongoDisponibile) {
-            return null;
-        }
+        $this->config = require __DIR__ . '/../config/mongo_config.php';
+        $this->logFile = $this->config['fallback_log_path'] ?? __DIR__ . '/../logs/mongodb_fallback.log';
         
         try {
-            // Configura opzioni di query
-            $opzioni = [
-                'sort' => $ordinamento,
-                'limit' => $limite
+            $options = [
+                'serverSelectionTimeoutMS' => 3000,
+                'connectTimeoutMS' => 2000,
+                'retryWrites' => true,
+                'w' => 'majority',
+                'readPreference' => 'primaryPreferred'
             ];
             
-            // Crea un oggetto query MongoDB
-            $query = new \MongoDB\Driver\Query($filtro, $opzioni);
+            $this->connectionManager = new MongoDB\Driver\Manager(
+                $this->config['connection_string'],
+                $options
+            );
             
-            // Esegui la query
-            $cursor = $this->gestoreConnessione->executeQuery('bostarter.logs', $query);
+            // Verifica la connessione
+            $this->connectionManager->selectServer(new MongoDB\Driver\ReadPreference('primary'));
+            $this->mongoAvailable = true;
             
-            // Converti il cursor in array di risultati
-            $risultati = [];
-            foreach ($cursor as $documento) {
-                $risultati[] = (array)$documento;
-            }
-            
-            return $risultati;
-        } catch (\Exception $e) {
-            error_log("Errore ricerca log MongoDB: " . $e->getMessage());
-            throw $e;
-        }
-    }
-    
-    /**
-     * Esporta statistiche di utilizzo per dashboard amministrativa
-     * 
-     * Genera aggregazioni sui dati di log per mostrare metriche
-     * chiave nell'interfaccia amministrativa.
-     * 
-     * @param string $tipo Tipo di statistiche da estrarre (users, errors, security)
-     * @param string $intervallo Periodo temporale da considerare (day, week, month)
-     * @return array|null Dati statistici aggregati o null se MongoDB non disponibile
-     */
-    public function statisticheUtilizzo($tipo = 'users', $intervallo = 'day') {
-        if (!$this->mongoDisponibile) {
-            return null;
+        } catch (Exception $e) {
+            $this->mongoAvailable = false;
+            $this->logToFile('SYSTEM', 'MongoDB connection failed: ' . $e->getMessage(), 'error');
         }
         
-        try {
-            // Calcola data di inizio in base all'intervallo
-            $timestampInizio = new \MongoDB\BSON\UTCDateTime(time() - $this->calcolaSecondiIntervallo($intervallo));
-            
-            // Costruisci pipeline di aggregazione in base al tipo richiesto
-            $pipeline = [];
-            
-            switch ($tipo) {
-                case 'users':
-                    $pipeline = [
-                        ['$match' => [
-                            'type' => 'user_activity',
-                            'timestamp' => ['$gte' => $timestampInizio]
-                        ]],
-                        ['$group' => [
-                            '_id' => '$activity',
-                            'count' => ['$sum' => 1]
-                        ]],
-                        ['$sort' => ['count' => -1]]
+        // Registra handler per flush del buffer alla chiusura
+        register_shutdown_function([$this, 'flushBuffer']);
+    }
+
+    /**
+     * Logga un'azione utente con contesto completo
+     * 
+     * @param string $action Nome dell'azione
+     * @param array $data Dati associati all'azione
+     * @param string $level Livello di log
+     * @return bool
+     */
+    public function logUserAction(string $action, array $data = [], string $level = 'info'): bool {
+        $logEntry = [
+            'timestamp' => new MongoDB\BSON\UTCDateTime(),
+            'type' => 'user_action',
+            'action' => $action,
+            'level' => $level,
+            'user_id' => $_SESSION['user_id'] ?? null,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+            'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
+            'data' => $data
+        ];
+
+        return $this->log('user_actions', $logEntry);
+    }
+
+    /**
+     * Logga un errore con stack trace e contesto
+     * 
+     * @param string $message Messaggio di errore
+     * @param array $context Contesto dell'errore
+     * @param string $level Livello di errore
+     * @return bool
+     */
+    public function logError(string $message, array $context = [], string $level = 'error'): bool {
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        array_shift($trace); // Rimuove il frame corrente
+        
+        $logEntry = [
+            'timestamp' => new MongoDB\BSON\UTCDateTime(),
+            'type' => 'error',
+            'message' => $message,
+            'level' => $level,
+            'file' => $trace[0]['file'] ?? 'unknown',
+            'line' => $trace[0]['line'] ?? 0,
+            'trace' => $trace,
+            'context' => $context,
+            'memory_usage' => memory_get_usage(true),
+            'peak_memory' => memory_get_peak_usage(true)
+        ];
+
+        return $this->log('errors', $logEntry);
+    }
+
+    /**
+     * Logga metriche di performance
+     * 
+     * @param string $operation Nome dell'operazione
+     * @param float $duration Durata in millisecondi
+     * @param array $metrics Metriche aggiuntive
+     * @return bool
+     */
+    public function logPerformance(string $operation, float $duration, array $metrics = []): bool {
+        $logEntry = [
+            'timestamp' => new MongoDB\BSON\UTCDateTime(),
+            'type' => 'performance',
+            'operation' => $operation,
+            'duration_ms' => $duration,
+            'metrics' => $metrics,
+            'memory_usage' => memory_get_usage(true),
+            'peak_memory' => memory_get_peak_usage(true),
+            'server_load' => sys_getloadavg()[0] ?? 0
+        ];
+
+        return $this->log('performance', $logEntry);
+    }
+
+    /**
+     * Metodo principale di logging con supporto per buffer e retry
+     * 
+     * @param string $collection Nome della collezione
+     * @param array $entry Dati da loggare
+     * @return bool
+     */
+    private function log(string $collection, array $entry): bool {
+        // Aggiunge al buffer
+        $this->buffer[] = [
+            'collection' => self::COLLECTIONS[$collection] ?? 'general_logs',
+            'entry' => $entry
+        ];
+
+        // Flush del buffer se pieno
+        if (count($this->buffer) >= self::BUFFER_SIZE) {
+            return $this->flushBuffer();
+        }
+
+        return true;
+    }
+
+    /**
+     * Esegue il flush del buffer su MongoDB o file di fallback
+     * 
+     * @return bool
+     */
+    public function flushBuffer(): bool {
+        if (empty($this->buffer)) {
+            return true;
+        }
+
+        if ($this->mongoAvailable) {
+            try {
+                $bulkWrite = [];
+                foreach ($this->buffer as $log) {
+                    $bulkWrite[] = [
+                        'insertOne' => [
+                            'document' => $log['entry']
+                        ]
                     ];
-                    break;
-                
-                case 'errors':
-                    $pipeline = [
-                        ['$match' => [
-                            'tipo' => 'errore',
-                            'timestamp' => ['$gte' => $timestampInizio]
-                        ]],
-                        ['$group' => [
-                            '_id' => '$errore',
-                            'count' => ['$sum' => 1]
-                        ]],
-                        ['$sort' => ['count' => -1]],
-                        ['$limit' => 10]
-                    ];
-                    break;
-                
-                case 'security':
-                    $pipeline = [
-                        ['$match' => [
-                            'type' => 'security',
-                            'timestamp' => ['$gte' => $timestampInizio]
-                        ]],
-                        ['$group' => [
-                            '_id' => '$event',
-                            'count' => ['$sum' => 1]
-                        ]],
-                        ['$sort' => ['count' => -1]]
-                    ];
-                    break;
-            }
-            
-            // Esegui l'aggregazione
-            $command = new \MongoDB\Driver\Command([
-                'aggregate' => 'logs',
-                'pipeline' => $pipeline,
-                'cursor' => new stdClass()
-            ]);
-            
-            $cursor = $this->gestoreConnessione->executeCommand('bostarter', $command);
-            
-            // Converti il risultato in un array
-            $risultati = [];
-            foreach ($cursor as $documento) {
-                if (isset($documento->result)) {
-                    $risultati = $documento->result;
-                    break;
                 }
+
+                $writeConcern = new MongoDB\Driver\WriteConcern(
+                    MongoDB\Driver\WriteConcern::MAJORITY,
+                    1000
+                );
+
+                $bulk = new MongoDB\Driver\BulkWrite();
+                foreach ($bulkWrite as $operation) {
+                    $bulk->insert($operation['insertOne']['document']);
+                }
+
+                $this->connectionManager->executeBulkWrite(
+                    $this->config['database'] . '.' . $log['collection'],
+                    $bulk,
+                    $writeConcern
+                );
+
+                $this->buffer = [];
+                return true;
+
+            } catch (Exception $e) {
+                $this->mongoAvailable = false;
+                $this->logToFile('SYSTEM', 'MongoDB write failed: ' . $e->getMessage(), 'error');
             }
-            
-            return $risultati;
-        } catch (\Exception $e) {
-            error_log("Errore generazione statistiche: " . $e->getMessage());
-            return null;
+        }
+
+        // Fallback su file
+        return $this->flushBufferToFile();
+    }
+
+    /**
+     * Scrive il buffer su file di fallback
+     * 
+     * @return bool
+     */
+    private function flushBufferToFile(): bool {
+        if (empty($this->buffer)) {
+            return true;
+        }
+
+        try {
+            $handle = fopen($this->logFile, 'a');
+            if (!$handle) {
+                throw new Exception('Unable to open log file');
+            }
+
+            foreach ($this->buffer as $log) {
+                $logLine = date('Y-m-d H:i:s') . ' [' . 
+                          strtoupper($log['entry']['level'] ?? 'INFO') . '] ' .
+                          json_encode($log['entry']) . PHP_EOL;
+                
+                fwrite($handle, $logLine);
+            }
+
+            fclose($handle);
+            $this->buffer = [];
+            return true;
+
+        } catch (Exception $e) {
+            error_log('MongoLogger fallback failed: ' . $e->getMessage());
+            return false;
         }
     }
-    
+
     /**
-     * Calcola il numero di secondi corrispondenti a un intervallo di tempo
+     * Recupera log con filtri e paginazione
      * 
-     * @param string $intervallo Identificativo intervallo (day, week, month, year)
-     * @return int Numero di secondi nell'intervallo
+     * @param array $filters Filtri da applicare
+     * @param array $options Opzioni di query (sort, limit, skip)
+     * @return array
      */
-    private function calcolaSecondiIntervallo($intervallo) {
-        switch ($intervallo) {
-            case 'hour':
-                return 3600;
-            case 'day':
-                return 86400;
-            case 'week':
-                return 604800;
-            case 'month':
-                return 2592000; // 30 giorni
-            case 'year':
-                return 31536000; // 365 giorni
-            default:
-                return 86400; // default: 1 giorno
+    public function getLogs(array $filters = [], array $options = []): array {
+        if (!$this->mongoAvailable) {
+            return [];
+        }
+
+        try {
+            $query = new MongoDB\Driver\Query($filters, $options);
+            $cursor = $this->connectionManager->executeQuery(
+                $this->config['database'] . '.logs',
+                $query
+            );
+
+            return $cursor->toArray();
+
+        } catch (Exception $e) {
+            $this->logError('Error retrieving logs: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Elimina log più vecchi di X giorni
+     * 
+     * @param int $days Numero di giorni
+     * @return int Numero di log eliminati
+     */
+    public function cleanOldLogs(int $days): int {
+        if (!$this->mongoAvailable) {
+            return 0;
+        }
+
+        try {
+            $cutoff = new MongoDB\BSON\UTCDateTime(
+                (time() - ($days * 86400)) * 1000
+            );
+
+            $bulk = new MongoDB\Driver\BulkWrite();
+            $bulk->delete(
+                ['timestamp' => ['$lt' => $cutoff]],
+                ['limit' => 0]
+            );
+
+            $result = $this->connectionManager->executeBulkWrite(
+                $this->config['database'] . '.logs',
+                $bulk
+            );
+
+            return $result->getDeletedCount();
+
+        } catch (Exception $e) {
+            $this->logError('Error cleaning old logs: ' . $e->getMessage());
+            return 0;
         }
     }
 }

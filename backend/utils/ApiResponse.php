@@ -140,6 +140,38 @@ class ApiResponse {
     }
 
     /**
+     * Invia una risposta JSON per conflitti (risorsa già esistente)
+     * 
+     * @param string $message Messaggio descrittivo del conflitto
+     * @return void Termina l'esecuzione dopo l'invio della risposta
+     */
+    public static function conflict($message = 'Conflitto - risorsa già esistente') {
+        self::error($message, 409);
+    }
+    
+    /**
+     * Invia una risposta JSON per dati non processabili (validazione fallita)
+     * 
+     * @param string $message Messaggio descrittivo dell'errore
+     * @param mixed $details Dettagli specifici sugli errori di validazione
+     * @return void Termina l'esecuzione dopo l'invio della risposta
+     */
+    public static function unprocessableEntity($message = 'Dati non processabili', $details = null) {
+        http_response_code(422);
+        header('Content-Type: application/json');
+        
+        $response = [
+            'success' => false,
+            'message' => $message,
+            'details' => $details,
+            'timestamp' => date('Y-m-d H:i:s')
+        ];
+        
+        echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
      * Sanitize data for output
      * 
      * Questo metodo si occupa di ripulire i dati da inviare al client,

@@ -21,36 +21,63 @@ class ModernRegistrationForm {
     }
 
     setupValidation() {
+        // Real-time validation
         this.inputs.forEach(input => {
             input.addEventListener('input', () => this.validateInput(input));
-            input.addEventListener('blur', () => this.validateInput(input));
+            input.addEventListener('blur', () => this.validateInput(input, true));
+        });
+
+        // Form-level validation
+        this.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (this.validateForm()) {
+                this.submitForm();
+            }
         });
     }
 
-    validateInput(input) {
+    validateInput(input, isFinal = false) {
         const value = input.value.trim();
+        const name = input.name;
         let isValid = true;
         let message = '';
 
-        switch (input.id) {
+        switch (name) {
             case 'email':
-                isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-                message = isValid ? '' : 'Email non valida';
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                isValid = emailRegex.test(value);
+                message = isValid ? '' : 'Please enter a valid email address';
                 break;
+
             case 'password':
-                isValid = value.length >= 8;
-                message = isValid ? '' : 'Minimo 8 caratteri';
+                const hasUpperCase = /[A-Z]/.test(value);
+                const hasLowerCase = /[a-z]/.test(value);
+                const hasNumbers = /\d/.test(value);
+                const hasSpecialChar = /[!@#$%^&*]/.test(value);
+                const isLongEnough = value.length >= 8;
+
+                isValid = hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar && isLongEnough;
+
+                if (!isValid && isFinal) {
+                    message = 'Password must contain at least 8 characters, including uppercase, lowercase, numbers and special characters';
+                }
                 break;
-            case 'password_confirm':
-                const password = document.getElementById('password').value;
+
+            case 'confirmPassword':
+                const password = this.form.querySelector('input[name="password"]').value;
                 isValid = value === password;
-                message = isValid ? '' : 'Le password non coincidono';
+                message = isValid ? '' : 'Passwords do not match';
                 break;
-            case 'nome':
-            case 'cognome':
-                isValid = value.length >= 2;
-                message = isValid ? '' : 'Minimo 2 caratteri';
+
+            case 'username':
+                const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+                isValid = usernameRegex.test(value);
+                message = isValid ? '' : 'Username must be 3-20 characters and may contain letters, numbers, underscores and hyphens';
                 break;
+
+            default:
+                isValid = value.length > 0;
+                message = isValid ? '' : 'This field is required';
         }
 
         this.updateInputStyle(input, isValid, message);
@@ -58,85 +85,120 @@ class ModernRegistrationForm {
     }
 
     updateInputStyle(input, isValid, message) {
-        input.classList.toggle('valid', isValid);
-        input.classList.toggle('invalid', !isValid);
+        const formGroup = input.closest('.form-group');
+        const feedback = formGroup.querySelector('.validation-feedback');
 
-        let messageElement = input.parentElement.querySelector('.validation-message');
-        if (!messageElement && message) {
-            messageElement = document.createElement('div');
-            messageElement.className = 'validation-message';
-            input.parentElement.appendChild(messageElement);
+        input.classList.toggle('is-valid', isValid && input.value.length > 0);
+        input.classList.toggle('is-invalid', !isValid && input.value.length > 0);
+
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.classList.toggle('text-danger', !isValid);
+            feedback.classList.toggle('text-success', isValid);
         }
-        if (messageElement) {
-            messageElement.textContent = message;
-            messageElement.style.display = message ? 'block' : 'none';
-        }
+
+        // Update submit button state
+        this.updateSubmitButtonState();
     }
 
     setupPasswordStrength() {
-        const passwordInput = document.getElementById('password');
-        if (!passwordInput) return;
+        const passwordInput = this.form.querySelector('input[name="password"]');
+        const strengthIndicator = document.createElement('div');
+        strengthIndicator.className = 'password-strength-meter mt-2';
+        passwordInput.parentNode.appendChild(strengthIndicator);
 
         passwordInput.addEventListener('input', () => {
             const strength = this.calculatePasswordStrength(passwordInput.value);
-            this.updatePasswordStrengthIndicator(strength);
+            this.updatePasswordStrengthIndicator(strength, strengthIndicator);
         });
     }
 
     calculatePasswordStrength(password) {
-        let strength = 0;
-        if (password.length >= 8) strength++;
-        if (password.match(/[A-Z]/)) strength++;
-        if (password.match(/[a-z]/)) strength++;
-        if (password.match(/[0-9]/)) strength++;
-        if (password.match(/[^A-Za-z0-9]/)) strength++;
-        return (strength / 5) * 100;
+        let score = 0;
+
+        // Length check
+        if (password.length >= 8) score += 20;
+        if (password.length >= 12) score += 10;
+
+        // Character variety
+        if (/[A-Z]/.test(password)) score += 20;
+        if (/[a-z]/.test(password)) score += 20;
+        if (/[0-9]/.test(password)) score += 20;
+        if (/[^A-Za-z0-9]/.test(password)) score += 20;
+
+        // Complexity bonus
+        if (score >= 80 && password.length >= 12) score += 10;
+
+        return Math.min(100, score);
     }
 
-    updatePasswordStrengthIndicator(strength) {
-        const strengthDiv = document.querySelector('.password-strength');
-        if (!strengthDiv) return;
+    updatePasswordStrengthIndicator(strength, indicator) {
+        const strengthClass = strength < 40 ? 'weak' :
+            strength < 70 ? 'medium' : 'strong';
 
-        let color = '#ff4444';
-        if (strength > 60) color = '#ffbb33';
-        if (strength > 80) color = '#00C851';
+        indicator.className = `password-strength-meter mt-2 strength-${strengthClass}`;
+        indicator.style.width = `${strength}%`;
 
-        strengthDiv.style.width = strength + '%';
-        strengthDiv.style.backgroundColor = color;
-        strengthDiv.style.height = '3px';
-        strengthDiv.style.transition = 'all 0.3s ease';
-        strengthDiv.style.marginTop = '5px';
+        const strengthText = strength < 40 ? 'Weak' :
+            strength < 70 ? 'Medium' : 'Strong';
+
+        indicator.setAttribute('data-strength', strengthText);
     }
 
-    setupFormSubmission() {
-        this.form.addEventListener('submit', (e) => {
-            e.preventDefault();
+    async submitForm() {
+        try {
+            this.setLoadingState(true);
 
-            let isValid = true;
-            this.inputs.forEach(input => {
-                if (!this.validateInput(input)) {
-                    isValid = false;
+            const formData = new FormData(this.form);
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
                 }
             });
 
-            if (isValid) {
-                this.submitButton.disabled = true;
-                this.submitButton.innerHTML = '<span class="spinner"></span> Creazione account...';
-                this.form.submit();
+            const data = await response.json();
+
+            if (response.ok) {
+                this.showSuccess('Registration successful! Redirecting...');
+                setTimeout(() => window.location.href = '/login', 2000);
+            } else {
+                throw new Error(data.message || 'Registration failed');
             }
-        });
+        } catch (error) {
+            this.showError(error.message);
+        } finally {
+            this.setLoadingState(false);
+        }
     }
 
-    addInputEffects() {
-        this.inputs.forEach(input => {
-            input.addEventListener('focus', () => {
-                input.parentElement.classList.add('focused');
-            });
+    setLoadingState(isLoading) {
+        this.submitButton.disabled = isLoading;
+        this.submitButton.innerHTML = isLoading ?
+            '<span class="spinner-border spinner-border-sm me-2"></span>Processing...' :
+            'Register';
+    }
 
-            input.addEventListener('blur', () => {
-                input.parentElement.classList.remove('focused');
-            });
-        });
+    showSuccess(message) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success mt-3 animate-fade-in';
+        alert.textContent = message;
+        this.form.insertAdjacentElement('beforebegin', alert);
+    }
+
+    showError(message) {
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-danger mt-3 animate-fade-in';
+        alert.textContent = message;
+        this.form.insertAdjacentElement('beforebegin', alert);
+    }
+
+    updateSubmitButtonState() {
+        const isValid = Array.from(this.inputs).every(input =>
+            input.classList.contains('is-valid')
+        );
+        this.submitButton.disabled = !isValid;
     }
 }
 
