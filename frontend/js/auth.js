@@ -2,7 +2,6 @@
  * BOSTARTER Authentication UI Enhancement
  * Modern login form interactions and validations
  */
-
 // Modern Auth/Login UX
 class LoginForm {
     constructor() {
@@ -13,7 +12,6 @@ class LoginForm {
         this.toggleBtn = document.querySelector('.password-toggle');
         this.init();
     }
-
     init() {
         if (this.email) {
             this.email.addEventListener('input', () => this.validateEmail());
@@ -28,7 +26,6 @@ class LoginForm {
             this.form.addEventListener('submit', (e) => this.handleSubmit(e));
         }
     }
-
     validateEmail() {
         if (!this.email) return true;
         const value = this.email.value.trim();
@@ -36,7 +33,6 @@ class LoginForm {
         this.setFieldState(this.email, valid, valid ? '' : 'Email non valida');
         return valid;
     }
-
     validatePassword() {
         if (!this.password) return true;
         const value = this.password.value;
@@ -44,7 +40,6 @@ class LoginForm {
         this.setFieldState(this.password, valid, valid ? '' : 'Minimo 8 caratteri');
         return valid;
     }
-
     setFieldState(field, valid, message) {
         field.classList.toggle('invalid', !valid);
         field.classList.toggle('valid', valid);
@@ -60,7 +55,6 @@ class LoginForm {
             errorDiv.remove();
         }
     }
-
     togglePassword() {
         if (!this.password || !this.toggleBtn) return;
         const iconShow = this.toggleBtn.querySelector('.show-icon');
@@ -77,7 +71,6 @@ class LoginForm {
             this.toggleBtn.setAttribute('aria-label', 'Mostra password');
         }
     }
-
     handleSubmit(e) {
         let valid = this.validateEmail() & this.validatePassword();
         if (!valid) {
@@ -89,9 +82,7 @@ class LoginForm {
         }
     }
 }
-
 document.addEventListener('DOMContentLoaded', () => { new LoginForm(); });
-
 // Miglioramento UX login: focus automatico, animazioni, validazione accessibile
 window.addEventListener('DOMContentLoaded', function () {
     // Focus automatico su primo campo vuoto
@@ -137,26 +128,22 @@ window.addEventListener('DOMContentLoaded', function () {
         alert.setAttribute('aria-live', 'assertive');
     });
 });
-
 // Global functions for backward compatibility
 function togglePassword(fieldId) {
     if (window.authUI) {
         window.authUI.togglePasswordVisibility(fieldId);
     }
 }
-
 function openPasswordReset() {
     if (window.authUI) {
         window.authUI.openModal('passwordResetModal');
     }
 }
-
 function closePasswordReset() {
     if (window.authUI) {
         window.authUI.closeModal('passwordResetModal');
     }
 }
-
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.authUI = new AuthUI();

@@ -1,0 +1,34 @@
+{
+  "name": "BOSTARTER",
+  "version": "2.0.0",
+  "description": "Piattaforma Crowdfunding Bootstrap 5.3.3",
+  "framework": "Bootstrap 5.3.3",
+  "assets": {
+    "css": {
+      "main": "css/bostarter-master.css",
+      "critical": ["Bootstrap Grid", "Typography", "Utilities"]
+    },
+    "js": {
+      "main": "js/bostarter-master.js",
+      "modules": ["Navbar", "Animations", "Forms", "Notifications"]
+    }
+  },
+  "performance": {
+    "minification": true,
+    "compression": true,
+    "caching": true,
+    "lazyLoading": true
+  },
+  "optimization": {
+    "removedFiles": [
+      "enhanced-styles.css",
+      "bootstrap-custom.css", 
+      "enhanced-interactions.js",
+      "bostarter-unified.js"
+    ],
+    "consolidatedInto": [
+      "bostarter-master.css",
+      "bostarter-master.js"
+    ]
+  }
+}

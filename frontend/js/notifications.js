@@ -5,11 +5,8 @@ class BONotifications {
         this.notifications = new Map();
         this.maxNotifications = 5;
         document.body.appendChild(this.container);
-
-        // Handle focus management for accessibility
         this.handleFocusManagement();
     }
-
     createContainer() {
         const container = document.createElement('div');
         container.className = 'notifications-container';
@@ -29,7 +26,6 @@ class BONotifications {
         `;
         return container;
     }
-
     handleFocusManagement() {
         // Track focus for accessibility
         this.container.addEventListener('keydown', (e) => {
@@ -38,7 +34,6 @@ class BONotifications {
             }
         });
     }
-
     show(message, options = {}) {
         const {
             type = 'info',
@@ -47,13 +42,11 @@ class BONotifications {
             action = null,
             id = Date.now().toString()
         } = options;
-
         // Manage maximum notifications
         if (this.notifications.size >= this.maxNotifications) {
             const oldestId = this.notifications.keys().next().value;
             this.dismiss(oldestId);
         }
-
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.setAttribute('role', 'alert');
@@ -72,7 +65,6 @@ class BONotifications {
             transition: all 0.3s ease;
             pointer-events: auto;
         `;
-
         // Add icon
         if (icon) {
             const iconElement = document.createElement('span');
@@ -80,13 +72,11 @@ class BONotifications {
             iconElement.innerHTML = icon;
             notification.appendChild(iconElement);
         }
-
         // Add message
         const messageElement = document.createElement('span');
         messageElement.className = 'notification-message';
         messageElement.textContent = message;
         notification.appendChild(messageElement);
-
         // Add action button if provided
         if (action) {
             const actionButton = document.createElement('button');
@@ -95,7 +85,6 @@ class BONotifications {
             actionButton.onclick = action.callback;
             notification.appendChild(actionButton);
         }
-
         // Add dismiss button
         const dismissButton = document.createElement('button');
         dismissButton.className = 'notification-dismiss';
@@ -103,43 +92,34 @@ class BONotifications {
         dismissButton.innerHTML = '×';
         dismissButton.onclick = () => this.dismiss(id);
         notification.appendChild(dismissButton);
-
         // Store notification reference
         this.notifications.set(id, {
             element: notification,
             timeout: duration ? setTimeout(() => this.dismiss(id), duration) : null
         });
-
         // Add to container and animate
         this.container.appendChild(notification);
         requestAnimationFrame(() => {
             notification.style.opacity = '1';
             notification.style.transform = 'translateX(0)';
         });
-
         return id;
     }
-
     dismiss(id) {
         const notification = this.notifications.get(id);
         if (!notification) return;
-
         const { element, timeout } = notification;
         if (timeout) clearTimeout(timeout);
-
         element.style.opacity = '0';
         element.style.transform = 'translateX(100%)';
-
         element.addEventListener('transitionend', () => {
             element.remove();
             this.notifications.delete(id);
         });
     }
-
     dismissAll() {
         this.notifications.forEach((_, id) => this.dismiss(id));
     }
-
     getDefaultIcon(type) {
         const icons = {
             success: '<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
@@ -149,24 +129,19 @@ class BONotifications {
         };
         return icons[type] || icons.info;
     }
-
     // Helper methods for different notification types
     success(message, options = {}) {
         return this.show(message, { ...options, type: 'success' });
     }
-
     error(message, options = {}) {
         return this.show(message, { ...options, type: 'error' });
     }
-
     warning(message, options = {}) {
         return this.show(message, { ...options, type: 'warning' });
     }
-
     info(message, options = {}) {
         return this.show(message, { ...options, type: 'info' });
     }
 }
-
 // Inizializzazione del sistema di notifiche
 window.boNotifications = new BONotifications();

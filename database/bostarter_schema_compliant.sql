@@ -1,4 +1,270 @@
--- BOSTARTER DATABASE SCHEMA - FULLY COMPLIANT WITH PDF SPECIFICATIONS
+USE bostarter_compliant;
+
+-- Aggiungi campo mancante per candidature software
+ALTER TABLE candidature ADD COLUMN IF NOT EXISTS max_contributori INT DEFAULT 5;
+
+-- Migliora constraint per progetti software
+ALTER TABLE profili_software ADD CONSTRAINT chk_max_contributori CHECK (max_contributori > 0);
+
+-- Aggiungi stati missing per progetti
+ALTER TABLE progetti MODIFY COLUMN stato ENUM('aperto', 'chiuso', 'scaduto') DEFAULT 'aperto';
+
+-- Trigger migliorato per chiusura automatica progetti scaduti
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS auto_close_expired_projects
+    BEFORE UPDATE ON progetti
+    FOR EACH ROW
+BEGIN
+    IF NEW.data_limite < CURDATE() AND OLD.stato = 'aperto' THEN
+        SET NEW.stato = 'scaduto';
+    END IF;
+END //
+DELIMITER ;<?php
+<?php
+/**
+ * Analisi della ridondanza #nr_progetti secondo la traccia
+ * Coefficienti: wI = 1, wB = 0.5, a = 2
+ * Volumi: 10 progetti, 3 finanziamenti per progetto, 5 utenti, 2 progetti per utente
+ */
+
+class AnalisiRidondanza {
+    private $wI = 1;    // Peso operazioni interattive
+    private $wB = 0.5;  // Peso operazioni batch
+    private $a = 2;     // Fattore amplificazione
+    
+    // Volumi dalla traccia
+    private $progetti = 10;
+    private $finanziamenti_per_progetto = 3;
+    private $utenti = 5;
+    private $progetti_per_utente = 2;
+    
+    public function calcolaConRidondanza() {
+        echo "=== ANALISI CON RIDONDANZA (#nr_progetti) ===\n";
+        
+        // Op1: Aggiungere nuovo progetto (1 volta/mese, interattiva)
+        $op1_accessi = 1; // INSERT + UPDATE nr_progetti
+        $op1_costo = $this->wI * $op1_accessi * 1; // frequenza = 1
+        echo "Op1 (Nuovo progetto): {$op1_costo}\n";
+        
+        // Op2: Visualizzare progetti e finanziamenti (1 volta/mese, batch)
+        $op2_accessi = $this->progetti + ($this->progetti * $this->finanziamenti_per_progetto);
+        $op2_costo = $this->wB * $op2_accessi * 1;
+        echo "Op2 (Visualizza tutto): {$op2_costo}\n";
+        
+        // Op3: Contare progetti per utente (3 volte/mese, batch)
+        $op3_accessi = 1; // Accesso diretto al campo nr_progetti
+        $op3_costo = $this->wB * $op3_accessi * 3;
+        echo "Op3 (Conta progetti): {$op3_costo}\n";
+        
+        $totale_con = $op1_costo + $op2_costo + $op3_costo;
+        echo "TOTALE CON RIDONDANZA: {$totale_con}\n\n";
+        
+        return $totale_con;
+    }
+    
+    public function calcolaSenzaRidondanza() {
+        echo "=== ANALISI SENZA RIDONDANZA ===\n";
+        
+        // Op1: Aggiungere nuovo progetto (1 volta/mese, interattiva)
+        $op1_accessi = 1; // Solo INSERT
+        $op1_costo = $this->wI * $op1_accessi * 1;
+        echo "Op1 (Nuovo progetto): {$op1_costo}\n";
+        
+        // Op2: Visualizzare progetti e finanziamenti (1 volta/mese, batch)
+        $op2_accessi = $this->progetti + ($this->progetti * $this->finanziamenti_per_progetto);
+        $op2_costo = $this->wB * $op2_accessi * 1;
+        echo "Op2 (Visualizza tutto): {$op2_costo}\n";
+        
+        // Op3: Contare progetti per utente (3 volte/mese, batch)
+        $op3_accessi = $this->progetti_per_utente; // COUNT(*) sui progetti
+        $op3_costo = $this->wB * $op3_accessi * 3;
+        echo "Op3 (Conta progetti): {$op3_costo}\n";
+        
+        $totale_senza = $op1_costo + $op2_costo + $op3_costo;
+        echo "TOTALE SENZA RIDONDANZA: {$totale_senza}\n\n";
+        
+        return $totale_senza;
+    }
+    
+    public function analizza() {
+        $con_ridondanza = $this->calcolaConRidondanza();
+        $senza_ridondanza = $this->calcolaSenzaRidondanza();
+        
+        echo "=== CONCLUSIONE ===\n";
+        if ($con_ridondanza < $senza_ridondanza) {
+            echo "MANTENERE la ridondanza #nr_progetti\n";
+            echo "Risparmio: " . ($senza_ridondanza - $con_ridondanza) . "\n";
+        } else {
+            echo "ELIMINARE la ridondanza #nr_progetti\n";
+            echo "Costo aggiuntivo: " . ($con_ridondanza - $senza_ridondanza) . "\n";
+        }
+    }
+}
+
+$analisi = new AnalisiRidondanza();
+$analisi->analizza();<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOSTARTER - Crowdfunding Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/css/custom.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="fas fa-rocket me-2"></i>BOSTARTER
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link" href="#progetti">Progetti</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#statistiche">Statistiche</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                </ul>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="login.html"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
+                    <a class="nav-link" href="register.html"><i class="fas fa-user-plus me-1"></i>Registrati</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section bg-gradient text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">Trasforma le tue idee in realtà</h1>
+                    <p class="lead mb-4">BOSTARTER è la piattaforma italiana per il crowdfunding di progetti hardware e software innovativi.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#progetti" class="btn btn-light btn-lg">Esplora Progetti</a>
+                        <a href="create-project.html" class="btn btn-outline-light btn-lg">Crea Progetto</a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-stats">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="stat-card text-center p-3 bg-white bg-opacity-10 rounded">
+                                    <h3 class="fw-bold" id="total-projects">-</h3>
+                                    <p class="mb-0">Progetti Attivi</p>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-card text-center p-3 bg-white bg-opacity-10 rounded">
+                                    <h3 class="fw-bold" id="total-funded">-</h3>
+                                    <p class="mb-0">Fondi Raccolti</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Top Projects Section -->
+    <section id="progetti" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Progetti in Evidenza</h2>
+            <div id="top-projects" class="row g-4">
+                <!-- Progetti caricati dinamicamente -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section id="statistiche" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">Statistiche Piattaforma</h2>
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-trophy text-warning me-2"></i>Top Creatori</h5>
+                            <div id="top-creators" class="creators-list">
+                                <!-- Caricato dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-chart-line text-success me-2"></i>Progetti Vicini</h5>
+                            <div id="near-completion" class="projects-list">
+                                <!-- Caricato dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-heart text-danger me-2"></i>Top Finanziatori</h5>
+                            <div id="top-funders" class="funders-list">
+                                <!-- Caricato dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/app.js"></script>
+</body>
+</html>USE bostarter_compliant;
+
+-- Aggiungi campo mancante per candidature software
+ALTER TABLE candidature ADD COLUMN IF NOT EXISTS max_contributori INT DEFAULT 5;
+
+-- Migliora constraint per progetti software
+ALTER TABLE profili_software ADD CONSTRAINT chk_max_contributori CHECK (max_contributori > 0);
+
+-- Aggiungi stati missing per progetti
+ALTER TABLE progetti MODIFY COLUMN stato ENUM('aperto', 'chiuso', 'scaduto') DEFAULT 'aperto';
+
+-- Trigger migliorato per chiusura automatica progetti scaduti
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS auto_close_expired_projects
+    BEFORE UPDATE ON progetti
+    FOR EACH ROW
+BEGIN
+    IF NEW.data_limite < CURDATE() AND OLD.stato = 'aperto' THEN
+        SET NEW.stato = 'scaduto';
+    END IF;
+END //
+DELIMITER ;USE bostarter_compliant;
+
+-- Aggiungi campo mancante per candidature software
+ALTER TABLE candidature ADD COLUMN IF NOT EXISTS max_contributori INT DEFAULT 5;
+
+-- Migliora constraint per progetti software
+ALTER TABLE profili_software ADD CONSTRAINT chk_max_contributori CHECK (max_contributori > 0);
+
+-- Aggiungi stati missing per progetti
+ALTER TABLE progetti MODIFY COLUMN stato ENUM('aperto', 'chiuso', 'scaduto') DEFAULT 'aperto';
+
+-- Trigger migliorato per chiusura automatica progetti scaduti
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS auto_close_expired_projects
+    BEFORE UPDATE ON progetti
+    FOR EACH ROW
+BEGIN
+    IF NEW.data_limite < CURDATE() AND OLD.stato = 'aperto' THEN
+        SET NEW.stato = 'scaduto';
+    END IF;
+END //
+DELIMITER ;-- BOSTARTER DATABASE SCHEMA - FULLY COMPLIANT WITH PDF SPECIFICATIONS
 -- A.A. 2024/2025 - Corso di Basi di Dati CdS Informatica per il Management
 
 DROP DATABASE IF EXISTS bostarter_compliant;

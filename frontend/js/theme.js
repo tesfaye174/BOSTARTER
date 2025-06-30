@@ -1,12 +1,9 @@
 /**
  * BOSTARTER - Theme Manager
  * Gestione del tema scuro/chiaro e preferenze utente
- * @version 1.0
  */
-
 (function (window, document) {
     'use strict';
-
     const ThemeManager = {
         // Costanti
         STORAGE_KEY: 'bostarter_theme',
@@ -15,11 +12,9 @@
             DARK: 'dark',
             AUTO: 'auto'
         },
-
         // Stato corrente
         currentTheme: null,
         mediaQuery: null,
-
         /**
          * Inizializza il theme manager
          */
@@ -29,51 +24,41 @@
             this.setupEventListeners();
             this.createThemeToggle();
         },
-
         /**
          * Carica il tema salvato o usa quello di sistema
          */
         loadTheme() {
             const savedTheme = localStorage.getItem(this.STORAGE_KEY);
             const systemTheme = this.getSystemTheme();
-
             this.currentTheme = savedTheme || this.THEMES.AUTO;
             this.applyTheme(this.currentTheme === this.THEMES.AUTO ? systemTheme : this.currentTheme);
         },
-
         /**
          * Applica il tema
          */
         applyTheme(theme) {
             const html = document.documentElement;
-
             // Rimuovi tutte le classi tema
             html.classList.remove('light', 'dark');
-
             // Aggiungi la classe del tema corrente
             if (theme === this.THEMES.DARK) {
                 html.classList.add('dark');
             } else {
                 html.classList.add('light');
             }
-
             // Aggiorna gli attributi data
             html.setAttribute('data-theme', theme);
-
             // Aggiorna i meta tag per il colore della barra di stato
             this.updateMetaTheme(theme);
-
             // Dispatch evento per altri componenti
             this.dispatchThemeChange(theme);
         },
-
         /**
          * Ottiene il tema di sistema
          */
         getSystemTheme() {
             return this.mediaQuery && this.mediaQuery.matches ? this.THEMES.DARK : this.THEMES.LIGHT;
         },
-
         /**
          * Cambia tema
          */
@@ -82,14 +67,11 @@
                 console.warn('Tema non valido:', theme);
                 return;
             }
-
             this.currentTheme = theme;
             localStorage.setItem(this.STORAGE_KEY, theme);
-
             const actualTheme = theme === this.THEMES.AUTO ? this.getSystemTheme() : theme;
             this.applyTheme(actualTheme);
         },
-
         /**
          * Toggle tra tema chiaro e scuro
          */
@@ -97,10 +79,8 @@
             const newTheme = this.getCurrentAppliedTheme() === this.THEMES.DARK
                 ? this.THEMES.LIGHT
                 : this.THEMES.DARK;
-
             this.setTheme(newTheme);
         },
-
         /**
          * Ottiene il tema attualmente applicato
          */
@@ -109,7 +89,6 @@
                 ? this.THEMES.DARK
                 : this.THEMES.LIGHT;
         },
-
         /**
          * Setup event listeners
          */
@@ -120,7 +99,6 @@
                     this.applyTheme(e.matches ? this.THEMES.DARK : this.THEMES.LIGHT);
                 }
             });
-
             // Ascolta i tasti di scelta rapida
             document.addEventListener('keydown', (e) => {
                 if (e.ctrlKey && e.shiftKey && e.key === 'T') {
@@ -129,14 +107,12 @@
                 }
             });
         },
-
         /**
          * Crea il toggle button per il tema
          */
         createThemeToggle() {
             // Verifica se esiste già un toggle
             if (document.querySelector('.theme-toggle')) return;
-
             const toggle = document.createElement('button');
             toggle.className = 'theme-toggle';
             toggle.setAttribute('aria-label', 'Cambia tema');
@@ -156,7 +132,6 @@
                     <path d="m21 12.79-.29.71-.29-.71A16.5 16.5 0 0 1 12.79 21l-.71-.29.71-.29A16.5 16.5 0 0 0 21 12.79z"></path>
                 </svg>
             `;
-
             // Stili inline per il toggle
             const style = document.createElement('style');
             style.textContent = `
@@ -177,64 +152,51 @@
                     justify-content: center;
                     transition: all 0.3s ease;
                 }
-                
                 .theme-toggle:hover {
                     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                     transform: translateY(-2px);
                 }
-                
                 .theme-icon {
                     transition: all 0.3s ease;
                 }
-                
                 .dark .sun-icon {
                     opacity: 0;
                     transform: rotate(180deg);
                 }
-                
                 .light .moon-icon {
                     opacity: 0;
                     transform: rotate(-180deg);
                 }
-                
                 .dark .moon-icon {
                     opacity: 1;
                     transform: rotate(0deg);
                 }
-                
                 .light .sun-icon {
                     opacity: 1;
                     transform: rotate(0deg);
                 }
             `;
-
             document.head.appendChild(style);
-
             // Event listener per il toggle
             toggle.addEventListener('click', () => {
                 this.toggle();
             });
-
             // Aggiungi il toggle alla pagina
             document.body.appendChild(toggle);
         },
-
         /**
          * Aggiorna i meta tag per il tema
          */
         updateMetaTheme(theme) {
             const themeColor = theme === this.THEMES.DARK ? '#1f2937' : '#ffffff';
-
             let metaTheme = document.querySelector('meta[name="theme-color"]');
             if (!metaTheme) {
                 metaTheme = document.createElement('meta');
                 metaTheme.name = 'theme-color';
                 document.head.appendChild(metaTheme);
             }
-
             metaTheme.content = themeColor;
         },
-
         /**
          * Dispatch evento di cambio tema
          */
@@ -245,7 +207,6 @@
             document.dispatchEvent(event);
         }
     };
-
     // Inizializzazione automatica
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
@@ -254,8 +215,6 @@
     } else {
         ThemeManager.init();
     }
-
     // Esporta il theme manager
     window.BOSTARTERTheme = ThemeManager;
-
 })(window, document);

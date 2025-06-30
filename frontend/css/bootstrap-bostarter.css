@@ -1,0 +1,333 @@
+/*
+ * BOSTARTER Bootstrap 5.3.3 Customization
+ * Implementazione completa per bonus lode
+ */
+
+/* Bootstrap Import */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+/* Custom Properties per Bootstrap */
+:root {
+    /* Colori brand BOSTARTER */
+    --bs-primary: #2563eb;
+    --bs-primary-rgb: 37, 99, 235;
+    --bs-secondary: #f59e0b;
+    --bs-secondary-rgb: 245, 158, 11;
+    --bs-success: #10b981;
+    --bs-info: #06b6d4;
+    --bs-warning: #f59e0b;
+    --bs-danger: #ef4444;
+    --bs-light: #f8fafc;
+    --bs-dark: #1e293b;
+    
+    /* Typography */
+    --bs-font-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --bs-font-weight-normal: 400;
+    --bs-font-weight-medium: 500;
+    --bs-font-weight-semibold: 600;
+    --bs-font-weight-bold: 700;
+    
+    /* Border Radius */
+    --bs-border-radius: 0.75rem;
+    --bs-border-radius-sm: 0.5rem;
+    --bs-border-radius-lg: 1rem;
+    --bs-border-radius-xl: 1.5rem;
+    
+    /* Shadows */
+    --bs-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --bs-box-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --bs-box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Bootstrap Component Overrides */
+
+/* Navbar personalizzata */
+.navbar-bostarter {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1rem 0;
+    transition: all 0.3s ease;
+}
+
+.navbar-bostarter.scrolled {
+    padding: 0.5rem 0;
+    box-shadow: var(--bs-box-shadow);
+}
+
+/* Cards migliorate */
+.card-bostarter {
+    border: none;
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: var(--bs-box-shadow);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.card-bostarter:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--bs-box-shadow-lg);
+}
+
+.card-bostarter .card-img-top {
+    transition: transform 0.3s ease;
+}
+
+.card-bostarter:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+/* Buttons personalizzati */
+.btn-bostarter-primary {
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+    border: none;
+    color: white;
+    font-weight: var(--bs-font-weight-semibold);
+    padding: 0.75rem 2rem;
+    border-radius: var(--bs-border-radius);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-bostarter-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(var(--bs-primary-rgb), 0.3);
+    color: white;
+}
+
+.btn-bostarter-secondary {
+    background: linear-gradient(135deg, var(--bs-secondary), #fb923c);
+    border: none;
+    color: white;
+    font-weight: var(--bs-font-weight-semibold);
+    padding: 0.75rem 2rem;
+    border-radius: var(--bs-border-radius);
+    transition: all 0.3s ease;
+}
+
+.btn-bostarter-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(var(--bs-secondary-rgb), 0.3);
+    color: white;
+}
+
+/* Progress bars personalizzate */
+.progress-bostarter {
+    height: 8px;
+    border-radius: var(--bs-border-radius);
+    background: rgba(var(--bs-primary-rgb), 0.1);
+    overflow: hidden;
+}
+
+.progress-bostarter .progress-bar {
+    background: linear-gradient(90deg, var(--bs-primary), var(--bs-info));
+    border-radius: var(--bs-border-radius);
+    transition: width 0.6s ease;
+}
+
+/* Hero Section */
+.hero-bostarter {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-bostarter::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.05\"%3E%3Ccircle cx=\"30\" cy=\"30\" r=\"2\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.1;
+}
+
+/* Text gradients */
+.text-gradient-bostarter {
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-fade-up {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.animate-fade-left {
+    animation: fadeInLeft 0.8s ease-out;
+}
+
+.animate-fade-right {
+    animation: fadeInRight 0.8s ease-out;
+}
+
+/* Statistics cards */
+.stat-card-bostarter {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--bs-border-radius-lg);
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card-bostarter:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Modal personalizzati */
+.modal-bostarter .modal-content {
+    border: none;
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: var(--bs-box-shadow-lg);
+}
+
+.modal-bostarter .modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+    color: white;
+    border-radius: var(--bs-border-radius-lg) var(--bs-border-radius-lg) 0 0;
+}
+
+/* Form controls */
+.form-control-bostarter {
+    border: 2px solid rgba(var(--bs-primary-rgb), 0.1);
+    border-radius: var(--bs-border-radius);
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control-bostarter:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Badges personalizzati */
+.badge-bostarter {
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+    color: white;
+    font-weight: var(--bs-font-weight-medium);
+    padding: 0.5rem 1rem;
+    border-radius: var(--bs-border-radius);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    .hero-bostarter {
+        min-height: 80vh;
+        padding: 2rem 0;
+    }
+    
+    .display-3 {
+        font-size: 2.5rem;
+    }
+    
+    .btn-bostarter-primary,
+    .btn-bostarter-secondary {
+        padding: 0.5rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .stat-card-bostarter {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-bostarter {
+        min-height: 70vh;
+    }
+    
+    .display-3 {
+        font-size: 2rem;
+    }
+    
+    .card-bostarter {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .navbar-bostarter {
+        background: rgba(30, 41, 59, 0.95);
+        border-bottom-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .card-bostarter {
+        background: var(--bs-dark);
+        color: white;
+    }
+}
+
+/* Accessibility improvements */
+.btn-bostarter-primary:focus,
+.btn-bostarter-secondary:focus {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+.card-bostarter:focus-within {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .navbar-bostarter,
+    .btn-bostarter-primary,
+    .btn-bostarter-secondary {
+        display: none;
+    }
+    
+    .card-bostarter {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}

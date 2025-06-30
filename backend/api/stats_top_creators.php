@@ -1,22 +1,11 @@
 <?php
-/**
- * Top Creators Statistics
- * BOSTARTER - Crowdfunding Platform
- */
-
 require_once '../config/database.php';
 require_once '../utils/Validator.php';
-
 header('Content-Type: application/json');
-
 try {
     $pdo = Database::getInstance()->getConnection();
-    
-    // Get parameters
     $limit = (int)($_GET['limit'] ?? 10);
-    $period = $_GET['period'] ?? 'all'; // all, month, year
-    
-    // Validate limit
+    $period = $_GET['period'] ?? 'all'; 
     $validator = new Validator();
     if ($limit <= 0 || $limit > 100) {
         $validator->min(1)->max(100);
@@ -26,11 +15,8 @@ try {
         echo json_encode(['error' => implode(', ', $validator->getErrors())]);
         exit;
     }
-    
-    // Build WHERE clause based on period
     $whereClause = "";
     $params = [];
-    
     switch ($period) {        case 'month':
             $whereClause = "WHERE p.created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
             break;
@@ -41,8 +27,6 @@ try {
         default:
             $whereClause = "";
             break;    }
-    
-    // Get top creators by total funding raised
     $sql = "
         SELECT 
             u.id,
@@ -70,14 +54,11 @@ try {
         ORDER BY totale_raccolto DESC, progetti_finanziati DESC
         LIMIT ?
     ";
-    
     $params[] = $limit;
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $creators = $stmt->fetchAll();
-      // Get additional statistics for each creator
     foreach ($creators as &$creator) {
-        // Get recent projects
         $stmt = $pdo->prepare("
             SELECT id, nome as titolo, stato, 0 as finanziamento_attuale, budget_richiesto as obiettivo_finanziario, created_at as data_creazione
             FROM progetti 
@@ -87,8 +68,6 @@ try {
         ");
         $stmt->execute([$creator['id']]);
         $creator['progetti_recenti'] = $stmt->fetchAll();
-        
-        // Get total backers count
         $stmt = $pdo->prepare("
             SELECT COUNT(DISTINCT f.utente_id) as total_backers
             FROM finanziamenti f
@@ -97,8 +76,6 @@ try {
         ");
         $stmt->execute([$creator['id']]);
         $result = $stmt->fetch();        $creator['total_backers'] = $result['total_backers'] ?? 0;
-        
-        // Calculate average project duration for completed projects
         $stmt = $pdo->prepare("
             SELECT AVG(DATEDIFF(data_limite, created_at)) as avg_duration
             FROM progetti 
@@ -107,13 +84,9 @@ try {
         $stmt->execute([$creator['id']]);
         $result = $stmt->fetch();
         $creator['durata_media_progetti'] = round($result['avg_duration'] ?? 0);
-        
-        // Format numbers
         $creator['totale_raccolto'] = number_format($creator['totale_raccolto'], 2);
         $creator['totale_obiettivi'] = number_format($creator['totale_obiettivi'], 2);
         $creator['media_raccolto'] = number_format($creator['media_raccolto'], 2);    }
-    
-    // Get overall platform statistics for context
     $stmt = $pdo->prepare("
         SELECT 
             COUNT(DISTINCT u.id) as total_creators,
@@ -127,7 +100,6 @@ try {
     ");
     $stmt->execute();
     $platform_stats = $stmt->fetch();
-    
     $response = [
         'success' => true,
         'data' => [
@@ -145,9 +117,7 @@ try {
             'generated_at' => date('Y-m-d H:i:s')
         ]
     ];
-    
     echo json_encode($response, JSON_PRETTY_PRINT);
-    
 } catch (Exception $e) {
     error_log("Top creators stats error: " . $e->getMessage());
     http_response_code(500);

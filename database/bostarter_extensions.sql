@@ -77,7 +77,6 @@ LIMIT 3;
 
 -- Procedura per registrazione utente 
 DELIMITER $$ 
-CREATE PROCEDURE IF NOT EXISTS sp_registra_utente( 
     IN p_email VARCHAR(255), 
     IN p_nickname VARCHAR(100), 
     IN p_password VARCHAR(255), 

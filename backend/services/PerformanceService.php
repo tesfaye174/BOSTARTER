@@ -1,41 +1,27 @@
 <?php
-/**
- * Servizio per la gestione delle prestazioni e ottimizzazione
- * Fornisce strumenti per l'analisi, monitoraggio e cache delle prestazioni
- * Gestisce cache Redis, Memcached e file per migliorare le performance
- */
-
 namespace BOSTARTER\Services;
-
 require_once __DIR__ . '/../config/database.php';
-
-// Implementazione cache semplificata interna
 class SimpleCacheManager {
     private static $cache = [];
     private static $cacheDir = null;
-    
     public static function init() {
         self::$cacheDir = __DIR__ . '/../../cache/';
         if (!is_dir(self::$cacheDir)) {
             mkdir(self::$cacheDir, 0755, true);
         }
     }
-    
     public static function get($key) {
         if (isset(self::$cache[$key])) {
             return self::$cache[$key];
         }
-        
         $file = self::$cacheDir . md5($key) . '.cache';
         if (file_exists($file) && time() - filemtime($file) < 3600) {
             $data = file_get_contents($file);
             self::$cache[$key] = unserialize($data);
             return self::$cache[$key];
         }
-        
         return false;
     }
-    
     public static function set($key, $value, $ttl = 3600) {
         self::init();
         self::$cache[$key] = $value;
@@ -43,47 +29,30 @@ class SimpleCacheManager {
         file_put_contents($file, serialize($value));
     }
 }
-
 class ServizioPerformance {
-    private $connessioneDatabase;     // Connessione al database principale
-    private $cache;                   // Sistema di cache semplificato
-    
-    /**
-     * Costruttore del servizio performance
-     * Inizializza la connessione database e il sistema di cache semplificato
-     */
+    private $connessioneDatabase;     
+    private $cache;                   
     public function __construct($connessioneDb = null) {
         $this->connessioneDatabase = $connessioneDb ?? Database::getInstance()->getConnection();
         SimpleCacheManager::init();
         $this->cache = new SimpleCacheManager();
     }
-    
-    /**
-     * Cache dei risultati delle query al database
-     * Utilizza cache semplificata per evitare duplicazioni
-     */
     public function cacheQuery($query, $params = [], $ttl = null) {
         $cacheKey = md5($query . serialize($params));
-        
         $cached = SimpleCacheManager::get($cacheKey);
         if ($cached !== false) {
             return $cached;
         }
-        
         $stmt = $this->connessioneDatabase->prepare($query);
         $stmt->execute($params);
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
         SimpleCacheManager::set($cacheKey, $result, $ttl ?? 3600);
         return $result;
     }
-    /**
-     * Carica la configurazione delle prestazioni con valori predefiniti
-     */
     private function caricaConfigurazione() {
         return [
             'cache_abilitata' => $_ENV['CACHE_ENABLED'] ?? true,
-            'tipo_cache' => 'file', // Utilizziamo cache su file semplificata
+            'tipo_cache' => 'file', 
             'durata_cache_default' => 3600,
             'durata_cache_progetti' => 1800,
             'durata_cache_utenti' => 900,
@@ -91,22 +60,16 @@ class ServizioPerformance {
             'host_memcached' => $_ENV['MEMCACHED_HOST'] ?? 'localhost',
             'porta_memcached' => $_ENV['MEMCACHED_PORT'] ?? 11211,
             'cartella_cache_file' => $_ENV['FILE_CACHE_DIR'] ?? __DIR__ . '/../cache',
-            'durata_cache_query' => $_ENV['QUERY_CACHE_TTL'] ?? 1800, // 30 minuti
-            'durata_cache_pagina' => $_ENV['PAGE_CACHE_TTL'] ?? 3600, // 1 ora
-            'durata_cache_api' => $_ENV['API_CACHE_TTL'] ?? 600, // 10 minuti
+            'durata_cache_query' => $_ENV['QUERY_CACHE_TTL'] ?? 1800, 
+            'durata_cache_pagina' => $_ENV['PAGE_CACHE_TTL'] ?? 3600, 
+            'durata_cache_api' => $_ENV['API_CACHE_TTL'] ?? 600, 
         ];
     }
-    
-    /**
-     * Inizializza il sistema di cache selezionato
-     * Configura Redis, Memcached o cache su file
-     */
     private function inizializzaCache() {
         if (!$this->configurazione['cache_abilitata']) {
             $this->sistemaCache = null;
             return;
         }
-        
         try {
             switch ($this->config['cache_type']) {
                 case 'redis':
@@ -127,40 +90,24 @@ class ServizioPerformance {
             $this->cache = null;
         }
     }
-    
-    /**
-     * Inizializza la cache Redis
-     */
     private function initializeRedis() {
         if (!class_exists('Redis')) {
             throw new \Exception("Estensione Redis non installata");
         }
-        
         $this->cache = new Redis();
         $this->cache->connect($this->config['redis_host'], $this->config['redis_port']);
-        
         if ($this->config['redis_password']) {
             $this->cache->auth($this->config['redis_password']);
         }
-        
-        $this->cache->select(0); // Usa il database 0
+        $this->cache->select(0); 
     }
-    
-    /**
-     * Inizializza la cache Memcached
-     */
     private function initializeMemcached() {
         if (!class_exists('Memcached')) {
             throw new \Exception("Estensione Memcached non installata");
         }
-        
         $this->cache = new Memcached();
         $this->cache->addServer($this->config['memcached_host'], $this->config['memcached_port']);
     }
-    
-    /**
-     * Inizializza la cache su file
-     */
     private function initializeFileCache() {
         $cacheDir = $this->config['file_cache_dir'];
         if (!is_dir($cacheDir)) {
@@ -168,29 +115,20 @@ class ServizioPerformance {
         }
         $this->cache = new FileCache($cacheDir);
     }
-    
-    /**
-     * Ottieni i dati dalla cache
-     */
     public function get($key) {
         if (!$this->cache) {
             return false;
         }
-        
         $fullKey = self::CACHE_PREFIX . $key;
-        
         try {
             switch ($this->cacheType) {
                 case 'redis':
                     $data = $this->cache->get($fullKey);
                     return $data === false ? false : unserialize($data);
-                    
                 case 'memcached':
                     return $this->cache->get($fullKey);
-                    
                 case 'file':
                     return $this->cache->get($fullKey);
-                    
                 default:
                     return false;
             }
@@ -199,29 +137,20 @@ class ServizioPerformance {
             return false;
         }
     }
-    
-    /**
-     * Imposta i dati nella cache
-     */
     public function set($key, $value, $ttl = null) {
         if (!$this->cache) {
             return false;
         }
-        
         $ttl = $ttl ?? self::DEFAULT_TTL;
         $fullKey = self::CACHE_PREFIX . $key;
-        
         try {
             switch ($this->cacheType) {
                 case 'redis':
                     return $this->cache->setex($fullKey, $ttl, serialize($value));
-                    
                 case 'memcached':
                     return $this->cache->set($fullKey, $value, $ttl);
-                    
                 case 'file':
                     return $this->cache->set($fullKey, $value, $ttl);
-                    
                 default:
                     return false;
             }
@@ -230,28 +159,19 @@ class ServizioPerformance {
             return false;
         }
     }
-    
-    /**
-     * Elimina i dati dalla cache
-     */
     public function delete($key) {
         if (!$this->cache) {
             return false;
         }
-        
         $fullKey = self::CACHE_PREFIX . $key;
-        
         try {
             switch ($this->cacheType) {
                 case 'redis':
                     return $this->cache->del($fullKey) > 0;
-                    
                 case 'memcached':
                     return $this->cache->delete($fullKey);
-                    
                 case 'file':
                     return $this->cache->delete($fullKey);
-                    
                 default:
                     return false;
             }
@@ -260,26 +180,18 @@ class ServizioPerformance {
             return false;
         }
     }
-    
-    /**
-     * Pulisce tutta la cache
-     */
     public function clear() {
         if (!$this->cache) {
             return false;
         }
-        
         try {
             switch ($this->cacheType) {
                 case 'redis':
                     return $this->cache->flushDB();
-                    
                 case 'memcached':
                     return $this->cache->flush();
-                    
                 case 'file':
                     return $this->cache->clear();
-                    
                 default:
                     return false;
             }
@@ -287,18 +199,12 @@ class ServizioPerformance {
             error_log("Errore nella pulizia della cache: " . $e->getMessage());
             return false;
         }    }
-    
-    /**
-     * Ottieni le notifiche dell'utente con caching
-     */
     public function getCachedUserNotifications($userId, $limit = 20, $offset = 0) {
         $cacheKey = "user_notifications:{$userId}:{$limit}:{$offset}";
-        
         $cached = $this->get($cacheKey);
         if ($cached !== false) {
             return $cached;
         }
-        
         $query = "
             SELECT n.*, p.titolo as project_title 
             FROM notifications n
@@ -307,22 +213,15 @@ class ServizioPerformance {
             ORDER BY n.created_at DESC 
             LIMIT ? OFFSET ?
         ";
-        
-        $result = $this->cacheQuery($query, [$userId, $limit, $offset], 300); // Cache di 5 minuti
+        $result = $this->cacheQuery($query, [$userId, $limit, $offset], 300); 
         return $result;
     }
-    
-    /**
-     * Ottieni le statistiche del progetto con caching
-     */
     public function getCachedProjectStats($projectId) {
         $cacheKey = "project_stats:{$projectId}";
-        
         $cached = $this->get($cacheKey);
         if ($cached !== false) {
             return $cached;
         }
-        
         $query = "
             SELECT 
                 p.id,
@@ -339,48 +238,32 @@ class ServizioPerformance {
             WHERE p.id = ?
             GROUP BY p.id
         ";
-        
-        $stats = $this->cacheQuery($query, [$projectId], 600); // Cache di 10 minuti
+        $stats = $this->cacheQuery($query, [$projectId], 600); 
         return $stats ? $stats[0] : null;
     }
-    
-    /**
-     * Invalida la cache per le notifiche dell'utente
-     */
     public function invalidateUserNotifications($userId) {
         $patterns = [
             "user_notifications:{$userId}:*",
             "user_notification_summary:{$userId}"
         ];
-        
         foreach ($patterns as $pattern) {
             $this->deleteByPattern($pattern);
         }
     }
-    
-    /**
-     * Invalida la cache per il progetto
-     */
     public function invalidateProject($projectId) {
         $patterns = [
             "project_stats:{$projectId}",
             "project_details:{$projectId}",
             "project_backers:{$projectId}:*"
         ];
-        
         foreach ($patterns as $pattern) {
             $this->deleteByPattern($pattern);
         }
     }
-    
-    /**
-     * Elimina la cache in base a un pattern (solo per Redis)
-     */
     private function deleteByPattern($pattern) {
         if ($this->cacheType !== 'redis' || !$this->cache) {
             return false;
         }
-        
         try {
             $fullPattern = self::CACHE_PREFIX . $pattern;
             $keys = $this->cache->keys($fullPattern);
@@ -393,15 +276,10 @@ class ServizioPerformance {
             return false;
         }
     }
-    
-    /**
-     * Ottieni le statistiche della cache
-     */
     public function getCacheStats() {
         if (!$this->cache) {
             return ['enabled' => false];
         }
-        
         try {
             switch ($this->cacheType) {
                 case 'redis':
@@ -415,7 +293,6 @@ class ServizioPerformance {
                             ? round($info['keyspace_hits'] / ($info['keyspace_hits'] + $info['keyspace_misses']) * 100, 2) . '%'
                             : 'sconosciuto'
                     ];
-                    
                 case 'memcached':
                     $stats = $this->cache->getStats();
                     $server = array_values($stats)[0] ?? [];
@@ -428,7 +305,6 @@ class ServizioPerformance {
                             ? round($server['get_hits'] / ($server['get_hits'] + $server['get_misses']) * 100, 2) . '%'
                             : 'sconosciuto'
                     ];
-                    
                 default:
                     return [
                         'enabled' => true,
@@ -445,38 +321,26 @@ class ServizioPerformance {
             ];
         }
     }
-    
-    /**
-     * Ottimizza le tabelle del database
-     */
     public function optimizeDatabase() {
         try {
             $tables = [
                 'utenti', 'progetti', 'backing', 'notifications', 
                 'notification_logs', 'email_queue', 'websocket_connections'
             ];
-            
             $results = [];
-            
             foreach ($tables as $table) {
                 $stmt = $this->db->query("OPTIMIZE TABLE $table");
                 $result = $stmt->fetch(\PDO::FETCH_ASSOC);
                 $results[$table] = $result;
             }
-            
             return $results;
         } catch (\Exception $e) {
             error_log("Errore nell'ottimizzazione del database: " . $e->getMessage());
             return false;
         }
     }
-    
-    /**
-     * Analizza le query lente
-     */
     public function getSlowQueries($limit = 10) {
         try {
-            // Abilita l'analisi del log delle query lente
             $stmt = $this->db->query("
                 SELECT 
                     sql_text,
@@ -497,53 +361,39 @@ class ServizioPerformance {
         }
     }
 }
-
-/**
- * Implementazione semplice della cache basata su file
- */
 class FileCache {
     private $cacheDir;
-    
     public function __construct($cacheDir) {
         $this->cacheDir = rtrim($cacheDir, '/') . '/';
     }
-    
     public function get($key) {
         $file = $this->getFilePath($key);
         if (!file_exists($file)) {
             return false;
         }
-        
         $data = unserialize(file_get_contents($file));
         if ($data['expires'] < time()) {
             unlink($file);
             return false;
         }
-        
         return $data['value'];
     }
-    
     public function set($key, $value, $ttl) {
         $file = $this->getFilePath($key);
         $dir = dirname($file);
-        
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
-        
         $data = [
             'value' => $value,
             'expires' => time() + $ttl
         ];
-        
         return file_put_contents($file, serialize($data)) !== false;
     }
-    
     public function delete($key) {
         $file = $this->getFilePath($key);
         return file_exists($file) ? unlink($file) : true;
     }
-    
     public function clear() {
         $files = glob($this->cacheDir . '*');
         foreach ($files as $file) {
@@ -553,7 +403,6 @@ class FileCache {
         }
         return true;
     }
-    
     private function getFilePath($key) {
         $hash = md5($key);
         return $this->cacheDir . substr($hash, 0, 2) . '/' . substr($hash, 2, 2) . '/' . $hash;

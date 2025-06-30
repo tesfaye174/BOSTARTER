@@ -1,14 +1,6 @@
 <?php
-require_once __DIR__ . '/../../backend/controllers/AuthController.php';
-
-// Inizializza controller di autenticazione
-$authController = new \BOSTARTER\Controllers\GestoreAutenticazione();
-
-// Esegui logout
-$authController->eseguiLogout();
-
 session_start();
-session_unset();
 session_destroy();
-header('Location: login.php');
+header("Location: ../index.php");
 exit;
+?>

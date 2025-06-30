@@ -1,12 +1,9 @@
 /**
  * BOSTARTER - Modal Accessibility Manager
  * Gestione dell'accessibilità per modali e dialog
- * @version 1.0
  */
-
 (function (window, document) {
     'use strict';
-
     const ModalAccessibility = {
         // Configurazione
         config: {
@@ -22,14 +19,12 @@
                 '[tabindex]:not([tabindex="-1"])'
             ].join(',')
         },
-
         // Stato
         state: {
             openModals: [],
             lastFocusedElement: null,
             scrollPosition: 0
         },
-
         /**
          * Inizializza il modal accessibility manager
          */
@@ -37,7 +32,6 @@
             this.setupEventListeners();
             this.observeModalChanges();
         },
-
         /**
          * Setup event listeners globali
          */
@@ -46,7 +40,6 @@
             document.addEventListener('keydown', (e) => {
                 this.handleKeyDown(e);
             });
-
             // Modal triggers
             document.addEventListener('click', (e) => {
                 const trigger = e.target.closest('[data-modal-target]');
@@ -55,7 +48,6 @@
                     const modalId = trigger.getAttribute('data-modal-target');
                     this.openModal(modalId);
                 }
-
                 const closeBtn = e.target.closest(this.config.closeSelector);
                 if (closeBtn) {
                     e.preventDefault();
@@ -65,7 +57,6 @@
                     }
                 }
             });
-
             // Backdrop clicks
             document.addEventListener('click', (e) => {
                 if (e.target.matches(this.config.backdropSelector)) {
@@ -77,7 +68,6 @@
                 }
             });
         },
-
         /**
          * Osserva i cambiamenti nei modali (MutationObserver)
          */
@@ -96,65 +86,51 @@
                     }
                 });
             });
-
             observer.observe(document.body, {
                 attributes: true,
                 subtree: true,
                 attributeFilter: ['class']
             });
         },
-
         /**
          * Apre un modal
          */
         openModal(modalId) {
             const modal = document.getElementById(modalId) ||
                 document.querySelector(`[data-modal-id="${modalId}"]`);
-
             if (!modal) {
                 console.warn(`Modal non trovato: ${modalId}`);
                 return;
             }
-
             // Salva l'elemento attualmente focalizzato
             this.state.lastFocusedElement = document.activeElement;
-
             // Salva la posizione di scroll
             this.state.scrollPosition = window.pageYOffset;
-
             // Prepara il modal per l'accessibilità
             this.prepareModal(modal);
-
             // Aggiungi alla lista dei modali aperti
             this.state.openModals.push(modal);
-
             // Apri il modal
             modal.classList.add('open', 'active');
             modal.setAttribute('aria-hidden', 'false');
-
             // Blocca lo scroll del body
             this.lockBodyScroll();
-
             // Focus management
             this.setInitialFocus(modal);
         },
-
         /**
          * Chiude un modal
          */
         closeModal(modal) {
             if (!modal) return;
-
             // Rimuovi dalla lista dei modali aperti
             const index = this.state.openModals.indexOf(modal);
             if (index > -1) {
                 this.state.openModals.splice(index, 1);
             }
-
             // Chiudi il modal
             modal.classList.remove('open', 'active');
             modal.setAttribute('aria-hidden', 'true');
-
             // Se non ci sono più modali aperti
             if (this.state.openModals.length === 0) {
                 this.unlockBodyScroll();
@@ -165,7 +141,6 @@
                 this.setInitialFocus(lastModal);
             }
         },
-
         /**
          * Prepara un modal per l'accessibilità
          */
@@ -174,11 +149,9 @@
             if (!modal.hasAttribute('role')) {
                 modal.setAttribute('role', 'dialog');
             }
-
             if (!modal.hasAttribute('aria-modal')) {
                 modal.setAttribute('aria-modal', 'true');
             }
-
             // Trova o crea un titolo
             let titleElement = modal.querySelector('.modal-title, h1, h2, h3');
             if (titleElement && !modal.hasAttribute('aria-labelledby')) {
@@ -187,7 +160,6 @@
                 }
                 modal.setAttribute('aria-labelledby', titleElement.id);
             }
-
             // Trova la descrizione se presente
             let descElement = modal.querySelector('.modal-description, .modal-body p:first-child');
             if (descElement && !modal.hasAttribute('aria-describedby')) {
@@ -197,40 +169,33 @@
                 modal.setAttribute('aria-describedby', descElement.id);
             }
         },
-
         /**
          * Gestione eventi da tastiera
          */
         handleKeyDown(e) {
             const currentModal = this.getCurrentModal();
             if (!currentModal) return;
-
             switch (e.key) {
                 case 'Escape':
                     e.preventDefault();
                     this.closeModal(currentModal);
                     break;
-
                 case 'Tab':
                     this.handleTabNavigation(e, currentModal);
                     break;
             }
         },
-
         /**
          * Gestisce la navigazione con Tab
          */
         handleTabNavigation(e, modal) {
             const focusableElements = this.getFocusableElements(modal);
-
             if (focusableElements.length === 0) {
                 e.preventDefault();
                 return;
             }
-
             const firstElement = focusableElements[0];
             const lastElement = focusableElements[focusableElements.length - 1];
-
             if (e.shiftKey) {
                 // Shift + Tab
                 if (document.activeElement === firstElement) {
@@ -245,7 +210,6 @@
                 }
             }
         },
-
         /**
          * Ottiene gli elementi focalizzabili nel modal
          */
@@ -258,38 +222,32 @@
                     el.offsetHeight > 0;
             });
         },
-
         /**
          * Imposta il focus iniziale
          */
         setInitialFocus(modal) {
             // Cerca un elemento con autofocus
             let targetElement = modal.querySelector('[autofocus]');
-
             // Se non c'è autofocus, cerca il primo input o button
             if (!targetElement) {
                 targetElement = modal.querySelector('input, textarea, select, button');
             }
-
             // Se non ci sono input, prendi il primo elemento focalizzabile
             if (!targetElement) {
                 const focusableElements = this.getFocusableElements(modal);
                 targetElement = focusableElements[0];
             }
-
             // Come ultimo resort, focalizza il modal stesso
             if (!targetElement) {
                 modal.setAttribute('tabindex', '-1');
                 targetElement = modal;
             }
-
             setTimeout(() => {
                 if (targetElement) {
                     targetElement.focus();
                 }
             }, 100);
         },
-
         /**
          * Ripristina il focus
          */
@@ -301,7 +259,6 @@
                 }, 100);
             }
         },
-
         /**
          * Blocca lo scroll del body
          */
@@ -309,7 +266,6 @@
             document.body.style.overflow = 'hidden';
             document.body.style.paddingRight = this.getScrollbarWidth() + 'px';
         },
-
         /**
          * Sblocca lo scroll del body
          */
@@ -318,7 +274,6 @@
             document.body.style.paddingRight = '';
             window.scrollTo(0, this.state.scrollPosition);
         },
-
         /**
          * Calcola la larghezza della scrollbar
          */
@@ -327,23 +282,18 @@
             outer.style.visibility = 'hidden';
             outer.style.overflow = 'scroll';
             document.body.appendChild(outer);
-
             const inner = document.createElement('div');
             outer.appendChild(inner);
-
             const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
             outer.parentNode.removeChild(outer);
-
             return scrollbarWidth;
         },
-
         /**
          * Ottiene il modal attualmente aperto
          */
         getCurrentModal() {
             return this.state.openModals[this.state.openModals.length - 1] || null;
         },
-
         /**
          * Callback quando un modal viene aperto
          */
@@ -351,17 +301,14 @@
             if (!this.state.openModals.includes(modal)) {
                 this.prepareModal(modal);
                 this.state.openModals.push(modal);
-
                 if (this.state.openModals.length === 1) {
                     this.state.lastFocusedElement = document.activeElement;
                     this.state.scrollPosition = window.pageYOffset;
                     this.lockBodyScroll();
                 }
-
                 this.setInitialFocus(modal);
             }
         },
-
         /**
          * Callback quando un modal viene chiuso
          */
@@ -369,28 +316,24 @@
             const index = this.state.openModals.indexOf(modal);
             if (index > -1) {
                 this.state.openModals.splice(index, 1);
-
                 if (this.state.openModals.length === 0) {
                     this.unlockBodyScroll();
                     this.restoreFocus();
                 }
             }
         },
-
         /**
          * Genera un ID unico
          */
         generateId(prefix) {
             return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
         },
-
         /**
          * API pubblica per aprire modal
          */
         open(modalId) {
             this.openModal(modalId);
         },
-
         /**
          * API pubblica per chiudere modal
          */
@@ -400,7 +343,6 @@
             }
             this.closeModal(modal);
         },
-
         /**
          * API pubblica per chiudere tutti i modal
          */
@@ -410,7 +352,6 @@
             });
         }
     };
-
     // Inizializzazione automatica
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
@@ -419,8 +360,6 @@
     } else {
         ModalAccessibility.init();
     }
-
     // Esporta il modal accessibility manager
     window.BOSTARTERModal = ModalAccessibility;
-
 })(window, document);

@@ -1,51 +1,30 @@
 <?php
-/**
- * Pagina per la gestione delle competenze (solo per amministratori)
- */
-
 require_once __DIR__ . '/../../backend/middleware/SecurityMiddleware.php';
 require_once __DIR__ . '/../../backend/config/database.php';
 require_once __DIR__ . '/../../backend/config/config.php';
 require_once __DIR__ . '/../../backend/services/MongoLogger.php';
 require_once __DIR__ . '/../../backend/utils/FrontendSecurity.php';
-
-// Initialize secure session through SecurityMiddleware
 SecurityMiddleware::initialize();
-
-// Security headers
 FrontendSecurity::setSecurityHeaders();
-
-// Verifica autenticazione e ruolo admin
 FrontendSecurity::requireRole('admin');
-
-// CSRF Token generation
 $csrf_token = FrontendSecurity::getCSRFToken();
-
 $db = Database::getInstance();
 $conn = $db->getConnection();
 $mongoLogger = new MongoLogger();
-
 $error = '';
 $success = '';
-
-// Gestione aggiunta nuova competenza
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add') {
-    // CSRF Token verification
     if (!FrontendSecurity::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $error = 'Token di sicurezza non valido. Riprova.';
         FrontendSecurity::logSecurityEvent('csrf_token_invalid', ['action' => 'add_skill']);
     } else {
-        // Rate limiting
         if (!FrontendSecurity::checkRateLimit('add_skill', 3, 300)) {
             $error = 'Troppi tentativi. Riprova tra 5 minuti.';
             FrontendSecurity::logSecurityEvent('rate_limit_exceeded', ['action' => 'add_skill']);
         } else {
-            // Input validation and sanitization
             $nome = FrontendSecurity::sanitizeInput($_POST['nome'] ?? '');
             $descrizione = FrontendSecurity::sanitizeInput($_POST['descrizione'] ?? '');
             $categoria = FrontendSecurity::sanitizeInput($_POST['categoria'] ?? '');
-            
-            // Validazione con regole centralizzate
             $validationRules = [
                 'nome' => [
                     'required' => true,
@@ -78,65 +57,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     ]
                 ]
             ];
-
-            // Validation
             $validationErrors = [];
             foreach ($validationRules as $field => $rules) {
                 $value = $$field ?? '';
-                
                 if ($rules['required'] && empty($value)) {
                     $validationErrors[$field] = $rules['error_messages']['required'];
                     continue;
                 }
-
                 if (isset($rules['min_length']) && strlen($value) < $rules['min_length']) {
                     $validationErrors[$field] = $rules['error_messages']['min_length'];
                 }
-
                 if (isset($rules['max_length']) && strlen($value) > $rules['max_length']) {
                     $validationErrors[$field] = $rules['error_messages']['max_length'];
                 }
-
                 if (isset($rules['pattern']) && !preg_match($rules['pattern'], $value)) {
                     $validationErrors[$field] = $rules['error_messages']['pattern'];
                 }
-
                 if (isset($rules['in_array']) && !in_array($value, $rules['in_array'])) {
                     $validationErrors[$field] = $rules['error_messages']['in_array'];
                 }
             }
-
             if (empty($validationErrors)) {
                 try {
-                    // Begin transaction
                     $conn->beginTransaction();
-
-                    // Check if skill already exists
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM competenze WHERE LOWER(nome) = LOWER(?) AND categoria = ?");
                     $stmt->execute([strtolower($nome), $categoria]);
-                    
                     if ($stmt->fetchColumn() > 0) {
                         throw new Exception("Una competenza con questo nome già esiste in questa categoria");
                     }
-
-                    // Insert new skill
                     $stmt = $conn->prepare("
                         INSERT INTO competenze (nome, descrizione, categoria, data_creazione)
                         VALUES (?, ?, ?, NOW())
                     ");
-                    
                     if ($stmt->execute([$nome, $descrizione, $categoria])) {
-                        // Log the action
                         $mongoLogger->logAction('add_skill', [
                             'skill_name' => $nome,
                             'category' => $categoria,
                             'admin_id' => $_SESSION['user_id']
                         ]);
-                        
                         $conn->commit();
                         $success = "Competenza aggiunta con successo!";
-                        
-                        // Clear form data
                         unset($nome, $descrizione, $categoria);
                     } else {
                         throw new Exception("Errore durante l'inserimento della competenza");
@@ -144,8 +104,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                 } catch (Exception $e) {
                     $conn->rollBack();
                     $error = $e->getMessage();
-                    
-                    // Log the error
                     $mongoLogger->logError('add_skill_error', [
                         'error' => $e->getMessage(),
                         'admin_id' => $_SESSION['user_id']
@@ -157,42 +115,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         }
     }
 }
-
-// Gestione eliminazione competenza
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'delete') {
-    // CSRF Token verification
     if (!FrontendSecurity::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $error = 'Token di sicurezza non valido. Riprova.';
         FrontendSecurity::logSecurityEvent('csrf_token_invalid', ['action' => 'delete_skill']);
     } else {
-        // Rate limiting
         if (!FrontendSecurity::checkRateLimit('delete_skill', 3, 300)) {
             $error = 'Troppi tentativi. Riprova tra 5 minuti.';
             FrontendSecurity::logSecurityEvent('rate_limit_exceeded', ['action' => 'delete_skill']);
         } else {
             try {
                 $skill_id = filter_input(INPUT_POST, 'skill_id', FILTER_VALIDATE_INT);
-                
                 if (!$skill_id) {
                     throw new Exception('ID competenza non valido');
                 }
-
-                // Begin transaction
                 $conn->beginTransaction();
-
-                // Check if skill is in use
                 $stmt = $conn->prepare("
                     SELECT COUNT(*) 
                     FROM utenti_competenze 
                     WHERE id_competenza = ?
                 ");
                 $stmt->execute([$skill_id]);
-                
                 if ($stmt->fetchColumn() > 0) {
                     throw new Exception('Non è possibile eliminare questa competenza perché è utilizzata da alcuni utenti');
                 }
-
-                // Delete skill
                 $stmt = $conn->prepare("
                     DELETE FROM competenze 
                     WHERE id = ? 
@@ -202,15 +148,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                         WHERE id_competenza = competenze.id
                     )
                 ");
-                
                 if ($stmt->execute([$skill_id])) {
                     if ($stmt->rowCount() > 0) {
-                        // Log the action
                         $mongoLogger->logAction('delete_skill', [
                             'skill_id' => $skill_id,
                             'admin_id' => $_SESSION['user_id']
                         ]);
-                        
                         $conn->commit();
                         $success = "Competenza eliminata con successo!";
                     } else {
@@ -222,8 +165,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             } catch (Exception $e) {
                 $conn->rollBack();
                 $error = $e->getMessage();
-                
-                // Log the error
                 $mongoLogger->logError('delete_skill_error', [
                     'error' => $e->getMessage(),
                     'admin_id' => $_SESSION['user_id']
@@ -232,8 +173,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         }
     }
 }
-
-// Recupera tutte le competenze con statistiche di utilizzo
 $stmt = $conn->prepare("
     SELECT 
         c.id,
@@ -249,17 +188,12 @@ $stmt = $conn->prepare("
     GROUP BY c.id, c.nome, c.descrizione, c.categoria
     ORDER BY c.categoria, c.nome
 ");
-
 $stmt->execute();
 $competenze = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Raggruppa per categoria per una migliore organizzazione
 $competenze_per_categoria = [];
 foreach ($competenze as $competenza) {
     $competenze_per_categoria[$competenza['categoria']][] = $competenza;
 }
-
-// Statistiche generali
 $stmt = $conn->prepare("
     SELECT 
         COUNT(*) as total_skills,
@@ -271,15 +205,14 @@ $stmt = $conn->prepare("
 $stmt->execute();
 $stats = $stmt->fetch();
 ?>
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Competenze - BOSTARTER Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https:
+    <link href="https:
     <style>
         .skill-card {
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -316,19 +249,16 @@ $stats = $stmt->fetch();
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         <?php endif; ?>
-
                         <?php if ($success): ?>
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 <?php echo $success; ?>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         <?php endif; ?>
-
                         <!-- Form aggiunta competenza -->
                         <form method="POST" class="needs-validation" novalidate>
                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                             <input type="hidden" name="action" value="add">
-                            
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <div class="form-floating">
@@ -341,7 +271,6 @@ $stats = $stmt->fetch();
                                         </div>
                                     </div>
                                 </div>
-                                
                                 <div class="col-md-4">
                                     <div class="form-floating">
                                         <select class="form-select" id="categoria" name="categoria" required>
@@ -358,14 +287,12 @@ $stats = $stmt->fetch();
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="col-md-4">
                                     <button type="submit" class="btn btn-primary h-100 w-100">
                                         <i class="fas fa-plus-circle me-2"></i>
                                         Aggiungi Competenza
                                     </button>
                                 </div>
-
                                 <div class="col-12">
                                     <div class="form-floating">
                                         <textarea class="form-control" id="descrizione" name="descrizione" 
@@ -379,11 +306,9 @@ $stats = $stmt->fetch();
                                 </div>
                             </div>
                         </form>
-
                         <!-- Lista competenze -->
                         <div class="mt-5">
                             <h2 class="h5 mb-4">Competenze Esistenti</h2>
-                            
                             <?php foreach ($competenze_per_categoria as $categoria => $competenze_categoria): ?>
                                 <div class="card mb-4">
                                     <div class="card-header bg-light">
@@ -441,15 +366,11 @@ $stats = $stmt->fetch();
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https:
     <script>
-        // Form validation
         (() => {
             'use strict';
-
             const forms = document.querySelectorAll('.needs-validation');
-            
             Array.from(forms).forEach(form => {
                 form.addEventListener('submit', event => {
                     if (!form.checkValidity()) {

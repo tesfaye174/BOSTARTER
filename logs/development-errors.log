@@ -1105,3 +1105,299 @@ Stack trace:
 [27-Jun-2025 17:58:46 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
 [27-Jun-2025 17:58:46 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
 [27-Jun-2025 17:58:50 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:00:45 Europe/Berlin] Errore inizializzazione sicurezza: Too few arguments to function BOSTARTER\Services\ServizioSicurezza::__construct(), 0 passed in C:\xampp\htdocs\BOSTARTER\backend\middleware\SecurityMiddleware.php on line 36 and at least 1 expected
+[27-Jun-2025 18:00:49 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:00:49 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:00:53 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:00:56 Europe/Berlin] Errore inizializzazione sicurezza: Too few arguments to function BOSTARTER\Services\ServizioSicurezza::__construct(), 0 passed in C:\xampp\htdocs\BOSTARTER\backend\middleware\SecurityMiddleware.php on line 36 and at least 1 expected
+[27-Jun-2025 18:01:00 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:01:00 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:01:04 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:11:48 Europe/Berlin] Errore inizializzazione sicurezza: Too few arguments to function BOSTARTER\Services\ServizioSicurezza::__construct(), 0 passed in C:\xampp\htdocs\BOSTARTER\backend\middleware\SecurityMiddleware.php on line 36 and at least 1 expected
+[27-Jun-2025 18:11:52 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:11:52 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:11:57 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:12:01 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:12:05 Europe/Berlin] Errore inizializzazione sicurezza: Too few arguments to function BOSTARTER\Services\ServizioSicurezza::__construct(), 0 passed in C:\xampp\htdocs\BOSTARTER\backend\middleware\SecurityMiddleware.php on line 36 and at least 1 expected
+[27-Jun-2025 18:12:10 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:12:10 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:12:14 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:15:30 Europe/Berlin] Errore inizializzazione sicurezza: Too few arguments to function BOSTARTER\Services\ServizioSicurezza::__construct(), 0 passed in C:\xampp\htdocs\BOSTARTER\backend\middleware\SecurityMiddleware.php on line 36 and at least 1 expected
+[27-Jun-2025 18:15:34 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:15:34 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:15:38 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:22:01 Europe/Berlin] Errore inizializzazione sicurezza: Too few arguments to function BOSTARTER\Services\ServizioSicurezza::__construct(), 0 passed in C:\xampp\htdocs\BOSTARTER\backend\middleware\SecurityMiddleware.php on line 42 and at least 1 expected
+[27-Jun-2025 18:22:05 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:22:05 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:22:09 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:22:31 Europe/Berlin] Errore inizializzazione sicurezza: Too few arguments to function BOSTARTER\Services\ServizioSicurezza::__construct(), 0 passed in C:\xampp\htdocs\BOSTARTER\backend\middleware\SecurityMiddleware.php on line 42 and at least 1 expected
+[27-Jun-2025 18:22:35 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:22:35 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:22:39 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:23:52 Europe/Berlin] Errore inizializzazione sicurezza: Too few arguments to function BOSTARTER\Services\ServizioSicurezza::__construct(), 0 passed in C:\xampp\htdocs\BOSTARTER\backend\middleware\SecurityMiddleware.php on line 42 and at least 1 expected
+[27-Jun-2025 18:23:56 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:23:56 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:24:00 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:11 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:15 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:15 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:25:19 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:25 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:29 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:29 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:25:33 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:37 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:41 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:41 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:25:45 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:49 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:53 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:25:53 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:25:57 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:26:02 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:26:06 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:26:06 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:26:10 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:26:14 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:26:18 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:26:18 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:26:22 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:27:47 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:27:51 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:27:51 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:27:55 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:04 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:08 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:08 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:28:12 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:16 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:20 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:20 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:28:24 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:28 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:32 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:32 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:28:37 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:41 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:45 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:45 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:28:49 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:28:57 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:01 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:01 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:29:05 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:09 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:14 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:14 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:29:18 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:22 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:26 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:26 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:29:30 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:34 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:38 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:38 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:29:42 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:46 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:50 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:29:50 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:29:55 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:03 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:07 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:07 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:30:11 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:19 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:23 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:23 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:30:27 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:32 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:36 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:36 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:30:40 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:30:56 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:31:00 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:31:00 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:31:04 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:31:09 Europe/Berlin] Errore inizializzazione sicurezza: Security initialization failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:31:13 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:31:13 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:31:17 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:32:19 Europe/Berlin] Warning: SecurityService not available - Database connection failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:32:23 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:32:23 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:32:27 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:33:09 Europe/Berlin] Warning: SecurityService not available - Database connection failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:33:13 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:33:13 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:33:17 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:33:32 Europe/Berlin] Warning: SecurityService not available - Database connection failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:33:36 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:33:36 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:33:40 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:34:07 Europe/Berlin] Warning: SecurityService not available - Database connection failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:34:11 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:34:11 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:34:15 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:34:57 Europe/Berlin] Warning: SecurityService not available - Database connection failed: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:35:01 Europe/Berlin] Errore caricamento dati: Non riesco a connettermi al database: SQLSTATE[HY000] [2002] Impossibile stabilire la connessione. Rifiuto persistente del computer di destinazione
+[27-Jun-2025 18:35:01 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:35:03 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:35:04 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:35:04 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:35:14 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:35:14 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:35:57 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:35:57 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:37:01 Europe/Berlin] Errore inizializzazione logger: Cannot assign int to property MongoLogger::$config of type array
+[27-Jun-2025 18:37:01 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:37:30 Europe/Berlin] Errore inizializzazione logger: Class "MongoDB\Driver\Manager" not found
+[27-Jun-2025 18:37:30 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:38:11 Europe/Berlin] Errore inizializzazione logger: Class "MongoDB\Driver\Manager" not found
+[27-Jun-2025 18:38:11 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:38:40 Europe/Berlin] Errore inizializzazione logger: Class "MongoDB\Driver\Manager" not found
+[27-Jun-2025 18:38:40 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:40:26 Europe/Berlin] Errore inizializzazione logger: Call to undefined method MongoLogger::logToFile()
+[27-Jun-2025 18:40:26 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:43:21 Europe/Berlin] Errore inizializzazione logger: Call to undefined method MongoLogger::logToFile()
+[27-Jun-2025 18:43:21 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:43:34 Europe/Berlin] Errore inizializzazione logger: Call to undefined method MongoLogger::logToFile()
+[27-Jun-2025 18:43:34 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:43:40 Europe/Berlin] Errore inizializzazione logger: Call to undefined method MongoLogger::logToFile()
+[27-Jun-2025 18:43:40 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:44:44 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:44:44 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:45:35 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:45:35 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:48:19 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:48:19 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:50:18 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:50:18 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:50:45 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:50:45 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:51:55 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:51:55 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:52:14 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:52:14 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:53:20 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:53:20 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:59:11 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:59:11 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 18:59:13 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 18:59:14 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:02:20 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:02:20 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:03:41 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:03:41 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:07:05 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:07:06 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:07:11 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:07:11 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:07:32 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:07:32 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:08:39 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:08:39 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:10:39 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:10:39 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:15:29 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:15:29 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:16:09 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:16:09 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:17:13 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:17:13 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:18:38 Europe/Berlin] Errore logging pagina: Call to undefined method MongoLogger::logEvent()
+[27-Jun-2025 19:18:38 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:21:11 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:21:11 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:21:21 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:21:21 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:21:55 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:21:55 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:22:41 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:22:41 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:24:09 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:24:09 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:25:09 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:25:10 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:26:03 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:26:03 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:29:50 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:29:51 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:31:44 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:31:44 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:33:07 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:33:07 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:33:43 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:33:43 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:34:38 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:34:38 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:34:59 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:34:59 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:35:55 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:35:55 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:36:02 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:36:02 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:36:16 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:36:16 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:36:35 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:36:35 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:38:14 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:38:14 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:38:52 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:38:52 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:42:11 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:42:11 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:46:35 Europe/Berlin] Errore inizializzazione logger: Class "MongoDB\Driver\Manager" not found
+[27-Jun-2025 19:46:35 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:48:27 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:48:27 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:49:24 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:49:24 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:50:22 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:50:22 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:50:50 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:50:50 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:51:39 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:51:39 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:52:38 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:52:38 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 19:56:44 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 19:56:44 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[27-Jun-2025 20:31:07 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[27-Jun-2025 20:31:07 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[30-Jun-2025 08:52:12 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 08:52:12 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[30-Jun-2025 08:52:15 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 08:52:15 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[30-Jun-2025 08:52:15 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 08:52:15 Europe/Berlin] PHP Deprecated:  number_format(): Passing null to parameter #1 ($num) of type float is deprecated in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 278
+[30-Jun-2025 09:43:17 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 09:43:17 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 09:43:18 Europe/Berlin] PHP Warning:  file_put_contents(C:\xampp\htdocs\BOSTARTER\frontend\utils/../cache/1dc1626d71b1daf3cc2f081ce8bc475c.cache): Failed to open stream: No such file or directory in C:\xampp\htdocs\BOSTARTER\frontend\utils\CacheManager.php on line 251
+[30-Jun-2025 09:43:18 Europe/Berlin] PHP Warning:  file_put_contents(C:\xampp\htdocs\BOSTARTER\frontend\utils/../cache/8866bb6abf786078fc047495418953b9.cache): Failed to open stream: No such file or directory in C:\xampp\htdocs\BOSTARTER\frontend\utils\CacheManager.php on line 251
+[30-Jun-2025 09:43:18 Europe/Berlin] PHP Warning:  include(C:\xampp\htdocs\BOSTARTER\frontend/includes/homepage-content.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 533
+[30-Jun-2025 09:43:18 Europe/Berlin] PHP Warning:  include(): Failed opening 'C:\xampp\htdocs\BOSTARTER\frontend/includes/homepage-content.php' for inclusion (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\BOSTARTER\frontend\index.php on line 533
+[30-Jun-2025 09:44:07 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 09:44:07 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 09:44:44 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 09:44:44 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 09:49:31 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 09:49:31 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 09:49:31 Europe/Berlin] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 2
+[30-Jun-2025 09:55:41 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 09:55:41 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 09:55:41 Europe/Berlin] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 2
+[30-Jun-2025 09:56:32 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 09:56:32 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 09:56:32 Europe/Berlin] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 2
+[30-Jun-2025 09:57:44 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 09:57:44 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 09:57:45 Europe/Berlin] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 2
+[30-Jun-2025 09:58:54 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 09:58:54 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 09:58:54 Europe/Berlin] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 2
+[30-Jun-2025 10:01:26 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 10:01:26 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 10:01:26 Europe/Berlin] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 2
+[30-Jun-2025 10:01:29 Europe/Berlin] Errore caricamento dipendenza services/MongoLogger.php: Classe non trovata: MongoLogger
+[30-Jun-2025 10:01:29 Europe/Berlin] Errore caricamento dipendenza middleware/SecurityMiddleware.php: syntax error, unexpected token "<", expecting end of file
+[30-Jun-2025 10:01:29 Europe/Berlin] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in C:\xampp\htdocs\BOSTARTER\frontend\includes\homepage-content.php on line 2

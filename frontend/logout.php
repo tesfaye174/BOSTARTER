@@ -1,54 +1,24 @@
 <?php
-/**
- * BOSTARTER - User Logout Handler
- * 
- * Gestisce il logout sicuro degli utenti con logging delle attività
- * e pulizia completa della sessione.
- * 
- * @author BOSTARTER Team
- * @version 3.0
- * @since 2024
- */
-
-// =============================================================================
-// SECURITY AND INITIALIZATION
-// =============================================================================
-
-// Security: Prevent direct access if not in proper context
 if (!defined('BOSTARTER_ACCESS')) {
     define('BOSTARTER_ACCESS', true);
 }
-
-// Error reporting configuration (disable in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
-
-// Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-// Security: Regenerate session ID to prevent session fixation
 if (!empty($_SESSION)) {
     session_regenerate_id(true);
 }
-
-// =============================================================================
-// DEPENDENCY LOADING
-// =============================================================================
-
 $dependenciesLoaded = [];
-
 try {
-    // Load required backend services
     $dependencies = [
         'database' => __DIR__ . '/../backend/config/database.php',
         'MongoLogger' => __DIR__ . '/../backend/services/MongoLogger.php',
         'NavigationHelper' => __DIR__ . '/../backend/utils/NavigationHelper.php',
         'SecurityService' => __DIR__ . '/../backend/services/SecurityService.php'
     ];
-
     foreach ($dependencies as $name => $path) {
         if (file_exists($path)) {
             require_once $path;
@@ -61,12 +31,6 @@ try {
 } catch (Exception $e) {
     error_log("Logout: Failed to load dependencies - " . $e->getMessage());
 }
-
-// =============================================================================
-// SESSION DATA COLLECTION
-// =============================================================================
-
-// Initialize variables for logging and security
 $sessionData = [
     'user_id' => null,
     'session_duration' => 0,
@@ -77,15 +41,11 @@ $sessionData = [
     'referer' => $_SERVER['HTTP_REFERER'] ?? 'direct',
     'csrf_token' => $_SESSION['csrf_token'] ?? null
 ];
-
-// Collect session data BEFORE destruction
 if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
     $sessionData['user_id'] = $_SESSION['user_id'];
     $sessionData['login_time'] = $_SESSION['login_time'] ?? time();
     $sessionData['session_duration'] = time() - $sessionData['login_time'];
 }
-
-// Check if user is actually logged in
 $isLoggedIn = false;
 if ($dependenciesLoaded['NavigationHelper'] && class_exists('NavigationHelper')) {
     try {
@@ -97,14 +57,7 @@ if ($dependenciesLoaded['NavigationHelper'] && class_exists('NavigationHelper'))
 } else {
     $isLoggedIn = !empty($sessionData['user_id']);
 }
-
-// =============================================================================
-// ACTIVITY LOGGING (BEFORE SESSION DESTRUCTION)
-// =============================================================================
-
 $logoutSuccess = false;
-
-// MongoDB Activity Logging
 if ($isLoggedIn && $sessionData['user_id'] && $dependenciesLoaded['MongoLogger']) {
     try {
         if (class_exists('MongoLogger')) {
@@ -124,10 +77,8 @@ if ($isLoggedIn && $sessionData['user_id'] && $dependenciesLoaded['MongoLogger']
                 ],
                 'timestamp' => time()
             ];
-            
             $logResult = $mongoLogger->logActivity($sessionData['user_id'], 'user_logout', $logData);
             $logoutSuccess = !empty($logResult);
-            
             if (!$logoutSuccess) {
                 error_log("Logout: MongoDB activity logging returned empty result");
             }
@@ -136,8 +87,6 @@ if ($isLoggedIn && $sessionData['user_id'] && $dependenciesLoaded['MongoLogger']
         error_log("Logout: MongoDB logging failed - " . $e->getMessage());
     }
 }
-
-// Security Event Logging
 if ($dependenciesLoaded['SecurityService']) {
     try {
         if (class_exists('SecurityService')) {
@@ -154,19 +103,9 @@ if ($dependenciesLoaded['SecurityService']) {
         error_log("Logout: Security logging failed - " . $e->getMessage());
     }
 }
-
-// =============================================================================
-// SESSION AND COOKIE CLEANUP
-// =============================================================================
-
-// Clear session data array completely
 $_SESSION = [];
-
-// Clear session cookie with enhanced security settings
 if (isset($_COOKIE[session_name()])) {
     $cookieParams = session_get_cookie_params();
-    
-    // Clear session cookie with all security flags
     setcookie(session_name(), '', [
         'expires' => time() - 3600,
         'path' => $cookieParams['path'] ?: '/',
@@ -176,8 +115,6 @@ if (isset($_COOKIE[session_name()])) {
         'samesite' => $cookieParams['samesite'] ?: 'Lax'
     ]);
 }
-
-// Clear remember me token cookie
 if (isset($_COOKIE['remember_token'])) {
     setcookie('remember_token', '', [
         'expires' => time() - 3600,
@@ -187,8 +124,6 @@ if (isset($_COOKIE['remember_token'])) {
         'samesite' => 'Strict'
     ]);
 }
-
-// Clear BOSTARTER specific cookies
 $bostarter_cookies = [
     'bostarter_prefs',
     'bostarter_lang', 
@@ -196,7 +131,6 @@ $bostarter_cookies = [
     'bostarter_user',
     'bostarter_auth'
 ];
-
 foreach ($bostarter_cookies as $cookie_name) {
     if (isset($_COOKIE[$cookie_name])) {
         setcookie($cookie_name, '', [
@@ -208,75 +142,46 @@ foreach ($bostarter_cookies as $cookie_name) {
         ]);
     }
 }
-
-// Destroy the session completely
 session_destroy();
-
-// =============================================================================
-// POST-LOGOUT SESSION FOR SUCCESS MESSAGE
-// =============================================================================
-
-// Start new session for success message
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-// Set success message for the next page
 $_SESSION['logout_success'] = true;
 $_SESSION['logout_message'] = $isLoggedIn ? 
     'Logout effettuato con successo. Grazie per aver utilizzato BOSTARTER!' : 
     'Sessione terminata.';
 $_SESSION['logout_time'] = time();
-
-// =============================================================================
-// SECURE REDIRECT HANDLING
-// =============================================================================
-
-// Determine redirect URL with validation
 $redirectUrl = 'home';
 $allowedRedirects = ['home', 'login', 'register', 'projects', 'about', 'contact'];
-
 if (isset($_GET['redirect']) && !empty($_GET['redirect'])) {
     $requestedRedirect = filter_var($_GET['redirect'], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
-    
     if (in_array($requestedRedirect, $allowedRedirects, true)) {
         $redirectUrl = $requestedRedirect;
     } else {
         error_log("Logout: Invalid redirect attempted: " . $_GET['redirect']);
     }
 }
-
-// Memory cleanup
 unset($sessionData, $logData, $cookieParams, $bostarter_cookies);
-
-// Perform redirect with proper error handling
 try {
     if ($dependenciesLoaded['NavigationHelper'] && class_exists('NavigationHelper')) {
         NavigationHelper::redirect($redirectUrl, ['logout' => 'success']);
     } else {
-        // Fallback redirect implementation
         $baseUrl = '/BOSTARTER/frontend/';
         $targetUrl = $baseUrl . ($redirectUrl === 'home' ? 'index.php' : $redirectUrl . '.php');
         $targetUrl .= '?logout=success';
-        
-        // Security: Validate redirect URL
         if (filter_var($targetUrl, FILTER_VALIDATE_URL) === false) {
             $targetUrl = '/BOSTARTER/frontend/index.php?logout=success';
         }
-        
         header('Location: ' . $targetUrl, true, 302);
         exit();
     }
 } catch (Exception $e) {
     error_log("Logout: Redirect failed - " . $e->getMessage());
-    
-    // Emergency fallback with multiple options
     $emergencyUrls = [
         '/BOSTARTER/frontend/index.php?logout=success',
         '/BOSTARTER/frontend/?logout=success',
         '/?logout=success'
     ];
-    
     foreach ($emergencyUrls as $url) {
         try {
             header('Location: ' . $url, true, 302);
@@ -286,12 +191,6 @@ try {
         }
     }
 }
-
-// =============================================================================
-// FINAL SAFETY NET
-// =============================================================================
-
-// This should never be reached, but included for absolute safety
 http_response_code(200);
 ?>
 <!DOCTYPE html>

@@ -1,35 +1,26 @@
 <?php
-// View Open Projects API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
-
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
 require_once __DIR__ . '/../utils/Validator.php';
-
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
         ApiResponse::error('Only GET method allowed', 405);
     }
-
     $db = Database::getInstance()->getConnection();
     $mongoLogger = new MongoLogger();
-
-    // Get parameters
     $page = max(1, (int)($_GET['page'] ?? 1));
     $per_page = min(50, max(10, (int)($_GET['per_page'] ?? 20)));
     $offset = ($page - 1) * $per_page;
-    
     $category = $_GET['category'] ?? '';
     $search = $_GET['search'] ?? '';
-    $sort = $_GET['sort'] ?? 'recent'; // recent, funded, ending_soon, title
+    $sort = $_GET['sort'] ?? 'recent'; 
     $min_funding = (float)($_GET['min_funding'] ?? 0);
     $max_funding = (float)($_GET['max_funding'] ?? 0);
-
-    // Validazione centralizzata dei parametri di paginazione
     $validator = new Validator();
     if ($page < 1) {
         $validator->min(1);
@@ -40,16 +31,12 @@ try {
     if (!$validator->isValid()) {
         ApiResponse::error(implode(', ', $validator->getErrors()), 400);
     }
-
-    // Build WHERE clause
     $where_conditions = ["p.stato = 'aperto'", "p.data_limite > NOW()"];
     $params = [];
-
     if (!empty($category) && $category !== 'all') {
         $where_conditions[] = "p.tipo_progetto = ?";
         $params[] = $category;
     }
-
     if (!empty($search)) {
         $where_conditions[] = "(p.nome LIKE ? OR p.descrizione LIKE ? OR u.nickname LIKE ?)";
         $search_term = '%' . $search . '%';
@@ -57,20 +44,15 @@ try {
         $params[] = $search_term;
         $params[] = $search_term;
     }
-
     if ($min_funding > 0) {
         $where_conditions[] = "p.budget_richiesto >= ?";
         $params[] = $min_funding;
     }
-
     if ($max_funding > 0) {
         $where_conditions[] = "p.budget_richiesto <= ?";
         $params[] = $max_funding;
     }
-
     $where_clause = implode(' AND ', $where_conditions);
-
-    // Build ORDER BY clause
     switch ($sort) {
         case 'funded':
             $order_clause = "current_funding DESC";
@@ -86,8 +68,6 @@ try {
             break;        default:
             $order_clause = "p.created_at DESC";
     }
-
-    // Get total count
     $count_query = "
         SELECT COUNT(*) as total
         FROM progetti p
@@ -97,8 +77,6 @@ try {
     $count_stmt = $db->prepare($count_query);
     $count_stmt->execute($params);
     $total_projects = $count_stmt->fetch()['total'];
-
-    // Get projects with funding info
     $projects_query = "
         SELECT 
             p.id,
@@ -123,15 +101,11 @@ try {
         ORDER BY $order_clause
         LIMIT ? OFFSET ?
     ";
-
     $params[] = $per_page;
     $params[] = $offset;
-
     $stmt = $db->prepare($projects_query);
     $stmt->execute($params);
     $projects = $stmt->fetchAll();
-
-    // Get skills for software projects
     if (!empty($projects)) {
         $project_ids = array_column($projects, 'id');
         $placeholders = str_repeat('?,', count($project_ids) - 1) . '?';
@@ -145,12 +119,9 @@ try {
             JOIN profili_software ps ON srp.profilo_id = ps.id
             WHERE ps.progetto_id IN ($placeholders)
         ";
-        
         $skills_stmt = $db->prepare($skills_query);
         $skills_stmt->execute($project_ids);
         $project_skills = $skills_stmt->fetchAll();
-
-        // Group skills by project
         $skills_by_project = [];
         foreach ($project_skills as $skill) {
             $skills_by_project[$skill['project_id']][] = [
@@ -158,19 +129,13 @@ try {
                 'category' => $skill['skill_category']
             ];
         }
-
-        // Add skills to projects
         foreach ($projects as &$project) {
             $project['required_skills'] = $skills_by_project[$project['id']] ?? [];
         }
     }
-
-    // Calculate pagination
     $total_pages = ceil($total_projects / $per_page);
     $has_next = $page < $total_pages;
     $has_prev = $page > 1;
-
-    // Get available categories
     $categories_query = "
         SELECT DISTINCT tipo_progetto as category, COUNT(*) as count
         FROM progetti p
@@ -181,8 +146,6 @@ try {
     $categories_stmt = $db->prepare($categories_query);
     $categories_stmt->execute();
     $categories = $categories_stmt->fetchAll();
-
-    // Log activity
     $user_id = $_SESSION['user_id'] ?? null;
     $mongoLogger->logActivity($user_id, 'projects_viewed', [
         'filters' => [
@@ -194,7 +157,6 @@ try {
         'results_count' => count($projects),
         'total_available' => $total_projects
     ]);
-
     ApiResponse::success([
         'projects' => $projects,
         'pagination' => [
@@ -216,7 +178,6 @@ try {
             ]
         ]
     ]);
-
 } catch (PDOException $e) {
     error_log("Database error in view_projects.php: " . $e->getMessage());
     ApiResponse::serverError('Database error occurred');

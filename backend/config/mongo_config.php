@@ -1,83 +1,73 @@
 <?php
-/**
- * MongoDB Configuration File
- * BOSTARTER - Crowdfunding Platform
- */
-
-// MongoDB connection parameters
-define('MONGO_HOST', 'localhost');
-define('MONGO_PORT', 27017);
-define('MONGO_DATABASE', 'bostarter_logs');
-define('MONGO_USERNAME', ''); // Set if authentication is enabled
-define('MONGO_PASSWORD', ''); // Set if authentication is enabled
-
-// MongoDB connection function
-function getMongoConnection() {
-    try {
-        // Build connection string
-        $connectionString = "mongodb://" . MONGO_HOST . ":" . MONGO_PORT;
-        
-        // Add authentication if credentials are provided
-        if (!empty(MONGO_USERNAME) && !empty(MONGO_PASSWORD)) {
-            $connectionString = "mongodb://" . MONGO_USERNAME . ":" . MONGO_PASSWORD . "@" . MONGO_HOST . ":" . MONGO_PORT;
+if (!defined('MONGO_HOST')) define('MONGO_HOST', 'localhost');
+if (!defined('MONGO_PORT')) define('MONGO_PORT', 27017);
+if (!defined('MONGO_DATABASE')) define('MONGO_DATABASE', 'bostarter_logs');
+if (!defined('MONGO_USERNAME')) define('MONGO_USERNAME', ''); 
+if (!defined('MONGO_PASSWORD')) define('MONGO_PASSWORD', ''); 
+$mongoConfig = [
+    'connection_string' => 'mongodb:
+    'database' => MONGO_DATABASE,
+    'fallback_log_path' => __DIR__ . '/../logs/mongodb_fallback.log',
+    'options' => [
+        'serverSelectionTimeoutMS' => 3000,
+        'connectTimeoutMS' => 5000,
+        'socketTimeoutMS' => 30000
+    ]
+];
+if (!empty(MONGO_USERNAME) && !empty(MONGO_PASSWORD)) {
+    $mongoConfig['connection_string'] = 'mongodb:
+}
+if (!function_exists('getMongoConnection')) {
+    function getMongoConnection() {
+        try {
+            $connectionString = "mongodb:
+            if (!empty(MONGO_USERNAME) && !empty(MONGO_PASSWORD)) {
+                $connectionString = "mongodb:
+            }
+            $client = new MongoDB\Client($connectionString);
+            $database = $client->selectDatabase(MONGO_DATABASE);
+            return $database;
+        } catch (Exception $e) {
+            error_log("MongoDB connection failed: " . $e->getMessage());
+            throw new Exception("MongoDB connection failed");
         }
-        
-        // Create MongoDB client
-        $client = new MongoDB\Client($connectionString);
-        
-        // Select database
-        $database = $client->selectDatabase(MONGO_DATABASE);
-        
-        return $database;
-        
-    } catch (Exception $e) {
-        error_log("MongoDB connection failed: " . $e->getMessage());
-        throw new Exception("MongoDB connection failed");
     }
 }
-
-// Log to MongoDB
-function logToMongo($collection, $data) {
-    try {
-        $db = getMongoConnection();
-        $coll = $db->selectCollection($collection);
-        
-        // Add timestamp
-        $data['timestamp'] = new MongoDB\BSON\UTCDateTime();
-        
-        $result = $coll->insertOne($data);
-        return $result->getInsertedId();
-        
-    } catch (Exception $e) {
-        error_log("MongoDB logging failed: " . $e->getMessage());
-        return false;
+if (!function_exists('logToMongo')) {
+    function logToMongo($collection, $data) {
+        try {
+            $db = getMongoConnection();
+            $coll = $db->selectCollection($collection);
+            $data['timestamp'] = new MongoDB\BSON\UTCDateTime();
+            $result = $coll->insertOne($data);
+            return $result->getInsertedId();
+        } catch (Exception $e) {
+            error_log("MongoDB logging failed: " . $e->getMessage());
+            return false;
+        }
     }
 }
-
-// Get logs from MongoDB
-function getLogsFromMongo($collection, $filter = [], $limit = 100, $sort = ['timestamp' => -1]) {
-    try {
-        $db = getMongoConnection();
-        $coll = $db->selectCollection($collection);
-        
-        $options = [
-            'limit' => $limit,
-            'sort' => $sort
-        ];
-        
-        $cursor = $coll->find($filter, $options);
-        return $cursor->toArray();
-        
-    } catch (Exception $e) {
-        error_log("MongoDB read failed: " . $e->getMessage());
-        return [];
+if (!function_exists('getLogsFromMongo')) {
+    function getLogsFromMongo($collection, $filter = [], $limit = 100, $sort = ['timestamp' => -1]) {
+        try {
+            $db = getMongoConnection();
+            $coll = $db->selectCollection($collection);
+            $options = [
+                'limit' => $limit,
+                'sort' => $sort
+            ];
+            $cursor = $coll->find($filter, $options);
+            return $cursor->toArray();
+        } catch (Exception $e) {
+            error_log("MongoDB read failed: " . $e->getMessage());
+            return [];
+        }
     }
 }
-
-// Collection names
-define('MONGO_COLLECTION_EVENTS', 'events');
-define('MONGO_COLLECTION_ERRORS', 'errors');
-define('MONGO_COLLECTION_PERFORMANCE', 'performance');
-define('MONGO_COLLECTION_SECURITY', 'security');
-define('MONGO_COLLECTION_USER_ACTIONS', 'user_actions');
+if (!defined('MONGO_COLLECTION_EVENTS')) define('MONGO_COLLECTION_EVENTS', 'events');
+if (!defined('MONGO_COLLECTION_ERRORS')) define('MONGO_COLLECTION_ERRORS', 'errors');
+if (!defined('MONGO_COLLECTION_PERFORMANCE')) define('MONGO_COLLECTION_PERFORMANCE', 'performance');
+if (!defined('MONGO_COLLECTION_SECURITY')) define('MONGO_COLLECTION_SECURITY', 'security');
+if (!defined('MONGO_COLLECTION_USER_ACTIONS')) define('MONGO_COLLECTION_USER_ACTIONS', 'user_actions');
+return $mongoConfig;
 ?>

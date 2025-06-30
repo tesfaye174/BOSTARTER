@@ -1,7 +1,6 @@
 // BOSTARTER Service Worker - Enhanced Caching Strategy
 const CACHE_NAME = "bostarter-v1.0.0";
 const OFFLINE_PAGE = "/BOSTARTER/frontend/offline.html";
-
 // Resources to cache
 const STATIC_RESOURCES = [
     "/BOSTARTER/frontend/",
@@ -12,7 +11,6 @@ const STATIC_RESOURCES = [
     "/BOSTARTER/frontend/images/logo.png",
     OFFLINE_PAGE
 ];
-
 // Install event - Cache static resources
 self.addEventListener("install", event => {
     event.waitUntil(
@@ -21,7 +19,6 @@ self.addEventListener("install", event => {
             .then(() => self.skipWaiting())
     );
 });
-
 // Activate event - Clean old caches
 self.addEventListener("activate", event => {
     event.waitUntil(
@@ -36,12 +33,9 @@ self.addEventListener("activate", event => {
             .then(() => self.clients.claim())
     );
 });
-
 // Fetch event - Network-first strategy with fallback to cache
 self.addEventListener("fetch", event => {
-    // Skip non-GET requests
     if (event.request.method !== 'GET') return;
-
     event.respondWith(
         fetch(event.request)
             .then(response => {

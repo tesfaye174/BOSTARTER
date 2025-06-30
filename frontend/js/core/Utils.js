@@ -1,15 +1,11 @@
 /**
  * BOSTARTER - Core Utilities
  * Funzioni di utilità comuni per tutta l'applicazione
- * @version 1.0
  */
-
 (function (window, document) {
     'use strict';
-
     // Namespace principale
     window.BOSTARTERUtils = window.BOSTARTERUtils || {};
-
     /**
      * Utilità per la manipolazione del DOM
      */
@@ -20,20 +16,17 @@
         $(selector, context = document) {
             return context.querySelector(selector);
         },
-
         /**
          * Selettore multiplo
          */
         $$(selector, context = document) {
             return context.querySelectorAll(selector);
         },
-
         /**
          * Crea elemento con attributi
          */
         createElement(tag, attributes = {}, content = '') {
             const element = document.createElement(tag);
-
             Object.keys(attributes).forEach(key => {
                 if (key === 'className') {
                     element.className = attributes[key];
@@ -43,14 +36,11 @@
                     element.setAttribute(key, attributes[key]);
                 }
             });
-
             if (content) {
                 element.textContent = content;
             }
-
             return element;
         },
-
         /**
          * Aggiunge classe in modo sicuro
          */
@@ -59,7 +49,6 @@
                 element.classList.add(className);
             }
         },
-
         /**
          * Rimuove classe in modo sicuro
          */
@@ -68,7 +57,6 @@
                 element.classList.remove(className);
             }
         },
-
         /**
          * Toggle classe
          */
@@ -78,7 +66,6 @@
             }
         }
     };
-
     /**
      * Utilità per le richieste HTTP
      */
@@ -96,18 +83,15 @@
                     },
                     ...options
                 });
-
                 if (!response.ok) {
                     throw new Error(`HTTP Error: ${response.status}`);
                 }
-
                 return await response.json();
             } catch (error) {
                 console.error('Errore richiesta GET:', error);
                 throw error;
             }
         },
-
         /**
          * Richiesta POST semplificata
          */
@@ -122,11 +106,9 @@
                     body: JSON.stringify(data),
                     ...options
                 });
-
                 if (!response.ok) {
                     throw new Error(`HTTP Error: ${response.status}`);
                 }
-
                 return await response.json();
             } catch (error) {
                 console.error('Errore richiesta POST:', error);
@@ -134,7 +116,6 @@
             }
         }
     };
-
     /**
      * Utilità per la formattazione
      */
@@ -148,7 +129,6 @@
                 currency: currency
             }).format(amount);
         },
-
         /**
          * Formatta date
          */
@@ -158,13 +138,11 @@
                 month: 'long',
                 day: 'numeric'
             };
-
             return new Intl.DateTimeFormat('it-IT', {
                 ...defaultOptions,
                 ...options
             }).format(new Date(date));
         },
-
         /**
          * Trunca testo
          */
@@ -172,7 +150,6 @@
             if (text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '...';
         },
-
         /**
          * Formatta numeri
          */
@@ -183,7 +160,6 @@
             }).format(num);
         }
     };
-
     /**
      * Utilità per storage locale
      */
@@ -200,7 +176,6 @@
                 return false;
             }
         },
-
         /**
          * Recupera dal localStorage
          */
@@ -213,7 +188,6 @@
                 return defaultValue;
             }
         },
-
         /**
          * Rimuove dal localStorage
          */
@@ -227,7 +201,6 @@
             }
         }
     };
-
     /**
      * Utilità per debouncing
      */
@@ -246,7 +219,6 @@
             if (callNow) func.apply(context, args);
         };
     };
-
     /**
      * Utilità per throttling
      */
@@ -262,7 +234,6 @@
             }
         };
     };
-
     // Esporta le utilità
     window.BOSTARTERUtils = {
         DOM,
@@ -272,5 +243,4 @@
         debounce,
         throttle
     };
-
 })(window, document);
