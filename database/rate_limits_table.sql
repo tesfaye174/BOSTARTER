@@ -1,4 +1,4 @@
--- Tabella per il rate limiting
+﻿-- Tabella per il rate limiting
 -- Traccia i tentativi di login falliti per prevenire attacchi brute force
 
 CREATE TABLE IF NOT EXISTS rate_limits (
@@ -13,4 +13,5 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 
 -- Clean up automatico dei record vecchi (opzionale)
 -- Può essere eseguito da un job cron
--- DELETE FROM rate_limits WHERE last_attempt < DATE_SUB(NOW(), INTERVAL 24 HOUR);
+-- Elimina FROM rate_limits WHERE last_attempt < DATE_SUB(NOW(), INTERVAL 24 HOUR);
+

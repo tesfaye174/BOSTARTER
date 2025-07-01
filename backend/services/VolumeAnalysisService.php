@@ -164,11 +164,11 @@ class VolumeAnalysisService {
         $percentage_diff = abs($difference) / max($redundancy_cost, $non_redundancy_cost) * 100;
         if (abs($difference) < 0.5) {
             $recommendation = 'NEUTRAL';
-            $reason = 'I costi sono sostanzialmente equivalenti. Mantenere la ridondanza per semplicitÃ .';
+            $reason = 'I costi sono sostanzialmente equivalenti. Mantenere la ridondanza per semplicità.';
         } elseif ($redundancy_cost < $non_redundancy_cost) {
             $recommendation = 'KEEP_REDUNDANCY';
             $reason = sprintf(
-                'La ridondanza Ã¨ conveniente. Risparmio mensile: %.2f (%.1f%%)',
+                'La ridondanza è conveniente. Risparmio mensile: %.2f (%.1f%%)',
                 abs($difference), $percentage_diff
             );
         } else {
@@ -395,10 +395,10 @@ class VolumeAnalysisService {
     }
     private function getReasoningForRecommendation($redundancyCost, $nonRedundancyCost) {
         if ($redundancyCost < $nonRedundancyCost) {
-            return "Il costo di mantenimento della ridondanza Ã¨ inferiore al costo di calcolo dinamico. " .
+            return "Il costo di mantenimento della ridondanza è inferiore al costo di calcolo dinamico. " .
                    "I trigger garantiscono consistenza con overhead minimo.";
         } else {
-            return "Il costo di calcolo dinamico Ã¨ inferiore al costo di mantenimento. " .
+            return "Il costo di calcolo dinamico è inferiore al costo di mantenimento. " .
                    "La rimozione della ridondanza potrebbe migliorare le performance.";
         }
     }

@@ -1,4 +1,4 @@
--- Tabelle di sicurezza mancanti per BOSTARTER
+﻿-- Tabelle di sicurezza mancanti per BOSTARTER
 
 USE bostarter_compliant;
 
@@ -38,3 +38,4 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     INDEX idx_email (email),
     INDEX idx_time (attempt_time)
 );
+

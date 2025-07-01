@@ -5,9 +5,9 @@ const OFFLINE_PAGE = "/BOSTARTER/frontend/offline.html";
 const STATIC_RESOURCES = [
     "/BOSTARTER/frontend/",
     "/BOSTARTER/frontend/css/bootstrap.min.css",
-    "/BOSTARTER/frontend/css/modern-ui.css",
+    "/BOSTARTER/frontend/css/modern.css",
     "/BOSTARTER/frontend/js/modern-interactions.js",
-    "/BOSTARTER/frontend/js/notifications.js",
+    "/BOSTARTER/frontend/js/alerts.js",
     "/BOSTARTER/frontend/images/logo.png",
     OFFLINE_PAGE
 ];
@@ -53,3 +53,4 @@ self.addEventListener("fetch", event => {
                 return cachedResponse || cache.match(OFFLINE_PAGE);
             }));
 });
+

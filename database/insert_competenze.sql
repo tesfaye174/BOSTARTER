@@ -1,4 +1,4 @@
--- Inserimento competenze di base per BOSTARTER
+﻿-- Inserimento competenze di base per BOSTARTER
 -- Da eseguire dopo la creazione del database
 
 USE bostarter_compliant;
@@ -79,3 +79,4 @@ INSERT INTO competenze (nome) VALUES
 -- Verifica inserimento
 SELECT COUNT(*) as total_competenze FROM competenze;
 SELECT * FROM competenze ORDER BY nome LIMIT 10;
+

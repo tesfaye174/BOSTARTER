@@ -1,14 +1,13 @@
 <?php
-require_once __DIR__ . '/../../backend/middleware/SecurityMiddleware.php';
+session_start();
 require_once __DIR__ . '/../../backend/config/database.php';
-require_once __DIR__ . '/../../backend/utils/Database.php';
-require_once __DIR__ . '/../../backend/config/config.php';
-require_once __DIR__ . '/../../backend/services/MongoLogger.php';
-require_once __DIR__ . '/../../backend/utils/FrontendSecurity.php';
-SecurityMiddleware::initialize();
-FrontendSecurity::setSecurityHeaders();
-FrontendSecurity::requireRole('admin');
-$csrf_token = FrontendSecurity::getCSRFToken();
+require_once __DIR__ . '/../../backend/config/app_config.php';
+
+// Simple admin check
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    header('Location: ../auth/login.php');
+    exit();
+}
 $db = Database::getInstance();
 $conn = $db->getConnection();
 $mongoLogger = new MongoLogger();
@@ -33,9 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     'max_length' => 50,
                     'pattern' => '/^[a-zA-Z0-9\s\-\+\#\.]+$/',
                     'error_messages' => [
-                        'required' => 'Il nome della competenza è obbligatorio',
+                        'required' => 'Il nome della competenza � obbligatorio',
                         'min_length' => 'Il nome deve essere di almeno 2 caratteri',
-                        'max_length' => 'Il nome non può superare i 50 caratteri',
+                        'max_length' => 'Il nome non pu� superare i 50 caratteri',
                         'pattern' => 'Il nome contiene caratteri non validi'
                     ]
                 ],
@@ -44,16 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     'min_length' => 10,
                     'max_length' => 500,
                     'error_messages' => [
-                        'required' => 'La descrizione è obbligatoria',
+                        'required' => 'La descrizione � obbligatoria',
                         'min_length' => 'La descrizione deve essere di almeno 10 caratteri',
-                        'max_length' => 'La descrizione non può superare i 500 caratteri'
+                        'max_length' => 'La descrizione non pu� superare i 500 caratteri'
                     ]
                 ],
                 'categoria' => [
                     'required' => true,
                     'in_array' => ['Programming', 'Design', 'Marketing', 'Business', 'Other'],
                     'error_messages' => [
-                        'required' => 'La categoria è obbligatoria',
+                        'required' => 'La categoria � obbligatoria',
                         'in_array' => 'Categoria non valida'
                     ]
                 ]
@@ -84,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM competenze WHERE LOWER(nome) = LOWER(?) AND categoria = ?");
                     $stmt->execute([strtolower($nome), $categoria]);
                     if ($stmt->fetchColumn() > 0) {
-                        throw new Exception("Una competenza con questo nome già esiste in questa categoria");
+                        throw new Exception("Una competenza con questo nome gi� esiste in questa categoria");
                     }
                     $stmt = $conn->prepare("
                         INSERT INTO competenze (nome, descrizione, categoria, data_creazione)
@@ -138,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                 ");
                 $stmt->execute([$skill_id]);
                 if ($stmt->fetchColumn() > 0) {
-                    throw new Exception('Non è possibile eliminare questa competenza perché è utilizzata da alcuni utenti');
+                    throw new Exception('Non � possibile eliminare questa competenza perch� � utilizzata da alcuni utenti');
                 }
                 $stmt = $conn->prepare("
                     DELETE FROM competenze 
@@ -158,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                         $conn->commit();
                         $success = "Competenza eliminata con successo!";
                     } else {
-                        throw new Exception('Non è possibile eliminare questa competenza perché è utilizzata in alcuni progetti');
+                        throw new Exception('Non � possibile eliminare questa competenza perch� � utilizzata in alcuni progetti');
                     }
                 } else {
                     throw new Exception("Errore durante l'eliminazione della competenza");
@@ -212,28 +211,6 @@ $stats = $stmt->fetch();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Competenze - BOSTARTER Admin</title>
-    <link href="https:
-    <link href="https:
-    <style>
-        .skill-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-        .skill-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .stats-badge {
-            font-size: 0.8rem;
-            padding: 0.25rem 0.5rem;
-        }
-        .delete-btn {
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-        }
-        .skill-card:hover .delete-btn {
-            opacity: 1;
-        }
-    </style>
 </head>
 <body class="bg-light">
     <div class="container py-5">
@@ -367,7 +344,6 @@ $stats = $stmt->fetch();
             </div>
         </div>
     </div>
-    <script src="https:
     <script>
         (() => {
             'use strict';

@@ -1,7 +1,7 @@
--- Drop alias apply_to_project if exists
+﻿-- Drop alias apply_to_project if exists
 DROP PROCEDURE IF EXISTS apply_to_project;
 
--- Create alias stored procedure for apply_to_project
+-- Crea alias stored procedure for apply_to_project
 USE bostarter_compliant;
 DELIMITER //
 CREATE PROCEDURE apply_to_project(
@@ -25,3 +25,4 @@ INSERT IGNORE INTO progetti (nome, descrizione, budget_richiesto, data_limite, c
 VALUES
 ('Progetto Alpha', 'Descrizione progetto Alpha', 1000.00, DATE_ADD(CURDATE(), INTERVAL 30 DAY), 1, 'software'),
 ('Progetto Beta', 'Descrizione progetto Beta', 2000.00, DATE_ADD(CURDATE(), INTERVAL 60 DAY), 1, 'hardware');
+

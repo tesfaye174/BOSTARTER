@@ -1,230 +1,200 @@
 <?php
-namespace BOSTARTER\Services;
-use Exception;
+/**
+ * MongoDB Logger per BOSTARTER
+ * Registra tutti gli eventi che occorrono nella piattaforma
+ */
+
+namespace BOSTARTER\Utils;
+
 class MongoLogger {
-    private bool $mongoAvailable;
-    private $connectionManager;
-    private string $logFile;
-    private array $config;
-    private array $buffer = [];
-    private const BUFFER_SIZE = 100;
-    private const LOG_LEVELS = [
-        'emergency' => 0,
-        'alert'     => 1,
-        'critical'  => 2,
-        'error'     => 3,
-        'warning'   => 4,
-        'notice'    => 5,
-        'info'      => 6,
-        'debug'     => 7
-    ];
-    private const COLLECTIONS = [
-        'user_actions' => 'user_logs',
-        'system'      => 'system_logs',
-        'security'    => 'security_logs',
-        'performance' => 'performance_logs',
-        'errors'      => 'error_logs'
-    ];
+    private $collection;
+    private $enabled;
+    
     public function __construct() {
-        $this->config = require __DIR__ . '/../config/mongo_config.php';
-        $this->logFile = $this->config['fallback_log_path'] ?? __DIR__ . '/../logs/mongodb_fallback.log';
-        if (!extension_loaded('mongodb')) {
-            $this->mongoAvailable = false;
-            $this->logToFile('SYSTEM', 'MongoDB extension not installed, using file fallback', 'warning');
-        } else {
-            try {
-                $options = [
-                    'serverSelectionTimeoutMS' => 3000,
-                    'connectTimeoutMS' => 2000,
-                    'retryWrites' => true,
-                    'w' => 'majority',
-                    'readPreference' => 'primaryPreferred'
-                ];
-                $this->connectionManager = new \MongoDB\Driver\Manager(
-                    $this->config['connection_string'],
-                    $options
-                );
-                $this->connectionManager->selectServer(new \MongoDB\Driver\ReadPreference('primary'));
-                $this->mongoAvailable = true;
-            } catch (Exception $e) {
-                $this->mongoAvailable = false;
-                $this->logToFile('SYSTEM', 'MongoDB connection failed: ' . $e->getMessage(), 'error');
-            }
-        }
-        register_shutdown_function([$this, 'flushBuffer']);
-    }
-    public function logUserAction(string $action, array $data = [], string $level = 'info'): bool {
-        $logEntry = [
-            'timestamp' => $this->mongoAvailable ? new \MongoDB\BSON\UTCDateTime() : date('Y-m-d H:i:s'),
-            'type' => 'user_action',
-            'action' => $action,
-            'level' => $level,
-            'user_id' => $_SESSION['user_id'] ?? null,
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
-            'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
-            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
-            'data' => $data
-        ];
-        return $this->log('user_actions', $logEntry);
-    }
-    public function logError(string $message, array $context = [], string $level = 'error'): bool {
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        array_shift($trace); 
-        $logEntry = [
-            'timestamp' => $this->mongoAvailable ? new \MongoDB\BSON\UTCDateTime() : date('Y-m-d H:i:s'),
-            'type' => 'error',
-            'message' => $message,
-            'level' => $level,
-            'file' => $trace[0]['file'] ?? 'unknown',
-            'line' => $trace[0]['line'] ?? 0,
-            'trace' => $trace,
-            'context' => $context,
-            'memory_usage' => memory_get_usage(true),
-            'peak_memory' => memory_get_peak_usage(true)
-        ];
-        return $this->log('errors', $logEntry);
-    }
-    public function logPerformance(string $operation, float $duration, array $metrics = []): bool {
-        $logEntry = [
-            'timestamp' => $this->mongoAvailable ? new \MongoDB\BSON\UTCDateTime() : date('Y-m-d H:i:s'),
-            'type' => 'performance',
-            'operation' => $operation,
-            'duration_ms' => $duration,
-            'metrics' => $metrics,
-            'memory_usage' => memory_get_usage(true),
-            'peak_memory' => memory_get_peak_usage(true),
-            'server_load' => sys_getloadavg()[0] ?? 0
-        ];
-        return $this->log('performance', $logEntry);
-    }
-    private function log(string $collection, array $entry): bool {
-        $this->buffer[] = [
-            'collection' => self::COLLECTIONS[$collection] ?? 'general_logs',
-            'entry' => $entry
-        ];
-        if (count($this->buffer) >= self::BUFFER_SIZE) {
-            return $this->flushBuffer();
-        }
-        return true;
-    }
-    public function flushBuffer(): bool {
-        if (empty($this->buffer)) {
-            return true;
-        }
-        if ($this->mongoAvailable && extension_loaded('mongodb')) {
-            try {
-                $bulkWrite = [];
-                foreach ($this->buffer as $log) {
-                    $bulkWrite[] = [
-                        'insertOne' => [
-                            'document' => $log['entry']
-                        ]
-                    ];
-                }
-                $writeConcern = new \MongoDB\Driver\WriteConcern(
-                    \MongoDB\Driver\WriteConcern::MAJORITY,
-                    1000
-                );
-                $bulk = new \MongoDB\Driver\BulkWrite();
-                foreach ($bulkWrite as $operation) {
-                    $bulk->insert($operation['insertOne']['document']);
-                }
-                $this->connectionManager->executeBulkWrite(
-                    $this->config['database'] . '.' . $log['collection'],
-                    $bulk,
-                    $writeConcern
-                );
-                $this->buffer = [];
-                return true;
-            } catch (Exception $e) {
-                $this->mongoAvailable = false;
-                $this->logToFile('SYSTEM', 'MongoDB write failed: ' . $e->getMessage(), 'error');
-            }
-        }
-        return $this->flushBufferToFile();
-    }
-    private function flushBufferToFile(): bool {
-        if (empty($this->buffer)) {
-            return true;
-        }
+        $this->enabled = false;
+        
         try {
-            $handle = fopen($this->logFile, 'a');
-            if (!$handle) {
-                throw new Exception('Unable to open log file');
+            // Connessione MongoDB (se disponibile)
+            if (class_exists('MongoDB\Client')) {
+                $client = new \MongoDB\Client("mongodb://localhost:27017");
+                $database = $client->selectDatabase('bostarter_logs');
+                $this->collection = $database->selectCollection('eventi');
+                $this->enabled = true;
             }
-            foreach ($this->buffer as $log) {
-                $logLine = date('Y-m-d H:i:s') . ' [' . 
-                          strtoupper($log['entry']['level'] ?? 'INFO') . '] ' .
-                          json_encode($log['entry']) . PHP_EOL;
-                fwrite($handle, $logLine);
-            }
-            fclose($handle);
-            $this->buffer = [];
-            return true;
-        } catch (Exception $e) {
-            error_log('MongoLogger fallback failed: ' . $e->getMessage());
-            return false;
-        }
-    }
-    public function getLogs(array $filters = [], array $options = []): array {
-        if (!$this->mongoAvailable || !extension_loaded('mongodb')) {
-            return [];
-        }
-        try {
-            $query = new \MongoDB\Driver\Query($filters, $options);
-            $cursor = $this->connectionManager->executeQuery(
-                $this->config['database'] . '.logs',
-                $query
-            );
-            return $cursor->toArray();
-        } catch (Exception $e) {
-            $this->logError('Error retrieving logs: ' . $e->getMessage());
-            return [];
-        }
-    }
-    public function cleanOldLogs(int $days): int {
-        if (!$this->mongoAvailable || !extension_loaded('mongodb')) {
-            return 0;
-        }
-        try {
-            $cutoff = new \MongoDB\BSON\UTCDateTime(
-                (time() - ($days * 86400)) * 1000
-            );
-            $bulk = new \MongoDB\Driver\BulkWrite();
-            $bulk->delete(
-                ['timestamp' => ['$lt' => $cutoff]],
-                ['limit' => 0]
-            );
-            $result = $this->connectionManager->executeBulkWrite(
-                $this->config['database'] . '.logs',
-                $bulk
-            );
-            return $result->getDeletedCount();
-        } catch (Exception $e) {
-            $this->logError('Error cleaning old logs: ' . $e->getMessage());
-            return 0;
-        }
-    }
-    private function logToFile(string $type, string $message, string $level = 'info'): bool {
-        try {
-            $logDir = dirname($this->logFile);
-            if (!is_dir($logDir)) {
-                mkdir($logDir, 0755, true);
-            }
-            $handle = fopen($this->logFile, 'a');
-            if (!$handle) {
-                throw new \Exception('Unable to open log file');
-            }
-            $logLine = date('Y-m-d H:i:s') . ' [' . strtoupper($level) . '] ' . 
-                      '[' . $type . '] ' . $message . PHP_EOL;
-            fwrite($handle, $logLine);
-            fclose($handle);
-            return true;
         } catch (\Exception $e) {
-            error_log('MongoLogger file logging failed: ' . $e->getMessage());
-            return false;
+            // MongoDB non disponibile, usa fallback su file
+            error_log("MongoDB non disponibile: " . $e->getMessage());
         }
+    }
+    
+    /**
+     * Registra un evento nel log
+     */
+    public function logEvent($tipo_evento, $dettagli, $utente_id = null, $entita_id = null) {
+        $evento = [
+            'tipo_evento' => $tipo_evento,
+            'dettagli' => $dettagli,
+            'utente_id' => $utente_id,
+            'entita_id' => $entita_id,
+            'timestamp' => new \DateTime(),
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+        ];
+        
+        if ($this->enabled) {
+            try {
+                $this->collection->insertOne($evento);
+                return true;
+            } catch (\Exception $e) {
+                error_log("Errore MongoDB logging: " . $e->getMessage());
+                return $this->logToFile($evento);
+            }
+        } else {
+            return $this->logToFile($evento);
+        }
+    }
+    
+    /**
+     * Fallback: salva su file
+     */
+    private function logToFile($evento) {
+        $logDir = __DIR__ . '/../logs/';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+        
+        $logFile = $logDir . 'mongodb_fallback.log';
+        $logEntry = date('Y-m-d H:i:s') . ' - ' . json_encode($evento) . PHP_EOL;
+        
+        return file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX) !== false;
+    }
+    
+    /**
+     * Eventi specifici della piattaforma
+     */
+    
+    public function logUserRegistration($utente_id, $email, $tipo_utente) {
+        return $this->logEvent(
+            'user_registration',
+            "Nuovo utente registrato: $email (tipo: $tipo_utente)",
+            $utente_id
+        );
+    }
+    
+    public function logUserLogin($utente_id, $email) {
+        return $this->logEvent(
+            'user_login',
+            "Utente autenticato: $email",
+            $utente_id
+        );
+    }
+    
+    public function logProjectCreation($utente_id, $progetto_id, $nome_progetto, $tipo) {
+        return $this->logEvent(
+            'project_creation',
+            "Nuovo progetto creato: $nome_progetto (tipo: $tipo)",
+            $utente_id,
+            $progetto_id
+        );
+    }
+    
+    public function logProjectFunding($utente_id, $progetto_id, $importo) {
+        return $this->logEvent(
+            'project_funding',
+            "Progetto finanziato con €$importo",
+            $utente_id,
+            $progetto_id
+        );
+    }
+    
+    public function logProjectStatusChange($progetto_id, $vecchio_stato, $nuovo_stato, $motivo = '') {
+        return $this->logEvent(
+            'project_status_change',
+            "Stato progetto cambiato da '$vecchio_stato' a '$nuovo_stato'. Motivo: $motivo",
+            null,
+            $progetto_id
+        );
+    }
+    
+    public function logCommentCreation($utente_id, $progetto_id, $commento_id) {
+        return $this->logEvent(
+            'comment_creation',
+            "Nuovo commento su progetto",
+            $utente_id,
+            $commento_id
+        );
+    }
+    
+    public function logCommentResponse($progetto_creatore_id, $commento_id) {
+        return $this->logEvent(
+            'comment_response',
+            "Risposta a commento da parte del creatore",
+            $progetto_creatore_id,
+            $commento_id
+        );
+    }
+    
+    public function logSkillUpdate($utente_id, $competenza_nome, $livello) {
+        return $this->logEvent(
+            'skill_update',
+            "Skill aggiornata: $competenza_nome (livello: $livello)",
+            $utente_id
+        );
+    }
+    
+    public function logCandidatureSubmission($utente_id, $profilo_id, $progetto_id) {
+        return $this->logEvent(
+            'candidature_submission',
+            "Nuova candidatura per profilo",
+            $utente_id,
+            $profilo_id
+        );
+    }
+    
+    public function logCandidatureResponse($creatore_id, $candidatura_id, $stato, $progetto_id) {
+        return $this->logEvent(
+            'candidature_response',
+            "Candidatura $stato dal creatore",
+            $creatore_id,
+            $candidatura_id
+        );
+    }
+    
+    public function logCompetenceCreation($admin_id, $competenza_nome) {
+        return $this->logEvent(
+            'competence_creation',
+            "Nuova competenza aggiunta: $competenza_nome",
+            $admin_id
+        );
+    }
+    
+    public function logRewardCreation($creatore_id, $progetto_id, $reward_codice) {
+        return $this->logEvent(
+            'reward_creation',
+            "Nuova reward creata: $reward_codice",
+            $creatore_id,
+            $progetto_id
+        );
+    }
+    
+    public function logProfileCreation($creatore_id, $progetto_id, $profilo_nome) {
+        return $this->logEvent(
+            'profile_creation',
+            "Nuovo profilo software creato: $profilo_nome",
+            $creatore_id,
+            $progetto_id
+        );
     }
 }
-?>
+
+// Singleton instance
+class MongoLoggerSingleton {
+    private static $instance = null;
+    
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new MongoLogger();
+        }
+        return self::$instance;
+    }
+}

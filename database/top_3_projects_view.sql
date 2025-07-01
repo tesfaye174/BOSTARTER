@@ -1,9 +1,9 @@
--- SQL View for Top 3 Most Funded Projects
--- This view gets the top 3 projects with highest funding amounts
+﻿-- Vista SQL per i 3 progetti più finanziati
+-- Questa vista mostra i 3 progetti con maggiori finanziamenti
 
 USE bostarter_compliant;
 
--- Create a comprehensive view for top funded projects
+-- Crea vista completa per progetti più finanziati
 CREATE OR REPLACE VIEW v_top_3_progetti AS
 SELECT 
     p.id,
@@ -17,15 +17,15 @@ SELECT
     p.stato as status,
     u.nickname as creator_name,
     u.id as creator_id,
-    -- Calculate funding percentage
+    -- Calcola percentuale finanziamento
     ROUND((COALESCE(SUM(f.importo), 0) / p.budget_richiesto) * 100, 1) as funding_percentage,
-    -- Calculate days left
+    -- Calcola giorni rimanenti
     DATEDIFF(p.data_limite, NOW()) as days_left,
-    -- Count unique backers
+    -- Conta finanziatori unici
     COUNT(DISTINCT f.utente_id) as backers_count,
-    -- Count total fundings
+    -- Conta finanziamenti totali
     COUNT(f.id) as total_fundings,
-    -- Get average funding amount
+    -- Calcola importo medio finanziamento
     COALESCE(AVG(f.importo), 0) as avg_funding
 FROM progetti p
 JOIN utenti u ON p.creatore_id = u.id
@@ -36,3 +36,5 @@ GROUP BY p.id, p.nome, p.descrizione, p.budget_richiesto, p.foto,
          p.tipo_progetto, p.data_limite, p.stato, u.nickname, u.id
 ORDER BY current_funding DESC
 LIMIT 3;
+
+

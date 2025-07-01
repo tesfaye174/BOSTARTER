@@ -1,4 +1,4 @@
--- BOSTARTER Database Extensions
+﻿-- BOSTARTER Database Extensions
 -- Questo file contiene eventi, viste e stored procedures aggiuntive per il database BOSTARTER
 
 USE bostarter;
@@ -318,3 +318,4 @@ DELIMITER ;
 -- Commento finale
 -- Estensioni database completate per la piattaforma BOSTARTER
 -- Questo file include eventi, viste e stored procedures aggiuntive per migliorare le funzionalità del sistema.
+

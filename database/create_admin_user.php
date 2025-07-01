@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../backend/config/config.php';
+require_once __DIR__ . '/../backend/config/app_config.php';
 require_once __DIR__ . '/../backend/config/database.php';
 try {
     $db = Database::getInstance()->getConnection();
@@ -14,11 +14,11 @@ try {
         'nickname' => 'admin'
     ];
     $stmt->execute($userData);
-    echo "✓ Utente admin creato con successo (ID: " . $db->lastInsertId() . ")\n";
+    echo "? Utente admin creato con successo (ID: " . $db->lastInsertId() . ")\n";
 } catch (PDOException $e) {
     if (strpos($e->getMessage(), 'Duplicate entry') !== false) {
-        echo "ℹ️ L'utente admin esiste già\n";
+        echo "?? L'utente admin esiste gi�\n";
     } else {
-        echo "✗ Errore nella creazione dell'utente: " . $e->getMessage() . "\n";
+        echo "? Errore nella creazione dell'utente: " . $e->getMessage() . "\n";
     }
 }

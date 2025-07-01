@@ -45,7 +45,7 @@ class ErrorHandler {
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => false,
-                'error' => 'Si √® verificato un errore interno. Riprova pi√π tardi.',
+                'error' => 'Si Ë verificato un errore interno. Riprova pi˘ tardi.',
                 'error_code' => 'INTERNAL_ERROR'
             ]);
         } else {
@@ -62,9 +62,9 @@ class ErrorHandler {
             </head>
             <body>
                 <div class="error-container">
-                    <div class="error-icon">‚ö†Ô∏è</div>
-                    <h1>Oops! Qualcosa √® andato storto</h1>
-                    <p>Si √® verificato un errore interno. I nostri tecnici sono stati notificati e stanno lavorando per risolvere il problema.</p>
+                    <div class="error-icon">??</div>
+                    <h1>Oops! Qualcosa Ë andato storto</h1>
+                    <p>Si Ë verificato un errore interno. I nostri tecnici sono stati notificati e stanno lavorando per risolvere il problema.</p>
                     <a href="/" class="btn">Torna alla homepage</a>
                 </div>
             </body>
@@ -179,7 +179,7 @@ class ErrorHandler {
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => false,
-                'error' => 'Si √® verificato un errore interno',
+                'error' => 'Si Ë verificato un errore interno',
                 'error_code' => 'SERVER_ERROR'
             ]);
         } else {

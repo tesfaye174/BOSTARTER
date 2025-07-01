@@ -2,14 +2,11 @@
 <?php
 chdir(__DIR__);
 require_once 'utils/BuildSystem.php';
-
 try {
-    $buildSystem = new BuildSystem('build-config.json');
-    
+    $buildSystem = new BuildSystem('build-settings.json');
     $clean = in_array('--clean', $argv);
     $production = in_array('--production', $argv);
     $watch = in_array('--watch', $argv);
-    
     if ($watch) {
         echo "Watching for changes... Press Ctrl+C to stop.\n";
         while (true) {
@@ -20,9 +17,9 @@ try {
     } else {
         $buildSystem->build($clean);
     }
-    
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage() . "\n";
     exit(1);
 }
 ?>
+

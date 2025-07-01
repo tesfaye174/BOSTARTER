@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/app_config.php';
 require_once __DIR__ . '/../config/database.php';
 class GestoreRicompense {
     private $database;
@@ -70,7 +70,7 @@ class GestoreRicompense {
             error_log("Errore nella creazione ricompensa: " . $errore->getMessage());
             return [
                 'successo' => false,
-                'messaggio' => 'Si Ã¨ verificato un errore durante la creazione della ricompensa'
+                'messaggio' => 'Si è verificato un errore durante la creazione della ricompensa'
             ];
         }
     }
@@ -106,7 +106,7 @@ class GestoreRicompense {
             error_log("Errore nell'aggiornamento ricompensa: " . $errore->getMessage());
             return [
                 'successo' => false,
-                'messaggio' => 'Si Ã¨ verificato un errore durante l\'aggiornamento della ricompensa'
+                'messaggio' => 'Si è verificato un errore durante l\'aggiornamento della ricompensa'
             ];
         }
     }
@@ -134,7 +134,7 @@ class GestoreRicompense {
             error_log("Errore nell'eliminazione ricompensa: " . $errore->getMessage());
             return [
                 'successo' => false,
-                'messaggio' => 'Si Ã¨ verificato un errore durante l\'eliminazione della ricompensa'
+                'messaggio' => 'Si è verificato un errore durante l\'eliminazione della ricompensa'
             ];
         }
     }
@@ -152,7 +152,7 @@ class GestoreRicompense {
                 'quantita' => 1 
             ];
         } catch (PDOException $errore) {
-            error_log("Errore nella verifica disponibilitÃ : " . $errore->getMessage());
+            error_log("Errore nella verifica disponibilità: " . $errore->getMessage());
             return [
                 'disponibile' => false,
                 'quantita' => 0

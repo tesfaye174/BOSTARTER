@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BOSTARTER - Core Utilities
  * Funzioni di utilità comuni per tutta l'applicazione
  */
@@ -244,3 +244,4 @@
         throttle
     };
 })(window, document);
+

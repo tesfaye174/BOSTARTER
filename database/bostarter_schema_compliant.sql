@@ -1,4 +1,4 @@
-USE bostarter_compliant;
+﻿USE bostarter_compliant;
 
 -- Aggiungi campo mancante per candidature software
 ALTER TABLE candidature ADD COLUMN IF NOT EXISTS max_contributori INT DEFAULT 5;
@@ -901,3 +901,4 @@ CREATE TABLE IF NOT EXISTS sistema_log (
     user_id INT NULL,
     FOREIGN KEY (user_id) REFERENCES utenti(id) ON DELETE SET NULL
 );
+
