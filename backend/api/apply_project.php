@@ -21,7 +21,7 @@ require_once __DIR__ . '/../services/MongoLogger.php';
 $mongoLogger = new MongoLogger();
 $response = ['status' => 'error', 'message' => 'An unexpected error occurred.'];
 try {
-    $input = json_decode(file_get_contents('php:
+    $input = json_decode(file_get_contents('php://input'), true);
     if (!$input) {
         ApiResponse::invalidInput('Invalid JSON input');
     }

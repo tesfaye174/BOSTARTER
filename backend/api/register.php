@@ -19,7 +19,7 @@ ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(0);
 try {
-    $input = json_decode(file_get_contents('php:
+    $input = json_decode(file_get_contents('php://input'), true);
     if (!$input) {
         ApiResponse::error('Formato JSON non valido');
     }

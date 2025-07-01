@@ -1,141 +1,249 @@
-# BOSTARTER - Piattaforma di Crowdfunding 🚀
+# BOSTARTER - Piattaforma di Crowdfunding
 
-**Corso di Basi di Dati - CdS Informatica per il Management - A.A. 2024/2025**
+**BOSTARTER** è una piattaforma di crowdfunding moderna e completa, sviluppata con backend PHP e frontend JavaScript vanilla. La piattaforma consente agli utenti di creare, gestire e finanziare progetti innovativi con focus su sviluppo hardware e software.
 
-BOSTARTER è una piattaforma di crowdfunding professionale sviluppata con **compliance 100%** alle specifiche della **traccia ufficiale** del corso di Basi di Dati. La piattaforma implementa un ecosistema completo per il **finanziamento di progetti hardware e software**, ispirata a Kickstarter, con sistema avanzato di competenze utente, candidature intelligenti e architettura enterprise-grade.
+## 🚀 Caratteristiche
 
-## 🎯 **Implementazione Specifica da Traccia Ufficiale**
+### Funzionalità Principali
+- **Gestione Progetti**: Crea, modifica e pubblica progetti con validazione completa
+- **Autenticazione Utenti**: Sistema sicuro di registrazione e login con validazione avanzata
+- **Sistema di Finanziamento**: Supporta progetti con elaborazione pagamenti integrata
+- **Notifiche in Tempo Reale**: Sistema avanzato di notifiche per aggiornamenti progetti
+- **Candidature Progetti**: Candidati per entrare nei team di progetto con matching delle competenze
+- **Dashboard Analytics**: Statistiche complete e analisi dei volumi
 
-La piattaforma BOSTARTER gestisce esattamente come richiesto dalla traccia:
+### Caratteristiche Tecniche
+- **Design Responsive**: Bootstrap 5.3.3 con styling personalizzato
+- **Progressive Enhancement**: JavaScript moderno con funzionalità di accessibilità
+- **Sicurezza**: Rate limiting, gestione sicura password e conformità GDPR
+- **Monitoraggio**: Sistema di logging MongoDB per tracciamento eventi completo
+- **Performance**: Query database ottimizzate e meccanismi di caching
 
-### 👥 **Sistema Utenti**
+## 🏗️ Architettura
 
-- **Email univoca**, nickname, password, nome, cognome, anno/luogo nascita
-- **Skill curriculum** `<competenza, livello>` con livelli [0-5]
-- **Amministratori** con codice sicurezza e gestione esclusiva competenze
-- **Creatori** con #nr_progetti (ridondanza automatica) e affidabilità
+```
+BOSTARTER/
+├── backend/                    # Backend PHP
+│   ├── api/                   # Endpoint REST API
+│   ├── config/                # File di configurazione
+│   ├── controllers/           # Controller logica business
+│   ├── models/                # Modelli dati
+│   ├── services/              # Layer di servizio
+│   ├── middleware/            # Autenticazione e validazione
+│   └── utils/                 # Funzioni utility
+├── frontend/                  # Applicazione client-side
+│   ├── css/                   # Fogli di stile
+│   ├── js/                    # Moduli JavaScript
+│   └── images/                # Asset statici
+├── database/                  # Schema database e migrazioni
+└── logs/                      # Log applicazione
+```
 
-### 🔧 **Progetti Hardware**
+## 🛠️ Stack Tecnologico
 
-- **Componenti**: nome, descrizione, prezzo, quantità>0
+### Backend
+- **PHP 8.0+** - Scripting server-side
+- **MySQL** - Database primario
+- **MongoDB** - Logging e analytics
+- **PDO** - Layer di astrazione database
+- **JWT** - Token di autenticazione
 
-### 💻 **Progetti Software**
+### Frontend
+- **JavaScript Vanilla** - Nessuna dipendenza da framework
+- **Bootstrap 5.3.3** - Framework UI
+- **CSS3** - Styling personalizzato con animazioni
+- **Progressive Web App** features
 
-- **Profili** con skill richieste per **candidature automatiche**
+### Strumenti di Sviluppo
+- **Composer** - Gestione dipendenze PHP
+- **Visual Studio Code** - Ambiente di sviluppo
+- **XAMPP** - Server di sviluppo locale
 
-### 💰 **Sistema Finanziamenti**
+## 📋 Requisiti
 
-- **Importo, data, reward** associata obbligatoria
-- **Multi-finanziamento** stesso progetto (date diverse)
+- **PHP**: 8.0 o superiore
+- **MySQL**: 5.7 o superiore
+- **MongoDB**: 4.0 o superiore (per logging)
+- **Web Server**: Apache o Nginx
+- **Composer**: Ultima versione
 
-### 💬 **Sistema Commenti**
+## 🚀 Installazione
 
-- **Risposte creatore** (max 1 per commento)
+1. **Clona il repository**
+   ```bash
+   git clone https://github.com/tuousername/bostarter.git
+   cd bostarter
+   ```
 
-### ⚙️ **Business Rules Automatiche**
+2. **Installa dipendenze PHP**
+   ```bash
+   cd backend
+   composer install
+   ```
 
-- **Chiusura automatica** progetti: budget raggiunto OR data limite superata
-- **Matching intelligente** skill per candidature software
+3. **Setup Database**
+   ```bash
+   # Importa lo schema principale
+   mysql -u root -p < database/bostarter_schema_compliant.sql
+   
+   # Esegui migrazioni aggiuntive
+   mysql -u root -p < database/security_tables.sql
+   mysql -u root -p < database/notifications_enhancement.sql
+   ```
 
-## 🎓 **CERTIFICAZIONE COMPLIANCE 100%**
+4. **Configurazione**
+   ```bash
+   # Copia e configura le impostazioni environment
+   cp backend/config/database.example.php backend/config/database.php
+   # Modifica il file di configurazione con le tue credenziali database
+   ```
 
-✅ **Il progetto BOSTARTER è CERTIFICATO COMPLIANT al 100%** con la traccia ufficiale del corso di Basi di Dati CdS Informatica per il Management A.A. 2024/2025.
+5. **Crea Utente Admin**
+   ```bash
+   php database/create_admin_user.php
+   ```
 
-**📊 Riepilogo Quantitativo Compliance**:
+6. **Imposta Permessi**
+   ```bash
+   chmod 755 backend/logs/
+   chmod 755 frontend/uploads/
+   ```
 
-- 🎯 **66/66 requisiti funzionali** implementati (100%)
-- 🗄️ **11/11 tabelle database** conformi (100%)  
-- ⚙️ **15/15 regole business** implementate (100%)
-- 🔒 **12/12 constraint integrità** verificati (100%)
+## 🔧 Configurazione
 
-## 📚 **Documentazione Completa**
+### Configurazione Database
+Modifica `backend/config/database.php`:
 
-### 📋 **Documenti di Verifica Compliance**
+```php
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'bostarter');
+define('DB_USER', 'tuo_username');
+define('DB_PASS', 'tua_password');
+```
 
-- **📋 [FINAL_COMPLIANCE_VALIDATION.md](FINAL_COMPLIANCE_VALIDATION.md)** - **Certificazione finale compliance**
-- **🎯 [COMPLIANCE_VERIFICATION.md](COMPLIANCE_VERIFICATION.md)** - **Mapping dettagliato** ogni requisito traccia → implementazione
+### Configurazione MongoDB (Opzionale)
+Per logging avanzato e analytics:
 
-### 📖 **Documentazione Tecnica**
+```php
+define('MONGO_HOST', 'localhost');
+define('MONGO_PORT', 27017);
+define('MONGO_DB', 'bostarter_logs');
+```
 
-- **📚 [DOCUMENTAZIONE_COMPLETA.md](DOCUMENTAZIONE_COMPLETA.md)** - Guida principale sviluppo e architettura
-- **🛡️ [SECURITY_AUDIT_REPORT.md](SECURITY_AUDIT_REPORT.md)** - Report audit di sicurezza enterprise
-- **⚡ [OTTIMIZZAZIONI_INDEX_REPORT.md](OTTIMIZZAZIONI_INDEX_REPORT.md)** - Dettagli ottimizzazioni performance
-- **👨‍💻 [GUIDA_SVILUPPATORE.md](GUIDA_SVILUPPATORE.md)** - Guida per sviluppatori
+## 🎯 Utilizzo
 
-## 🚀 **Quick Start**
+### Per Creatori di Progetti
+1. **Registrati** e completa il tuo profilo
+2. **Crea Progetto** con informazioni dettagliate
+3. **Aggiungi Competenze** richieste per il tuo progetto
+4. **Pubblica** per revisione e finanziamento
+5. **Gestisci** candidature e aggiornamenti
 
-### Installazione
+### Per Sostenitori
+1. **Esplora Progetti** con filtri avanzati
+2. **Supporta Progetti** con pagamenti sicuri
+3. **Traccia Progressi** con notifiche in tempo reale
+4. **Partecipa** con aggiornamenti e commenti progetti
 
+### Per Collaboratori
+1. **Cerca Progetti** per competenze e interessi
+2. **Candidati** per entrare nei team di progetto
+3. **Mostra** la tua esperienza e portfolio
+4. **Collabora** su progetti innovativi
+
+## 🔒 Caratteristiche di Sicurezza
+
+- **Validazione Input**: Validazione completa server-side
+- **Protezione SQL Injection**: Prepared statements e query parametrizzate
+- **Prevenzione XSS**: Sanitizzazione output e header CSP
+- **Protezione CSRF**: Validazione richieste basata su token
+- **Rate Limiting**: Protezione endpoint API
+- **Sessioni Sicure**: Flag cookie HTTPOnly e Secure
+- **Sicurezza Password**: Hashing Bcrypt con salt
+
+## 🎨 Architettura Frontend
+
+Il frontend utilizza un'architettura JavaScript modulare:
+
+- **[`BOSTARTERMaster`](frontend/js/bostarter-master.js)**: Framework core e animazioni
+- **[`ProjectsManager`](frontend/js/projects.js)**: Listing e gestione progetti
+- **[`NavigationManager`](frontend/js/navigation.js)**: Navigazione responsive
+- **[`ModernRegistrationForm`](frontend/js/auth-register.js)**: UX registrazione potenziata
+- **[`ModalAccessibility`](frontend/js/modal-accessibility.js)**: Funzionalità accessibilità
+
+## 📊 Endpoint API
+
+### Progetti
+- `GET /api/projects_compliant.php` - Lista progetti con filtri
+- `POST /api/projects_compliant.php` - Crea nuovo progetto
+- `PUT /api/projects_compliant.php` - Aggiorna progetto
+- `DELETE /api/projects_compliant.php` - Elimina progetto
+
+### Statistiche
+- `GET /api/stats_compliant.php?action=overview` - Statistiche piattaforma
+
+### Candidature
+- `POST /api/apply_project.php` - Candidati per entrare nel progetto
+
+## 🧪 Testing
+
+Esegui i test di validazione integrati:
 ```bash
-# 1. Setup ambiente
-cp .env.example .env
-# Modifica .env con le tue configurazioni
-
-# 2. Database
-mysql -u root -p < database/bostarter_schema_compliant.sql
-
-# 3. Avvia XAMPP e apri
-# http://localhost/BOSTARTER/frontend/
+php backend/utils/test_validator.php
 ```
 
-### Configurazione Minima (.env)
+## 📈 Monitoraggio
 
-```env
-DB_HOST=localhost
-DB_NAME=bostarter_compliant
-DB_USER=root
-DB_PASS=your_secure_password
+La piattaforma include logging completo attraverso:
+- **[`MongoLogger`](backend/services/MongoLogger.php)**: Tracciamento eventi e analytics
+- **[`NotificationService`](backend/services/NotificationService.php)**: Metriche engagement utenti
+- **[`VolumeAnalysisService`](backend/services/VolumeAnalysisService.php)**: Analisi crescita piattaforma
 
-JWT_SECRET=your_32_char_secret
-ENCRYPTION_KEY=your_32_char_key
-```
+## 🤝 Contribuire
 
-## ✅ **Compliance Traccia Ufficiale**
+1. Fai fork del repository
+2. Crea un branch feature (`git checkout -b feature/funzionalita-fantastica`)
+3. Commit delle tue modifiche (`git commit -m 'Aggiungi funzionalità fantastica'`)
+4. Push al branch (`git push origin feature/funzionalita-fantastica`)
+5. Apri una Pull Request
 
-### Requisiti Implementati
+## 📄 Licenza
 
-#### 🔥 **Core Requirements da Traccia**
+Questo progetto è rilasciato sotto Licenza MIT - vedi il file [LICENSE](LICENSE) per dettagli.
 
-- [x] **Gestione Utenti**: Email univoca, skill curriculum [0-5], amministratori con codice sicurezza, creatori con #nr_progetti e affidabilità
-- [x] **Progetti HW/SW**: Componenti con quantità>0 vs profili con skill richieste, reward con codice univoco, stato enum
-- [x] **Finanziamenti**: Multipli per progetto con date diverse, reward obbligatoria, chiusura automatica
-- [x] **Commenti**: ID univoco, risposte creatore (max 1 per commento)
-- [x] **Candidature**: Matching automatico skill utente vs profili software
+## 🙏 Riconoscimenti
 
-#### ⚙️ **Regole Business Automatiche**
+- Team Bootstrap per l'eccellente framework CSS
+- Community PHP per le robuste capacità server-side
+- Contributori e tester che hanno aiutato a migliorare la piattaforma
 
-- [x] **Chiusura progetti**: Budget raggiunto OR data limite superata
-- [x] **Ridondanza #nr_progetti**: Aggiornamento automatico via trigger
-- [x] **Validazioni**: Livelli skill [0-5], quantità componenti >0, date future
-- [x] **Autorizzazioni**: Solo admin gestiscono competenze, solo creatori progetti
+## 📞 Supporto
 
-#### 🗄️ **Database Schema Compliant**
+Per supporto e domande:
+- Crea un issue nel repository
+- Consulta la documentazione nella cartella `docs/`
+- Contatta il team di sviluppo
 
-- [x] **11 tabelle principali**: utenti, competenze, skill_utente, progetti, reward, componenti_hardware, profili_software, profili_skill_richieste, finanziamenti, commenti, candidature
-- [x] **Constraint integrità**: FK, unique, check, enum
-- [x] **Trigger automatici**: Chiusura progetti, aggiornamento contatori
-- [x] **Indici ottimizzati**: Performance e query rapide
+## 🌟 Caratteristiche Distintive
 
-## 🏆 **Caratteristiche Enterprise (Valore Aggiunto)**
+### Sistema di Validazione Avanzato
+La piattaforma implementa un sistema di validazione multi-livello che garantisce:
+- **Validazione Real-time**: Feedback immediato durante l'inserimento dati
+- **Controlli Server-side**: Validazione completa backend per sicurezza
+- **Messaggi Contestuali**: Guide utente intuitive per correzioni
 
-Oltre ai requisiti della traccia:
+### Gestione Competenze Intelligente
+- **Matching Automatico**: Algoritmo di abbinamento skill-progetto
+- **Suggerimenti Dinamici**: Raccomandazioni progetti basate su competenze
+- **Portfolio Integrato**: Showcase lavori e certificazioni
 
-- **🛡️ Sicurezza Avanzata**: bcrypt, CSRF protection, SQL injection prevention, XSS protection
-- **⚡ Performance Ottimizzate**: Asset unificati, caching, query tuning, indexing
-- **📊 Analytics**: Statistiche progetti, top creatori, volume analysis
-- **🔔 Notifiche Real-time**: Sistema notifiche con MongoDB
-- **📱 UI/UX Moderna**: Responsive design, PWA-ready, offline support
-- **🤖 AI-like Features**: Raccomandazioni intelligenti, matching automatico
+### Analytics e Reporting
+- **Dashboard Tempo Reale**: Metriche live performance progetti
+- **Report Personalizzati**: Analisi dettagliate per creatori
+- **Trend Analysis**: Identificazione pattern e opportunità mercato
 
-## 🎓 **Pronto per Valutazione Accademica**
+---
 
-Il progetto BOSTARTER è completo, documentato e pronto per la **valutazione del corso di Basi di Dati**:
+**BOSTARTER** - Potenziamo l'Innovazione Attraverso il Crowdfunding 🚀
 
-- ✅ **Compliance 100%** con traccia ufficiale
-- ✅ **Database normalizzato** e ottimizzato  
-- ✅ **Business logic completa** con tutte le regole
-- ✅ **Sicurezza enterprise-grade**
-- ✅ **Documentazione completa** e dettagliata
-- ✅ **Codice pulito** e ben strutturato
-
-**🎯 Per la verifica dettagliata di ogni singolo requisito consultare: [COMPLIANCE_VERIFICATION.md](COMPLIANCE_VERIFICATION.md)**
+*Sviluppato con passione per supportare l'ecosistema dell'innovazione italiana*

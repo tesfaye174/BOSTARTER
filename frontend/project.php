@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . "/../backend/config/database.php";
+require_once __DIR__ . "/../backend/utils/Database.php";
 $project_id = (int)($_GET["id"] ?? 0);
 $error = "";
 $project = null;
@@ -51,9 +52,14 @@ $days_left = $project ? max(0, floor((strtotime($project["data_scadenza"]) - tim
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $project ? htmlspecialchars($project["nome"]) : "Progetto" ?> - BOSTARTER</title>
     <!-- Bootstrap 5.3.3 -->
-    <link href="https:
-    <link href="https:
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <link href="css/bootstrap-bostarter.css" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="images/icon-144x144.png">
 </head>
 <body>
     <!-- Navbar Bootstrap -->
@@ -182,7 +188,7 @@ $days_left = $project ? max(0, floor((strtotime($project["data_scadenza"]) - tim
                                                     <strong><?= htmlspecialchars($finanziamento["nickname"]) ?></strong>
                                                     <br>
                                                     <small class="text-muted">
-                                                        €<?= number_format($finanziamento["importo"]) ?> - 
+                                                        ï¿½<?= number_format($finanziamento["importo"]) ?> - 
                                                         <?= date("d/m/Y", strtotime($finanziamento["data_finanziamento"])) ?>
                                                     </small>
                                                 </div>
@@ -211,7 +217,7 @@ $days_left = $project ? max(0, floor((strtotime($project["data_scadenza"]) - tim
                                 <!-- Stats -->
                                 <div class="row text-center mb-4">
                                     <div class="col-6">
-                                        <h3 class="text-gradient-bostarter mb-0">€<?= number_format($project["totale_raccolto"]) ?></h3>
+                                        <h3 class="text-gradient-bostarter mb-0">ï¿½<?= number_format($project["totale_raccolto"]) ?></h3>
                                         <small class="text-muted">Raccolti</small>
                                     </div>
                                     <div class="col-6">
@@ -221,7 +227,7 @@ $days_left = $project ? max(0, floor((strtotime($project["data_scadenza"]) - tim
                                 </div>
                                 <div class="row text-center mb-4">
                                     <div class="col-6">
-                                        <h4 class="mb-0">€<?= number_format($project["budget_richiesto"]) ?></h4>
+                                        <h4 class="mb-0">ï¿½<?= number_format($project["budget_richiesto"]) ?></h4>
                                         <small class="text-muted">Obiettivo</small>
                                     </div>
                                     <div class="col-6">
@@ -272,7 +278,7 @@ $days_left = $project ? max(0, floor((strtotime($project["data_scadenza"]) - tim
                     <form id="supportForm" method="POST" action="support-project.php">
                         <input type="hidden" name="project_id" value="<?= $project["id"] ?>">
                         <div class="mb-3">
-                            <label for="amount" class="form-label">Importo (€)</label>
+                            <label for="amount" class="form-label">Importo (ï¿½)</label>
                             <input type="number" class="form-control form-control-bostarter" id="amount" name="amount" min="10" max="10000" required>
                         </div>
                         <div class="mb-3">

@@ -14,6 +14,7 @@ $is_logged_in = isset($_SESSION["user_id"]);
 $username = $_SESSION["nickname"] ?? "";
 try {
     require_once __DIR__ . "/../backend/config/database.php";
+    require_once __DIR__ . "/../backend/utils/Database.php";
     $db = Database::getInstance();
     $conn = $db->getConnection();
     try {
@@ -68,18 +69,16 @@ if (empty($featured_projects)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BOSTARTER - Crowdfunding Italiano</title>
-    <link href="https:
-    <link href="https:
-    <style>
-        body { padding-top: 76px; }
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 5rem 0;
-        }
-        .project-card { transition: transform 0.3s ease; }
-        .project-card:hover { transform: translateY(-5px); }
-    </style>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bostarter-master.css"> 
+    <link rel="stylesheet" href="css/custom.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="images/icon-144x144.png">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
@@ -101,8 +100,8 @@ if (empty($featured_projects)) {
     </nav>
     <section class="hero-section text-center">
         <div class="container">
-            <h1 class="display-4 fw-bold mb-4">Trasforma le tue idee in realtà</h1>
-            <p class="lead mb-4">BOSTARTER è la piattaforma italiana per il crowdfunding di progetti innovativi.</p>
+            <h1 class="display-4 fw-bold mb-4">Trasforma le tue idee in realtï¿½</h1>
+            <p class="lead mb-4">BOSTARTER ï¿½ la piattaforma italiana per il crowdfunding di progetti innovativi.</p>
             <div class="d-flex gap-3 justify-content-center">
                 <a href="#progetti" class="btn btn-bostarter-light btn-lg">Esplora Progetti</a>
                 <a href="auth/register.php" class="btn btn-outline-light btn-lg">Inizia Ora</a>
@@ -127,7 +126,7 @@ if (empty($featured_projects)) {
                                         <?= $progress ?>%
                                     </div>
                                 </div>
-                                <small class="text-muted">€<?= number_format($project["total_funding"]) ?> / €<?= number_format($project["budget_richiesto"]) ?> - <?= $days_left ?> giorni rimasti</small>
+                                <small class="text-muted">ï¿½<?= number_format($project["total_funding"]) ?> / ï¿½<?= number_format($project["budget_richiesto"]) ?> - <?= $days_left ?> giorni rimasti</small>
                             </div>
                         </div>
                     </div>

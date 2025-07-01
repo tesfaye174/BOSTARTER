@@ -21,7 +21,7 @@ try {
     $mongoLogger = new MongoLogger();
     $method = $_SERVER['REQUEST_METHOD'];
     $action = $_GET['action'] ?? 'list';
-    $request = json_decode(file_get_contents('php:
+    $request = json_decode(file_get_contents('php://input'), true);
     $validProjectTypes = ['hardware', 'software'];
     $mongoLogger->logAction('projects_compliant_request', [
         'endpoint' => 'projects_compliant',

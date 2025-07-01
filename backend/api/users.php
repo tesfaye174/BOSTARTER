@@ -33,7 +33,7 @@ function canAccessProfile($db, $targetUserId) {
     return $user && $user['role'] === 'admin';
 }
 $method = $_SERVER['REQUEST_METHOD'];
-$request = json_decode(file_get_contents('php:
+$request = json_decode(file_get_contents('php://input'), true);
 switch ($method) {
     case 'GET':
         if (isset($_GET['user_id'])) {
@@ -394,7 +394,7 @@ if (isset($_GET['skills']) && isset($_GET['user_id'])) {
                 echo json_encode(['error' => 'Can only add skills to your own profile']);
                 exit;
             }
-            $skillData = json_decode(file_get_contents('php:
+            $skillData = json_decode(file_get_contents('php://input'), true);
             $insertStmt = $db->prepare("
                 INSERT INTO USER_SKILLS (user_id, skill_id, proficiency_level, years_experience, created_at) 
                 VALUES (?, ?, ?, ?, NOW())

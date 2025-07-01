@@ -6,6 +6,12 @@ class ResourceOptimizer {
     private static array $preloadedAssets = [];
     private static array $inlineScripts = [];
     private static array $deferredStyles = [];
+    private $config;
+    private $buildDir;
+    public function __construct($config) {
+        $this->config = $config;
+        $this->buildDir = dirname(__DIR__) . '/build/';
+    }
     public static function optimizeImage(string $imagePath, array $options = []): string {
         $defaults = [
             'lazy' => true,
@@ -311,6 +317,35 @@ self.addEventListener('activate', (event) => {
         self::$preloadedAssets = [];
         self::$inlineScripts = [];
         self::$deferredStyles = [];
+    }
+    public function optimizeCSS($files) {
+        $combinedCSS = '';
+        foreach ($files as $file) {
+            if (file_exists($file)) {
+                $combinedCSS .= file_get_contents($file) . "\n";
+            }
+        }
+        return $this->minifyCSS($combinedCSS);
+    }
+    public function optimizeJS($files) {
+        $combinedJS = '';
+        foreach ($files as $file) {
+            if (file_exists($file)) {
+                $combinedJS .= file_get_contents($file) . ";\n";
+            }
+        }
+        return $this->minifyJS($combinedJS);
+    }
+    private function minifyCSS($css) {
+        $css = preg_replace('/\/\*.*?\*\//s', '', $css);
+        $css = preg_replace('/\s+/', ' ', $css);
+        return trim($css);
+    }
+    private function minifyJS($js) {
+        $js = preg_replace('/\/\*.*?\*\//s', '', $js);
+        $js = preg_replace('/\/\/.*$/m', '', $js);
+        $js = preg_replace('/\s+/', ' ', $js);
+        return trim($js);
     }
 }
 ?>

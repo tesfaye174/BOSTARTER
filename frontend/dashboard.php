@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . "/../backend/config/database.php";
+require_once __DIR__ . "/../backend/utils/Database.php";
 if (!isset($_SESSION["user_id"])) {
     header("Location: auth/login.php");
     exit;
@@ -63,39 +64,15 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - BOSTARTER</title>
-    <link href="https:
-    <link href="https:
-    <style>
-        body { 
-            padding-top: 76px; 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-card h3 { margin: 0; font-size: 2.5rem; font-weight: bold; }
-        .stat-card p { margin: 0; opacity: 0.9; font-size: 1.1rem; }
-        .dashboard-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            border: none;
-        }
-        .project-card {
-            transition: transform 0.3s ease;
-            border: 1px solid #e9ecef;
-        }
-        .project-card:hover { transform: translateY(-3px); }
-        .navbar { backdrop-filter: blur(10px); }
-    </style>
+    <link rel="stylesheet" href="css/bostarter-master.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/fontawesome.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="images/icon-144x144.png">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
@@ -149,7 +126,7 @@ try {
                 <div class="col-md-6">
                     <div class="stat-card text-center">
                         <i class="fas fa-euro-sign fa-2x mb-3"></i>
-                        <h3>€<?= number_format($stats["fondi_raccolti"]) ?></h3>
+                        <h3>ï¿½<?= number_format($stats["fondi_raccolti"]) ?></h3>
                         <p>Fondi Raccolti</p>
                     </div>
                 </div>
@@ -164,7 +141,7 @@ try {
                 <div class="col-md-6">
                     <div class="stat-card text-center">
                         <i class="fas fa-chart-line fa-2x mb-3"></i>
-                        <h3>€<?= number_format($stats["totale_investito"]) ?></h3>
+                        <h3>ï¿½<?= number_format($stats["totale_investito"]) ?></h3>
                         <p>Totale Investito</p>
                     </div>
                 </div>
@@ -203,8 +180,8 @@ try {
                                                 </p>
                                                 <div class="mb-3">
                                                     <div class="d-flex justify-content-between small mb-2">
-                                                        <span class="fw-bold">Raccolti: €<?= number_format($progetto["totale_raccolto"]) ?></span>
-                                                        <span>Obiettivo: €<?= number_format($progetto["budget_richiesto"]) ?></span>
+                                                        <span class="fw-bold">Raccolti: ï¿½<?= number_format($progetto["totale_raccolto"]) ?></span>
+                                                        <span>Obiettivo: ï¿½<?= number_format($progetto["budget_richiesto"]) ?></span>
                                                     </div>
                                                     <div class="progress" style="height: 8px;">
                                                         <div class="progress-bar bg-success" style="width: <?= min($progress, 100) ?>%"></div>
@@ -262,7 +239,7 @@ try {
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-success fs-6">
-                                                        €<?= number_format($finanziamento["importo"]) ?>
+                                                        ï¿½<?= number_format($finanziamento["importo"]) ?>
                                                     </span>
                                                 </td>
                                                 <td class="text-muted">
@@ -290,6 +267,14 @@ try {
             </div>
         </div>
     </div>
-    <script src="https:
+    <footer class="bg-primary text-white text-center py-3 mt-4">
+        <div class="container">
+            <p class="mb-0">&copy; 2023 BOSTARTER. Tutti i diritti riservati.</p>
+            <p class="mb-0">Powered by <a href="https://getbootstrap.com/">Bootstrap</a></p>
+        </div>
+    </footer>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

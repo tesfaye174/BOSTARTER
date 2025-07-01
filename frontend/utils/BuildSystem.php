@@ -9,6 +9,8 @@ class BuildSystem {
     private const BUILD_DIR = __DIR__ . '/../build/';
     private const ASSETS_CONFIG = __DIR__ . '/../config/assets.json';
     private static array $buildManifest = [];
+    private $config;
+    private $optimizer;
     public static function build(array $options = []): array {
         $startTime = microtime(true);
         echo "🚀 Avvio build sistema BOSTARTER...\n";
@@ -203,6 +205,107 @@ class BuildSystem {
             }
         }
         return false;
+    }
+    public function __construct($configFile = 'build-config.json') {
+        $this->loadConfig($configFile);
+        $this->optimizer = new ResourceOptimizer($this->config);
+    }
+    private function loadConfig($configFile) {
+        if (!file_exists($configFile)) {
+            throw new Exception("Config file not found: $configFile");
+        }
+        
+        $json = file_get_contents($configFile);
+        $this->config = json_decode($json, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Invalid JSON in config file: " . json_last_error_msg());
+        }
+    }
+    public function build($clean = false) {
+        try {
+            if ($clean) {
+                $this->clean();
+            }
+            
+            $this->buildCSS();
+            $this->buildJS();
+            $this->generateManifest();
+            
+            echo "Build completed successfully!\n";
+            return true;
+            
+        } catch (Exception $e) {
+            echo "Build failed: " . $e->getMessage() . "\n";
+            return false;
+        }
+    }
+    private function buildCSS() {
+        if (!isset($this->config['css']) || !isset($this->config['css']['files'])) {
+            return;
+        }
+        
+        $cssFiles = array_map(function($file) {
+            return dirname(__DIR__) . '/' . $file;
+        }, $this->config['css']['files']);
+        
+        $optimizedCSS = $this->optimizer->optimizeCSS($cssFiles);
+        $outputFile = dirname(__DIR__) . '/' . $this->config['css']['output'];
+        
+        file_put_contents($outputFile, $optimizedCSS);
+        echo "CSS built: " . $this->config['css']['output'] . "\n";
+    }
+    private function buildJS() {
+        if (!isset($this->config['js']) || !isset($this->config['js']['files'])) {
+            return;
+        }
+        
+        $jsFiles = array_map(function($file) {
+            return dirname(__DIR__) . '/' . $file;
+        }, $this->config['js']['files']);
+        
+        $optimizedJS = $this->optimizer->optimizeJS($jsFiles);
+        $outputFile = dirname(__DIR__) . '/' . $this->config['js']['output'];
+        
+        file_put_contents($outputFile, $optimizedJS);
+        echo "JS built: " . $this->config['js']['output'] . "\n";
+    }
+    private function clean() {
+        $patterns = [
+            dirname(__DIR__) . '/css/bostarter-master*.css',
+            dirname(__DIR__) . '/js/bostarter-master*.js',
+            dirname(__DIR__) . '/build/*'
+        ];
+        
+        foreach ($patterns as $pattern) {
+            $files = glob($pattern);
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+        }
+        
+        echo "Build directory cleaned.\n";
+    }
+    private function generateManifest() {
+        $manifest = [
+            'css' => [
+                'bostarter-master.css' => filemtime(dirname(__DIR__) . '/css/bostarter-master.css')
+            ],
+            'js' => [
+                'bostarter-master.js' => filemtime(dirname(__DIR__) . '/js/bostarter-master.js')
+            ],
+            'timestamp' => time()
+        ];
+        
+        $manifestFile = dirname(__DIR__) . '/build/manifest.json';
+        if (!is_dir(dirname($manifestFile))) {
+            mkdir(dirname($manifestFile), 0755, true);
+        }
+        
+        file_put_contents($manifestFile, json_encode($manifest, JSON_PRETTY_PRINT));
+        echo "Manifest generated.\n";
     }
 }
 if (php_sapi_name() === 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_NAME'])) {

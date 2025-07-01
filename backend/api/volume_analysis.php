@@ -69,7 +69,7 @@ function handleGetRequest($volumeService) {
     }
 }
 function handlePostRequest($volumeService) {
-    $input = json_decode(file_get_contents('php:
+    $input = json_decode(file_get_contents('php://input'), true);
     if (!$input) {
         ApiResponse::error('Invalid JSON input', 400);
         return;

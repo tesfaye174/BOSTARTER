@@ -45,7 +45,7 @@ try {
             ]);
             break;
         case 'POST':
-            $input = json_decode(file_get_contents('php:
+            $input = json_decode(file_get_contents('php://input'), true);
             if (!$input) {
                 ApiResponse::error('Invalid JSON format');
             }
@@ -87,7 +87,7 @@ try {
             ], 'Skill added successfully');
             break;
         case 'PUT':
-            $input = json_decode(file_get_contents('php:
+            $input = json_decode(file_get_contents('php://input'), true);
             if (!$input) {
                 ApiResponse::error('Invalid JSON format');
             }

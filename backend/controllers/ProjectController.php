@@ -231,22 +231,7 @@ class ProjectController extends BaseController {
             ];
         }
     }
-        try {
-            $statement = $this->connessioneDatabase->prepare("CALL publish_project(?, @p_success, @p_message)");            
-            $statement->bindParam(1, $projectId, \PDO::PARAM_INT);
-            $statement->execute();
-            $risultato = $this->connessioneDatabase->query("SELECT @p_success as success, @p_message as message")->fetch(\PDO::FETCH_ASSOC);
-            return [
-                'stato' => $risultato['success'] ? 'successo' : 'errore',
-                'messaggio' => $risultato['message']
-            ];        
-        } catch (\PDOException $errore) {
-            return [
-                'stato' => 'errore',
-                'messaggio' => 'Non riesco a pubblicare il progetto: ' . $errore->getMessage()
-            ];
-        }
-    }
+    
     public function getCreatorProjects($creatorId) {        
         try {
             $statement = $this->connessioneDatabase->prepare("CALL get_creator_projects(?)");

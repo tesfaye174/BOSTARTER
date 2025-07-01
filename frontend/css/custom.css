@@ -1,0 +1,62 @@
+/* Layout and spacing */
+body { 
+    padding-top: 76px;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+}
+
+/* Hero section with style guide colors */
+.hero-section { 
+    background: linear-gradient(135deg, #5A87FA 0%, #2C3DB2 100%);
+    color: white; 
+    padding: 5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+}
+
+/* Project cards with enhanced hover effects */
+.project-card { 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background: white;
+    overflow: hidden;
+}
+
+.project-card:hover { 
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Typography improvements */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* Button styles matching the style guide */
+.btn-primary {
+    background: linear-gradient(135deg, #5A87FA 0%, #2C3DB2 100%);
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(90, 135, 250, 0.3);
+}

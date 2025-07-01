@@ -18,7 +18,7 @@ $modelloUtente = new UserCompliant();
 $logger = new MongoLogger();
 $servizioAuth = new AuthService();
 $metodo = $_SERVER['REQUEST_METHOD'];
-$richiestaJson = json_decode(file_get_contents('php:
+$richiestaJson = json_decode(file_get_contents('php://input'), true);
 switch ($metodo) {
     case 'POST':
         gestisciRichiestaAuth($servizioAuth, $logger, $richiestaJson);

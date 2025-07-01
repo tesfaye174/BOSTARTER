@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['error' => 'Metodo non consentito']);
     exit();
 }
-$input = json_decode(file_get_contents('php:
+$input = json_decode(file_get_contents('php://input'), true);
 $project_id = (int)($input['project_id'] ?? 0);
 $comment_text = trim($input['comment'] ?? '');
 $parent_id = (int)($input['parent_id'] ?? 0) ?: null; 

@@ -3,6 +3,8 @@ namespace BOSTARTER\Controllers;
 require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../utils/NavigationHelper.php';
 require_once __DIR__ . '/../utils/BaseController.php';
+require_once __DIR__ . "/../models/User.php";
+require_once __DIR__ . "/../utils/Validator.php";
 use BOSTARTER\Utils\BaseController;
 class GestoreAutenticazione extends BaseController
 {
@@ -11,12 +13,15 @@ class GestoreAutenticazione extends BaseController
     private const MAX_LOGIN_ATTEMPTS = 5;
     private const LOCKOUT_DURATION = 900; 
     private const PASSWORD_MIN_LENGTH = 8;
+    private $userModel;
+    
     public function __construct()
     {
         parent::__construct();
         $this->authService = new \BOSTARTER\Services\AuthService();
         $this->config = require __DIR__ . '/../config/auth_config.php';
         $this->initializeSecurityMeasures();
+        $this->userModel = new User();
     }
     private function initializeSecurityMeasures(): void
     {

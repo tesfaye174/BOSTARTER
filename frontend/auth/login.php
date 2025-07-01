@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . "/../../backend/config/database.php";
+require_once __DIR__ . "/../../backend/utils/Database.php";
 $error = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST["email"] ?? "");
@@ -36,27 +37,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - BOSTARTER</title>
-    <link href="https:
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-        }
-        .login-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .login-header {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-    </style>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/bostarter-master.css">
+    <link rel="stylesheet" href="../css/custom.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../js/auth.js"></script>
 </head>
 <body>
     <div class="container">

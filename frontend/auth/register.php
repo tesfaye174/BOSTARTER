@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . "/../../backend/config/database.php";
+require_once __DIR__ . "/../../backend/utils/Database.php";
 $error = "";
 $success = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -19,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmt = $conn->prepare("SELECT id FROM utenti WHERE email = ? OR nickname = ?");
             $stmt->execute([$email, $nickname]);
             if ($stmt->fetch()) {
-                $error = "Email o nickname già registrati";
+                $error = "Email o nickname giï¿½ registrati";
             } else {
                 $password_hash = hash("sha256", $password);
                 $stmt = $conn->prepare("
@@ -43,26 +44,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrazione - BOSTARTER</title>
-    <link href="https:
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 2rem 0;
-        }
-        .register-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .register-header {
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-    </style>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../css/bostarter-master.css">
+    <link rel="stylesheet" href="../css/custom.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="../favicon.ico" type="image/x-icon">
+    
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="../js/auth-register.js"></script>
+    
 </head>
 <body>
     <div class="container">
@@ -129,7 +129,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </form>
                         <?php endif; ?>
                         <div class="text-center">
-                            <p class="mb-2">Hai già un account? <a href="login.php">Accedi</a></p>
+                            <p class="mb-2">Hai giï¿½ un account? <a href="login.php">Accedi</a></p>
                             <p><a href="../index.php" class="text-muted"> Torna alla homepage</a></p>
                         </div>
                     </div>

@@ -18,7 +18,7 @@ require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
 require_once __DIR__ . '/../utils/Validator.php';
 try {
-    $input = json_decode(file_get_contents('php:
+    $input = json_decode(file_get_contents('php://input'), true);
     if (!$input) {
         ApiResponse::error('Formato JSON non valido');
     }

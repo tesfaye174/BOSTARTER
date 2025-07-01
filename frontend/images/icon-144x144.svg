@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 144 144">
+  <rect width="144" height="144" fill="#3176FF" rx="20"/>
+  <circle cx="72" cy="72" r="45" fill="white" opacity="0.1"/>
+  <text x="72" y="85" font-family="Arial, sans-serif" font-size="60" fill="white" text-anchor="middle" font-weight="bold">B</text>
+  <text x="72" y="110" font-family="Arial, sans-serif" font-size="14" fill="white" text-anchor="middle" opacity="0.8">STARTER</text>
+</svg>

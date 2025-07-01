@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../backend/middleware/SecurityMiddleware.php';
 require_once __DIR__ . '/../../backend/config/database.php';
+require_once __DIR__ . '/../../backend/utils/Database.php';
 require_once __DIR__ . '/../../backend/config/config.php';
 require_once __DIR__ . '/../../backend/services/MongoLogger.php';
 require_once __DIR__ . '/../../backend/utils/FrontendSecurity.php';

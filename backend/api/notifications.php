@@ -117,7 +117,7 @@ switch ($method) {
         }
         break;
     case 'POST':
-        $data = json_decode(file_get_contents('php:
+        $data = json_decode(file_get_contents('php://input'), true);
         switch ($action) {
             case 'bulk_action':
                 if (!isset($data['notification_ids']) || !isset($data['action'])) {
@@ -133,7 +133,7 @@ switch ($method) {
         }
         break;
     case 'PUT':
-        $data = json_decode(file_get_contents('php:
+        $data = json_decode(file_get_contents('php://input'), true);
         switch ($action) {
             case 'mark_read':
                 if (!isset($data['notification_id'])) {
