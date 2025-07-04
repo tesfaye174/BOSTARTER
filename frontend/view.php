@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once __DIR__ . "/../backend/config/database.php";
 
@@ -6,9 +6,9 @@ require_once __DIR__ . "/../backend/config/database.php";
 $project_id = (int)($_GET["id"] ?? 0);
 $error = "";
 $project = null;
-$finanziamenti = [];
+$finanziamenti = $this->getFinanziamenti($project_id);
 
-// Carica i dati del progetto se l'ID è valido
+// Carica i dati del progetto se l'ID Ã¨ valido
 if ($project_id > 0) {
     try {
         $db = Database::getInstance();
@@ -28,14 +28,14 @@ if ($project_id > 0) {
         
         if ($project) {
             // La tabella finanziamenti non esiste, quindi saltiamo questa query
-            $finanziamenti = [];
+            $finanziamenti = $this->getFinanziamenti($project_id);
         }
     } catch(Exception $e) {
         $error = "Errore nel caricamento del progetto";
     }
 }
 
-// Se il progetto non è stato trovato, mostra errore
+// Se il progetto non Ã¨ stato trovato, mostra errore
 if (!$project) {
     $error = "Progetto non trovato";
 }
@@ -336,4 +336,5 @@ $days_left = $project ? max(0, floor((strtotime($project["data_limite"]) - time(
     </script>
 </body>
 </html>
+
 

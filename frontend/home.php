@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 // Gestisci messaggio di logout
@@ -106,7 +106,7 @@ if (empty($featured_projects)) {
     </nav>
     <section class="hero-section text-center">
         <div class="container">
-            <h1 class="display-4 fw-bold mb-4">Trasforma le tue idee in realt?</h1>
+            <h1 class="display-4 fw-bold mb-4">Trasforma le tue idee in realtà</h1>
             <p class="lead mb-4">BOSTARTER ? la piattaforma italiana per il crowdfunding di progetti innovativi.</p>
             <div class="d-flex gap-3 justify-content-center">
                 <a href="#progetti" class="btn btn-bostarter-light btn-lg">Esplora Progetti</a>
@@ -151,3 +151,4 @@ if (empty($featured_projects)) {
 </body>
 
 </html>
+

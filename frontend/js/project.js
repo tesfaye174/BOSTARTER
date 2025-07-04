@@ -1,4 +1,4 @@
-/**
+﻿/**
  * BOSTARTER - Projects Manager
  * Gestione dei progetti nella dashboard
  */
@@ -160,7 +160,7 @@
             return `
                 <div class="project-card ${statusClass}" data-project-id="${project.id}">
                     <div class="project-image">
-                        <img src="${project.immagine_principale || '/BOSTARTER/frontend/images/placeholder-project.jpg'}" 
+                        <img src="${project.immagine_principale || './images/placeholder-project.jpg'}" 
                              alt="${project.titolo}" 
                              loading="lazy">
                         <div class="project-status">${this.getStatusLabel(project.stato)}</div>
@@ -299,13 +299,13 @@
          * Visualizza progetto
          */
         viewProject(projectId) {
-            window.location.href = `/BOSTARTER/frontend/view.php?id=${projectId}`;
+            window.location.href = `./view.php?id=${projectId}`;
         },
         /**
          * Modifica progetto
          */
         editProject(projectId) {
-            window.location.href = `/BOSTARTER/frontend/edit-view.php?id=${projectId}`;
+            window.location.href = `./edit-view.php?id=${projectId}`;
         },
         /**
          * Mostra loading
@@ -422,5 +422,6 @@
     // Esporta il projects manager
     window.BOSTARTERProjects = ProjectsManager;
 })(window, document);
+
 
 
