@@ -17,7 +17,8 @@ try {
     $database = Database::getInstance();
     $db = $database->getConnection();
     $projectModel = new ProjectCompliant();
-    $mongoLogger = new MongoLogger();
+    use BOSTARTER\Services\MongoLoggerSingleton;
+    $mongoLogger = MongoLoggerSingleton::getInstance();
     $method = $_SERVER['REQUEST_METHOD'];
     $action = $_GET['action'] ?? '';
     if ($method !== 'GET') {

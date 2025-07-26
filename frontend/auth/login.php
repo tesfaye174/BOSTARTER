@@ -3,51 +3,31 @@ session_start();
 require_once __DIR__ . "/../../backend/config/database.php";
 
 $error = "";
-$debug_info = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST["email"] ?? "");
     $password = trim($_POST["password"] ?? "");
-    
-    $debug_info .= "Email: $email<br>";
-    $debug_info .= "Password length: " . strlen($password) . "<br>";
     
     if ($email && $password) {
         try {
             $db = Database::getInstance();
             $conn = $db->getConnection();
             
-            $debug_info .= "Database connected<br>";
-            
-            $stmt = $conn->prepare("SELECT id, nickname, tipo_utente, password_hash FROM utenti WHERE email = ?");
+            $stmt = $conn->prepare("SELECT id, nickname, tipo_utente, password FROM utenti WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
             
-            if ($user) {
-                $debug_info .= "User found: " . $user['nickname'] . "<br>";
-                
-                if (password_verify($password, $user['password_hash'])) {
-                    $debug_info .= "Password verified<br>";
-                    $_SESSION["user_id"] = $user["id"];
-                    $_SESSION["nickname"] = $user["nickname"];
-                    $_SESSION["tipo_utente"] = $user["tipo_utente"];
-                    $debug_info .= "Session set, redirecting...<br>";
-                    header("Location: ../dash.php");
-                    exit;
-                } else {
-                    $debug_info .= "Password verification failed<br>";
-                    $user = null;
-                }
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION["user_id"] = $user["id"];
+                $_SESSION["nickname"] = $user["nickname"];
+                $_SESSION["tipo_utente"] = $user["tipo_utente"];
+                header("Location: ../dash.php");
+                exit;
             } else {
-                $debug_info .= "User not found<br>";
-            }
-            
-            if (!$user) {
                 $error = "Credenziali non valide";
             }
         } catch(Exception $e) {
-            $error = "Errore di sistema";
-            $debug_info .= "Exception: " . $e->getMessage() . "<br>";
+            $error = "Errore di sistema: " . $e->getMessage();
         }
     } else {
         $error = "Tutti i campi sono obbligatori";
@@ -83,13 +63,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </div>
                         <?php endif; ?>
 
-                        <?php if ($debug_info && ($_GET['debug'] ?? false)): ?>
-                        <div class="alert alert-info">
-                            <strong>Debug Info:</strong><br>
-                            <?= $debug_info ?>
-                        </div>
-                        <?php endif; ?>
-
                         <form method="POST">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
@@ -110,9 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <hr>
                         <div class="text-muted small">
                             <strong>Account di test:</strong><br>
-                            admin@bostarter.it / password<br>
-                            mario.rossi@email.it / password<br>
-                            user@test.it / password
+
                         </div>
                     </div>
                 </div>

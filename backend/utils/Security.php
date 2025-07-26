@@ -334,7 +334,8 @@ class Security {
         // Log su MongoDB se disponibile
         try {
             require_once __DIR__ . '/../services/MongoLogger.php';
-            $mongoLogger = new MongoLogger();
+            use BOSTARTER\Services\MongoLoggerSingleton;
+            $mongoLogger = MongoLoggerSingleton::getInstance();
             $mongoLogger->log('security', $logEntry);
         } catch (Exception $e) {
             // Fallback silenzioso

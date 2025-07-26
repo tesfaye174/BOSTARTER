@@ -11,7 +11,8 @@ require_once '../services/MongoLogger.php';
 require_once '../utils/Validator.php';
 $database = new Database();
 $db = $database->getConnection();
-$mongoLogger = new MongoLogger();
+use BOSTARTER\Services\MongoLoggerSingleton;
+$mongoLogger = MongoLoggerSingleton::getInstance();
 session_start();
 function requireAuth() {
     if (!isset($_SESSION['user_id'])) {

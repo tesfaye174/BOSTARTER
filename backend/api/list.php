@@ -12,7 +12,8 @@ try {
         ApiResponse::error('Only GET method allowed', 405);
     }
     $db = Database::getInstance()->getConnection();
-    $mongoLogger = new MongoLogger();
+    use BOSTARTER\Services\MongoLoggerSingleton;
+    $mongoLogger = MongoLoggerSingleton::getInstance();
     $page = max(1, (int)($_GET['page'] ?? 1));
     $per_page = min(50, max(10, (int)($_GET['per_page'] ?? 20)));
     $offset = ($page - 1) * $per_page;

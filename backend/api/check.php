@@ -9,13 +9,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once '../config/database.php';
 require_once '../models/UserCompliant.php';
 require_once '../services/MongoLogger.php';
-require_once '../services/AuthService.php';
+use BOSTARTER\Services\AuthService;
 require_once '../utils/Validator.php';
 require_once '../utils/ApiResponse.php';
 $database = Database::getInstance();
 $connessione = $database->getConnection();
 $modelloUtente = new UserCompliant();
-$logger = new MongoLogger();
+use BOSTARTER\Services\MongoLoggerSingleton;
+$logger = MongoLoggerSingleton::getInstance();
 $servizioAuth = new AuthService();
 $metodo = $_SERVER['REQUEST_METHOD'];
 $richiestaJson = json_decode(file_get_contents('php://input'), true);
@@ -119,7 +120,7 @@ function handleRegister($userModel, $mongoLogger, $request) {
         }
         if ($userModel->userExists($request['email'], $request['nickname'])) {
             http_response_code(409);
-            echo json_encode(['error' => 'Email o nickname già in uso']);
+            echo json_encode(['error' => 'Email o nickname giï¿½ in uso']);
             return;
         }
         $result = $userModel->register($request);

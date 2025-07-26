@@ -16,13 +16,14 @@ try {
     http_response_code(500);  
     echo json_encode([
         'stato' => 'errore',
-        'messaggio' => 'Problema interno del server. Riprova più tardi.'
+        'messaggio' => 'Problema interno del server. Riprova piï¿½ tardi.'
     ]);
     exit();
 }
 $istanzaDatabase = Database::getInstance();       
 $connessioneDb = $istanzaDatabase->getConnection(); 
-$sistemaLogging = new MongoLogger();              
+use BOSTARTER\Services\MongoLoggerSingleton;
+$sistemaLogging = MongoLoggerSingleton::getInstance();              
 $metodoRichiesta = $_SERVER['REQUEST_METHOD'];
 switch ($metodoRichiesta) {
     case 'GET':
@@ -154,8 +155,8 @@ function gestisciRicercaProgetti($connessioneDb, $logger) {
         $risultatoConteggio = $statementConteggio->fetch(PDO::FETCH_ASSOC);
         $totalePagine = ceil($risultatoConteggio['totale'] / $elementiPerPagina);
         foreach ($progettiTrovati as &$progetto) {
-            $progetto['budget_formattato'] = '€' . number_format($progetto['obiettivo_budget'], 2, ',', '.');
-            $progetto['raccolto_formattato'] = '€' . number_format($progetto['budget_raccolto'], 2, ',', '.');
+            $progetto['budget_formattato'] = 'ï¿½' . number_format($progetto['obiettivo_budget'], 2, ',', '.');
+            $progetto['raccolto_formattato'] = 'ï¿½' . number_format($progetto['budget_raccolto'], 2, ',', '.');
             $progetto['stato_leggibile'] = match($progetto['stato']) {
                 'active' => 'Attivo',
                 'funded' => 'Finanziato',
@@ -220,7 +221,7 @@ function gestisciRicercaProgetti($connessioneDb, $logger) {
         http_response_code(500);
         echo json_encode([
             'stato' => 'errore',
-            'messaggio' => 'Si è verificato un problema nella ricerca. Riprova tra qualche momento.',
+            'messaggio' => 'Si ï¿½ verificato un problema nella ricerca. Riprova tra qualche momento.',
             'codice_supporto' => 'SEARCH_' . time() 
         ]);
     }
@@ -238,7 +239,7 @@ function validaParametriRicerca($parolaChiave, $categoria, $ordinamento) {
         if (strlen($parolaChiave) > 100) {
             return [
                 'valido' => false,
-                'errore' => 'La parola chiave è troppo lunga (massimo 100 caratteri)'
+                'errore' => 'La parola chiave ï¿½ troppo lunga (massimo 100 caratteri)'
             ];
         }
         if (preg_match('/[<>"\']/', $parolaChiave)) {

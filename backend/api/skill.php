@@ -18,7 +18,8 @@ try {
     $user_id = $_SESSION['user_id'];
     $method = $_SERVER['REQUEST_METHOD'];
     $db = Database::getInstance()->getConnection();
-    $mongoLogger = new MongoLogger();
+    use BOSTARTER\Services\MongoLoggerSingleton;
+    $mongoLogger = MongoLoggerSingleton::getInstance();
     switch ($method) {
         case 'GET':            
             $stmt = $db->prepare("

@@ -14,11 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 session_start();
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/mongo_config.php';
+
 require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
-$mongoLogger = new MongoLogger();
+use BOSTARTER\Services\MongoLoggerSingleton;
+$mongoLogger = MongoLoggerSingleton::getInstance();
 $response = ['status' => 'error', 'message' => 'An unexpected error occurred.'];
 try {
     $input = json_decode(file_get_contents('php://input'), true);

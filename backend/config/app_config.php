@@ -9,6 +9,11 @@ define("DB_HOST", "localhost");
 define("DB_NAME", "bostarter");
 define("DB_USER", "root");
 define("DB_PASS", "");
+// === CONFIGURAZIONE MONGODB ===
+define("MONGO_HOST", "localhost");
+define("MONGO_PORT", 27017);
+define("MONGO_DB", "bostarter_logs");
+define("MONGO_COLLECTION", "eventi");
 // === CONFIGURAZIONE SICUREZZA ===
 define("JWT_SECRET", "bostarter_secret_key_2025");
 define("SESSION_LIFETIME", 3600); // 1 ora
@@ -34,6 +39,8 @@ define("CACHE_DIR", __DIR__ . "/../../cache/");
 define("DEBUG_MODE", true);
 define("ERROR_REPORTING_LEVEL", E_ALL);
 define("LOG_LEVEL", "INFO"); // DEBUG, INFO, WARNING, ERROR
+define("APP_ENV", "development"); // development, production
+define("ERROR_LOG_FILE", getAppRoot() . '/logs/errors.log');
 // === CONFIGURAZIONE PRESTAZIONI ===
 define("PERFORMANCE_MONITORING", true);
 define("SLOW_QUERY_THRESHOLD", 0.1); // 100ms
@@ -64,7 +71,7 @@ if (!headers_sent()) {
     header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
     header("Referrer-Policy: strict-origin-when-cross-origin");
 }
-// === FUNZIONI UTILITÀ ===
+// === FUNZIONI UTILITï¿½ ===
 function getConfig($key, $default = null) {
     return defined($key) ? constant($key) : $default;
 }

@@ -18,7 +18,8 @@ try {
     $database = Database::getInstance();
     $db = $database->getConnection();
     $projectModel = new ProjectCompliant();
-    $mongoLogger = new MongoLogger();
+    use BOSTARTER\Services\MongoLoggerSingleton;
+    $mongoLogger = MongoLoggerSingleton::getInstance();
     $method = $_SERVER['REQUEST_METHOD'];
     $action = $_GET['action'] ?? 'list';
     $request = json_decode(file_get_contents('php://input'), true);

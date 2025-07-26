@@ -11,9 +11,9 @@
 :root {
     /* Colori brand BOSTARTER */
     --bs-primary: #2563eb;
-    --bs-primary-rgb: 37, 99, 235;
+    --bs-primary-rgb: 37,99,235;
     --bs-secondary: #f59e0b;
-    --bs-secondary-rgb: 245, 158, 11;
+    --bs-secondary-rgb: 245,158,11;
     --bs-success: #10b981;
     --bs-info: #06b6d4;
     --bs-warning: #f59e0b;
@@ -22,7 +22,7 @@
     --bs-dark: #1e293b;
     
     /* Typography */
-    --bs-font-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --bs-font-sans-serif: "Inter", system-ui, sans-serif;
     --bs-font-weight-normal: 400;
     --bs-font-weight-medium: 500;
     --bs-font-weight-semibold: 600;
@@ -35,18 +35,18 @@
     --bs-border-radius-xl: 1.5rem;
     
     /* Shadows */
-    --bs-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --bs-box-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --bs-box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --bs-box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    --bs-box-shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+    --bs-box-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
 }
 
 /* Bootstrap Component Overrides */
 
 /* Navbar personalizzata */
 .navbar-bostarter {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255,255,255,0.95);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
     padding: 1rem 0;
     transition: all 0.3s ease;
 }
@@ -56,10 +56,10 @@
     box-shadow: var(--bs-box-shadow);
 }
 
-/* Cards migliorate */
+/* Card migliorate */
 .card-bostarter {
     border: none;
-    border-radius: var(--bs-border-radius-lg);
+    border-radius: var(--bs-border-radius);
     box-shadow: var(--bs-box-shadow);
     transition: all 0.3s ease;
     overflow: hidden;
@@ -67,7 +67,7 @@
 
 .card-bostarter:hover {
     transform: translateY(-8px);
-    box-shadow: var(--bs-box-shadow-lg);
+    box-shadow: 0 10px 20px rgba(var(--bs-primary-rgb),0.3);
 }
 
 .card-bostarter .card-img-top {
@@ -78,12 +78,12 @@
     transform: scale(1.05);
 }
 
-/* Buttons personalizzati */
+/* Button personalizzati */
 .btn-bostarter-primary {
     background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
     border: none;
     color: white;
-    font-weight: var(--bs-font-weight-semibold);
+    font-weight: 600;
     padding: 0.75rem 2rem;
     border-radius: var(--bs-border-radius);
     transition: all 0.3s ease;
@@ -93,7 +93,7 @@
 
 .btn-bostarter-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(var(--bs-primary-rgb), 0.3);
+    box-shadow: 0 10px 20px rgba(var(--bs-primary-rgb),0.3);
     color: white;
 }
 
@@ -262,12 +262,7 @@
         padding: 2rem 0;
     }
     
-    .display-3 {
-        font-size: 2.5rem;
-    }
-    
-    .btn-bostarter-primary,
-    .btn-bostarter-secondary {
+    .btn-bostarter-primary {
         padding: 0.5rem 1.5rem;
         font-size: 0.9rem;
     }
@@ -281,10 +276,6 @@
 @media (max-width: 576px) {
     .hero-bostarter {
         min-height: 70vh;
-    }
-    
-    .display-3 {
-        font-size: 2rem;
     }
     
     .card-bostarter {
@@ -331,3 +322,5 @@
         border: 1px solid #ccc;
     }
 }
+
+/* Fine bootstrap.css ottimizzato */

@@ -4,7 +4,9 @@
  * Registra tutti gli eventi che occorrono nella piattaforma
  */
 
-namespace BOSTARTER\Utils;
+namespace BOSTARTER\Services;
+
+require_once __DIR__ . '/../config/app_config.php';
 
 class MongoLogger {
     private $collection;
@@ -16,9 +18,9 @@ class MongoLogger {
         try {
             // Connessione MongoDB (se disponibile)
             if (class_exists('MongoDB\Client')) {
-                $client = new \MongoDB\Client("mongodb://localhost:27017");
-                $database = $client->selectDatabase('bostarter_logs');
-                $this->collection = $database->selectCollection('eventi');
+                $client = new \MongoDB\Client("mongodb://" . MONGO_HOST . ":" . MONGO_PORT);
+                $database = $client->selectDatabase(MONGO_DB);
+                $this->collection = $database->selectCollection(MONGO_COLLECTION);
                 $this->enabled = true;
             }
         } catch (\Exception $e) {
@@ -49,9 +51,8 @@ class MongoLogger {
                 error_log("Errore MongoDB logging: " . $e->getMessage());
                 return $this->logToFile($evento);
             }
-        } else {
-            return $this->logToFile($evento);
         }
+        return $this->logToFile($evento);
     }
     
     /**
@@ -183,6 +184,47 @@ class MongoLogger {
             "Nuovo profilo software creato: $profilo_nome",
             $creatore_id,
             $progetto_id
+        );
+    }
+
+    public function registraErrore($type, $errorData) {
+        return $this->logEvent(
+            'system_error',
+            [
+                'type' => $type,
+                'message' => $errorData['message'] ?? 'N/A',
+                'file' => $errorData['file'] ?? 'N/A',
+                'line' => $errorData['line'] ?? 'N/A',
+                'trace' => $errorData['trace'] ?? 'N/A',
+                'context' => $errorData['context'] ?? 'N/A',
+            ],
+            $errorData['user_id'] ?? null
+        );
+    }
+
+    public function registraEventoSistema($level, $eventData) {
+        return $this->logEvent(
+            'system_event',
+            [
+                'level' => $level,
+                'message' => $eventData['message'] ?? 'N/A',
+                'context' => $eventData['context'] ?? 'N/A',
+            ],
+            $eventData['user_id'] ?? null
+        );
+    }
+
+    public function logSecurity($type, $securityData) {
+        return $this->logEvent(
+            'security_event',
+            [
+                'type' => $type,
+                'message' => $securityData['message'] ?? 'N/A',
+                'ip' => $securityData['ip'] ?? 'N/A',
+                'user_agent' => $securityData['user_agent'] ?? 'N/A',
+                'context' => $securityData['context'] ?? 'N/A',
+            ],
+            $securityData['user_id'] ?? null
         );
     }
 }

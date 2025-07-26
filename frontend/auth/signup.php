@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $cognome = trim($_POST["cognome"] ?? "");
     $anno_nascita = (int)($_POST["anno_nascita"] ?? 0);
     $luogo_nascita = trim($_POST["luogo_nascita"] ?? "");
-    $tipo_utente = $_POST["tipo_utente"] ?? "standard";
+    $tipo_utente = $_POST["tipo_utente"] ?? "normale";
     if ($email && $nickname && $password && $nome && $cognome && $anno_nascita && $luogo_nascita) {
         try {
             $db = Database::getInstance();
@@ -23,8 +23,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $error = "Email o nickname gi? registrati";
             } else {
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
+                
+                // Usa direttamente il tipo_utente scelto (normale o creatore)
                 $stmt = $conn->prepare("
-                    INSERT INTO utenti (email, nickname, password_hash, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) 
+                    INSERT INTO utenti (email, nickname, password, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt->execute([$email, $nickname, $password_hash, $nome, $cognome, $anno_nascita, $luogo_nascita, $tipo_utente]);
@@ -118,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             <div class="mb-4">
                                 <label for="tipo_utente" class="form-label">Tipo account</label>
                                 <select class="form-select" id="tipo_utente" name="tipo_utente">
-                                    <option value="standard">Utente Standard</option>
+                                    <option value="normale">Utente Standard</option>
                                     <option value="creatore">Creatore di Progetti</option>
                                 </select>
                             </div>

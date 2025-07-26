@@ -6,7 +6,7 @@ require_once __DIR__ . "/../backend/config/database.php";
 $project_id = (int)($_GET["id"] ?? 0);
 $error = "";
 $project = null;
-$finanziamenti = $this->getFinanziamenti($project_id);
+$finanziamenti = [];
 
 // Carica i dati del progetto se l'ID Ã¨ valido
 if ($project_id > 0) {
@@ -27,8 +27,20 @@ if ($project_id > 0) {
         $project = $stmt->fetch();
         
         if ($project) {
-            // La tabella finanziamenti non esiste, quindi saltiamo questa query
-            $finanziamenti = $this->getFinanziamenti($project_id);
+            // Carica i finanziamenti del progetto
+            try {
+                $stmt_fin = $conn->prepare("
+                    SELECT f.*, u.nickname as finanziatore_nickname 
+                    FROM finanziamenti f 
+                    LEFT JOIN utenti u ON f.utente_id = u.id 
+                    WHERE f.progetto_id = ? 
+                    ORDER BY f.data_finanziamento DESC
+                ");
+                $stmt_fin->execute([$project_id]);
+                $finanziamenti = $stmt_fin->fetchAll();
+            } catch(Exception $e) {
+                $finanziamenti = [];
+            }
         }
     } catch(Exception $e) {
         $error = "Errore nel caricamento del progetto";
