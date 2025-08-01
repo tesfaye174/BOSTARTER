@@ -7,12 +7,14 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
 require_once __DIR__ . '/../utils/Validator.php';
+
+use BOSTARTER\Services\MongoLoggerSingleton;
+
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
         ApiResponse::error('Only GET method allowed', 405);
     }
     $db = Database::getInstance()->getConnection();
-    use BOSTARTER\Services\MongoLoggerSingleton;
     $mongoLogger = MongoLoggerSingleton::getInstance();
     $page = max(1, (int)($_GET['page'] ?? 1));
     $per_page = min(50, max(10, (int)($_GET['per_page'] ?? 20)));
@@ -186,4 +188,3 @@ try {
     error_log("Error in view_view.php: " . $e->getMessage());
     ApiResponse::serverError('An unexpected error occurred');
 }
-

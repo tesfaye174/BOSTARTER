@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../config/database.php';
 
 /**
- * Classe User per gestione utenti
+ * Modello User - Gestione utenti BOSTARTER
  */
 class User {
     private $db;

@@ -67,10 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($stmt->fetch()) {
                     $stmt = $conn->prepare("
-                        INSERT INTO risposte_commenti (commento_id, testo_risposta, data_risposta) 
-                        VALUES (?, ?, NOW())
+                        INSERT INTO risposte_commenti (commento_id, utente_id, testo) 
+                        VALUES (?, ?, ?)
                     ");
-                    $stmt->execute([$commento_id, $testo_risposta]);
+                    $stmt->execute([$commento_id, $_SESSION['user_id'], $testo_risposta]);
                     $success_message = "Risposta aggiunta con successo!";
                 } else {
                     $error_message = "Commento non trovato o già risposto";
@@ -87,7 +87,7 @@ $stmt = $conn->prepare("
     SELECT 
         c.id, c.testo, c.data_commento,
         u.nickname as utente_nickname,
-        rc.testo_risposta, rc.data_risposta
+        rc.testo as testo_risposta, rc.data_risposta
     FROM commenti c
     JOIN utenti u ON c.utente_id = u.id
     LEFT JOIN risposte_commenti rc ON c.id = rc.commento_id

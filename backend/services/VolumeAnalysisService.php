@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+
 class VolumeAnalysisService {
     private $conn;
     const WI = 1;        
@@ -12,10 +13,12 @@ class VolumeAnalysisService {
     const FUNDINGS_PER_PROJECT = 3; 
     const TOTAL_USERS = 5;          
     const PROJECTS_PER_USER = 2;    
+    
     public function __construct() {
         $db = Database::getInstance();
         $this->conn = $db->getConnection();
     }
+    
     public function analyzeRedundancy() {
         $results = [
             'timestamp' => date('Y-m-d H:i:s'),
@@ -164,11 +167,11 @@ class VolumeAnalysisService {
         $percentage_diff = abs($difference) / max($redundancy_cost, $non_redundancy_cost) * 100;
         if (abs($difference) < 0.5) {
             $recommendation = 'NEUTRAL';
-            $reason = 'I costi sono sostanzialmente equivalenti. Mantenere la ridondanza per semplicità.';
+            $reason = 'I costi sono sostanzialmente equivalenti. Mantenere la ridondanza per semplicitï¿½.';
         } elseif ($redundancy_cost < $non_redundancy_cost) {
             $recommendation = 'KEEP_REDUNDANCY';
             $reason = sprintf(
-                'La ridondanza è conveniente. Risparmio mensile: %.2f (%.1f%%)',
+                'La ridondanza ï¿½ conveniente. Risparmio mensile: %.2f (%.1f%%)',
                 abs($difference), $percentage_diff
             );
         } else {
@@ -395,10 +398,10 @@ class VolumeAnalysisService {
     }
     private function getReasoningForRecommendation($redundancyCost, $nonRedundancyCost) {
         if ($redundancyCost < $nonRedundancyCost) {
-            return "Il costo di mantenimento della ridondanza è inferiore al costo di calcolo dinamico. " .
+            return "Il costo di mantenimento della ridondanza ï¿½ inferiore al costo di calcolo dinamico. " .
                    "I trigger garantiscono consistenza con overhead minimo.";
         } else {
-            return "Il costo di calcolo dinamico è inferiore al costo di mantenimento. " .
+            return "Il costo di calcolo dinamico ï¿½ inferiore al costo di mantenimento. " .
                    "La rimozione della ridondanza potrebbe migliorare le performance.";
         }
     }

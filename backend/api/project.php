@@ -9,21 +9,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 ob_clean();
+
+use BOSTARTER\Services\MongoLoggerSingleton;
+
 try {
     session_start();
     require_once '../config/database.php';
-    require_once '../models/ProjectCompliant.php';
+    require_once '../models/Project.php';
     require_once '../services/MongoLogger.php';
     require_once '../utils/Validator.php';
+    
     $database = Database::getInstance();
     $db = $database->getConnection();
-    $projectModel = new ProjectCompliant();
-    use BOSTARTER\Services\MongoLoggerSingleton;
+    $projectModel = new Project();
     $mongoLogger = MongoLoggerSingleton::getInstance();
     $method = $_SERVER['REQUEST_METHOD'];
     $action = $_GET['action'] ?? 'list';
     $request = json_decode(file_get_contents('php://input'), true);
     $validProjectTypes = ['hardware', 'software'];
+    
     $mongoLogger->logAction('projects_compliant_request', [
         'endpoint' => 'projects_compliant',
         'method' => $method,
@@ -53,7 +57,7 @@ try {
             break;
         case 'POST':
             if ($action === 'create') {
-                handleCreateProjectCompliant($projectModel, $mongoLogger, $request, $validProjectTypes);
+                handleCreateProject($projectModel, $mongoLogger, $request);
             } else {
                 sendError('Azione POST non supportata', 400);
             }
@@ -61,7 +65,7 @@ try {
         case 'PUT':
             if ($action === 'update') {
                 $projectId = (int)($_GET['id'] ?? 0);
-                handleUpdateProjectCompliant($projectModel, $mongoLogger, $projectId, $request, $validProjectTypes);
+                handleUpdateProject($projectModel, $mongoLogger, $projectId, $request);
             } else {
                 sendError('Azione PUT non supportata', 400);
             }
@@ -69,7 +73,7 @@ try {
         case 'DELETE':
             if ($action === 'delete') {
                 $projectId = (int)($_GET['id'] ?? 0);
-                handleDeleteProjectCompliant($projectModel, $mongoLogger, $projectId, $validProjectTypes);
+                handleDeleteProject($projectModel, $mongoLogger, $projectId);
             } else {
                 sendError('Azione DELETE non supportata', 400);
             }
@@ -159,6 +163,25 @@ function handleGetProjects($projectModel, $mongoLogger) {
 }
 function handleCreateProject($projectModel, $mongoLogger, $request) {
     $userId = requireAuth();
+    
+    // Verifica che l'utente sia un creatore
+    try {
+        $db = Database::getInstance()->getConnection();
+        $stmt = $db->prepare("SELECT tipo_utente FROM utenti WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        
+        if (!$user || $user['tipo_utente'] !== 'creatore') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Solo gli utenti creatori possono creare progetti']);
+            return;
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Errore nella verifica dell\'utente']);
+        return;
+    }
+    
     try {
         $validationResult = Validator::validateProjectData([
             'name' => $request['nome'] ?? '',
@@ -191,8 +214,17 @@ function handleCreateProject($projectModel, $mongoLogger, $request) {
                 return;
             }
         }
-        $request['creatore_id'] = $userId;
-        $result = $projectModel->create($request);
+        // Prepara i dati per il modello con i nomi corretti
+        $projectData = [
+            'nome' => $request['nome'] ?? '',
+            'descrizione' => $request['descrizione'] ?? '',
+            'tipo' => $request['tipo'] ?? '',
+            'budget_richiesto' => $request['budget_richiesto'] ?? '',
+            'data_limite' => $request['data_scadenza'] ?? $request['data_limite'] ?? '',
+            'creatore_id' => $userId
+        ];
+        
+        $result = $projectModel->create($projectData);
         if ($result['success']) {
             $mongoLogger->logEvent('project_created', [
                 'project_id' => $result['progetto_id'],

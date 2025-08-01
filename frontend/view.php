@@ -2,23 +2,20 @@
 session_start();
 require_once __DIR__ . "/../backend/config/database.php";
 
-// Ottieni l'ID del progetto dalla query string
 $project_id = (int)($_GET["id"] ?? 0);
 $error = "";
 $project = null;
 $finanziamenti = [];
 
-// Carica i dati del progetto se l'ID Ã¨ valido
 if ($project_id > 0) {
     try {
         $db = Database::getInstance();
         $conn = $db->getConnection();
         
-        // Query per ottenere i dati del progetto con il nickname del creatore
         $stmt = $conn->prepare("
             SELECT p.*, u.nickname as creatore_nickname,
-                   p.budget_raccolto as totale_raccolto,
-                   0 as numero_sostenitori
+                   p.tipo as tipo_progetto,
+                   p.data_limite as data_scadenza
             FROM progetti p 
             LEFT JOIN utenti u ON p.creatore_id = u.id
             WHERE p.id = ?
@@ -27,7 +24,23 @@ if ($project_id > 0) {
         $project = $stmt->fetch();
         
         if ($project) {
-            // Carica i finanziamenti del progetto
+            // Calcola statistiche
+            $stmt_stats = $conn->prepare("
+                SELECT 
+                    COALESCE(SUM(importo), 0) as totale_raccolto,
+                    COUNT(DISTINCT utente_id) as numero_sostenitori,
+                    COUNT(id) as numero_finanziamenti
+                FROM finanziamenti 
+                WHERE progetto_id = ?
+            ");
+            $stmt_stats->execute([$project_id]);
+            $stats = $stmt_stats->fetch();
+            
+            $project['totale_raccolto'] = $stats['totale_raccolto'] ?? 0;
+            $project['numero_sostenitori'] = $stats['numero_sostenitori'] ?? 0;
+            $project['numero_finanziamenti'] = $stats['numero_finanziamenti'] ?? 0;
+            
+            // Carica finanziamenti
             try {
                 $stmt_fin = $conn->prepare("
                     SELECT f.*, u.nickname as finanziatore_nickname 
@@ -43,19 +56,19 @@ if ($project_id > 0) {
             }
         }
     } catch(Exception $e) {
-        $error = "Errore nel caricamento del progetto";
+        $error = "Errore nel caricamento del progetto: " . $e->getMessage();
     }
 }
 
-// Se il progetto non Ã¨ stato trovato, mostra errore
-if (!$project) {
-    $error = "Progetto non trovato";
+if (!$project && $project_id > 0) {
+    $error = "Progetto con ID $project_id non trovato";
+} elseif ($project_id <= 0) {
+    $error = "ID progetto non valido";
 }
 
-// Variabili per la vista
 $is_logged_in = isset($_SESSION["user_id"]);
-$progress = $project ? min(100, ($project["totale_raccolto"] / $project["budget_richiesto"]) * 100) : 0;
-$days_left = $project ? max(0, floor((strtotime($project["data_limite"]) - time()) / (60 * 60 * 24))) : 0;
+$progress = $project && $project["budget_richiesto"] > 0 ? min(100, ($project["totale_raccolto"] / $project["budget_richiesto"]) * 100) : 0;
+$days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($project["data_limite"]) - time()) / (60 * 60 * 24))) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="it" data-bs-theme="light">
@@ -138,8 +151,8 @@ $days_left = $project ? max(0, floor((strtotime($project["data_limite"]) - time(
                                         </p>
                                     </div>
                                     <span class="badge badge-bostarter">
-                                        <i class="fas fa-<?= $project["tipo_progetto"] === "hardware" ? "microchip" : "code" ?> me-1"></i>
-                                        <?= ucfirst($project["tipo_progetto"]) ?>
+                                        <i class="fas fa-<?= ($project["tipo_progetto"] ?? 'software') === "hardware" ? "microchip" : "code" ?> me-1"></i>
+                                        <?= ucfirst($project["tipo_progetto"] ?? 'software') ?>
                                     </span>
                                 </div>
                                 <div class="mb-4">
@@ -172,7 +185,9 @@ $days_left = $project ? max(0, floor((strtotime($project["data_limite"]) - time(
                                                 <i class="fas fa-flag-checkered text-warning me-3"></i>
                                                 <div>
                                                     <strong>Scadenza:</strong><br>
-                                                    <small class="text-muted"><?= date("d/m/Y", strtotime($project["data_scadenza"])) ?></small>
+                                                    <small class="text-muted">
+                                                        <?= $project["data_scadenza"] ? date("d/m/Y", strtotime($project["data_scadenza"])) : "Non specificata" ?>
+                                                    </small>
                                                 </div>
                                             </div>
                                         </div>
@@ -228,7 +243,7 @@ $days_left = $project ? max(0, floor((strtotime($project["data_limite"]) - time(
                                 <!-- Stats -->
                                 <div class="row text-center mb-4">
                                     <div class="col-6">
-                                        <h3 class="text-gradient-bostarter mb-0">?<?= number_format($project["totale_raccolto"]) ?></h3>
+                                        <h3 class="text-gradient-bostarter mb-0">€<?= number_format($project["totale_raccolto"]) ?></h3>
                                         <small class="text-muted">Raccolti</small>
                                     </div>
                                     <div class="col-6">
@@ -238,7 +253,7 @@ $days_left = $project ? max(0, floor((strtotime($project["data_limite"]) - time(
                                 </div>
                                 <div class="row text-center mb-4">
                                     <div class="col-6">
-                                        <h4 class="mb-0">?<?= number_format($project["budget_richiesto"]) ?></h4>
+                                        <h4 class="mb-0">€<?= number_format($project["budget_richiesto"]) ?></h4>
                                         <small class="text-muted">Obiettivo</small>
                                     </div>
                                     <div class="col-6">

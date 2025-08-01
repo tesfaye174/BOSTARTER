@@ -1,7 +1,6 @@
 <?php
 /**
  * MongoDB Logger per BOSTARTER
- * Registra tutti gli eventi che occorrono nella piattaforma
  */
 
 namespace BOSTARTER\Services;
@@ -16,7 +15,6 @@ class MongoLogger {
         $this->enabled = false;
         
         try {
-            // Connessione MongoDB (se disponibile)
             if (class_exists('MongoDB\Client')) {
                 $client = new \MongoDB\Client("mongodb://" . MONGO_HOST . ":" . MONGO_PORT);
                 $database = $client->selectDatabase(MONGO_DB);
@@ -24,13 +22,12 @@ class MongoLogger {
                 $this->enabled = true;
             }
         } catch (\Exception $e) {
-            // MongoDB non disponibile, usa fallback su file
             error_log("MongoDB non disponibile: " . $e->getMessage());
         }
     }
     
     /**
-     * Registra un evento nel log
+     * Registra evento nel log
      */
     public function logEvent($tipo_evento, $dettagli, $utente_id = null, $entita_id = null) {
         $evento = [

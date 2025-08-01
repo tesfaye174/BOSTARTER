@@ -10,6 +10,9 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 require_once __DIR__ . '/../utils/ApiResponse.php';
 require_once __DIR__ . '/../utils/Validator.php';
+
+use BOSTARTER\Services\MongoLoggerSingleton;
+
 session_start();
 try {
     if (!isset($_SESSION['user_id'])) {
@@ -18,7 +21,6 @@ try {
     $user_id = $_SESSION['user_id'];
     $method = $_SERVER['REQUEST_METHOD'];
     $db = Database::getInstance()->getConnection();
-    use BOSTARTER\Services\MongoLoggerSingleton;
     $mongoLogger = MongoLoggerSingleton::getInstance();
     switch ($method) {
         case 'GET':            

@@ -1,19 +1,15 @@
 /**
- * BOSTARTER Master JavaScript - Sistema Unificato Avanzato
- * Versione 3.0.0 - Ottimizzato per Performance e Modernità
- * @author BOSTARTER Team
- * @version 3.0.0
- * @framework Bootstrap 5.3.3
+ * BOSTARTER Master JavaScript
+ * Sistema principale per funzionalità frontend
  */
 (function (window, document) {
     "use strict";
 
-    // Performance optimizations
     const raf = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame;
     const caf = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.mozCancelAnimationFrame;
 
     /**
-     * Main BOSTARTER Class with enhanced features
+     * Classe principale BOSTARTER
      */
     class BOSTARTERMaster {
         constructor() {
@@ -36,7 +32,6 @@
             this.destroy = this.destroy.bind(this);
             this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
 
-            // Initialize when DOM is ready
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', this.init);
             } else {
@@ -44,16 +39,12 @@
             }
         }
 
-        /**
-         * Initialize all components
-         */
         init() {
             if (this.isInitialized) return;
 
             try {
                 this.log('Initializing BOSTARTER Master v3.0.0');
 
-                // Core initialization
                 this.setupPerformanceOptimizations();
                 this.setupAccessibility();
                 this.setupNavbar();

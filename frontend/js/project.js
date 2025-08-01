@@ -1,17 +1,16 @@
 ﻿/**
- * BOSTARTER - Projects Manager
- * Gestione dei progetti nella dashboard
+ * BOSTARTER Projects Manager
  */
 (function (window, document) {
     'use strict';
+
     const ProjectsManager = {
-        // Configurazione
         config: {
             apiBaseUrl: '/BOSTARTER/backend/api/',
             itemsPerPage: 12,
-            refreshInterval: 30000 // 30 secondi
+            refreshInterval: 30000
         },
-        // Stato
+
         state: {
             currentPage: 1,
             totalPages: 1,
@@ -20,7 +19,7 @@
             sortBy: 'created_at',
             sortOrder: 'desc'
         },
-        // Elementi DOM
+
         elements: {
             container: null,
             grid: null,

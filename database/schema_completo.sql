@@ -9,7 +9,7 @@ USE bostarter;
 CREATE TABLE IF NOT EXISTS utenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) UNIQUE NOT NULL,
-    nickname VARCHAR(100) NOT NULL,
+    nickname VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     nome VARCHAR(100) NOT NULL,
     cognome VARCHAR(100) NOT NULL,
@@ -18,10 +18,11 @@ CREATE TABLE IF NOT EXISTS utenti (
     tipo_utente ENUM('normale', 'creatore', 'amministratore') DEFAULT 'normale',
     codice_sicurezza VARCHAR(50) NULL, -- Solo per amministratori
     nr_progetti INT DEFAULT 0, -- Solo per creatori
-    affidabilita DECIMAL(3,2) DEFAULT 0.00, -- Solo per creatori
+    affidabilita DECIMAL(5,2) DEFAULT 0.00, -- Solo per creatori (cambiato da 3,2 a 5,2 per valori fino a 100.00)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email),
+    INDEX idx_nickname (nickname),
     INDEX idx_tipo_utente (tipo_utente)
 );
 
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS progetti (
     descrizione TEXT NOT NULL,
     data_inserimento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     budget_richiesto DECIMAL(10,2) NOT NULL CHECK (budget_richiesto > 0),
+    budget_raccolto DECIMAL(10,2) DEFAULT 0.00,
     data_limite DATE NOT NULL,
     stato ENUM('aperto', 'chiuso') DEFAULT 'aperto',
     tipo ENUM('hardware', 'software') NOT NULL,
@@ -215,6 +217,45 @@ FROM progetti p
 LEFT JOIN finanziamenti f ON p.id = f.progetto_id
 GROUP BY p.id;
 
+-- Vista per classifica creatori per affidabilità (TOP 3)
+CREATE VIEW IF NOT EXISTS vista_top_creatori_affidabilita AS
+SELECT 
+    u.nickname, 
+    u.affidabilita, 
+    u.nr_progetti
+FROM utenti u
+WHERE u.tipo_utente = 'creatore'
+ORDER BY u.affidabilita DESC, u.nr_progetti DESC
+LIMIT 3;
+
+-- Vista per progetti aperti più vicini al completamento (TOP 3)
+CREATE VIEW IF NOT EXISTS vista_progetti_vicini_completamento AS
+SELECT 
+    p.nome,
+    p.budget_richiesto,
+    COALESCE(SUM(f.importo), 0) as budget_raccolto,
+    (p.budget_richiesto - COALESCE(SUM(f.importo), 0)) as differenza,
+    ROUND((COALESCE(SUM(f.importo), 0) / p.budget_richiesto) * 100, 2) as percentuale
+FROM progetti p
+LEFT JOIN finanziamenti f ON p.id = f.progetto_id
+WHERE p.stato = 'aperto' 
+GROUP BY p.id
+HAVING COALESCE(SUM(f.importo), 0) < p.budget_richiesto
+ORDER BY differenza ASC
+LIMIT 3;
+
+-- Vista per classifica finanziatori per totale erogato (TOP 3)
+CREATE VIEW IF NOT EXISTS vista_top_finanziatori AS
+SELECT 
+    u.nickname,
+    SUM(f.importo) as totale_finanziato,
+    COUNT(f.id) as numero_finanziamenti
+FROM utenti u
+JOIN finanziamenti f ON u.id = f.utente_id
+GROUP BY u.id, u.nickname
+ORDER BY totale_finanziato DESC
+LIMIT 3;
+
 -- Trigger per aggiornare nr_progetti quando viene inserito un progetto
 DELIMITER //
 CREATE TRIGGER IF NOT EXISTS update_nr_progetti_insert
@@ -233,6 +274,26 @@ BEGIN
     UPDATE utenti 
     SET nr_progetti = nr_progetti - 1
     WHERE id = OLD.creatore_id;
+END//
+
+-- Trigger per aggiornare budget_raccolto quando viene inserito un finanziamento
+CREATE TRIGGER IF NOT EXISTS update_budget_raccolto_insert
+AFTER INSERT ON finanziamenti
+FOR EACH ROW
+BEGIN
+    UPDATE progetti 
+    SET budget_raccolto = budget_raccolto + NEW.importo
+    WHERE id = NEW.progetto_id;
+END//
+
+-- Trigger per aggiornare budget_raccolto quando viene eliminato un finanziamento
+CREATE TRIGGER IF NOT EXISTS update_budget_raccolto_delete
+AFTER DELETE ON finanziamenti
+FOR EACH ROW
+BEGIN
+    UPDATE progetti 
+    SET budget_raccolto = budget_raccolto - OLD.importo
+    WHERE id = OLD.progetto_id;
 END//
 
 -- Trigger per chiudere automaticamente i progetti scaduti o che hanno raggiunto il budget
@@ -256,6 +317,62 @@ BEGIN
         UPDATE progetti 
         SET stato = 'chiuso'
         WHERE id = NEW.progetto_id;
+    END IF;
+END//
+
+-- Trigger per aggiornare l'affidabilità di un utente creatore
+CREATE TRIGGER IF NOT EXISTS tr_aggiorna_affidabilita_finanziamento
+AFTER INSERT ON finanziamenti
+FOR EACH ROW
+BEGIN
+    DECLARE progetti_totali INT;
+    DECLARE progetti_finanziati INT;
+    DECLARE v_creatore_id INT;
+    
+    -- Ottieni il creatore del progetto
+    SELECT creatore_id INTO v_creatore_id FROM progetti WHERE id = NEW.progetto_id;
+    
+    -- Conta progetti totali del creatore
+    SELECT COUNT(*) INTO progetti_totali FROM progetti WHERE creatore_id = v_creatore_id;
+    
+    -- Conta progetti che hanno ricevuto almeno un finanziamento
+    SELECT COUNT(DISTINCT p.id) INTO progetti_finanziati
+    FROM progetti p
+    JOIN finanziamenti f ON p.id = f.progetto_id
+    WHERE p.creatore_id = v_creatore_id;
+    
+    -- Aggiorna l'affidabilità
+    IF progetti_totali > 0 THEN
+        UPDATE utenti 
+        SET affidabilita = (progetti_finanziati / progetti_totali) * 100
+        WHERE id = v_creatore_id;
+    END IF;
+END//
+
+-- Trigger per aggiornare l'affidabilità quando viene creato un nuovo progetto
+CREATE TRIGGER IF NOT EXISTS tr_aggiorna_affidabilita_progetto
+AFTER INSERT ON progetti
+FOR EACH ROW
+BEGIN
+    DECLARE progetti_totali INT;
+    DECLARE progetti_finanziati INT;
+    
+    -- Conta progetti totali del creatore
+    SELECT COUNT(*) INTO progetti_totali FROM progetti WHERE creatore_id = NEW.creatore_id;
+    
+    -- Conta progetti che hanno ricevuto almeno un finanziamento
+    SELECT COUNT(DISTINCT p.id) INTO progetti_finanziati
+    FROM progetti p
+    JOIN finanziamenti f ON p.id = f.progetto_id
+    WHERE p.creatore_id = NEW.creatore_id;
+    
+    -- Aggiorna l'affidabilità
+    IF progetti_totali > 0 THEN
+        UPDATE utenti 
+        SET affidabilita = (progetti_finanziati / progetti_totali) * 100
+        WHERE id = NEW.creatore_id;
+    ELSE
+        UPDATE utenti SET affidabilita = 0 WHERE id = NEW.creatore_id;
     END IF;
 END//
 

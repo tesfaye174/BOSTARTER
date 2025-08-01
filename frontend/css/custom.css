@@ -1,14 +1,11 @@
-/* BOSTARTER - Miglioramento custom.css 2025 */
-/* Migliorata la leggibilità, struttura e commenti */
+/* BOSTARTER Custom Styles */
 
-/* Layout and spacing */
 body {
     padding-top: 76px;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     line-height: 1.6;
 }
 
-/* Hero section with style guide colors */
 .hero-section {
     background: linear-gradient(135deg, #5A87FA 0%, #2C3DB2 100%);
     color: white;
@@ -16,6 +13,7 @@ body {
     position: relative;
     overflow: hidden;
 }
+
 .hero-section::before {
     content: '';
     position: absolute;
@@ -24,7 +22,6 @@ body {
     pointer-events: none;
 }
 
-/* Project cards with enhanced hover effects */
 .project-card {
     transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
     border-radius: 12px;

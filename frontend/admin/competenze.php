@@ -11,13 +11,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
 $db = Database::getInstance();
 $conn = $db->getConnection();
 
-// Gestione form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         if ($_POST['action'] === 'add_competenza') {
             $nome = trim($_POST['nome']);
             if (!empty($nome)) {
-                // Verifica che non esista già
                 $stmt = $conn->prepare("SELECT id FROM competenze WHERE nome = ?");
                 $stmt->execute([$nome]);
                 

@@ -28,22 +28,42 @@ $error = '';
 // Gestisce la creazione del progetto via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        // Mappa i campi del form ai nomi del database
         $data = [
-            'name' => trim($_POST['name']),
-            'description' => trim($_POST['description']),
-            'category' => $_POST['category'],
-            'funding_goal' => floatval($_POST['funding_goal']),
-            'deadline' => $_POST['deadline'],
-            'creator_id' => $_SESSION['user_id']
+            'nome' => trim($_POST['name']),
+            'descrizione' => trim($_POST['description']),
+            'tipo' => $_POST['category'], // mappiamo category a tipo
+            'budget_richiesto' => floatval($_POST['funding_goal']),
+            'data_limite' => $_POST['deadline'],
+            'creatore_id' => $_SESSION['user_id']
         ];
+        
+        // Mappa le categorie ai tipi di progetto
+        $categoryToType = [
+            'technology' => 'software',
+            'games' => 'software',
+            'publishing' => 'software',
+            'education' => 'software',
+            'community' => 'software',
+            'art' => 'hardware',
+            'music' => 'hardware', 
+            'film' => 'hardware',
+            'food' => 'hardware',
+            'fashion' => 'hardware',
+            'health' => 'hardware',
+            'environment' => 'hardware'
+        ];
+        
+        $data['tipo'] = $categoryToType[$_POST['category']] ?? 'software';
+        
         // Valida i dati del form
-        if (empty($data['name']) || empty($data['description']) || empty($data['category']) || 
-            $data['funding_goal'] <= 0 || empty($data['deadline'])) {
+        if (empty($data['nome']) || empty($data['descrizione']) || empty($_POST['category']) || 
+            $data['budget_richiesto'] <= 0 || empty($data['data_limite'])) {
             throw new Exception('Tutti i campi sono obbligatori e l\'obiettivo di finanziamento deve essere maggiore di 0.');
         }
         
         // Valida la data di scadenza
-        if (strtotime($data['deadline']) <= time()) {
+        if (strtotime($data['data_limite']) <= time()) {
             throw new Exception('La data di scadenza deve essere nel futuro.');
         }
         
@@ -71,13 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        $projectId = $project->create($data);
-        if ($projectId) {
+        $result = $project->create($data);
+        if ($result['success']) {
             $message = 'Progetto creato con successo!';
-            header('Location: view.php?id=' . $projectId);
+            header('Location: view.php?id=' . $result['progetto_id']);
             exit();
         } else {
-            $error = 'Errore nella creazione del progetto. Riprova.';
+            $error = $result['error'] ?? 'Errore nella creazione del progetto. Riprova.';
         }
     } catch (Exception $e) {
         $error = $e->getMessage();
@@ -333,16 +353,19 @@ $categories = [
         const category = document.getElementById('category').value;
         const fundingGoal = parseFloat(document.getElementById('funding_goal').value);
         const deadline = document.getElementById('deadline').value;
+        
         if (!name || !description || !category || !fundingGoal || !deadline) {
             e.preventDefault();
             alert('Please fill in all required fields.');
             return;
         }
+        
         if (fundingGoal <= 0) {
             e.preventDefault();
             alert('Funding goal must be greater than 0.');
             return;
         }
+        
         const selectedDate = new Date(deadline);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -351,6 +374,34 @@ $categories = [
             alert('Deadline must be in the future.');
             return;
         }
+        
+        // Check if project name already exists
+        e.preventDefault(); // Prevent default submission
+        
+        fetch('../backend/api/check.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'check_project_name',
+                name: name
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists) {
+                alert('Un progetto con questo nome esiste già. Scegli un nome diverso.');
+            } else {
+                // Name is unique, submit the form
+                e.target.submit();
+            }
+        })
+        .catch(error => {
+            console.error('Error checking project name:', error);
+            // If check fails, allow submission anyway
+            e.target.submit();
+        });
     });
     // Character counter for description
     const descriptionTextarea = document.getElementById('description');

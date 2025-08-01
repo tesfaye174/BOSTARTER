@@ -4,6 +4,8 @@
  * Gestisce tutti gli aspetti di sicurezza dell'applicazione
  */
 
+use BOSTARTER\Services\MongoLoggerSingleton;
+
 class Security {
     private static $instance = null;
     private $csrfSecret;
@@ -334,7 +336,6 @@ class Security {
         // Log su MongoDB se disponibile
         try {
             require_once __DIR__ . '/../services/MongoLogger.php';
-            use BOSTARTER\Services\MongoLoggerSingleton;
             $mongoLogger = MongoLoggerSingleton::getInstance();
             $mongoLogger->log('security', $logEntry);
         } catch (Exception $e) {

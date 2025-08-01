@@ -5,8 +5,7 @@ namespace BOSTARTER\Utils;
 require_once __DIR__ . '/../config/app_config.php';
 require_once __DIR__ . '/../services/MongoLogger.php';
 
-use BOSTARTER\Services
-MongoLogger;
+use BOSTARTER\Services\MongoLogger;
 
 class ErrorHandler {
     private static $mongoLogger;

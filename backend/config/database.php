@@ -1,7 +1,6 @@
 <?php
 /**
- * Configurazione Database BOSTARTER
- * Singleton pattern per connessione MySQL
+ * Database Singleton per MySQL
  */
 
 require_once __DIR__ . '/app_config.php';
@@ -38,17 +37,15 @@ class Database {
         return $this->connection;
     }
 
-    // Prevenire clonazione
     private function __clone() {}
 
-    // Prevenire unserialize
     public function __wakeup() {
         throw new Exception("Cannot unserialize singleton");
     }
 }
 
 /**
- * Classe helper per operazioni database comuni
+ * Helper per operazioni database comuni
  */
 class DatabaseHelper {
     private $db;
@@ -58,7 +55,7 @@ class DatabaseHelper {
     }
 
     /**
-     * Esegue stored procedure con parametri
+     * Esegue stored procedure
      */
     public function callStoredProcedure($procedureName, $params = []) {
         $placeholders = str_repeat('?,', count($params) - 1) . '?';

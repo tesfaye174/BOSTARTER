@@ -8,6 +8,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 ob_clean();
+
+use BOSTARTER\Services\MongoLoggerSingleton;
+
 try {
     session_start();
     require_once '../config/database.php';
@@ -17,7 +20,6 @@ try {
     $database = Database::getInstance();
     $db = $database->getConnection();
     $projectModel = new ProjectCompliant();
-    use BOSTARTER\Services\MongoLoggerSingleton;
     $mongoLogger = MongoLoggerSingleton::getInstance();
     $method = $_SERVER['REQUEST_METHOD'];
     $action = $_GET['action'] ?? '';

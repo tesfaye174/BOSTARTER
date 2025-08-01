@@ -22,7 +22,18 @@ $metodo = $_SERVER['REQUEST_METHOD'];
 $richiestaJson = json_decode(file_get_contents('php://input'), true);
 switch ($metodo) {
     case 'POST':
-        gestisciRichiestaAuth($servizioAuth, $logger, $richiestaJson);
+        if (isset($richiestaJson['action'])) {
+            switch ($richiestaJson['action']) {
+                case 'check_project_name':
+                    verificaNomeProgetto($connessione, $richiestaJson['name'] ?? '');
+                    break;
+                default:
+                    gestisciRichiestaAuth($servizioAuth, $logger, $richiestaJson);
+                    break;
+            }
+        } else {
+            gestisciRichiestaAuth($servizioAuth, $logger, $richiestaJson);
+        }
         break;
     case 'GET':
         verificaStatoAuth($servizioAuth, $logger);
@@ -190,5 +201,38 @@ function handleLogout($mongoLogger) {
     }
     session_destroy();
     echo json_encode(['success' => true, 'message' => 'Logout effettuato con successo']);
+}
+
+/**
+ * Verifica se un nome progetto esiste già nel database
+ */
+function verificaNomeProgetto($connessione, $nome) {
+    try {
+        if (empty($nome)) {
+            echo json_encode([
+                'success' => false,
+                'exists' => false,
+                'message' => 'Nome progetto non fornito'
+            ]);
+            return;
+        }
+        
+        $stmt = $connessione->prepare("SELECT id FROM progetti WHERE nome = ?");
+        $stmt->execute([$nome]);
+        $result = $stmt->fetch();
+        
+        echo json_encode([
+            'success' => true,
+            'exists' => $result !== false,
+            'message' => $result ? 'Nome progetto già esistente' : 'Nome progetto disponibile'
+        ]);
+        
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'exists' => false,
+            'message' => 'Errore nella verifica: ' . $e->getMessage()
+        ]);
+    }
 }
 ?>
