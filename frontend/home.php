@@ -75,146 +75,321 @@ if (empty($featured_projects)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOSTARTER - Crowdfunding Italiano</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>BOSTARTER - La tua piattaforma di crowdfunding</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/app.css">
     <link rel="stylesheet" href="css/custom.css">
-    <!-- Favicon -->
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="images/icon-144x144.png">
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background: rgba(0,0,0,0.9);">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php">
+            <a class="navbar-brand fw-bold" href="home.php">
                 <i class="fas fa-rocket me-2"></i>BOSTARTER
             </a>
-            <div class="navbar-nav ms-auto">
-                <?php if ($is_logged_in): ?>
-                <span class="nav-link">Ciao, <?= htmlspecialchars($username) ?></span>
-                <a class="nav-link" href="dash.php">Dashboard</a>
-                <a class="nav-link" href="auth/exit.php">Logout</a>
-                <?php else: ?>
-                <a class="nav-link" href="auth/login.php">Login</a>
-                <a class="nav-link" href="auth/signup.php">Registrati</a>
-                <?php endif; ?>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#progetti">Progetti</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#come-funziona">Come Funziona</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="statistiche.php">Statistiche</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <?php if ($is_logged_in): ?>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i><?= htmlspecialchars($username) ?>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="dash.php"><i
+                                        class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="new.php"><i class="fas fa-plus me-2"></i>Nuovo
+                                    Progetto</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="auth/exit.php"><i
+                                        class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </li>
+                    <?php else: ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="auth/login.php">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-light ms-2" href="auth/signup.php">
+                            <i class="fas fa-user-plus me-1"></i>Registrati
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                </ul>
             </div>
         </div>
     </nav>
-    <section class="hero-section text-center">
+
+    <!-- Logout Message -->
+    <?php if ($logout_message): ?>
+    <div class="fixed-top" style="top: 70px; z-index: 1050;">
         <div class="container">
-            <h1 class="display-4 fw-bold mb-4">Trasforma le tue idee in realtà</h1>
-            <p class="lead mb-4">BOSTARTER ? la piattaforma italiana per il crowdfunding di progetti innovativi.</p>
-            <div class="d-flex gap-3 justify-content-center">
-                <a href="#progetti" class="btn btn-bostarter-light btn-lg">Esplora Progetti</a>
-                <a href="auth/signup.php" class="btn btn-outline-light btn-lg">Inizia Ora</a>
+            <?= $logout_message ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-3 fw-bold mb-4">
+                        Trasforma le tue <span class="text-warning">idee innovative</span> in realtà
+                    </h1>
+                    <p class="lead fs-4 mb-5">
+                        BOSTARTER è la piattaforma italiana leader per il crowdfunding di progetti tecnologici.
+                        Dai vita alle tue idee o supporta i progetti del futuro.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="#progetti" class="btn btn-warning btn-lg px-4 py-3">
+                            <i class="fas fa-search me-2"></i>Esplora Progetti
+                        </a>
+                        <?php if (!$is_logged_in): ?>
+                        <a href="auth/signup.php" class="btn btn-outline-light btn-lg px-4 py-3">
+                            <i class="fas fa-rocket me-2"></i>Inizia Ora
+                        </a>
+                        <?php else: ?>
+                        <a href="new.php" class="btn btn-outline-light btn-lg px-4 py-3">
+                            <i class="fas fa-plus me-2"></i>Crea Progetto
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="stats-card text-center p-4 rounded-3">
+                                <h3 class="fw-bold"><?= number_format($stats['total_projects']) ?></h3>
+                                <p class="mb-0">Progetti Attivi</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stats-card text-center p-4 rounded-3">
+                                <h3 class="fw-bold">€<?= number_format($stats['total_funding']) ?></h3>
+                                <p class="mb-0">Finanziamenti</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stats-card text-center p-4 rounded-3">
+                                <h3 class="fw-bold"><?= number_format($stats['total_backers']) ?></h3>
+                                <p class="mb-0">Sostenitori</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stats-card text-center p-4 rounded-3">
+                                <h3 class="fw-bold"><?= $stats['success_rate'] ?>%</h3>
+                                <p class="mb-0">Successo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
-    <section id="progetti" class="py-5">
+    <!-- Progetti in Evidenza -->
+    <section id="progetti" class="py-5 bg-light">
         <div class="container">
-            <h2 class="text-center mb-5">Progetti in Evidenza</h2>
-            <div class="row g-4">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold">Progetti in Evidenza</h2>
+                <p class="lead text-muted">Scopri i progetti più innovativi che stanno cambiando il futuro</p>
+            </div>
+
+            <div class="row g-4" id="projects-container">
                 <?php foreach ($featured_projects as $project): 
                     $progress = round(($project["total_funding"] / $project["budget_richiesto"]) * 100, 1);
                     $days_left = max(0, floor((strtotime($project["data_scadenza"]) - time()) / (60 * 60 * 24)));
                 ?>
-                <div class="col-lg-6">
-                    <div class="card h-100 shadow-sm project-card">
-                        <div class="card-body">
-                            <h5 class="card-title"><?= htmlspecialchars($project["nome"]) ?></h5>
-                            <p class="card-text"><?= htmlspecialchars($project["descrizione"]) ?></p>
-                            <div class="progress mb-2">
-                                <div class="progress-bar" style="width: <?= min($progress, 100) ?>%">
-                                    <?= $progress ?>%
-                                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card project-card h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge bg-primary fs-6"><?= htmlspecialchars($project["tipo"]) ?></span>
+                                <span class="text-muted small"><?= $days_left ?> giorni rimasti</span>
                             </div>
-                            <small class="text-muted">?<?= number_format($project["total_funding"]) ?> /
-                                ?<?= number_format($project["budget_richiesto"]) ?> - <?= $days_left ?> giorni
-                                rimasti</small>
+
+                            <h5 class="card-title fw-bold mb-3"><?= htmlspecialchars($project["nome"]) ?></h5>
+                            <p class="card-text text-muted mb-4">
+                                <?= htmlspecialchars(substr($project["descrizione"], 0, 120)) ?>...</p>
+
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span class="fw-semibold">€<?= number_format($project["total_funding"]) ?></span>
+                                    <span class="text-muted"><?= $progress ?>%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-gradient" style="width: <?= min($progress, 100) ?>%">
+                                    </div>
+                                </div>
+                                <small class="text-muted">Obiettivo:
+                                    €<?= number_format($project["budget_richiesto"]) ?></small>
+                            </div>
+
+                            <a href="view.php?id=<?= $project["id"] ?>" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-2"></i>Scopri di più
+                            </a>
                         </div>
                     </div>
                 </div>
                 <?php endforeach; ?>
             </div>
+
+            <div class="text-center mt-5">
+                <a href="dash.php" class="btn btn-primary btn-lg">
+                    <i class="fas fa-th-large me-2"></i>Vedi Tutti i Progetti
+                </a>
+            </div>
         </div>
     </section>
-    <footer class="bg-dark text-white py-4">
-        <div class="container text-center">
-            <p>&copy; 2025 BOSTARTER. Tutti i diritti riservati.</p>
+
+    <!-- Come Funziona -->
+    <section id="come-funziona" class="py-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold">Come Funziona BOSTARTER</h2>
+                <p class="lead text-muted">Tre semplici passi per trasformare le tue idee in realtà</p>
+            </div>
+
+            <div class="row g-5">
+                <div class="col-lg-4 text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-lightbulb text-white fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">1. Condividi la tua Idea</h4>
+                    <p class="text-muted">Crea il tuo progetto con una descrizione dettagliata, immagini e video.
+                        Definisci
+                        l'obiettivo di finanziamento e le reward per i sostenitori.</p>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-users text-white fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">2. Raccogli Sostenitori</h4>
+                    <p class="text-muted">Promuovi il tuo progetto e attira sostenitori che credono nella tua visione.
+                        Ogni
+                        contributo ti avvicina al tuo obiettivo.</p>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-rocket text-white fa-2x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">3. Realizza il Progetto</h4>
+                    <p class="text-muted">Una volta raggiunto l'obiettivo, ricevi i fondi e inizia a sviluppare il tuo
+                        progetto. Mantieni aggiornati i tuoi sostenitori sui progressi.</p>
+                </div>
+            </div>
         </div>
-    </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script src="js/roleManager.js"></script>
-    <script>
-        // Carica progetti via API
-        async function loadProjects() {
-            try {
-                const response = await fetch('../backend/api/project.php?action=list&limit=6');
-                const data = await response.json();
-                
-                if (data.success && data.projects.length > 0) {
-                    const container = document.querySelector('.row.g-4');
-                    container.innerHTML = '';
-                    
-                    data.projects.forEach(project => {
-                        const projectCard = createProjectCard(project);
-                        container.appendChild(projectCard);
-                    });
-                } else {
-                    document.querySelector('.row.g-4').innerHTML = 
-                        '<div class="col-12 text-center"><p>Nessun progetto disponibile al momento.</p></div>';
-                }
-            } catch (error) {
-                console.error('Errore nel caricamento progetti:', error);
-                document.querySelector('.row.g-4').innerHTML = 
-                    '<div class="col-12 text-center"><p>Errore nel caricamento dei progetti.</p></div>';
-            }
-        }
-        
-        function createProjectCard(project) {
-            const col = document.createElement('div');
-            col.className = 'col-md-4';
-            
-            const progressPercent = project.budget_raccolto ? 
-                Math.round((project.budget_raccolto / project.budget_richiesto) * 100) : 0;
-                
-            col.innerHTML = `
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">${project.nome || 'Progetto senza titolo'}</h5>
-                        <p class="card-text">${(project.descrizione || '').substring(0, 100)}...</p>
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between small text-muted mb-1">
-                                <span>Raccolto: €${project.budget_raccolto || 0}</span>
-                                <span>Obiettivo: €${project.budget_richiesto || 0}</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar" role="progressbar" 
-                                     style="width: ${progressPercent}%" 
-                                     aria-valuenow="${progressPercent}" 
-                                     aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                        <span class="badge bg-primary mb-2">${project.tipo || 'Software'}</span>
-                        <br>
-                        <a href="view.php?type=project&id=${project.id}" class="btn btn-outline-primary btn-sm">
-                            Dettagli
-                        </a>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta-section text-white py-5">
+        <div class="container text-center">
+            <h2 class="display-5 fw-bold mb-4">Pronto a iniziare?</h2>
+            <p class="lead mb-5">Unisciti a migliaia di innovatori che hanno già trasformato le loro idee in successi.
+            </p>
+
+            <?php if (!$is_logged_in): ?>
+            <div class="d-flex flex-wrap gap-3 justify-content-center">
+                <a href="auth/signup.php" class="btn btn-light btn-lg px-5 py-3">
+                    <i class="fas fa-user-plus me-2"></i>Registrati Gratis
+                </a>
+                <a href="auth/login.php" class="btn btn-outline-light btn-lg px-5 py-3">
+                    <i class="fas fa-sign-in-alt me-2"></i>Accedi
+                </a>
+            </div>
+            <?php else: ?>
+            <a href="new.php" class="btn btn-light btn-lg px-5 py-3">
+                <i class="fas fa-plus me-2"></i>Crea il tuo Primo Progetto
+            </a>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-rocket me-2"></i>BOSTARTER
+                    </h5>
+                    <p class="text-muted">La piattaforma italiana leader per il crowdfunding di progetti innovativi.
+                        Trasforma le tue idee in realtà.</p>
+                </div>
+                <div class="col-lg-2 col-6 mb-4">
+                    <h6 class="fw-bold mb-3">Esplora</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="dash.php" class="text-muted text-decoration-none">Progetti</a></li>
+                        <li><a href="statistiche.php" class="text-muted text-decoration-none">Statistiche</a></li>
+                        <li><a href="#come-funziona" class="text-muted text-decoration-none">Come Funziona</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-6 mb-4">
+                    <h6 class="fw-bold mb-3">Account</h6>
+                    <ul class="list-unstyled">
+                        <?php if (!$is_logged_in): ?>
+                        <li><a href="auth/login.php" class="text-muted text-decoration-none">Login</a></li>
+                        <li><a href="auth/signup.php" class="text-muted text-decoration-none">Registrati</a></li>
+                        <?php else: ?>
+                        <li><a href="dash.php" class="text-muted text-decoration-none">Dashboard</a></li>
+                        <li><a href="new.php" class="text-muted text-decoration-none">Nuovo Progetto</a></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <h6 class="fw-bold mb-3">Connettiti</h6>
+                    <p class="text-muted small">Seguici sui social media per rimanere aggiornato sui progetti più
+                        innovativi.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-muted"><i class="fab fa-facebook fa-lg"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-linkedin fa-lg"></i></a>
+                        <a href="#" class="text-muted"><i class="fab fa-instagram fa-lg"></i></a>
                     </div>
                 </div>
-            `;
-            
-            return col;
-        }
-        
-        // Carica progetti quando la pagina è pronta
-        document.addEventListener('DOMContentLoaded', loadProjects);
+            </div>
+            <hr class="my-4">
+            <div class="text-center">
+                <p class="mb-0 text-muted">&copy; 2025 BOSTARTER. Tutti i diritti riservati.</p>
+            </div>
+        </div>
+    </footer>
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/home.js"></script>
+
+    <script>
+    // Auto-dismiss alerts dopo 5 secondi
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const bsAlert = bootstrap.Alert.getInstance(alert);
+                if (bsAlert) bsAlert.close();
+            });
+        }, 5000);
+    });
     </script>
 </body>
 
 </html>
-

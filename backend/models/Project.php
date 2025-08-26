@@ -45,6 +45,23 @@ class Project {
                 ];
             }
 
+            // Validazione data limite
+            $dataLimite = strtotime($data['data_limite']);
+            if (!$dataLimite || $dataLimite <= time()) {
+                return [
+                    'success' => false,
+                    'error' => 'La data limite deve essere futura'
+                ];
+            }
+
+            // Validazione budget
+            if (!is_numeric($data['budget_richiesto']) || $data['budget_richiesto'] <= 0) {
+                return [
+                    'success' => false,
+                    'error' => 'Il budget richiesto deve essere un numero positivo'
+                ];
+            }
+
             // Controllo nome duplicato
             $stmt = $this->db->prepare("SELECT id FROM progetti WHERE nome = ?");
             $stmt->execute([$data['nome']]);
@@ -119,7 +136,7 @@ class Project {
             if ($project) {
                 return [
                     'success' => true,
-                    'data' => $project
+                    'project' => $project
                 ];
             } else {
                 return [

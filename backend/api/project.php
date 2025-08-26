@@ -39,7 +39,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         
         $input = json_decode(file_get_contents('php://input'), true);
         
-        $requiredFields = ['titolo', 'descrizione', 'obiettivo_finanziario', 'data_scadenza', 'tipo'];
+        $requiredFields = ['nome', 'descrizione', 'budget_richiesto', 'data_limite', 'tipo'];
         foreach ($requiredFields as $field) {
             if (!isset($input[$field]) || empty($input[$field])) {
                 $apiResponse->sendError("Campo $field obbligatorio");
@@ -49,10 +49,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
         
         $data = [
             'creatore_id' => $_SESSION['user_id'],
-            'titolo' => $input['titolo'],
+            'nome' => $input['nome'],
             'descrizione' => $input['descrizione'],
-            'obiettivo_finanziario' => $input['obiettivo_finanziario'],
-            'data_scadenza' => $input['data_scadenza'],
+            'budget_richiesto' => $input['budget_richiesto'],
+            'data_limite' => $input['data_limite'],
             'tipo' => $input['tipo'],
             'categoria' => $input['categoria'] ?? null,
             'immagine' => $input['immagine'] ?? null

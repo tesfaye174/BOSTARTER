@@ -1,656 +1,490 @@
-﻿/**
- * BOSTARTER - Enhanced Main JavaScript
- * Sistema principale ottimizzato con funzionalità avanzate
- * @version 3.0.0
+/**
+ * BOSTARTER - Core JavaScript 
+ * Sistema JavaScript moderno con funzionalità avanzate
+ * @version 4.1.0
  */
 (function () {
-    "use strict";
+    'use strict';
 
     // Configuration
     const CONFIG = {
-        version: "3.0.0",
-        framework: "Bootstrap 5.3.3",
+        version: '4.1.0',
         debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+        api: {
+            base: '/BOSTARTER/backend/api/',
+            timeout: 10000
+        },
         theme: {
-            default: 'auto',
+            default: 'light',
             storageKey: 'bostarter_theme'
         },
-        performance: {
-            lazyLoadOffset: 100,
-            debounceDelay: 250,
-            throttleDelay: 16
+        animations: {
+            duration: 300,
+            easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
         }
     };
 
-    // State management
+    // State Management
     const state = {
         initialized: false,
         theme: localStorage.getItem(CONFIG.theme.storageKey) || CONFIG.theme.default,
+        user: null,
         observers: new Map(),
-        listeners: new Map(),
         cache: new Map()
     };
 
-    // Utility functions
+    // Utility Functions
     const utils = {
-        /**
-         * Logging with debug check
-         */
-        log: (...args) => {
-            if (CONFIG.debug) {
-                console.log('[BOSTARTER Main]', ...args);
+        log: (...args) => CONFIG.debug && console.log('[BOSTARTER]', ...args),
+        error: (...args) => console.error('[BOSTARTER Error]', ...args),
+        warn: (...args) => CONFIG.debug && console.warn('[BOSTARTER Warning]', ...args),
+
+        // DOM Utilities
+        $(selector) {
+            return typeof selector === 'string' ? document.querySelector(selector) : selector;
+        },
+
+        $$(selector) {
+            return typeof selector === 'string' ? document.querySelectorAll(selector) : selector;
+        },
+
+        createElement(tag, options = {}) {
+            const element = document.createElement(tag);
+
+            if (options.className) element.className = options.className;
+            if (options.id) element.id = options.id;
+            if (options.textContent) element.textContent = options.textContent;
+            if (options.innerHTML) element.innerHTML = options.innerHTML;
+
+            if (options.attributes) {
+                Object.entries(options.attributes).forEach(([key, value]) => {
+                    element.setAttribute(key, value);
+                });
             }
+
+            if (options.styles) {
+                Object.assign(element.style, options.styles);
+            }
+
+            return element;
         },
 
-        /**
-         * Error logging
-         */
-        error: (...args) => {
-            console.error('[BOSTARTER Error]', ...args);
+        // String Utilities
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         },
 
-        /**
-         * Debounce function
-         */
-        debounce: (func, wait) => {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
+        // Date Utilities
+        formatDate(date, format = 'it-IT') {
+            const d = new Date(date);
+            return d.toLocaleDateString(format, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        },
+
+        formatCurrency(amount, currency = 'EUR') {
+            return new Intl.NumberFormat('it-IT', {
+                style: 'currency',
+                currency: currency
+            }).format(amount);
+        },
+
+        // Performance Utilities
+        debounce(func, delay = CONFIG.animations.duration) {
+            let timeoutId;
+            return function (...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
             };
         },
 
-        /**
-         * Throttle function
-         */
-        throttle: (func, limit) => {
-            let inThrottle;
-            return function () {
-                const args = arguments;
-                const context = this;
-                if (!inThrottle) {
-                    func.apply(context, args);
-                    inThrottle = true;
-                    setTimeout(() => inThrottle = false, limit);
+        throttle(func, delay = 16) {
+            let lastCall = 0;
+            return function (...args) {
+                const now = Date.now();
+                if (now - lastCall >= delay) {
+                    lastCall = now;
+                    return func.apply(this, args);
                 }
             };
         },
 
-        /**
-         * Check if element is in viewport
-         */
-        isInViewport: (element, offset = 0) => {
-            const rect = element.getBoundingClientRect();
-            return (
-                rect.top >= -offset &&
-                rect.left >= -offset &&
-                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) + offset &&
-                rect.right <= (window.innerWidth || document.documentElement.clientWidth) + offset
-            );
+        // Animation Utilities
+        animate(element, keyframes, options = {}) {
+            const defaultOptions = {
+                duration: CONFIG.animations.duration,
+                easing: CONFIG.animations.easing,
+                fill: 'forwards'
+            };
+
+            return element.animate(keyframes, { ...defaultOptions, ...options });
         },
 
-        /**
-         * Generate unique ID
-         */
-        generateId: () => {
+        fadeIn(element, duration = CONFIG.animations.duration) {
+            element.style.opacity = '0';
+            element.style.display = 'block';
+
+            return this.animate(element, [
+                { opacity: 0 },
+                { opacity: 1 }
+            ], { duration });
+        },
+
+        fadeOut(element, duration = CONFIG.animations.duration) {
+            return this.animate(element, [
+                { opacity: 1 },
+                { opacity: 0 }
+            ], { duration }).finished.then(() => {
+                element.style.display = 'none';
+            });
+        },
+
+        // Generate unique ID
+        generateId() {
             return 'bos_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
         }
     };
 
-    // Main initialization
-    const init = () => {
-        if (state.initialized) return;
+    // API Handler
+    const api = {
+        async request(endpoint, options = {}) {
+            const url = CONFIG.api.base + endpoint;
+            const defaultOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            };
 
-        try {
-            utils.log('Initializing BOSTARTER Main v3.0.0');
+            try {
+                const response = await fetch(url, { ...defaultOptions, ...options });
 
-            // Core setup
-            setupTheme();
-            setupMobileMenu();
-            setupLazyLoading();
-            setupScrollAnimations();
-            setupBootstrapComponents();
-            setupAccessibility();
-            setupPerformanceOptimizations();
-            setupErrorHandling();
-
-            // Mark as initialized
-            state.initialized = true;
-            utils.log('BOSTARTER Main initialized successfully');
-
-            // Dispatch ready event
-            document.dispatchEvent(new CustomEvent('bostarterMainReady', {
-                detail: { version: CONFIG.version, state }
-            }));
-
-        } catch (error) {
-            utils.error('Failed to initialize BOSTARTER Main:', error);
-        }
-    };
-
-    /**
-     * Enhanced theme management
-     */
-    const setupTheme = () => {
-        const savedTheme = localStorage.getItem(CONFIG.theme.storageKey) || CONFIG.theme.default;
-
-        // Apply theme
-        applyTheme(savedTheme);
-
-        // Listen for theme changes
-        document.addEventListener('themeChanged', (e) => {
-            applyTheme(e.detail.theme);
-        });
-
-        // Listen for system theme changes
-        if (savedTheme === 'auto') {
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            mediaQuery.addListener((e) => {
-                if (state.theme === 'auto') {
-                    applyTheme(e.matches ? 'dark' : 'light');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                utils.error('API Request failed:', error);
+                throw error;
+            }
+        },
+
+        async get(endpoint, params = {}) {
+            const searchParams = new URLSearchParams(params);
+            const url = searchParams.toString() ? `${endpoint}?${searchParams}` : endpoint;
+            return this.request(url);
+        },
+
+        async post(endpoint, data = {}) {
+            return this.request(endpoint, {
+                method: 'POST',
+                body: JSON.stringify(data)
             });
         }
     };
 
-    /**
-     * Apply theme with smooth transition
-     */
-    const applyTheme = (theme) => {
-        const html = document.documentElement;
-        const body = document.body;
+    // Notification System
+    const notifications = {
+        container: null,
 
-        // Add transition class
-        html.classList.add('theme-transition');
-
-        // Determine actual theme
-        let actualTheme = theme;
-        if (theme === 'auto') {
-            actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-
-        // Apply theme
-        html.setAttribute('data-bs-theme', actualTheme);
-        html.setAttribute('data-theme', theme);
-        body.className = body.className.replace(/theme-\w+/g, '') + ` theme-${actualTheme}`;
-
-        // Update state
-        state.theme = theme;
-
-        // Remove transition class
-        setTimeout(() => {
-            html.classList.remove('theme-transition');
-        }, 300);
-
-        utils.log(`Theme applied: ${theme} (actual: ${actualTheme})`);
-    };
-
-    /**
-     * Enhanced mobile menu with better UX
-     */
-    const setupMobileMenu = () => {
-        const navbar = document.querySelector('.navbar');
-        const toggler = navbar?.querySelector('.navbar-toggler');
-        const collapse = navbar?.querySelector('.navbar-collapse');
-
-        if (!toggler || !collapse) return;
-
-        let isAnimating = false;
-
-        toggler.addEventListener('click', (e) => {
-            e.preventDefault();
-
-            if (isAnimating) return;
-            isAnimating = true;
-
-            const isExpanded = toggler.getAttribute('aria-expanded') === 'true';
-            const newState = !isExpanded;
-
-            // Update aria-expanded
-            toggler.setAttribute('aria-expanded', newState);
-
-            // Toggle classes with animation
-            if (newState) {
-                collapse.classList.add('collapsing');
-                collapse.style.height = '0px';
-
-                requestAnimationFrame(() => {
-                    collapse.classList.remove('collapse');
-                    collapse.classList.add('show');
-                    collapse.style.height = collapse.scrollHeight + 'px';
+        init() {
+            if (!this.container) {
+                this.container = utils.createElement('div', {
+                    className: 'notification-container position-fixed top-0 end-0 p-3',
+                    styles: { zIndex: 9999 }
                 });
+                document.body.appendChild(this.container);
+            }
+        },
 
-                // Trap focus
+        show(message, type = 'info', duration = 5000) {
+            this.init();
+
+            const notificationId = utils.generateId();
+            const notification = utils.createElement('div', {
+                className: `alert alert-${type} alert-dismissible fade show shadow-sm`,
+                id: notificationId,
+                innerHTML: `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-${this.getIcon(type)} me-2"></i>
+                        <span>${utils.escapeHtml(message)}</span>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                    </div>
+                `
+            });
+
+            this.container.appendChild(notification);
+
+            // Auto remove
+            if (duration > 0) {
                 setTimeout(() => {
-                    trapFocus(collapse);
-                }, 150);
-            } else {
-                collapse.style.height = collapse.scrollHeight + 'px';
-                collapse.classList.add('collapsing');
+                    this.remove(notificationId);
+                }, duration);
+            }
 
-                requestAnimationFrame(() => {
-                    collapse.style.height = '0px';
+            return notificationId;
+        },
+
+        remove(notificationId) {
+            const notification = utils.$(`#${notificationId}`);
+            if (notification) {
+                utils.fadeOut(notification).then(() => {
+                    notification.remove();
                 });
             }
+        },
 
-            // Clean up animation
-            setTimeout(() => {
-                collapse.classList.remove('collapsing');
-                if (newState) {
-                    collapse.style.height = '';
+        success(message, duration) {
+            return this.show(message, 'success', duration);
+        },
+
+        error(message, duration) {
+            return this.show(message, 'danger', duration);
+        },
+
+        warning(message, duration) {
+            return this.show(message, 'warning', duration);
+        },
+
+        info(message, duration) {
+            return this.show(message, 'info', duration);
+        },
+
+        getIcon(type) {
+            const icons = {
+                success: 'check-circle',
+                danger: 'exclamation-circle',
+                warning: 'exclamation-triangle',
+                info: 'info-circle'
+            };
+            return icons[type] || 'info-circle';
+        }
+    };
+
+    // Form Utilities
+    const forms = {
+        validate(form) {
+            const errors = [];
+            const inputs = form.querySelectorAll('input, select, textarea');
+
+            inputs.forEach(input => {
+                if (input.hasAttribute('required') && !input.value.trim()) {
+                    errors.push(`${this.getFieldLabel(input)} è obbligatorio`);
+                    this.markInvalid(input);
                 } else {
-                    collapse.classList.remove('show');
-                    collapse.classList.add('collapse');
+                    this.markValid(input);
                 }
-                isAnimating = false;
-            }, 350);
-        });
 
-        // Close menu on outside click
-        document.addEventListener('click', (e) => {
-            if (!navbar.contains(e.target) && collapse.classList.contains('show')) {
-                toggler.click();
-            }
-        });
-
-        // Close menu on escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && collapse.classList.contains('show')) {
-                toggler.click();
-                toggler.focus();
-            }
-        });
-    };
-
-    /**
-     * Advanced lazy loading with intersection observer
-     */
-    const setupLazyLoading = () => {
-        if (!('IntersectionObserver' in window)) {
-            // Fallback for older browsers
-            const images = document.querySelectorAll('img[loading="lazy"]');
-            images.forEach(img => {
-                if (img.dataset.src) {
-                    img.src = img.dataset.src;
+                // Email validation
+                if (input.type === 'email' && input.value && !this.isValidEmail(input.value)) {
+                    errors.push('Formato email non valido');
+                    this.markInvalid(input);
                 }
-                img.classList.add('loaded');
             });
-            return;
+
+            return errors;
+        },
+
+        markInvalid(input) {
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+        },
+
+        markValid(input) {
+            input.classList.add('is-valid');
+            input.classList.remove('is-invalid');
+        },
+
+        getFieldLabel(input) {
+            const label = utils.$(`label[for="${input.id}"]`);
+            return label ? label.textContent.trim() : input.name || 'Campo';
+        },
+
+        isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
-
-        const imageObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-
-                    // Create a new image to preload
-                    const newImg = new Image();
-                    newImg.onload = () => {
-                        img.src = img.dataset.src || img.src;
-                        img.classList.add('loaded');
-                        img.classList.add('animate-fadeIn');
-                    };
-                    newImg.onerror = () => {
-                        img.classList.add('error');
-                        utils.error('Failed to load image:', img.dataset.src || img.src);
-                    };
-
-                    newImg.src = img.dataset.src || img.src;
-                    imageObserver.unobserve(img);
-                }
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: `${CONFIG.performance.lazyLoadOffset}px`
-        });
-
-        // Observe all lazy images
-        const lazyImages = document.querySelectorAll('img[loading="lazy"], img[data-src]');
-        lazyImages.forEach(img => imageObserver.observe(img));
-
-        state.observers.set('lazyLoading', imageObserver);
     };
 
-    /**
-     * Enhanced scroll animations
-     */
-    const setupScrollAnimations = () => {
-        if (!('IntersectionObserver' in window)) return;
+    // Theme Management
+    const theme = {
+        init() {
+            this.applyTheme(state.theme);
+            this.setupToggle();
+        },
 
-        const animationObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const element = entry.target;
-                    const delay = parseInt(element.dataset.delay) || 0;
-                    const animationClass = element.dataset.animation || 'animate-fadeIn';
+        applyTheme(newTheme) {
+            state.theme = newTheme;
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem(CONFIG.theme.storageKey, newTheme);
+        },
 
-                    setTimeout(() => {
-                        element.classList.add('animate', animationClass);
+        toggle() {
+            const newTheme = state.theme === 'light' ? 'dark' : 'light';
+            this.applyTheme(newTheme);
+        },
 
-                        // Fire custom event
-                        element.dispatchEvent(new CustomEvent('elementAnimated', {
-                            detail: { element, animationClass }
-                        }));
-                    }, delay);
+        setupToggle() {
+            const toggles = utils.$$('[data-theme-toggle]');
+            toggles.forEach(toggle => {
+                toggle.addEventListener('click', () => this.toggle());
+            });
+        }
+    };
 
-                    // Stop observing if animation should only happen once
-                    if (!element.hasAttribute('data-repeat')) {
-                        animationObserver.unobserve(element);
+    // Component Handlers
+    const components = {
+        initSmoothScrolling() {
+            utils.$$('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = utils.$(anchor.getAttribute('href'));
+
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        },
+
+        initBootstrapComponents() {
+            // Initialize Bootstrap tooltips
+            const tooltipTriggerList = utils.$$('[data-bs-toggle="tooltip"]');
+            tooltipTriggerList.forEach(tooltipTriggerEl => {
+                if (typeof bootstrap !== 'undefined') {
+                    new bootstrap.Tooltip(tooltipTriggerEl);
+                }
+            });
+
+            // Initialize Bootstrap popovers
+            const popoverTriggerList = utils.$$('[data-bs-toggle="popover"]');
+            popoverTriggerList.forEach(popoverTriggerEl => {
+                if (typeof bootstrap !== 'undefined') {
+                    new bootstrap.Popover(popoverTriggerEl);
+                }
+            });
+        }
+    };
+
+    // Event Handlers
+    const events = {
+        init() {
+            this.setupGlobalHandlers();
+            this.setupFormHandlers();
+        },
+
+        setupGlobalHandlers() {
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // ESC key to close modals
+                if (e.key === 'Escape') {
+                    const openModal = utils.$('.modal.show');
+                    if (openModal && typeof bootstrap !== 'undefined') {
+                        bootstrap.Modal.getInstance(openModal)?.hide();
                     }
                 }
             });
-        }, {
-            threshold: 0.1,
-            rootMargin: '50px'
-        });
 
-        // Observe elements with scroll animations
-        const animatedElements = document.querySelectorAll('.animate-on-scroll, [data-animation]');
-        animatedElements.forEach(el => animationObserver.observe(el));
-
-        state.observers.set('scrollAnimations', animationObserver);
-    };
-
-    /**
-     * Enhanced Bootstrap components initialization
-     */
-    const setupBootstrapComponents = () => {
-        // Tooltips with enhanced options
-        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => {
-            return new bootstrap.Tooltip(tooltipTriggerEl, {
-                trigger: 'hover focus',
-                delay: { show: 500, hide: 100 },
-                boundary: 'viewport'
-            });
-        });
-
-        // Popovers with enhanced options
-        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-        const popoverList = [...popoverTriggerList].map(popoverTriggerEl => {
-            return new bootstrap.Popover(popoverTriggerEl, {
-                trigger: 'click',
-                boundary: 'viewport',
-                sanitize: true
-            });
-        });
-
-        // Modals with focus management
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            modal.addEventListener('shown.bs.modal', () => {
-                const firstFocusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-                firstFocusable?.focus();
-                trapFocus(modal);
+            // Handle offline/online status
+            window.addEventListener('online', () => {
+                notifications.success('Connessione ripristinata');
             });
 
-            modal.addEventListener('hidden.bs.modal', () => {
-                const trigger = document.querySelector(`[data-bs-target="#${modal.id}"]`) ||
-                    document.querySelector(`[href="#${modal.id}"]`);
-                trigger?.focus();
+            window.addEventListener('offline', () => {
+                notifications.warning('Connessione persa');
             });
-        });
+        },
 
-        // Offcanvas with enhanced behavior
-        const offcanvasElements = document.querySelectorAll('.offcanvas');
-        offcanvasElements.forEach(offcanvas => {
-            offcanvas.addEventListener('shown.bs.offcanvas', () => {
-                trapFocus(offcanvas);
-            });
-        });
+        setupFormHandlers() {
+            // Auto-validation for forms
+            utils.$$('form').forEach(form => {
+                form.addEventListener('submit', (e) => {
+                    const errors = forms.validate(form);
 
-        // Store references
-        state.cache.set('tooltips', tooltipList);
-        state.cache.set('popovers', popoverList);
-    };
-
-    /**
-     * Enhanced accessibility features
-     */
-    const setupAccessibility = () => {
-        // Skip link functionality
-        const skipLink = document.querySelector('.skip-link');
-        if (skipLink) {
-            skipLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = document.querySelector(skipLink.getAttribute('href'));
-                if (target) {
-                    target.focus();
-                    target.scrollIntoView({ behavior: 'smooth' });
-                }
-            });
-        }
-
-        // Keyboard navigation enhancement
-        document.addEventListener('keydown', (e) => {
-            // Tab navigation indicator
-            if (e.key === 'Tab') {
-                document.body.classList.add('user-is-tabbing');
-            }
-
-            // Arrow key navigation for custom components
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                handleArrowKeyNavigation(e);
-            }
-        });
-
-        // Remove tab indicator on mouse use
-        document.addEventListener('mousedown', () => {
-            document.body.classList.remove('user-is-tabbing');
-        });
-
-        // Announce dynamic content changes to screen readers
-        setupAriaLiveRegions();
-    };
-
-    /**
-     * Performance optimizations
-     */
-    const setupPerformanceOptimizations = () => {
-        // Passive event listeners for better scroll performance
-        const passiveEvents = ['scroll', 'touchstart', 'touchmove', 'wheel'];
-        passiveEvents.forEach(event => {
-            document.addEventListener(event, () => { }, { passive: true });
-        });
-
-        // Preload critical resources
-        const criticalResources = document.querySelectorAll('[data-preload]');
-        criticalResources.forEach(resource => {
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.href = resource.dataset.preload;
-            link.as = resource.dataset.preloadAs || 'fetch';
-            if (resource.dataset.preloadType) {
-                link.type = resource.dataset.preloadType;
-            }
-            document.head.appendChild(link);
-        });
-
-        // Resource hints for external resources
-        const prefetchResources = document.querySelectorAll('[data-prefetch]');
-        prefetchResources.forEach(resource => {
-            const link = document.createElement('link');
-            link.rel = 'prefetch';
-            link.href = resource.dataset.prefetch;
-            document.head.appendChild(link);
-        });
-    };
-
-    /**
-     * Global error handling
-     */
-    const setupErrorHandling = () => {
-        window.addEventListener('error', (event) => {
-            utils.error('JavaScript Error:', {
-                message: event.message,
-                filename: event.filename,
-                lineno: event.lineno,
-                colno: event.colno,
-                error: event.error
-            });
-        });
-
-        window.addEventListener('unhandledrejection', (event) => {
-            utils.error('Unhandled Promise Rejection:', event.reason);
-        });
-    };
-
-    /**
-     * Utility functions for components
-     */
-
-    /**
-     * Focus trap for modals and other components
-     */
-    const trapFocus = (element) => {
-        const focusableElements = element.querySelectorAll(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        const trapFocusHandler = (e) => {
-            if (e.key === 'Tab') {
-                if (e.shiftKey) {
-                    if (document.activeElement === firstElement) {
-                        lastElement?.focus();
+                    if (errors.length > 0) {
                         e.preventDefault();
+                        notifications.error(errors.join('<br>'));
                     }
-                } else {
-                    if (document.activeElement === lastElement) {
-                        firstElement?.focus();
-                        e.preventDefault();
-                    }
-                }
-            }
-        };
-
-        element.addEventListener('keydown', trapFocusHandler);
-
-        // Return cleanup function
-        return () => element.removeEventListener('keydown', trapFocusHandler);
-    };
-
-    /**
-     * Handle arrow key navigation
-     */
-    const handleArrowKeyNavigation = (e) => {
-        const activeElement = document.activeElement;
-
-        // Custom dropdown navigation
-        if (activeElement.matches('.dropdown-item')) {
-            const dropdown = activeElement.closest('.dropdown-menu');
-            const items = dropdown.querySelectorAll('.dropdown-item:not(.disabled)');
-            const currentIndex = Array.from(items).indexOf(activeElement);
-
-            let nextIndex;
-            if (e.key === 'ArrowDown') {
-                nextIndex = (currentIndex + 1) % items.length;
-                e.preventDefault();
-            } else if (e.key === 'ArrowUp') {
-                nextIndex = (currentIndex - 1 + items.length) % items.length;
-                e.preventDefault();
-            }
-
-            if (nextIndex !== undefined) {
-                items[nextIndex].focus();
-            }
-        }
-    };
-
-    /**
-     * Setup ARIA live regions for dynamic announcements
-     */
-    const setupAriaLiveRegions = () => {
-        // Create polite live region if it doesn't exist
-        if (!document.getElementById('aria-live-polite')) {
-            const liveRegion = document.createElement('div');
-            liveRegion.id = 'aria-live-polite';
-            liveRegion.setAttribute('aria-live', 'polite');
-            liveRegion.setAttribute('aria-atomic', 'true');
-            liveRegion.className = 'visually-hidden';
-            document.body.appendChild(liveRegion);
-        }
-
-        // Create assertive live region if it doesn't exist
-        if (!document.getElementById('aria-live-assertive')) {
-            const liveRegion = document.createElement('div');
-            liveRegion.id = 'aria-live-assertive';
-            liveRegion.setAttribute('aria-live', 'assertive');
-            liveRegion.setAttribute('aria-atomic', 'true');
-            liveRegion.className = 'visually-hidden';
-            document.body.appendChild(liveRegion);
-        }
-    };
-
-    /**
-     * Public API
-     */
-    const BOSTARTER_MAIN = {
-        version: CONFIG.version,
-        initialized: () => state.initialized,
-
-        // Theme management
-        setTheme: (theme) => {
-            if (['light', 'dark', 'auto'].includes(theme)) {
-                localStorage.setItem(CONFIG.theme.storageKey, theme);
-                applyTheme(theme);
-                return true;
-            }
-            return false;
-        },
-
-        getTheme: () => state.theme,
-
-        // Announcements for screen readers
-        announce: (message, priority = 'polite') => {
-            const liveRegion = document.getElementById(`aria-live-${priority}`);
-            if (liveRegion) {
-                liveRegion.textContent = message;
-                setTimeout(() => liveRegion.textContent = '', 1000);
-            }
-        },
-
-        // Utility functions
-        utils: {
-            debounce: utils.debounce,
-            throttle: utils.throttle,
-            isInViewport: utils.isInViewport,
-            generateId: utils.generateId
-        },
-
-        // State access
-        getState: () => ({ ...state }),
-
-        // Cleanup
-        destroy: () => {
-            state.observers.forEach(observer => observer.disconnect());
-            state.observers.clear();
-            state.listeners.forEach((listener, event) => {
-                window.removeEventListener(event, listener);
+                });
             });
-            state.listeners.clear();
-            state.cache.clear();
-            state.initialized = false;
         }
+    };
+
+    // Main Application
+    const app = {
+        init() {
+            if (state.initialized) return;
+
+            try {
+                utils.log('Initializing BOSTARTER v4.1.0');
+
+                // Initialize core systems
+                theme.init();
+                events.init();
+                components.initSmoothScrolling();
+                components.initBootstrapComponents();
+
+                state.initialized = true;
+                utils.log('BOSTARTER initialized successfully');
+
+                // Dispatch ready event
+                document.dispatchEvent(new CustomEvent('bostarterReady', {
+                    detail: { version: CONFIG.version }
+                }));
+
+            } catch (error) {
+                utils.error('Initialization failed:', error);
+            }
+        },
+
+        // Public API
+        getVersion() {
+            return CONFIG.version;
+        },
+
+        showNotification(message, type, duration) {
+            return notifications.show(message, type, duration);
+        },
+
+        validateForm(form) {
+            return forms.validate(form);
+        },
+
+        apiRequest(endpoint, options) {
+            return api.request(endpoint, options);
+        },
+
+        utils: utils,
+        api: api,
+        notifications: notifications,
+        forms: forms,
+        theme: theme,
+        components: components
     };
 
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', app.init);
     } else {
-        init();
+        app.init();
     }
 
-    // Export to global scope
-    window.BOSTARTER = {
-        ...(window.BOSTARTER || {}),
-        Main: BOSTARTER_MAIN
-    };
+    // Global API
+    window.BOSTARTER = app;
+
+    // Export for module systems
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = app;
+    }
 
 })();
-

@@ -360,11 +360,12 @@ $categories = [
             descrizione: formData.get('description'),
             tipo: getCategoryType(formData.get('category')),
             budget_richiesto: parseFloat(formData.get('funding_goal')),
-            data_scadenza: formData.get('deadline')
+            data_limite: formData.get('deadline'),
+            categoria: formData.get('category')
         };
         
         try {
-            const response = await fetch('../backend/api/project.php?action=create', {
+            const response = await fetch('../backend/api/project.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

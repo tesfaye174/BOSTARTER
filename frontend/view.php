@@ -7,9 +7,14 @@ $project_id = $_GET["id"] ?? null;
 $error = "";
 $project = null;
 $finanziamenti = [];
+$redirect_to_home = false;
 
-if (!$project_id || !is_numeric($project_id) || $project_id <= 0) {
-    $error = "ID progetto non valido";
+if (!$project_id) {
+    $error = "Nessun progetto specificato.";
+    $redirect_to_home = true;
+} elseif (!is_numeric($project_id) || $project_id <= 0) {
+    $error = "ID progetto non valido. L'ID deve essere un numero positivo.";
+    $redirect_to_home = true;
 } else {
     $project_id = (int)$project_id;
     try {
@@ -58,15 +63,13 @@ if (!$project_id || !is_numeric($project_id) || $project_id <= 0) {
             } catch(Exception $e) {
                 $finanziamenti = [];
             }
+        } else {
+            $error = "Progetto non trovato. Il progetto con ID $project_id potrebbe essere stato rimosso o non esistere.";
+            $redirect_to_home = true;
         }
     } catch(Exception $e) {
         $error = "Errore nel caricamento del progetto: " . $e->getMessage();
     }
-}
-
-// Verifica finale se il progetto è stato trovato
-if (!$project && empty($error)) {
-    $error = "Progetto con ID {$projectIdValidation['id']} non trovato nel database";
 }
 
 $is_logged_in = isset($_SESSION["user_id"]);
@@ -127,6 +130,13 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
             <div class="alert alert-danger animate-fade-up">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <?= htmlspecialchars($error) ?>
+                <?php if ($redirect_to_home): ?>
+                <div class="mt-3">
+                    <a href="home.php" class="btn btn-primary">
+                        <i class="fas fa-home me-1"></i>Torna alla Homepage
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
             <?php else: ?>
             <!-- Header Progetto -->
@@ -366,6 +376,16 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
     });
     }
     }
+    
+    // Redirect automatico per errori
+    <?php if ($error && $redirect_to_home): ?>
+    setTimeout(function() {
+        if (confirm("Vuoi essere reindirizzato alla homepage?")) {
+            window.location.href = "home.php";
+        }
+    }, 5000); // 5 secondi
+    <?php endif; ?>
+    
     window.addEventListener("scroll", function() {
         const navbar = document.querySelector(".navbar-bostarter");
         if (window.scrollY > 100) {

@@ -88,7 +88,7 @@ $roleManager = new RoleManager();
                                 </a></li>
                             <?php endif; ?>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="<?= strpos($_SERVER['PHP_SELF'], '/admin/') !== false ? '../' : '' ?>auth/exit.php">
+                            <li><a class="dropdown-item text-danger" href="<?= strpos($_SERVER['PHP_SELF'], '/admin/') !== false ? '../' : '' ?>exit.php">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </a></li>
                         </ul>
