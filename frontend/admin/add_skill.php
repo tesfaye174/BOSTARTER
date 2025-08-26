@@ -10,7 +10,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
 }
 $db = Database::getInstance();
 $conn = $db->getConnection();
-$mongoLogger = new MongoLogger();
 $error = '';
 $success = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add') {
@@ -32,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     'max_length' => 50,
                     'pattern' => '/^[a-zA-Z0-9\s\-\+\#\.]+$/',
                     'error_messages' => [
-                        'required' => 'Il nome della competenza � obbligatorio',
+                        'required' => 'Il nome della competenza è obbligatorio',
                         'min_length' => 'Il nome deve essere di almeno 2 caratteri',
-                        'max_length' => 'Il nome non pu� superare i 50 caratteri',
+                        'max_length' => 'Il nome non può superare i 50 caratteri',
                         'pattern' => 'Il nome contiene caratteri non validi'
                     ]
                 ],
@@ -43,16 +42,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     'min_length' => 10,
                     'max_length' => 500,
                     'error_messages' => [
-                        'required' => 'La descrizione � obbligatoria',
+                        'required' => 'La descrizione è obbligatoria',
                         'min_length' => 'La descrizione deve essere di almeno 10 caratteri',
-                        'max_length' => 'La descrizione non pu� superare i 500 caratteri'
+                        'max_length' => 'La descrizione non può superare i 500 caratteri'
                     ]
                 ],
                 'categoria' => [
                     'required' => true,
                     'in_array' => ['Programming', 'Design', 'Marketing', 'Business', 'Other'],
                     'error_messages' => [
-                        'required' => 'La categoria � obbligatoria',
+                        'required' => 'La categoria è obbligatoria',
                         'in_array' => 'Categoria non valida'
                     ]
                 ]
@@ -83,18 +82,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     $stmt = $conn->prepare("SELECT COUNT(*) FROM competenze WHERE LOWER(nome) = LOWER(?) AND categoria = ?");
                     $stmt->execute([strtolower($nome), $categoria]);
                     if ($stmt->fetchColumn() > 0) {
-                        throw new Exception("Una competenza con questo nome gi� esiste in questa categoria");
+                        throw new Exception("Una competenza con questo nome già esiste in questa categoria");
                     }
                     $stmt = $conn->prepare("
                         INSERT INTO competenze (nome, descrizione, categoria, data_creazione)
                         VALUES (?, ?, ?, NOW())
                     ");
                     if ($stmt->execute([$nome, $descrizione, $categoria])) {
-                        $mongoLogger->logAction('add_skill', [
-                            'skill_name' => $nome,
-                            'category' => $categoria,
-                            'admin_id' => $_SESSION['user_id']
-                        ]);
+                        // Log azione nel database tradizionale
+                        error_log("Admin {$_SESSION['user_id']} ha aggiunto la competenza: $nome");
                         $conn->commit();
                         $success = "Competenza aggiunta con successo!";
                         unset($nome, $descrizione, $categoria);
@@ -104,10 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                 } catch (Exception $e) {
                     $conn->rollBack();
                     $error = $e->getMessage();
-                    $mongoLogger->logError('add_skill_error', [
-                        'error' => $e->getMessage(),
-                        'admin_id' => $_SESSION['user_id']
-                    ]);
+                    error_log("Errore aggiunta competenza: " . $e->getMessage());
                 }
             } else {
                 $error = implode('<br>', $validationErrors);
@@ -150,14 +143,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                 ");
                 if ($stmt->execute([$skill_id])) {
                     if ($stmt->rowCount() > 0) {
-                        $mongoLogger->logAction('delete_skill', [
-                            'skill_id' => $skill_id,
-                            'admin_id' => $_SESSION['user_id']
-                        ]);
+                        error_log("Admin {$_SESSION['user_id']} ha eliminato la competenza ID: $skill_id");
                         $conn->commit();
                         $success = "Competenza eliminata con successo!";
                     } else {
-                        throw new Exception('Non � possibile eliminare questa competenza perch� � utilizzata in alcuni progetti');
+                        throw new Exception('Non è possibile eliminare questa competenza perché è utilizzata in alcuni progetti');
                     }
                 } else {
                     throw new Exception("Errore durante l'eliminazione della competenza");
@@ -165,10 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             } catch (Exception $e) {
                 $conn->rollBack();
                 $error = $e->getMessage();
-                $mongoLogger->logError('delete_skill_error', [
-                    'error' => $e->getMessage(),
-                    'admin_id' => $_SESSION['user_id']
-                ]);
+                error_log("Errore eliminazione competenza: " . $e->getMessage());
             }
         }
     }

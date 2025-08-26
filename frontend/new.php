@@ -1,17 +1,19 @@
 <?php
 session_start();
 
-// Sessione utente temporanea per testing
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['user_id'] = 1; // ID utente temporaneo per testing
-}
-
 require_once __DIR__ . '/../backend/config/database.php';
 require_once __DIR__ . '/../backend/models/Project.php';
+require_once __DIR__ . '/../backend/utils/RoleManager.php';
 
-// Controlla autenticazione
-if (!isset($_SESSION['user_id'])) {
+// Controlla autenticazione e permessi
+$roleManager = new RoleManager();
+if (!$roleManager->isAuthenticated()) {
     header('Location: auth/login.php');
+    exit();
+}
+
+if (!$roleManager->hasPermission('can_create_project')) {
+    header('Location: home.php?error=no_permission');
     exit();
 }
 
@@ -19,90 +21,11 @@ if (!isset($_SESSION['user_id'])) {
 $db = Database::getInstance();
 $conn = $db->getConnection();
 
-// Inizializza il modello Project
-$project = new Project();
-
 $message = '';
 $error = '';
 
-// Gestisce la creazione del progetto via POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        // Mappa i campi del form ai nomi del database
-        $data = [
-            'nome' => trim($_POST['name']),
-            'descrizione' => trim($_POST['description']),
-            'tipo' => $_POST['category'], // mappiamo category a tipo
-            'budget_richiesto' => floatval($_POST['funding_goal']),
-            'data_limite' => $_POST['deadline'],
-            'creatore_id' => $_SESSION['user_id']
-        ];
-        
-        // Mappa le categorie ai tipi di progetto
-        $categoryToType = [
-            'technology' => 'software',
-            'games' => 'software',
-            'publishing' => 'software',
-            'education' => 'software',
-            'community' => 'software',
-            'art' => 'hardware',
-            'music' => 'hardware', 
-            'film' => 'hardware',
-            'food' => 'hardware',
-            'fashion' => 'hardware',
-            'health' => 'hardware',
-            'environment' => 'hardware'
-        ];
-        
-        $data['tipo'] = $categoryToType[$_POST['category']] ?? 'software';
-        
-        // Valida i dati del form
-        if (empty($data['nome']) || empty($data['descrizione']) || empty($_POST['category']) || 
-            $data['budget_richiesto'] <= 0 || empty($data['data_limite'])) {
-            throw new Exception('Tutti i campi sono obbligatori e l\'obiettivo di finanziamento deve essere maggiore di 0.');
-        }
-        
-        // Valida la data di scadenza
-        if (strtotime($data['data_limite']) <= time()) {
-            throw new Exception('La data di scadenza deve essere nel futuro.');
-        }
-        
-        // Gestisce l'upload dell'immagine
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = '../uploads/projects/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            $imageInfo = getimagesize($_FILES['image']['tmp_name']);
-            if (!$imageInfo) {
-                throw new Exception('File immagine non valido.');
-            }
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!in_array($imageInfo['mime'], $allowedTypes)) {
-                throw new Exception('Solo immagini JPEG, PNG, GIF e WebP sono consentite.');
-            }
-            $fileExtension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-            $fileName = uniqid('project_') . '.' . $fileExtension;
-            $uploadPath = $uploadDir . $fileName;
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadPath)) {
-                $data['image'] = 'uploads/projects/' . $fileName;
-            } else {
-                throw new Exception('Errore durante l\'upload dell\'immagine.');
-            }
-        }
-        
-        $result = $project->create($data);
-        if ($result['success']) {
-            $message = 'Progetto creato con successo!';
-            header('Location: view.php?id=' . $result['progetto_id']);
-            exit();
-        } else {
-            $error = $result['error'] ?? 'Errore nella creazione del progetto. Riprova.';
-        }
-    } catch (Exception $e) {
-        $error = $e->getMessage();
-    }
-}
+// La creazione del progetto è gestita via JavaScript/API
+
 $categories = [
     'technology' => 'Technology',
     'art' => 'Art & Design',
@@ -426,6 +349,59 @@ $categories = [
     descriptionTextarea.addEventListener('input', updateCharacterCount);
     descriptionTextarea.setAttribute('maxlength', maxLength);
     updateCharacterCount();
+    
+    // Gestione submit del form via API
+    document.getElementById('projectForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const projectData = {
+            nome: formData.get('name'),
+            descrizione: formData.get('description'),
+            tipo: getCategoryType(formData.get('category')),
+            budget_richiesto: parseFloat(formData.get('funding_goal')),
+            data_scadenza: formData.get('deadline')
+        };
+        
+        try {
+            const response = await fetch('../backend/api/project.php?action=create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(projectData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Progetto creato con successo!');
+                window.location.href = 'home.php';
+            } else {
+                alert('Errore: ' + result.error);
+            }
+        } catch (error) {
+            alert('Errore di connessione: ' + error.message);
+        }
+    });
+    
+    function getCategoryType(category) {
+        const categoryToType = {
+            'technology': 'software',
+            'games': 'software',
+            'publishing': 'software',
+            'education': 'software',
+            'community': 'software',
+            'art': 'hardware',
+            'music': 'hardware',
+            'film': 'hardware',
+            'food': 'hardware',
+            'fashion': 'hardware',
+            'health': 'hardware',
+            'environment': 'hardware'
+        };
+        return categoryToType[category] || 'software';
+    }
     </script>
 </body>
 

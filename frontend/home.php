@@ -148,6 +148,72 @@ if (empty($featured_projects)) {
         </div>
     </footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="js/roleManager.js"></script>
+    <script>
+        // Carica progetti via API
+        async function loadProjects() {
+            try {
+                const response = await fetch('../backend/api/project.php?action=list&limit=6');
+                const data = await response.json();
+                
+                if (data.success && data.projects.length > 0) {
+                    const container = document.querySelector('.row.g-4');
+                    container.innerHTML = '';
+                    
+                    data.projects.forEach(project => {
+                        const projectCard = createProjectCard(project);
+                        container.appendChild(projectCard);
+                    });
+                } else {
+                    document.querySelector('.row.g-4').innerHTML = 
+                        '<div class="col-12 text-center"><p>Nessun progetto disponibile al momento.</p></div>';
+                }
+            } catch (error) {
+                console.error('Errore nel caricamento progetti:', error);
+                document.querySelector('.row.g-4').innerHTML = 
+                    '<div class="col-12 text-center"><p>Errore nel caricamento dei progetti.</p></div>';
+            }
+        }
+        
+        function createProjectCard(project) {
+            const col = document.createElement('div');
+            col.className = 'col-md-4';
+            
+            const progressPercent = project.budget_raccolto ? 
+                Math.round((project.budget_raccolto / project.budget_richiesto) * 100) : 0;
+                
+            col.innerHTML = `
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">${project.nome || 'Progetto senza titolo'}</h5>
+                        <p class="card-text">${(project.descrizione || '').substring(0, 100)}...</p>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Raccolto: €${project.budget_raccolto || 0}</span>
+                                <span>Obiettivo: €${project.budget_richiesto || 0}</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: ${progressPercent}%" 
+                                     aria-valuenow="${progressPercent}" 
+                                     aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary mb-2">${project.tipo || 'Software'}</span>
+                        <br>
+                        <a href="view.php?type=project&id=${project.id}" class="btn btn-outline-primary btn-sm">
+                            Dettagli
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            return col;
+        }
+        
+        // Carica progetti quando la pagina è pronta
+        document.addEventListener('DOMContentLoaded', loadProjects);
+    </script>
 </body>
 
 </html>

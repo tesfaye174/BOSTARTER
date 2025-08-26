@@ -37,7 +37,7 @@ BEGIN
         SET p_message = 'Email o nickname già esistenti';
         ROLLBACK;
     ELSE
-        INSERT INTO utenti (email, nickname, password_hash, nome, cognome, 
+        INSERT INTO utenti (email, nickname, password, nome, cognome, 
                           anno_nascita, luogo_nascita, tipo_utente, codice_sicurezza)
         VALUES (p_email, p_nickname, p_password, p_nome, p_cognome, 
                 p_anno_nascita, p_luogo_nascita, p_tipo_utente, p_codice_sicurezza);
@@ -59,14 +59,14 @@ CREATE PROCEDURE sp_login_utente(
     OUT p_message VARCHAR(255)
 )
 BEGIN
-    DECLARE v_password_hash VARCHAR(255);
+    DECLARE v_password VARCHAR(255);
     DECLARE v_tipo_utente VARCHAR(20);
     DECLARE v_codice_sicurezza VARCHAR(50);
     DECLARE v_stato VARCHAR(20);
     DECLARE v_nickname VARCHAR(100);
     
-    SELECT id, password_hash, tipo_utente, codice_sicurezza, stato, nickname
-    INTO p_utente_id, v_password_hash, v_tipo_utente, v_codice_sicurezza, v_stato, v_nickname
+    SELECT id, password, tipo_utente, codice_sicurezza, stato, nickname
+    INTO p_utente_id, v_password, v_tipo_utente, v_codice_sicurezza, v_stato, v_nickname
     FROM utenti WHERE email = p_email;
     
     IF p_utente_id IS NULL THEN
@@ -78,7 +78,7 @@ BEGIN
     ELSEIF v_tipo_utente = 'amministratore' AND p_codice_sicurezza != v_codice_sicurezza THEN
         SET p_success = FALSE;
         SET p_message = 'Codice sicurezza richiesto';
-    ELSEIF v_password_hash = p_password THEN
+    ELSEIF v_password = p_password THEN
         SET p_success = TRUE;
         SET p_message = 'Login effettuato';
         SET p_user_data = JSON_OBJECT('id', p_utente_id, 'nickname', v_nickname, 'tipo', v_tipo_utente);
@@ -94,7 +94,7 @@ CREATE PROCEDURE sp_crea_progetto(
     IN p_nome VARCHAR(200),
     IN p_descrizione TEXT,
     IN p_creatore_id INT,
-    IN p_tipo_progetto VARCHAR(20),
+    IN p_tipo VARCHAR(20),
     IN p_budget_richiesto DECIMAL(12,2),
     IN p_data_limite DATE,
     OUT p_progetto_id INT,

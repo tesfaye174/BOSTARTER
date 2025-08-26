@@ -1,33 +1,106 @@
 <?php
 session_start();
-require_once '../config/database.php';
-require_once '../utils/Validator.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/Commento.php';
+require_once '../utils/RoleManager.php';
+require_once '../utils/ApiResponse.php';
+
 header('Content-Type: application/json');
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Devi essere loggato per commentare']);
+
+$roleManager = new RoleManager();
+$apiResponse = new ApiResponse();
+$commento = new Commento();
+
+// Verifica autenticazione
+if (!$roleManager->isAuthenticated()) {
+    $apiResponse->sendError('Devi essere autenticato', 401);
     exit();
 }
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Metodo non consentito']);
-    exit();
+
+switch ($_SERVER['REQUEST_METHOD']) {
+    case 'GET':
+        $progetto_id = $_GET['progetto_id'] ?? null;
+        
+        if (!$progetto_id) {
+            $apiResponse->sendError('ID progetto richiesto');
+            exit();
+        }
+        
+        $result = $commento->getByProject($progetto_id);
+        
+        if ($result['success']) {
+            $apiResponse->sendSuccess($result['commenti']);
+        } else {
+            $apiResponse->sendError($result['error']);
+        }
+        break;
+        
+    case 'POST':
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($input['progetto_id']) || !isset($input['testo'])) {
+            $apiResponse->sendError('Progetto ID e testo richiesti');
+            exit();
+        }
+        
+        $data = [
+            'utente_id' => $_SESSION['user_id'],
+            'progetto_id' => $input['progetto_id'],
+            'testo' => $input['testo']
+        ];
+        
+        $result = $commento->create($data);
+        
+        if ($result['success']) {
+            $apiResponse->sendSuccess($result);
+        } else {
+            $apiResponse->sendError($result['error']);
+        }
+        break;
+        
+    case 'PUT':
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($input['commento_id']) || !isset($input['risposta'])) {
+            $apiResponse->sendError('ID commento e risposta richiesti');
+            exit();
+        }
+        
+        $result = $commento->addRisposta(
+            $input['commento_id'], 
+            $_SESSION['user_id'], 
+            $input['risposta']
+        );
+        
+        if ($result['success']) {
+            $apiResponse->sendSuccess($result);
+        } else {
+            $apiResponse->sendError($result['error']);
+        }
+        break;
+        
+    case 'DELETE':
+        $commento_id = $_GET['id'] ?? null;
+        
+        if (!$commento_id) {
+            $apiResponse->sendError('ID commento richiesto');
+            exit();
+        }
+        
+        $isAdmin = $roleManager->getUserType() === 'amministratore';
+        $result = $commento->delete($commento_id, $_SESSION['user_id'], $isAdmin);
+        
+        if ($result['success']) {
+            $apiResponse->sendSuccess($result);
+        } else {
+            $apiResponse->sendError($result['error']);
+        }
+        break;
+        
+    default:
+        $apiResponse->sendError('Metodo non supportato', 405);
 }
-$input = json_decode(file_get_contents('php://input'), true);
-$project_id = (int)($input['project_id'] ?? 0);
-$comment_text = trim($input['comment'] ?? '');
-$parent_id = (int)($input['parent_id'] ?? 0) ?: null; 
-$user_id = $_SESSION['user_id'];
-$validator = new Validator();
-$validator->required('project_id', $project_id)
-          ->required('comment', $comment_text)
-          ->minLength(1)
-          ->maxLength(1000);
-if ($project_id <= 0 || !$validator->isValid()) {
-    http_response_code(400);
-    echo json_encode(['error' => implode(', ', $validator->getErrors())]);
-    exit();
-}
+?>
 try {
     $database = new Database();
     $pdo = $database->getConnection();

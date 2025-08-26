@@ -21,6 +21,27 @@ class ApiResponse {
         self::sendResponse(false, $message, [], $statusCode);
     }
 
+    // Instance methods for compatibility
+    public function sendSuccess($data = [], $message = 'Success', $statusCode = 200) {
+        self::success($data, $message, $statusCode);
+    }
+
+    public function sendError($message = 'Error', $statusCode = 400) {
+        self::error($message, $statusCode);
+    }
+
+    public function sendInvalidInput($errors = [], $message = 'Invalid Input', $statusCode = 422) {
+        self::invalidInput($errors, $message, $statusCode);
+    }
+
+    public function sendUnauthorized($message = 'Unauthorized', $statusCode = 401) {
+        self::unauthorized($message, $statusCode);
+    }
+
+    public function sendServerError($message = 'Internal Server Error', $statusCode = 500) {
+        self::serverError($message, $statusCode);
+    }
+
     private static function sendResponse($success, $message, $data, $statusCode) {
         http_response_code($statusCode);
         echo json_encode([

@@ -1,343 +1,118 @@
 <?php
-ob_start();
+session_start();
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/Project.php';
+require_once __DIR__ . '/../utils/RoleManager.php';
+require_once __DIR__ . '/../utils/ApiResponse.php';
+
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
-ob_clean();
 
-use BOSTARTER\Services\MongoLoggerSingleton;
+$roleManager = new RoleManager();
+$apiResponse = new ApiResponse();
+$project = new Project();
 
-try {
-    session_start();
-    require_once '../config/database.php';
-    require_once '../models/Project.php';
-    require_once '../services/MongoLogger.php';
-    require_once '../utils/Validator.php';
-    
-    $database = Database::getInstance();
-    $db = $database->getConnection();
-    $projectModel = new Project();
-    $mongoLogger = MongoLoggerSingleton::getInstance();
-    $method = $_SERVER['REQUEST_METHOD'];
-    $action = $_GET['action'] ?? 'list';
-    $request = json_decode(file_get_contents('php://input'), true);
-    $validProjectTypes = ['hardware', 'software'];
-    
-    $mongoLogger->logAction('projects_compliant_request', [
-        'endpoint' => 'projects_compliant',
-        'method' => $method,
-        'action' => $action,
-        'timestamp' => time(),
-        'pdf_compliant' => true,
-        'supported_types' => $validProjectTypes
-    ]);
-    switch ($method) {
-        case 'GET':
-            $action = $_GET['action'] ?? 'list';
-            switch ($action) {
-                case 'list':
-                    $result = $projectModel->getList();
-                    echo json_encode([
-                        'success' => true,
-                        'progetti' => array_values($result['progetti'] ?? [])
-                    ]);
-                    break;
-                default:
-                    http_response_code(400);
-                    echo json_encode([
-                        'success' => false,
-                        'error' => 'Invalid action'
-                    ]);
-            }
-            break;
-        case 'POST':
-            if ($action === 'create') {
-                handleCreateProject($projectModel, $mongoLogger, $request);
+switch ($_SERVER['REQUEST_METHOD']) {
+    case 'GET':
+        if (isset($_GET['id'])) {
+            $result = $project->getById($_GET['id']);
+            if ($result['success']) {
+                $apiResponse->sendSuccess($result['project']);
             } else {
-                sendError('Azione POST non supportata', 400);
+                $apiResponse->sendError($result['error']);
             }
-            break;
-        case 'PUT':
-            if ($action === 'update') {
-                $projectId = (int)($_GET['id'] ?? 0);
-                handleUpdateProject($projectModel, $mongoLogger, $projectId, $request);
-            } else {
-                sendError('Azione PUT non supportata', 400);
-            }
-            break;
-        case 'DELETE':
-            if ($action === 'delete') {
-                $projectId = (int)($_GET['id'] ?? 0);
-                handleDeleteProject($projectModel, $mongoLogger, $projectId);
-            } else {
-                sendError('Azione DELETE non supportata', 400);
-            }
-            break;
-        default:
-            sendError('Metodo HTTP non supportato', 405);
-    }
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
-}
-ob_end_flush();
-function requireAuth() {
-    if (!isset($_SESSION['user_id'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Authentication required']);
-        exit;
-    }
-    return $_SESSION['user_id'];
-}
-function handleGetProject($projectModel, $mongoLogger, $projectId) {
-    try {
-        $project = $projectModel->getDetails($projectId);
-        if ($project) {
-            $mongoLogger->logEvent('project_viewed', [
-                'project_id' => $projectId,
-                'viewer_id' => $_SESSION['user_id'] ?? null,
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-            ]);
-            echo json_encode([
-                'success' => true,
-                'project' => $project
-            ]);
         } else {
-            http_response_code(404);
-            echo json_encode(['error' => 'Project not found']);
+            $filters = $_GET;
+            $result = $project->getAll($filters);
+            if ($result['success']) {
+                $apiResponse->sendSuccess($result['projects']);
+            } else {
+                $apiResponse->sendError($result['error']);
+            }
         }
-    } catch (Exception $e) {
-        $mongoLogger->logEvent('project_get_error', [
-            'project_id' => $projectId,
-            'error' => $e->getMessage()
-        ]);
-        http_response_code(500);
-        echo json_encode(['error' => 'Internal server error']);
-    }
-}
-function handleGetProjects($projectModel, $mongoLogger) {
-    try {
-        $filters = [];
-        $page = intval($_GET['page'] ?? 1);
-        $perPage = min(intval($_GET['per_page'] ?? 10), 50); 
-        if (isset($_GET['tipo']) && in_array($_GET['tipo'], ['hardware', 'software'])) {
-            $filters['tipo'] = $_GET['tipo'];
-        }
-        if (isset($_GET['stato'])) {
-            $filters['stato'] = $_GET['stato'];
-        }
-        if (isset($_GET['search']) && !empty($_GET['search'])) {
-            $filters['search'] = $_GET['search'];
-        }
-        $result = $projectModel->getList($filters, $page, $perPage);
-        if ($result) {
-            $mongoLogger->logEvent('projects_list_viewed', [
-                'filters' => $filters,
-                'page' => $page,
-                'results_count' => count($result['progetti']),
-                'viewer_id' => $_SESSION['user_id'] ?? null
-            ]);
-            echo json_encode([
-                'success' => true,
-                'data' => $result
-            ]);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to retrieve projects']);
-        }
-    } catch (Exception $e) {
-        $mongoLogger->logEvent('projects_list_error', [
-            'error' => $e->getMessage()
-        ]);
-        http_response_code(500);
-        echo json_encode(['error' => 'Internal server error']);
-    }
-}
-function handleCreateProject($projectModel, $mongoLogger, $request) {
-    $userId = requireAuth();
-    
-    // Verifica che l'utente sia un creatore
-    try {
-        $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("SELECT tipo_utente FROM utenti WHERE id = ?");
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch();
+        break;
         
-        if (!$user || $user['tipo_utente'] !== 'creatore') {
-            http_response_code(403);
-            echo json_encode(['error' => 'Solo gli utenti creatori possono creare progetti']);
-            return;
+    case 'POST':
+        if (!$roleManager->isAuthenticated()) {
+            $apiResponse->sendError('Devi essere autenticato', 401);
+            exit();
         }
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Errore nella verifica dell\'utente']);
-        return;
-    }
-    
-    try {
-        $validationResult = Validator::validateProjectData([
-            'name' => $request['nome'] ?? '',
-            'creator_id' => $userId,
-            'description' => $request['descrizione'] ?? '',
-            'budget' => $request['budget_richiesto'] ?? '',
-            'project_type' => $request['tipo'] ?? '',
-            'end_date' => $request['data_scadenza'] ?? ''
-        ]);
-        if ($validationResult !== true) {
-            http_response_code(400);
-            echo json_encode(['error' => implode(', ', $validationResult)]);
-            return;
-        }
-        if (!in_array($request['tipo'], ['hardware', 'software'])) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Tipo progetto deve essere hardware o software']);
-            return;
-        }
-        if ($request['tipo'] === 'hardware') {
-            if (empty($request['componenti'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Progetti hardware devono avere almeno un componente']);
-                return;
-            }
-        } elseif ($request['tipo'] === 'software') {
-            if (empty($request['profili'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Progetti software devono avere almeno un profilo']);
-                return;
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        $requiredFields = ['titolo', 'descrizione', 'obiettivo_finanziario', 'data_scadenza', 'tipo'];
+        foreach ($requiredFields as $field) {
+            if (!isset($input[$field]) || empty($input[$field])) {
+                $apiResponse->sendError("Campo $field obbligatorio");
+                exit();
             }
         }
-        // Prepara i dati per il modello con i nomi corretti
-        $projectData = [
-            'nome' => $request['nome'] ?? '',
-            'descrizione' => $request['descrizione'] ?? '',
-            'tipo' => $request['tipo'] ?? '',
-            'budget_richiesto' => $request['budget_richiesto'] ?? '',
-            'data_limite' => $request['data_scadenza'] ?? $request['data_limite'] ?? '',
-            'creatore_id' => $userId
+        
+        $data = [
+            'creatore_id' => $_SESSION['user_id'],
+            'titolo' => $input['titolo'],
+            'descrizione' => $input['descrizione'],
+            'obiettivo_finanziario' => $input['obiettivo_finanziario'],
+            'data_scadenza' => $input['data_scadenza'],
+            'tipo' => $input['tipo'],
+            'categoria' => $input['categoria'] ?? null,
+            'immagine' => $input['immagine'] ?? null
         ];
         
-        $result = $projectModel->create($projectData);
+        $result = $project->create($data);
+        
         if ($result['success']) {
-            $mongoLogger->logEvent('project_created', [
-                'project_id' => $result['progetto_id'],
-                'creator_id' => $userId,
-                'tipo' => $request['tipo'],
-                'budget_richiesto' => $request['budget_richiesto']
-            ]);
-            echo json_encode($result);
+            $apiResponse->sendSuccess(['project_id' => $result['project_id']], 'Progetto creato con successo', 201);
         } else {
-            http_response_code(400);
-            echo json_encode($result);
+            $apiResponse->sendError($result['error']);
         }
-    } catch (Exception $e) {
-        $mongoLogger->logEvent('project_creation_error', [
-            'creator_id' => $userId,
-            'request_data' => $request,
-            'error' => $e->getMessage()
-        ]);
-        http_response_code(500);
-        echo json_encode(['error' => 'Internal server error']);
-    }
-}
-function handleUpdateProject($projectModel, $mongoLogger, $projectId, $request) {
-    $userId = requireAuth();
-    try {
-        $project = $projectModel->getDetails($projectId);
-        if (!$project) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Project not found']);
-            return;
+        break;
+        
+    case 'PUT':
+        if (!$roleManager->isAuthenticated()) {
+            $apiResponse->sendError('Devi essere autenticato', 401);
+            exit();
         }
-        if ($project['creatore_id'] != $userId) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Not authorized to update this project']);
-            return;
+        
+        if (!isset($_GET['id'])) {
+            $apiResponse->sendError('ID progetto richiesto');
+            exit();
         }
-        if ($project['stato'] !== 'aperto' || strtotime($project['data_scadenza']) <= time()) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Project cannot be updated']);
-            return;
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $input['id'] = $_GET['id'];
+        $input['user_id'] = $_SESSION['user_id'];
+        
+        $result = $project->update($input);
+        
+        if ($result['success']) {
+            $apiResponse->sendSuccess([], 'Progetto aggiornato con successo');
+        } else {
+            $apiResponse->sendError($result['error']);
         }
-        if (isset($request['budget_richiesto'])) {
-            $validator = new Validator();
-            $validator->required('budget_richiesto', $request['budget_richiesto']);
-            if (!$validator->isValid() || !is_numeric($request['budget_richiesto']) || $request['budget_richiesto'] <= 0) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Budget deve essere un numero positivo']);
-                return;
-            }
+        break;
+        
+    case 'DELETE':
+        if (!$roleManager->isAuthenticated()) {
+            $apiResponse->sendError('Devi essere autenticato', 401);
+            exit();
         }
-        if (isset($request['data_scadenza'])) {
-            $deadline = DateTime::createFromFormat('Y-m-d H:i:s', $request['data_scadenza']);
-            if (!$deadline || $deadline <= new DateTime()) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Data scadenza deve essere futura']);
-                return;
-            }
+        
+        if (!isset($_GET['id'])) {
+            $apiResponse->sendError('ID progetto richiesto');
+            exit();
         }
-        $mongoLogger->logEvent('project_update_attempted', [
-            'project_id' => $projectId,
-            'user_id' => $userId,
-            'update_data' => $request
-        ]);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Project updates not implemented in compliant version'
-        ]);
-    } catch (Exception $e) {
-        $mongoLogger->logEvent('project_update_error', [
-            'project_id' => $projectId,
-            'user_id' => $userId,
-            'error' => $e->getMessage()
-        ]);
-        http_response_code(500);
-        echo json_encode(['error' => 'Internal server error']);
-    }
-}
-function handleDeleteProject($projectModel, $mongoLogger, $projectId) {
-    $userId = requireAuth();
-    try {
-        $project = $projectModel->getDetails($projectId);
-        if (!$project) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Project not found']);
-            return;
+        
+        $result = $project->delete($_GET['id'], $_SESSION['user_id']);
+        
+        if ($result['success']) {
+            $apiResponse->sendSuccess([], 'Progetto eliminato con successo');
+        } else {
+            $apiResponse->sendError($result['error']);
         }
-        if ($project['creatore_id'] != $userId) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Not authorized to delete this project']);
-            return;
-        }
-        if ($project['totale_finanziamenti'] > 0) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Cannot delete project with existing funding']);
-            return;
-        }
-        $mongoLogger->logEvent('project_deletion_attempted', [
-            'project_id' => $projectId,
-            'user_id' => $userId,
-            'project_data' => $project
-        ]);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Project deletion not implemented in compliant version'
-        ]);
-    } catch (Exception $e) {
-        $mongoLogger->logEvent('project_deletion_error', [
-            'project_id' => $projectId,
-            'user_id' => $userId,
-            'error' => $e->getMessage()
-        ]);
-        http_response_code(500);
-        echo json_encode(['error' => 'Internal server error']);
-    }
+        break;
+        
+    default:
+        $apiResponse->sendError('Metodo non supportato', 405);
+        break;
 }
 ?>

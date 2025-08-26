@@ -19,21 +19,21 @@ INSERT INTO competenze (nome, descrizione) VALUES
 ('Project Management', 'Gestione progetti');
 
 -- UTENTE AMMINISTRATORE
-INSERT INTO utenti (email, nickname, password_hash, nome, cognome, anno_nascita, luogo_nascita, tipo_utente, codice_sicurezza) VALUES
+INSERT INTO utenti (email, nickname, password, nome, cognome, anno_nascita, luogo_nascita, tipo_utente, codice_sicurezza) VALUES
 ('admin@bostarter.com', 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'System', 1990, 'Milano', 'amministratore', 'ADMIN2024');
 
 -- UTENTI CREATORI
-INSERT INTO utenti (email, nickname, password_hash, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) VALUES
+INSERT INTO utenti (email, nickname, password, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) VALUES
 ('mario.rossi@email.com', 'mariorossi', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Mario', 'Rossi', 1985, 'Roma', 'creatore'),
 ('anna.verdi@email.com', 'annaverdi', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Anna', 'Verdi', 1990, 'Milano', 'creatore');
 
 -- UTENTI STANDARD
-INSERT INTO utenti (email, nickname, password_hash, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) VALUES
-('giulia.bianchi@email.com', 'giuliabianchi', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Giulia', 'Bianchi', 1995, 'Napoli', 'standard'),
-('luca.neri@email.com', 'lucaneri', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Luca', 'Neri', 1988, 'Torino', 'standard');
+INSERT INTO utenti (email, nickname, password, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) VALUES
+('giulia.bianchi@email.com', 'giuliabianchi', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Giulia', 'Bianchi', 1995, 'Napoli', 'normale'),
+('luca.neri@email.com', 'lucaneri', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Luca', 'Neri', 1988, 'Torino', 'normale');
 
 -- PROGETTI (secondo la tabella dei volumi: 10 progetti, 2 progetti per utente)
-INSERT INTO progetti (nome, descrizione, creatore_id, tipo_progetto, budget_richiesto, data_limite) VALUES
+INSERT INTO progetti (nome, descrizione, creatore_id, tipo, budget_richiesto, data_limite) VALUES
 ('SmartHome IoT', 'Sistema domotico intelligente con sensori e controllo remoto', 2, 'hardware', 5000.00, '2025-12-31'),
 ('Robot Aspirapolvere', 'Robot autonomo per pulizia domestica', 2, 'hardware', 3500.00, '2025-11-30'),
 ('App Mobile Fitness', 'Applicazione per tracking fitness e allenamenti', 3, 'software', 3000.00, '2025-10-31'),

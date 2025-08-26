@@ -12,8 +12,6 @@
     },
     "autoload": {
         "classmap": [
-            "classes/",
-            "controllers/",
             "models/",
             "services/",
             "utils/"
@@ -26,4 +24,4 @@
         }
     ],
     "minimum-stability": "stable"
-} 
+}

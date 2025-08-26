@@ -37,10 +37,10 @@ define("CACHE_ENABLED", true);
 define("CACHE_DEFAULT_TTL", 3600); // 1 ora
 define("CACHE_DIR", __DIR__ . "/../../cache/");
 
-define("DEBUG_MODE", true);
+define("DEBUG_MODE", false); // Cambiato per produzione
 define("ERROR_REPORTING_LEVEL", E_ALL);
 define("LOG_LEVEL", "INFO"); // DEBUG, INFO, WARNING, ERROR
-define("APP_ENV", "development"); // development, production
+define("APP_ENV", "production"); // development, production
 define("ERROR_LOG_FILE", getAppRoot() . '/logs/errors.log');
 
 define("PERFORMANCE_MONITORING", true);

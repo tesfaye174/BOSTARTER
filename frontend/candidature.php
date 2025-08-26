@@ -38,14 +38,14 @@ if (!$progetto) {
 $is_creatore = ($user_id == $progetto['creatore_id']);
 
 // Carica profili richiesti
-$stmt = $conn->prepare("SELECT * FROM profili_software WHERE progetto_id = ? ORDER BY nome");
+$stmt = $conn->prepare("SELECT * FROM profili_richiesti WHERE progetto_id = ? ORDER BY nome");
 $stmt->execute([$progetto_id]);
 $profili = $stmt->fetchAll();
 
 // Carica skill dell'utente corrente
 $stmt = $conn->prepare("
     SELECT su.competenza_id, su.livello, c.nome 
-    FROM skill_utenti su 
+    FROM skill_utente su 
     JOIN competenze c ON su.competenza_id = c.id 
     WHERE su.utente_id = ?
 ");
@@ -58,14 +58,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$is_creatore) {
         $profilo_id = intval($_POST['profilo_id']);
         
         // Verifica che il profilo esista
-        $stmt = $conn->prepare("SELECT * FROM profili_software WHERE id = ? AND progetto_id = ?");
+        $stmt = $conn->prepare("SELECT * FROM profili_richiesti WHERE id = ? AND progetto_id = ?");
         $stmt->execute([$profilo_id, $progetto_id]);
         $profilo = $stmt->fetch();
         
         if ($profilo) {
             // Verifica skill richieste
             $stmt = $conn->prepare("
-                SELECT sp.competenza_id, sp.livello_richiesto, c.nome
+                SELECT sp.competenza_id, sp.livello as livello_richiesto, c.nome
                 FROM skill_profili sp
                 JOIN competenze c ON sp.competenza_id = c.id
                 WHERE sp.profilo_id = ?
@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_creatore) {
         $stmt = $conn->prepare("
             UPDATE candidature 
             SET stato = ?, data_risposta = NOW() 
-            WHERE id = ? AND profilo_id IN (SELECT id FROM profili_software WHERE progetto_id = ?)
+            WHERE id = ? AND profilo_id IN (SELECT id FROM profili_richiesti WHERE progetto_id = ?)
         ");
         $stmt->execute([$nuovo_stato, $candidatura_id, $progetto_id]);
         $success_message = "Candidatura " . ($nuovo_stato === 'accettata' ? 'accettata' : 'rifiutata') . " con successo!";
@@ -137,11 +137,11 @@ if ($is_creatore) {
         SELECT 
             c.id, c.stato, c.data_candidatura, c.data_risposta,
             u.nickname, u.nome, u.cognome,
-            ps.nome as profilo_nome
+            pr.nome as profilo_nome
         FROM candidature c
         JOIN utenti u ON c.utente_id = u.id
-        JOIN profili_software ps ON c.profilo_id = ps.id
-        WHERE ps.progetto_id = ?
+        JOIN profili_richiesti pr ON c.profilo_id = pr.id
+        WHERE pr.progetto_id = ?
         ORDER BY c.data_candidatura DESC
     ");
     $stmt->execute([$progetto_id]);
@@ -150,10 +150,10 @@ if ($is_creatore) {
     $stmt = $conn->prepare("
         SELECT 
             c.id, c.stato, c.data_candidatura, c.data_risposta,
-            ps.nome as profilo_nome
+            pr.nome as profilo_nome
         FROM candidature c
-        JOIN profili_software ps ON c.profilo_id = ps.id
-        WHERE c.utente_id = ? AND ps.progetto_id = ?
+        JOIN profili_richiesti pr ON c.profilo_id = pr.id
+        WHERE c.utente_id = ? AND pr.progetto_id = ?
         ORDER BY c.data_candidatura DESC
     ");
     $stmt->execute([$user_id, $progetto_id]);
@@ -163,6 +163,7 @@ if ($is_creatore) {
 
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -170,58 +171,63 @@ if ($is_creatore) {
     <link href="css/bootstrap.css" rel="stylesheet">
     <link href="css/app.css" rel="stylesheet">
 </head>
+
 <body>
     <?php include 'includes/navbar.php'; ?>
-    
+
     <div class="container mt-4">
         <div class="row">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fas fa-users"></i> <?= $is_creatore ? 'Gestione' : '' ?> Candidature - <?= htmlspecialchars($progetto['nome']) ?></h3>
-                        <small class="text-muted">Progetto di <?= htmlspecialchars($progetto['creatore_nickname']) ?></small>
+                        <h3><i class="fas fa-users"></i> <?= $is_creatore ? 'Gestione' : '' ?> Candidature -
+                            <?= htmlspecialchars($progetto['nome']) ?></h3>
+                        <small class="text-muted">Progetto di
+                            <?= htmlspecialchars($progetto['creatore_nickname']) ?></small>
                     </div>
                     <div class="card-body">
                         <?php if (isset($success_message)): ?>
-                            <div class="alert alert-success"><?= $success_message ?></div>
+                        <div class="alert alert-success"><?= $success_message ?></div>
                         <?php endif; ?>
-                        
+
                         <?php if (isset($error_message)): ?>
-                            <div class="alert alert-danger"><?= $error_message ?></div>
+                        <div class="alert alert-danger"><?= $error_message ?></div>
                         <?php endif; ?>
-                        
+
                         <?php if (isset($skill_mancanti) && !empty($skill_mancanti)): ?>
-                            <div class="alert alert-warning">
-                                <h6>Skill mancanti per la candidatura:</h6>
-                                <ul class="mb-0">
-                                    <?php foreach ($skill_mancanti as $skill): ?>
-                                        <li><?= htmlspecialchars($skill['nome']) ?>: hai livello <?= $skill['attuale'] ?>, richiesto <?= $skill['richiesto'] ?></li>
-                                    <?php endforeach; ?>
-                                </ul>
-                                <small>Aggiorna le tue skill nella <a href="skill.php">pagina dedicata</a> prima di candidarti.</small>
-                            </div>
+                        <div class="alert alert-warning">
+                            <h6>Skill mancanti per la candidatura:</h6>
+                            <ul class="mb-0">
+                                <?php foreach ($skill_mancanti as $skill): ?>
+                                <li><?= htmlspecialchars($skill['nome']) ?>: hai livello <?= $skill['attuale'] ?>,
+                                    richiesto <?= $skill['richiesto'] ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                            <small>Aggiorna le tue skill nella <a href="skill.php">pagina dedicata</a> prima di
+                                candidarti.</small>
+                        </div>
                         <?php endif; ?>
-                        
+
                         <?php if (!$is_creatore): ?>
-                            <!-- Sezione candidatura per utenti normali -->
-                            <h5>Profili disponibili per candidatura:</h5>
-                            <?php if (empty($profili)): ?>
-                                <div class="alert alert-info">
-                                    Nessun profilo disponibile per questo progetto.
-                                </div>
-                            <?php else: ?>
-                                <div class="row">
-                                    <?php foreach ($profili as $profilo): ?>
-                                        <div class="col-md-6 mb-4">
-                                            <div class="card">
-                                                <div class="card-body">
-                                                    <h6 class="card-title"><?= htmlspecialchars($profilo['nome']) ?></h6>
-                                                    <p class="card-text"><?= htmlspecialchars($profilo['descrizione']) ?></p>
-                                                    
-                                                    <!-- Skill richieste -->
-                                                    <?php
+                        <!-- Sezione candidatura per utenti normali -->
+                        <h5>Profili disponibili per candidatura:</h5>
+                        <?php if (empty($profili)): ?>
+                        <div class="alert alert-info">
+                            Nessun profilo disponibile per questo progetto.
+                        </div>
+                        <?php else: ?>
+                        <div class="row">
+                            <?php foreach ($profili as $profilo): ?>
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title"><?= htmlspecialchars($profilo['nome']) ?></h6>
+                                        <p class="card-text"><?= htmlspecialchars($profilo['descrizione']) ?></p>
+
+                                        <!-- Skill richieste -->
+                                        <?php
                                                     $stmt = $conn->prepare("
-                                                        SELECT sp.livello_richiesto, c.nome
+                                                        SELECT sp.livello as livello_richiesto, c.nome
                                                         FROM skill_profili sp
                                                         JOIN competenze c ON sp.competenza_id = c.id
                                                         WHERE sp.profilo_id = ?
@@ -230,141 +236,145 @@ if ($is_creatore) {
                                                     $stmt->execute([$profilo['id']]);
                                                     $skill_profilo = $stmt->fetchAll();
                                                     ?>
-                                                    
-                                                    <h6>Skill richieste:</h6>
-                                                    <ul class="list-unstyled">
-                                                        <?php foreach ($skill_profilo as $skill): ?>
-                                                            <li>
-                                                                <span class="badge bg-secondary">
-                                                                    <?= htmlspecialchars($skill['nome']) ?> - Livello <?= $skill['livello_richiesto'] ?>
-                                                                </span>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                    
-                                                    <!-- Verifica già candidato -->
-                                                    <?php
+
+                                        <h6>Skill richieste:</h6>
+                                        <ul class="list-unstyled">
+                                            <?php foreach ($skill_profilo as $skill): ?>
+                                            <li>
+                                                <span class="badge bg-secondary">
+                                                    <?= htmlspecialchars($skill['nome']) ?> - Livello
+                                                    <?= $skill['livello_richiesto'] ?>
+                                                </span>
+                                            </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+
+                                        <!-- Verifica già candidato -->
+                                        <?php
                                                     $stmt = $conn->prepare("SELECT stato FROM candidature WHERE utente_id = ? AND profilo_id = ?");
                                                     $stmt->execute([$user_id, $profilo['id']]);
                                                     $candidatura_esistente = $stmt->fetch();
                                                     ?>
-                                                    
-                                                    <?php if ($candidatura_esistente): ?>
-                                                        <span class="badge bg-<?= $candidatura_esistente['stato'] === 'accettata' ? 'success' : ($candidatura_esistente['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
-                                                            Candidatura <?= ucfirst($candidatura_esistente['stato']) ?>
-                                                        </span>
-                                                    <?php else: ?>
-                                                        <form method="POST" style="display:inline;">
-                                                            <input type="hidden" name="action" value="candidati">
-                                                            <input type="hidden" name="profilo_id" value="<?= $profilo['id'] ?>">
-                                                            <button type="submit" class="btn btn-primary">
-                                                                <i class="fas fa-paper-plane"></i> Candidati
-                                                            </button>
-                                                        </form>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
+
+                                        <?php if ($candidatura_esistente): ?>
+                                        <span
+                                            class="badge bg-<?= $candidatura_esistente['stato'] === 'accettata' ? 'success' : ($candidatura_esistente['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
+                                            Candidatura <?= ucfirst($candidatura_esistente['stato']) ?>
+                                        </span>
+                                        <?php else: ?>
+                                        <form method="POST" style="display:inline;">
+                                            <input type="hidden" name="action" value="candidati">
+                                            <input type="hidden" name="profilo_id" value="<?= $profilo['id'] ?>">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-paper-plane"></i> Candidati
+                                            </button>
+                                        </form>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                            <?php endif; ?>
-                            
-                            <!-- Le mie candidature -->
-                            <?php if (!empty($mie_candidature)): ?>
-                                <h5 class="mt-4">Le mie candidature:</h5>
-                                <div class="table-responsive">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Profilo</th>
-                                                <th>Data Candidatura</th>
-                                                <th>Stato</th>
-                                                <th>Data Risposta</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($mie_candidature as $cand): ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($cand['profilo_nome']) ?></td>
-                                                    <td><?= date('d/m/Y H:i', strtotime($cand['data_candidatura'])) ?></td>
-                                                    <td>
-                                                        <span class="badge bg-<?= $cand['stato'] === 'accettata' ? 'success' : ($cand['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
-                                                            <?= ucfirst($cand['stato']) ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <?= $cand['data_risposta'] ? date('d/m/Y H:i', strtotime($cand['data_risposta'])) : '-' ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
-                            
-                        <?php else: ?>
-                            <!-- Sezione gestione candidature per creatori -->
-                            <h5>Candidature ricevute:</h5>
-                            <?php if (empty($candidature)): ?>
-                                <div class="alert alert-info">
-                                    Nessuna candidatura ricevuta ancora.
-                                </div>
-                            <?php else: ?>
-                                <div class="table-responsive">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Candidato</th>
-                                                <th>Profilo</th>
-                                                <th>Data Candidatura</th>
-                                                <th>Stato</th>
-                                                <th>Azioni</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($candidature as $cand): ?>
-                                                <tr>
-                                                    <td>
-                                                        <strong><?= htmlspecialchars($cand['nickname']) ?></strong><br>
-                                                        <small><?= htmlspecialchars($cand['nome'] . ' ' . $cand['cognome']) ?></small>
-                                                    </td>
-                                                    <td><?= htmlspecialchars($cand['profilo_nome']) ?></td>
-                                                    <td><?= date('d/m/Y H:i', strtotime($cand['data_candidatura'])) ?></td>
-                                                    <td>
-                                                        <span class="badge bg-<?= $cand['stato'] === 'accettata' ? 'success' : ($cand['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
-                                                            <?= ucfirst($cand['stato']) ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <?php if ($cand['stato'] === 'in_attesa'): ?>
-                                                            <form method="POST" style="display:inline;">
-                                                                <input type="hidden" name="action" value="accetta">
-                                                                <input type="hidden" name="candidatura_id" value="<?= $cand['id'] ?>">
-                                                                <button type="submit" class="btn btn-sm btn-success">
-                                                                    <i class="fas fa-check"></i> Accetta
-                                                                </button>
-                                                            </form>
-                                                            <form method="POST" style="display:inline;">
-                                                                <input type="hidden" name="action" value="rifiuta">
-                                                                <input type="hidden" name="candidatura_id" value="<?= $cand['id'] ?>">
-                                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                                    <i class="fas fa-times"></i> Rifiuta
-                                                                </button>
-                                                            </form>
-                                                        <?php else: ?>
-                                                            <small class="text-muted">
-                                                                Risposto il <?= date('d/m/Y', strtotime($cand['data_risposta'])) ?>
-                                                            </small>
-                                                        <?php endif; ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
                         <?php endif; ?>
-                        
+
+                        <!-- Le mie candidature -->
+                        <?php if (!empty($mie_candidature)): ?>
+                        <h5 class="mt-4">Le mie candidature:</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Profilo</th>
+                                        <th>Data Candidatura</th>
+                                        <th>Stato</th>
+                                        <th>Data Risposta</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($mie_candidature as $cand): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($cand['profilo_nome']) ?></td>
+                                        <td><?= date('d/m/Y H:i', strtotime($cand['data_candidatura'])) ?></td>
+                                        <td>
+                                            <span
+                                                class="badge bg-<?= $cand['stato'] === 'accettata' ? 'success' : ($cand['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
+                                                <?= ucfirst($cand['stato']) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?= $cand['data_risposta'] ? date('d/m/Y H:i', strtotime($cand['data_risposta'])) : '-' ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php else: ?>
+                        <!-- Sezione gestione candidature per creatori -->
+                        <h5>Candidature ricevute:</h5>
+                        <?php if (empty($candidature)): ?>
+                        <div class="alert alert-info">
+                            Nessuna candidatura ricevuta ancora.
+                        </div>
+                        <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Candidato</th>
+                                        <th>Profilo</th>
+                                        <th>Data Candidatura</th>
+                                        <th>Stato</th>
+                                        <th>Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($candidature as $cand): ?>
+                                    <tr>
+                                        <td>
+                                            <strong><?= htmlspecialchars($cand['nickname']) ?></strong><br>
+                                            <small><?= htmlspecialchars($cand['nome'] . ' ' . $cand['cognome']) ?></small>
+                                        </td>
+                                        <td><?= htmlspecialchars($cand['profilo_nome']) ?></td>
+                                        <td><?= date('d/m/Y H:i', strtotime($cand['data_candidatura'])) ?></td>
+                                        <td>
+                                            <span
+                                                class="badge bg-<?= $cand['stato'] === 'accettata' ? 'success' : ($cand['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
+                                                <?= ucfirst($cand['stato']) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php if ($cand['stato'] === 'in_attesa'): ?>
+                                            <form method="POST" style="display:inline;">
+                                                <input type="hidden" name="action" value="accetta">
+                                                <input type="hidden" name="candidatura_id" value="<?= $cand['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check"></i> Accetta
+                                                </button>
+                                            </form>
+                                            <form method="POST" style="display:inline;">
+                                                <input type="hidden" name="action" value="rifiuta">
+                                                <input type="hidden" name="candidatura_id" value="<?= $cand['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times"></i> Rifiuta
+                                                </button>
+                                            </form>
+                                            <?php else: ?>
+                                            <small class="text-muted">
+                                                Risposto il <?= date('d/m/Y', strtotime($cand['data_risposta'])) ?>
+                                            </small>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+                        <?php endif; ?>
+
                         <div class="mt-4">
                             <a href="view.php?id=<?= $progetto_id ?>" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Torna al Progetto
@@ -375,8 +385,9 @@ if ($is_creatore) {
             </div>
         </div>
     </div>
-    
+
     <script src="js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 </body>
+
 </html>

@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once __DIR__ . "/../backend/config/database.php";
-require_once __DIR__ . "/../backend/services/MongoLogger.php";
 
 // Verifica autenticazione
 if (!isset($_SESSION['user_id'])) {
@@ -12,7 +11,6 @@ if (!isset($_SESSION['user_id'])) {
 $db = Database::getInstance();
 $conn = $db->getConnection();
 $user_id = $_SESSION['user_id'];
-$logger = \BOSTARTER\Utils\MongoLoggerSingleton::getInstance();
 
 // Gestione form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -51,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$competenza_id]);
             $competenza_nome = $stmt->fetchColumn();
             
-            $stmt = $conn->prepare("DELETE FROM skill_utenti WHERE utente_id = ? AND competenza_id = ?");
+            $stmt = $conn->prepare("DELETE FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
             $stmt->execute([$user_id, $competenza_id]);
             
             // Log evento
@@ -69,7 +67,7 @@ $competenze = $stmt->fetchAll();
 // Carica skill attuali dell'utente
 $stmt = $conn->prepare("
     SELECT su.competenza_id, su.livello, c.nome 
-    FROM skill_utenti su 
+    FROM skill_utente su 
     JOIN competenze c ON su.competenza_id = c.id 
     WHERE su.utente_id = ? 
     ORDER BY c.nome

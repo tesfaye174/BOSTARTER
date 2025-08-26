@@ -49,22 +49,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conn->beginTransaction();
             
-            // Inserisci finanziamento
+            // Inserisci finanziamento (il trigger aggiornerà automaticamente il budget_raccolto)
             $stmt = $conn->prepare("
                 INSERT INTO finanziamenti (utente_id, progetto_id, importo, data_finanziamento, reward_id) 
                 VALUES (?, ?, ?, NOW(), ?)
             ");
             $stmt->execute([$user_id, $progetto_id, $importo, $reward_id]);
             
-            // Aggiorna budget raccolto del progetto
-            $stmt = $conn->prepare("
-                UPDATE progetti 
-                SET budget_raccolto = budget_raccolto + ? 
-                WHERE id = ?
-            ");
-            $stmt->execute([$importo, $progetto_id]);
-            
-            // Verifica se il progetto ha raggiunto il budget
+            // Verifica se il progetto ha raggiunto il budget (leggi valore aggiornato dal trigger)
             $stmt = $conn->prepare("SELECT budget_raccolto, budget_richiesto FROM progetti WHERE id = ?");
             $stmt->execute([$progetto_id]);
             $budget_info = $stmt->fetch();

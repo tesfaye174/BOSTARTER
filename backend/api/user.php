@@ -6,13 +6,10 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
-require_once '../config/database.php';
-require_once '../services/MongoLogger.php';
-require_once '../utils/Validator.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../utils/Validator.php';
 $database = new Database();
 $db = $database->getConnection();
-use BOSTARTER\Services\MongoLoggerSingleton;
-$mongoLogger = MongoLoggerSingleton::getInstance();
 session_start();
 function requireAuth() {
     if (!isset($_SESSION['user_id'])) {
@@ -38,23 +35,23 @@ $request = json_decode(file_get_contents('php://input'), true);
 switch ($method) {
     case 'GET':
         if (isset($_GET['user_id'])) {
-            getUserProfile($db, $mongoLogger, $_GET['user_id']);
+            getUserProfile($db, $_GET['user_id']);
         } else {
-            getUserList($db, $mongoLogger);
+            getUserList($db);
         }
         break;
     case 'PUT':
-        updateUserProfile($db, $mongoLogger, $request);
+        updateUserProfile($db, $request);
         break;
     case 'DELETE':
-        deleteUser($db, $mongoLogger);
+        deleteUser($db);
         break;
     default:
         http_response_code(405);
         echo json_encode(['error' => 'Method not allowed']);
         break;
 }
-function getUserProfile($db, $mongoLogger, $userId) {
+function getUserProfile($db, $userId) {
     try {
         if (!canAccessProfile($db, $userId)) {
             http_response_code(403);

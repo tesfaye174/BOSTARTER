@@ -14,10 +14,7 @@ if (!empty($_SESSION)) {
 $dependenciesLoaded = [];
 try {
     $dependencies = [
-        'database' => __DIR__ . '/../backend/config/database.php',
-        'MongoLogger' => __DIR__ . '/../backend/services/MongoLogger.php',
-        'NavigationHelper' => __DIR__ . '/../backend/utils/NavigationHelper.php',
-        'SecurityService' => __DIR__ . '/../backend/services/SecurityService.php'
+        'database' => __DIR__ . '/../backend/config/database.php'
     ];
     foreach ($dependencies as $name => $path) {
         if (file_exists($path)) {
@@ -58,33 +55,31 @@ if ($dependenciesLoaded['NavigationHelper'] && class_exists('NavigationHelper'))
     $isLoggedIn = !empty($sessionData['user_id']);
 }
 $logoutSuccess = false;
-if ($isLoggedIn && $sessionData['user_id'] && $dependenciesLoaded['MongoLogger']) {
+if ($isLoggedIn && $sessionData['user_id']) {
+    // Semplice logging
     try {
-        if (class_exists('MongoLogger')) {
-            $mongoLogger = new MongoLogger();
-            $logData = [
+        if (class_exists('Database')) {
+            $db = Database::getInstance();
+            $conn = $db->getConnection();
+            
+            // Nota: la tabella user_activity_log deve esistere nel database
+            $stmt = $conn->prepare("
+                INSERT INTO user_logs 
+                (user_id, action, details, created_at) 
+                VALUES (?, 'logout', ?, NOW())
+            ");
+            
+            $logData = json_encode([
                 'logout_time' => date('Y-m-d H:i:s'),
                 'session_duration' => $sessionData['session_duration'],
-                'session_duration_human' => gmdate('H:i:s', $sessionData['session_duration']),
-                'login_time' => date('Y-m-d H:i:s', $sessionData['login_time']),
-                'ip_address' => $sessionData['ip_address'],
-                'user_agent' => $sessionData['user_agent'],
-                'referer' => $sessionData['referer'],
-                'logout_method' => 'manual',
-                'security_context' => [
-                    'session_id' => $sessionData['session_id'],
-                    'csrf_token' => $sessionData['csrf_token']
-                ],
-                'timestamp' => time()
-            ];
-            $logResult = $mongoLogger->logActivity($sessionData['user_id'], 'user_logout', $logData);
-            $logoutSuccess = !empty($logResult);
-            if (!$logoutSuccess) {
-                error_log("Logout: MongoDB activity logging returned empty result");
-            }
+                'ip_address' => $sessionData['ip_address']
+            ]);
+            
+            $stmt->execute([$sessionData['user_id'], $logData]);
+            $logoutSuccess = true;
         }
     } catch (Exception $e) {
-        error_log("Logout: MongoDB logging failed - " . $e->getMessage());
+        error_log("Logout: Database logging failed - " . $e->getMessage());
     }
 }
 if ($dependenciesLoaded['SecurityService']) {
@@ -195,21 +190,36 @@ http_response_code(200);
 ?>
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logout - BOSTARTER</title>
     <meta http-equiv="refresh" content="3;url=/BOSTARTER/frontend/home.php">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-        .message { background: #f0f9ff; border: 1px solid #0ea5e9; padding: 20px; border-radius: 8px; max-width: 400px; margin: 0 auto; }
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 50px;
+    }
+
+    .message {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 400px;
+        margin: 0 auto;
+    }
     </style>
 </head>
+
 <body>
     <div class="message">
         <h2>Logout Completato</h2>
-        <p>Il logout è stato effettuato con successo.</p>
+        <p>Il logout ï¿½ stato effettuato con successo.</p>
         <p>Se non vieni reindirizzato automaticamente, <a href="/BOSTARTER/frontend/home.php">clicca qui</a>.</p>
     </div>
 </body>
+
 </html>
