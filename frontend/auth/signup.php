@@ -1,9 +1,35 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/init.php';
 require_once __DIR__ . "/../../backend/config/database.php";
 
 $error = "";
 $success = "";
+
+$successMessages = [
+    "Ottimo! Il tuo account è stato creato con successo.",
+    "Benvenuto a bordo! Registrazione completata.",
+    "Perfetto! Ora fai parte della community BOSTARTER.",
+    "Eccellente! Il tuo profilo è pronto all'uso."
+];
+
+$errorMessages = [
+    "duplicate_user" => [
+        "Questa email risulta già associata a un account esistente.",
+        "Sembra che tu abbia già un account con questi dati.",
+        "Email o nickname già in uso. Prova con dati diversi."
+    ],
+    "missing_fields" => [
+        "Non dimenticare di compilare tutti i campi obbligatori.",
+        "Tutti i dati sono necessari per completare la registrazione.",
+        "Per favore, completa tutte le informazioni richieste."
+    ],
+    "system_error" => [
+        "Si è verificato un problema durante la registrazione.",
+        "Errore temporaneo del sistema. Riprova tra poco.",
+        "Attenzione! Qualcosa è andato storto. I nostri tecnici stanno lavorando."
+    ]
+];
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST["email"] ?? "");
     $nickname = trim($_POST["nickname"] ?? "");
@@ -13,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $anno_nascita = (int)($_POST["anno_nascita"] ?? 0);
     $luogo_nascita = trim($_POST["luogo_nascita"] ?? "");
     $tipo_utente = $_POST["tipo_utente"] ?? "normale";
+    
     if ($email && $nickname && $password && $nome && $cognome && $anno_nascita && $luogo_nascita) {
         try {
             $db = Database::getInstance();
@@ -20,48 +47,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmt = $conn->prepare("SELECT id FROM utenti WHERE email = ? OR nickname = ?");
             $stmt->execute([$email, $nickname]);
             if ($stmt->fetch()) {
-                $error = "Email o nickname gi? registrati";
+                $error = $errorMessages["duplicate_user"][array_rand($errorMessages["duplicate_user"])];
             } else {
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
                 
-                // Usa direttamente il tipo_utente scelto (normale o creatore)
+                // Registra l'utente con il tipo scelto
                 $stmt = $conn->prepare("
                     INSERT INTO utenti (email, nickname, password, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ");
                 $stmt->execute([$email, $nickname, $password_hash, $nome, $cognome, $anno_nascita, $luogo_nascita, $tipo_utente]);
-                $success = "Registrazione completata! Ora puoi effettuare il login.";
+                $success = $successMessages[array_rand($successMessages)] . " Ora puoi effettuare il login.";
             }
         } catch(Exception $e) {
-            $error = "Errore di sistema";
+            $error = $errorMessages["system_error"][array_rand($errorMessages["system_error"])];
         }
     } else {
-        $error = "Tutti i campi sono obbligatori";
+        $error = $errorMessages["missing_fields"][array_rand($errorMessages["missing_fields"])];
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrazione - BOSTARTER</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="../css/app.css">
-    <link rel="stylesheet" href="../css/custom.css">
+<?php $page_title = 'Registrazione'; include __DIR__ . '/../includes/head.php'; ?>
     <!-- Favicon -->
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
     <link rel="icon" href="../favicon.ico" type="image/x-icon">
-    <!-- jQuery -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="../js/signup.js"></script>
 </head>
 <body>
     <div class="container">
@@ -85,6 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             </div>
                         <?php else: ?>
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="nome" class="form-label">Nome</label>
@@ -135,6 +148,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
             </div>
         </div>
+    <?php include __DIR__ . '/../includes/scripts.php'; ?>
     </div>
 </body>
 </html>

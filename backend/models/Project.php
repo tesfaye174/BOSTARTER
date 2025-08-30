@@ -26,7 +26,7 @@ class Project {
                 }
             }
 
-            // Verifica che l'utente sia effettivamente un creatore
+            // Controllo che l'utente abbia i permessi per creare progetti
             $stmt = $this->db->prepare("SELECT tipo_utente FROM utenti WHERE id = ?");
             $stmt->execute([$data['creatore_id']]);
             $user = $stmt->fetch();
@@ -34,23 +34,23 @@ class Project {
             if (!$user || $user['tipo_utente'] !== 'creatore') {
                 return [
                     'success' => false,
-                    'error' => 'Solo gli utenti creatori possono creare progetti'
+                    'error' => 'Per poter creare un progetto devi essere registrato come creatore'
                 ];
             }
 
             if (!in_array($data['tipo'], ['hardware', 'software'])) {
                 return [
                     'success' => false,
-                    'error' => 'Tipo progetto deve essere hardware o software'
+                    'error' => 'Il tipo di progetto deve essere specificato come hardware o software'
                 ];
             }
 
-            // Validazione data limite
+            // Controllo che la data di scadenza sia ragionevole
             $dataLimite = strtotime($data['data_limite']);
             if (!$dataLimite || $dataLimite <= time()) {
                 return [
                     'success' => false,
-                    'error' => 'La data limite deve essere futura'
+                    'error' => 'La data di scadenza deve essere nel futuro'
                 ];
             }
 
@@ -58,25 +58,17 @@ class Project {
             if (!is_numeric($data['budget_richiesto']) || $data['budget_richiesto'] <= 0) {
                 return [
                     'success' => false,
-                    'error' => 'Il budget richiesto deve essere un numero positivo'
+                    'error' => 'Inserisci un obiettivo di finanziamento valido'
                 ];
             }
 
-            // Controllo nome duplicato
+            // Controllo nome duplicato per evitare confusione
             $stmt = $this->db->prepare("SELECT id FROM progetti WHERE nome = ?");
             $stmt->execute([$data['nome']]);
             if ($stmt->fetch()) {
                 return [
                     'success' => false,
-                    'error' => 'Esiste già un progetto con questo nome. Scegli un nome diverso.'
-                ];
-            }
-
-            // Verifica che la data limite sia futura
-            if (strtotime($data['data_limite']) <= time()) {
-                return [
-                    'success' => false,
-                    'error' => 'La data limite deve essere futura'
+                    'error' => 'Esiste già un progetto con questo nome. Prova qualcosa di diverso!'
                 ];
             }
 
@@ -97,9 +89,10 @@ class Project {
             
             if ($result) {
                 $projectId = $this->db->lastInsertId();
+                // uploaded images are not supported in this streamlined build
                 return [
                     'success' => true,
-                    'progetto_id' => $projectId,
+                    'project_id' => $projectId,
                     'message' => 'Progetto creato con successo'
                 ];
             } else {

@@ -37,17 +37,18 @@ class ErrorHandler {
         $error = error_get_last();
         if ($error && in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_PARSE, E_COMPILE_ERROR])) {
             $errorData = [
-                'type' => 'FATAL_ERROR',
+                'type' => 'ERRORE_CRITICO',
                 'message' => $error['message'],
                 'file' => $error['file'],
                 'line' => $error['line'],
                 'timestamp' => date('Y-m-d H:i:s'),
-                'user_id' => isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'guest',
-                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                'user_id' => isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 'ospite',
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'sconosciuto'
             ];
             self::logError($errorData);
             if (self::$isProduction) {
-                self::showGenericError();
+                // Mostriamo la pagina di errore generica in produzione
+                self::showErrorPage();
             }
         }
     }
@@ -285,6 +286,7 @@ class ErrorHandler {
     }
 }
 
-if (class_exists('ErrorHandler')) {
+// Inizializza gestore errori se la classe namespaced è disponibile
+if (class_exists(__NAMESPACE__ . '\\ErrorHandler')) {
     ErrorHandler::initialize();
 }

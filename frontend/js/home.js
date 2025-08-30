@@ -35,13 +35,9 @@
         const heroElements = hero.querySelectorAll('h1, .lead, .btn, .stats-card');
 
         heroElements.forEach((element, index) => {
-            element.style.opacity = '0';
-            element.style.transform = 'translateY(30px)';
-            element.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-
+            element.classList.add('animate-initial');
             setTimeout(() => {
-                element.style.opacity = '1';
-                element.style.transform = 'translateY(0)';
+                element.classList.add('animate-in');
             }, 100 + (index * 150));
         });
     }
@@ -94,13 +90,7 @@
 
         projectCards.forEach(card => {
             // Simplified hover effects using CSS
-            card.addEventListener('mouseenter', () => {
-                card.style.transform = 'translateY(-8px)';
-            });
-
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'translateY(0)';
-            });
+            card.classList.add('card-lift');
         });
 
         // Animate cards on scroll
@@ -168,7 +158,7 @@
                 }
             }
         } catch (error) {
-            console.log('Using fallback projects:', error.message);
+            // using fallback projects due to error
         }
     }
 
@@ -214,8 +204,8 @@
                             <span class="fw-semibold">€${(project.budget_raccolto || 0).toLocaleString('it-IT')}</span>
                             <span class="text-muted">${progress}%</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-gradient" style="width: ${Math.min(progress, 100)}%"></div>
+                        <div class="progress progress-thin">
+                            <div class="progress-bar bg-gradient" style="--progress: ${Math.min(progress, 100)}%"></div>
                         </div>
                         <small class="text-muted">Obiettivo: €${(project.budget_richiesto || 0).toLocaleString('it-IT')}</small>
                     </div>

@@ -1,15 +1,21 @@
 <?php
-
-namespace BOSTARTER\Utils;
+/**
+ * BOSTARTER - Servizio di Autenticazione
+ * Gestione login, logout e validazione sessioni
+ */
 
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/MongoLogger.php';
-require_once __DIR__ . '/ApiResponse.php';
-require_once __DIR__ . '/Validator.php';
-
-use BOSTARTER\Services\MongoLoggerSingleton;
+require_once __DIR__ . '/../utils/Validator.php';
+require_once __DIR__ . '/../utils/MessageManager.php';
 
 class AuthService {
+    
+    /**
+     * Esegue login utente
+     * @param string $email Email utente
+     * @param string $password Password utente
+     * @return array Risultato operazione
+     */
     public function login($email, $password) {
         $validator = new Validator();
         $validator->required('email', $email)->email();
@@ -20,12 +26,16 @@ class AuthService {
         }
 
         $db = Database::getInstance()->getConnection();
-        $stmt = $db->prepare("SELECT id, email, password, nickname, nome, cognome, tipo_utente, created_at FROM utenti WHERE email = ?");
+        $stmt = $db->prepare("
+            SELECT id, email, password, nickname, nome, cognome, tipo_utente, created_at 
+            FROM utenti 
+            WHERE email = ?
+        ");
         $stmt->execute([$email]);
         $user_data = $stmt->fetch();
 
         if (!$user_data) {
-            throw new Exception('Email o password non validi');
+            throw new Exception(MessageManager::get('login_failed'));
         }
 
         $password_valid = false;
@@ -36,7 +46,7 @@ class AuthService {
         }
 
         if (!$password_valid) {
-            throw new Exception('Email o password non validi');
+            throw new Exception(MessageManager::get('login_failed'));
         }
 
         $stmt = $db->prepare("UPDATE utenti SET last_access = CURRENT_TIMESTAMP WHERE id = ?");

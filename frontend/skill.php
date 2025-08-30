@@ -1,212 +1,209 @@
 <?php
-session_start();
-require_once __DIR__ . "/../backend/config/database.php";
+/**
+ * BOSTARTER - Gestione Skill Utente
+ * Pagina per gestire le competenze dell'utente
+ */
+require_once __DIR__ . '/includes/init.php';
 
-// Verifica autenticazione
-if (!isset($_SESSION['user_id'])) {
-    header("Location: auth/login.php");
-    exit();
+// Verifica login
+if (!isLoggedIn()) {
+    header('Location: auth/login.php');
+    exit;
 }
 
-$db = Database::getInstance();
-$conn = $db->getConnection();
-$user_id = $_SESSION['user_id'];
+$page_title = 'Le Mie Competenze';
 
-// Gestione form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
+try {
+    $db = Database::getInstance();
+    $conn = $db->getConnection();
+    
+    // Gestione POST per aggiungere/rimuovere skill
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $token = $_POST['csrf_token'] ?? '';
+        if (!verify_csrf_token($token)) {
+            $_SESSION['flash_error'] = 'Token CSRF non valido.';
+            header('Location: skill.php');
+            exit;
+        }
+        
         if ($_POST['action'] === 'add_skill') {
-            $competenza_id = $_POST['competenza_id'];
+            $competenza_id = intval($_POST['competenza_id']);
             $livello = intval($_POST['livello']);
             
-            // Verifica che il livello sia valido (0-5)
-            if ($livello >= 0 && $livello <= 5) {
-                // Ottieni nome competenza per il log
-                $stmt = $conn->prepare("SELECT nome FROM competenze WHERE id = ?");
-                $stmt->execute([$competenza_id]);
-                $competenza_nome = $stmt->fetchColumn();
-                
-                // Inserisci o aggiorna skill
-                $stmt = $conn->prepare("
-                    INSERT INTO skill_utenti (utente_id, competenza_id, livello) 
-                    VALUES (?, ?, ?) 
-                    ON DUPLICATE KEY UPDATE livello = ?
-                ");
-                $stmt->execute([$user_id, $competenza_id, $livello, $livello]);
-                
-                // Log evento
-                $logger->logSkillUpdate($user_id, $competenza_nome, $livello);
-                
-                $success_message = "Skill aggiunta/aggiornata con successo!";
+            if ($livello < 1 || $livello > 5) {
+                $_SESSION['flash_error'] = 'Il livello deve essere compreso tra 1 e 5.';
             } else {
-                $error_message = "Il livello deve essere compreso tra 0 e 5";
+                // Controlla se già presente
+                $stmt = $conn->prepare("SELECT id FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
+                $stmt->execute([$_SESSION['user_id'], $competenza_id]);
+                
+                if ($stmt->fetch()) {
+                    // Aggiorna livello
+                    $stmt = $conn->prepare("UPDATE skill_utente SET livello = ? WHERE utente_id = ? AND competenza_id = ?");
+                    $stmt->execute([$livello, $_SESSION['user_id'], $competenza_id]);
+                    $_SESSION['flash_success'] = 'Livello competenza aggiornato!';
+                } else {
+                    // Inserisci nuova skill
+                    $stmt = $conn->prepare("INSERT INTO skill_utente (utente_id, competenza_id, livello) VALUES (?, ?, ?)");
+                    $stmt->execute([$_SESSION['user_id'], $competenza_id, $livello]);
+                    $_SESSION['flash_success'] = 'Competenza aggiunta con successo!';
+                }
             }
         } elseif ($_POST['action'] === 'remove_skill') {
-            $competenza_id = $_POST['competenza_id'];
-            
-            // Ottieni nome competenza per il log
-            $stmt = $conn->prepare("SELECT nome FROM competenze WHERE id = ?");
-            $stmt->execute([$competenza_id]);
-            $competenza_nome = $stmt->fetchColumn();
-            
+            $competenza_id = intval($_POST['competenza_id']);
             $stmt = $conn->prepare("DELETE FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
-            $stmt->execute([$user_id, $competenza_id]);
-            
-            // Log evento
-            $logger->logSkillUpdate($user_id, $competenza_nome . " (rimossa)", 0);
-            
-            $success_message = "Skill rimossa con successo!";
+            $stmt->execute([$_SESSION['user_id'], $competenza_id]);
+            $_SESSION['flash_success'] = 'Competenza rimossa!';
         }
+        
+        header('Location: skill.php');
+        exit;
     }
+    
+    // Carica le skill dell'utente
+    $stmt = $conn->prepare("
+        SELECT su.*, c.nome, c.descrizione 
+        FROM skill_utente su 
+        JOIN competenze c ON su.competenza_id = c.id 
+        WHERE su.utente_id = ? 
+        ORDER BY c.nome
+    ");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user_skills = $stmt->fetchAll();
+    
+    // Carica tutte le competenze disponibili
+    $stmt = $conn->query("SELECT * FROM competenze ORDER BY nome");
+    $all_competenze = $stmt->fetchAll();
+    
+    // Crea array delle competenze già possedute
+    $possessed_skills = array_column($user_skills, 'competenza_id');
+    
+} catch (Exception $e) {
+    error_log('Errore skill.php: ' . $e->getMessage());
+    $_SESSION['flash_error'] = 'Si è verificato un errore. Riprova più tardi.';
 }
-
-// Carica competenze disponibili
-$stmt = $conn->query("SELECT id, nome FROM competenze ORDER BY nome");
-$competenze = $stmt->fetchAll();
-
-// Carica skill attuali dell'utente
-$stmt = $conn->prepare("
-    SELECT su.competenza_id, su.livello, c.nome 
-    FROM skill_utente su 
-    JOIN competenze c ON su.competenza_id = c.id 
-    WHERE su.utente_id = ? 
-    ORDER BY c.nome
-");
-$stmt->execute([$user_id]);
-$skill_utenti = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
 <html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le Mie Skill - BOSTARTER</title>
-    <link href="css/bootstrap.css" rel="stylesheet">
-    <link href="css/app.css" rel="stylesheet">
-</head>
+<?php include __DIR__ . '/includes/head.php'; ?>
 <body>
-    <?php include 'includes/navbar.php'; ?>
-    
+    <?php include __DIR__ . '/includes/navbar.php'; ?>
+
     <div class="container mt-4">
         <div class="row">
-            <div class="col-md-8 offset-md-2">
+            <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fas fa-skills"></i> Le Mie Skill di Curriculum</h3>
+                        <h4><i class="fas fa-tools"></i> Le Mie Competenze</h4>
                     </div>
                     <div class="card-body">
-                        <?php if (isset($success_message)): ?>
-                            <div class="alert alert-success"><?= $success_message ?></div>
-                        <?php endif; ?>
-                        
-                        <?php if (isset($error_message)): ?>
-                            <div class="alert alert-danger"><?= $error_message ?></div>
-                        <?php endif; ?>
-                        
-                        <!-- Form aggiunta skill -->
-                        <form method="POST" class="mb-4">
-                            <input type="hidden" name="action" value="add_skill">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="competenza_id" class="form-label">Competenza</label>
-                                    <select name="competenza_id" id="competenza_id" class="form-select" required>
-                                        <option value="">Seleziona competenza...</option>
-                                        <?php foreach ($competenze as $comp): ?>
-                                            <option value="<?= $comp['id'] ?>"><?= htmlspecialchars($comp['nome']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="livello" class="form-label">Livello (0-5)</label>
-                                    <select name="livello" id="livello" class="form-select" required>
-                                        <option value="">Livello...</option>
-                                        <option value="0">0 - Nessuna esperienza</option>
-                                        <option value="1">1 - Principiante</option>
-                                        <option value="2">2 - Base</option>
-                                        <option value="3">3 - Intermedio</option>
-                                        <option value="4">4 - Avanzato</option>
-                                        <option value="5">5 - Esperto</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary form-control">
-                                        <i class="fas fa-plus"></i> Aggiungi
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                        
-                        <!-- Lista skill attuali -->
-                        <h5>Le Tue Skill Attuali:</h5>
-                        <?php if (empty($skill_utenti)): ?>
+                        <?php if (empty($user_skills)): ?>
                             <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> Non hai ancora inserito nessuna skill. 
-                                Aggiungi le tue competenze per candidarti ai progetti!
+                                <h5>Non hai ancora aggiunto competenze!</h5>
+                                <p>Le competenze ti aiutano a trovare progetti più adatti al tuo profilo e aumentano la tua credibilità presso i creatori di progetti.</p>
                             </div>
                         <?php else: ?>
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Competenza</th>
-                                            <th>Livello</th>
-                                            <th>Descrizione</th>
-                                            <th>Azioni</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($skill_utenti as $skill): ?>
-                                            <tr>
-                                                <td><strong><?= htmlspecialchars($skill['nome']) ?></strong></td>
-                                                <td>
-                                                    <span class="badge bg-<?= $skill['livello'] >= 4 ? 'success' : ($skill['livello'] >= 2 ? 'warning' : 'secondary') ?>">
-                                                        <?= $skill['livello'] ?>/5
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $descrizioni = [
-                                                        0 => 'Nessuna esperienza',
-                                                        1 => 'Principiante',
-                                                        2 => 'Base',
-                                                        3 => 'Intermedio',
-                                                        4 => 'Avanzato',
-                                                        5 => 'Esperto'
-                                                    ];
-                                                    echo $descrizioni[$skill['livello']] ?? 'N/D';
-                                                    ?>
-                                                </td>
-                                                <td>
-                                                    <form method="POST" style="display:inline;">
+                            <div class="row">
+                                <?php foreach ($user_skills as $skill): ?>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border-left-primary">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="card-title"><?= htmlspecialchars($skill['nome']) ?></h6>
+                                                        <p class="card-text text-muted small">
+                                                            <?= htmlspecialchars($skill['descrizione'] ?? '') ?>
+                                                        </p>
+                                                        <div class="mb-2">
+                                                            <small class="text-muted">Livello:</small>
+                                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                                                <i class="fas fa-star <?= $i <= $skill['livello'] ? 'text-warning' : 'text-muted' ?>"></i>
+                                                            <?php endfor; ?>
+                                                        </div>
+                                                    </div>
+                                                    <form method="POST" class="d-inline">
+                                                        <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
                                                         <input type="hidden" name="action" value="remove_skill">
                                                         <input type="hidden" name="competenza_id" value="<?= $skill['competenza_id'] ?>">
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                                onclick="return confirm('Sei sicuro di voler rimuovere questa skill?')">
-                                                            <i class="fas fa-trash"></i> Rimuovi
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                                onclick="return confirm('Rimuovere questa competenza?')">
+                                                            <i class="fas fa-trash"></i>
                                                         </button>
                                                     </form>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
-                        
-                        <div class="mt-4">
-                            <a href="home.php" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Torna alla Dashboard
-                            </a>
-                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-plus"></i> Aggiungi Competenza</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST">
+                            <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
+                            <input type="hidden" name="action" value="add_skill">
+                            
+                            <div class="mb-3">
+                                <label for="competenza_id" class="form-label">Competenza</label>
+                                <select name="competenza_id" id="competenza_id" class="form-select" required>
+                                    <option value="">Seleziona una competenza...</option>
+                                    <?php foreach ($all_competenze as $competenza): ?>
+                                        <?php if (!in_array($competenza['id'], $possessed_skills)): ?>
+                                            <option value="<?= $competenza['id'] ?>">
+                                                <?= htmlspecialchars($competenza['nome']) ?>
+                                            </option>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="livello" class="form-label">Livello</label>
+                                <select name="livello" id="livello" class="form-select" required>
+                                    <option value="">Seleziona livello...</option>
+                                    <option value="1">⭐ Principiante</option>
+                                    <option value="2">⭐⭐ Base</option>
+                                    <option value="3">⭐⭐⭐ Intermedio</option>
+                                    <option value="4">⭐⭐⭐⭐ Avanzato</option>
+                                    <option value="5">⭐⭐⭐⭐⭐ Esperto</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-plus"></i> Aggiungi
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6><i class="fas fa-info-circle"></i> Info</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted">
+                            Le competenze ti aiutano a:
+                        </p>
+                        <ul class="small text-muted">
+                            <li>Candidarti per ruoli specifici nei progetti</li>
+                            <li>Aumentare la tua credibilità</li>
+                            <li>Essere trovato dai creatori di progetti</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script src="js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+
+    <?php include __DIR__ . '/includes/scripts.php'; ?>
 </body>
 </html>

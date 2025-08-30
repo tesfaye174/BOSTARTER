@@ -9,36 +9,43 @@
 
 /* === VARIABILI COLORI MODERNE === */
 :root {
-    /* Palette Principale */
-    --bostarter-primary: #2563eb;
+    /* Palette Principale - Colori più moderni e vibranti */
+    --bostarter-primary: #3b82f6; /* blu più vivace */
     --bostarter-primary-dark: #1d4ed8;
-    --bostarter-primary-light: #3b82f6;
-    --bostarter-primary-lighter: #dbeafe;
+    --bostarter-primary-light: #60a5fa;
+    --bostarter-primary-lighter: #eff6ff;
+
+    /* RGB helpers for alpha uses */
+    --bostarter-primary-rgb: 59, 130, 246;
+
+    /* Palette Secondaria - Arancione come accento */
+    --bostarter-secondary: #f97316; /* arancione vibrante */
+    --bostarter-secondary-dark: #ea580c;
+    --bostarter-secondary-light: #fb923c;
+    --bostarter-secondary-lighter: #fff7ed;
+
+    --bostarter-secondary-rgb: 249, 115, 22;
+
+    /* Palette Accent - Verde per successo e variazioni */
+    --bostarter-accent: #10b981; /* verde smeraldo */
+    --bostarter-accent-dark: #059669;
+    --bostarter-accent-light: #34d399;
+    --bostarter-accent-lighter: #ecfdf5;
+
+    --bostarter-accent-rgb: 16, 185, 129;
     
-    /* Palette Secondaria */
-    --bostarter-secondary: #7c3aed;
-    --bostarter-secondary-dark: #6d28d9;
-    --bostarter-secondary-light: #8b5cf6;
-    --bostarter-secondary-lighter: #ede9fe;
+    /* Palette Success/Warning/Danger - più vivaci */
+    --bostarter-success: #22c55e;
+    --bostarter-success-light: #4ade80;
+    --bostarter-success-lighter: #f0fdf4;
     
-    /* Palette Accent */
-    --bostarter-accent: #06b6d4;
-    --bostarter-accent-dark: #0891b2;
-    --bostarter-accent-light: #22d3ee;
-    --bostarter-accent-lighter: #cffafe;
+    --bostarter-warning: #eab308;
+    --bostarter-warning-light: #facc15;
+    --bostarter-warning-lighter: #fefce8;
     
-    /* Palette Success/Warning/Danger */
-    --bostarter-success: #059669;
-    --bostarter-success-light: #10b981;
-    --bostarter-success-lighter: #d1fae5;
-    
-    --bostarter-warning: #d97706;
-    --bostarter-warning-light: #f59e0b;
-    --bostarter-warning-lighter: #fef3c7;
-    
-    --bostarter-danger: #dc2626;
-    --bostarter-danger-light: #ef4444;
-    --bostarter-danger-lighter: #fee2e2;
+    --bostarter-danger: #ef4444;
+    --bostarter-danger-light: #f87171;
+    --bostarter-danger-lighter: #fef2f2;
     
     /* Grayscale Moderna */
     --bostarter-gray-50: #f8fafc;
@@ -52,12 +59,14 @@
     --bostarter-gray-800: #1e293b;
     --bostarter-gray-900: #0f172a;
     
-    /* Gradienti Avanzati */
+    /* Gradienti Avanzati - aggiornati per i nuovi colori */
     --gradient-primary: linear-gradient(135deg, var(--bostarter-primary) 0%, var(--bostarter-secondary) 100%);
-    --gradient-secondary: linear-gradient(135deg, var(--bostarter-accent) 0%, var(--bostarter-secondary) 100%);
-    --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #2563eb 100%);
+    --gradient-secondary: linear-gradient(135deg, var(--bostarter-accent) 0%, var(--bostarter-primary) 100%);
+    --gradient-hero: linear-gradient(135deg, var(--bostarter-primary) 0%, var(--bostarter-secondary) 50%, var(--bostarter-accent) 100%);
     --gradient-success: linear-gradient(135deg, var(--bostarter-success) 0%, var(--bostarter-accent) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    --gradient-warm: linear-gradient(135deg, var(--bostarter-secondary) 0%, var(--bostarter-warning) 100%);
+    --gradient-cool: linear-gradient(135deg, var(--bostarter-primary) 0%, var(--bostarter-accent) 100%);
     
     /* Shadows Moderne */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -65,7 +74,7 @@
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    --shadow-colored: 0 10px 15px -3px rgba(37, 99, 235, 0.2), 0 4px 6px -2px rgba(37, 99, 235, 0.1);
+    --shadow-colored: 0 10px 15px -3px rgba(var(--bostarter-secondary-rgb), 0.2), 0 4px 6px -2px rgba(var(--bostarter-secondary-rgb), 0.1);
     
     /* Typography */
     --font-primary: "Inter", system-ui, -apple-system, sans-serif;
@@ -98,6 +107,218 @@
     --transition-fast: 150ms ease-in-out;
     --transition-normal: 250ms ease-in-out;
     --transition-slow: 350ms ease-in-out;
+
+    /* Bootstrap compatibility fallbacks so focus styles work predictably */
+    --bs-primary: var(--bostarter-primary);
+    --bs-primary-rgb: var(--bostarter-primary-rgb);
+
+    /* small shadow used in utilities */
+    --shadow-xs: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* Accessibility utilities */
+.text-contrast {
+    color: var(--bostarter-gray-900) !important;
+}
+
+.btn-contrast {
+    background: var(--bostarter-primary) !important;
+    color: #fff !important;
+    box-shadow: var(--shadow-xs);
+}
+
+/* toggle high-contrast mode on the html element for users who prefer it */
+html.high-contrast {
+    filter: contrast(1.05) saturate(1.05);
+}
+
+/* Utilities moved from inline styles */
+.pt-navbar {
+    padding-top: 100px;
+}
+
+.project-image {
+    height: 400px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+}
+
+.sticky-top-bostarter {
+    top: 120px;
+}
+
+.progress-bar-bostarter {
+    transition: width var(--transition-normal);
+}
+
+.progress-thin {
+    height: 8px !important;
+}
+
+.reward-card {
+    cursor: pointer;
+}
+
+.reward-img {
+    max-height: 100px;
+}
+
+.brand-bo { color: var(--bostarter-primary); }
+.brand-starter { color: var(--bostarter-secondary); }
+
+.text-gradient-hero { --text-gradient: var(--gradient-hero); }
+
+.fixed-top-offset { top: 70px; z-index: 1050; }
+
+.page-offset { margin-top: 80px; }
+
+.textarea-large { height: 100px; }
+
+/* Animation utilities for JS to toggle classes instead of inline styles */
+.animate-initial {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all var(--transition-normal) var(--transition-slow);
+}
+.animate-in {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* Card hover lift using CSS only */
+.card-lift {
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+.card-lift:hover {
+    transform: translateY(-8px);
+}
+
+/* === BOSTARTER SPECIFIC STYLES === */
+.navbar-bostarter {
+    backdrop-filter: blur(20px);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-lg);
+}
+
+.text-gradient-bostarter {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.btn-bostarter-primary {
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    font-weight: var(--font-weight-medium);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+}
+
+.btn-bostarter-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-colored);
+    background: linear-gradient(135deg, var(--bostarter-primary-dark) 0%, var(--bostarter-secondary-dark) 100%);
+    color: white;
+    text-decoration: none;
+}
+
+.card-bostarter {
+    border: none;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    transition: all var(--transition-normal);
+    background: white;
+    overflow: hidden;
+}
+
+.card-bostarter:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.badge-bostarter {
+    background: var(--gradient-primary);
+    color: white;
+    font-weight: var(--font-weight-medium);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Animation classes */
+.animate-fade-up {
+    animation: fadeUp 0.6s ease-out;
+}
+
+.animate-fade-left {
+    animation: fadeLeft 0.6s ease-out;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+.progress-bar .progress-fill,
+.progress-fill {
+    width: var(--progress, 0%);
+    transition: width var(--transition-normal) ease-in-out;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(var(--bostarter-primary-rgb),0.95), rgba(var(--bostarter-secondary-rgb),0.95));
+}
+
+/* Loading dim state for grids */
+.loading-dim {
+    opacity: 0.5 !important;
+    transition: opacity var(--transition-normal);
+}
+
+/* Notifications / alerts fixed container */
+.notification-container-fixed {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1055;
+    min-width: 300px;
+    max-width: 560px;
+}
+
+.dynamic-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1055;
+    min-width: 300px;
+    max-width: 560px;
 }
 
 /* === BASE STYLES === */
@@ -145,10 +366,11 @@ body {
     transform: translateY(-2px);
     box-shadow: var(--shadow-colored);
     background: linear-gradient(135deg, var(--bostarter-primary-dark) 0%, var(--bostarter-secondary-dark) 100%);
+    color: white;
 }
 
 .btn-secondary {
-    background: var(--gradient-secondary);
+    background: var(--gradient-warm);
     border: none;
     color: white;
     font-weight: var(--font-weight-medium);
@@ -156,6 +378,31 @@ body {
     border-radius: var(--radius-lg);
     transition: all var(--transition-normal);
     box-shadow: var(--shadow-md);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, var(--bostarter-secondary-dark) 0%, var(--bostarter-warning) 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+.btn-success {
+    background: var(--gradient-success);
+    border: none;
+    color: white;
+    font-weight: var(--font-weight-medium);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, var(--bostarter-success) 0%, var(--bostarter-accent-dark) 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
 }
 
 .btn-outline-primary {
@@ -226,9 +473,10 @@ body {
 /* === NAVIGATION MODERNA === */
 .navbar {
     backdrop-filter: blur(20px);
-    background: rgba(15, 23, 42, 0.9) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
     transition: all var(--transition-normal);
+    box-shadow: var(--shadow-lg);
 }
 
 .navbar-brand {
@@ -236,10 +484,11 @@ body {
     font-weight: var(--font-weight-bold);
     font-size: 1.5rem;
     color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .navbar-nav .nav-link {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
     font-weight: var(--font-weight-medium);
     padding: 0.5rem 1rem !important;
     border-radius: var(--radius-md);
@@ -248,7 +497,13 @@ body {
 
 .navbar-nav .nav-link:hover {
     color: white !important;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+}
+
+.navbar-nav .nav-link:focus,
+.navbar-nav .nav-link:active {
+    color: white !important;
 }
 
 .dropdown-menu {
@@ -317,11 +572,7 @@ body {
     color: var(--bostarter-accent);
     border-left: 4px solid var(--bostarter-accent);
 }
-    color: #212529;
-    background-color: #fff;
-    margin: 0;
-    padding: 0;
-}
+
 
 /* Performance optimizations */
 img {
@@ -340,16 +591,24 @@ img[loading="lazy"].loaded {
 }
 
 /* Focus management for accessibility */
+/* Improved focus styles for accessibility */
 *:focus {
-    outline: 2px solid var(--bs-primary);
-    outline-offset: 2px;
+    outline: 3px solid rgba(var(--bostarter-secondary-rgb), 0.18);
+    outline-offset: 3px;
 }
 
 .btn:focus,
 .form-control:focus,
 .form-select:focus,
 .form-check-input:focus {
-    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bostarter-secondary-rgb), 0.18);
+}
+
+/* Stronger focus when keyboard navigation or high-contrast mode enabled */
+html.high-contrast *:focus,
+.high-contrast *:focus {
+    outline: 3px solid var(--bostarter-secondary);
+    outline-offset: 3px;
 }
 
 /* === UTILITIES === */
@@ -1103,18 +1362,21 @@ img[loading="lazy"].loaded {
 
 /* === PRINT === */
 @media print {
-    .navbar,
-    .btn,
-    .hero-gradient {
-        display: none;
+    /* print-safe navbar: remove effects and use solid background */
+    .navbar {
+        backdrop-filter: none !important;
+        background: #fff !important;
+        color: #000 !important;
+        border-bottom: 1px solid #ddd !important;
+        box-shadow: none !important;
     }
-    
+
     .card {
         break-inside: avoid;
         box-shadow: none;
         border: 1px solid #ccc;
     }
-    
+
     .text-gradient {
         -webkit-text-fill-color: initial;
         color: var(--bostarter-gray-900);

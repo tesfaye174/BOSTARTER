@@ -1,31 +1,83 @@
 <?php
 /**
- * Database Singleton per MySQL
+ * =====================================================
+ * BOSTARTER - GESTORE DATABASE SINGLETON
+ * =====================================================
+ * 
+ * Implementa il pattern Singleton per la gestione
+ * centralizzata delle connessioni al database MySQL.
+ * 
+ * @author BOSTARTER Team
+ * @version 2.0
+ * @description Singleton per connessioni database sicure
  */
 
+// Importa le configurazioni dell'applicazione
 require_once __DIR__ . '/app_config.php';
 
+/**
+ * Classe Database - Pattern Singleton
+ * 
+ * Gestisce le connessioni al database MySQL con PDO
+ * garantendo una sola istanza attiva per applicazione.
+ */
 class Database {
+    /** @var Database|null Istanza singleton della classe */
     private static $instance = null;
+    
+    /** @var PDO Connessione PDO al database */
     private $connection;
+    
+    /** @var string Charset utilizzato per la connessione */
     private $charset = 'utf8mb4';
 
+    /**
+     * Costruttore privato - Pattern Singleton
+     * 
+     * Stabilisce la connessione al database MySQL con
+     * configurazioni ottimizzate per prestazioni e sicurezza.
+     * 
+     * @throws PDOException Se la connessione fallisce
+     */
     private function __construct() {
+        // Costruisce la stringa DSN per MySQL
         $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=$this->charset";
+        
+        // Opzioni PDO per prestazioni e sicurezza ottimali
         $options = [
+            // Gestione errori con eccezioni
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            // Modalità fetch predefinita (array associativo)
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            // Disabilita l'emulazione delle prepared statements
             PDO::ATTR_EMULATE_PREPARES   => false,
+            // Restituisce il numero di righe trovate invece di quelle modificate
             PDO::MYSQL_ATTR_FOUND_ROWS   => true,
         ];
 
         try {
+            // Stabilisce la connessione PDO
             $this->connection = new PDO($dsn, DB_USER, DB_PASS, $options);
+            
+            // Log della connessione riuscita (solo in debug)
+            if (isDebugMode()) {
+                logMessage('DEBUG', 'Connessione database stabilita con successo');
+            }
         } catch (PDOException $e) {
-            throw new PDOException($e->getMessage(), (int)$e->getCode());
+            // Log dell'errore di connessione
+            logMessage('ERROR', 'Errore connessione database: ' . $e->getMessage());
+            throw new PDOException('Impossibile connettersi al database: ' . $e->getMessage(), (int)$e->getCode());
         }
     }
 
+    /**
+     * Restituisce l'istanza singleton della classe Database
+     * 
+     * Se l'istanza non esiste ancora, la crea automaticamente.
+     * Garantisce che esista sempre una sola connessione al database.
+     * 
+     * @return Database L'istanza singleton
+     */
     public static function getInstance(): Database {
         if (self::$instance === null) {
             self::$instance = new self();
@@ -33,14 +85,60 @@ class Database {
         return self::$instance;
     }
 
+    /**
+     * Restituisce la connessione PDO attiva
+     * 
+     * @return PDO La connessione PDO al database
+     */
     public function getConnection(): PDO {
         return $this->connection;
     }
 
-    private function __clone() {}
+    /**
+     * Impedisce la clonazione dell'istanza singleton
+     * 
+     * @throws Exception Se si tenta di clonare l'istanza
+     */
+    private function __clone() {
+        throw new Exception('Clonazione della classe Database non permessa - Pattern Singleton');
+    }
 
+    /**
+     * Impedisce la deserializzazione dell'istanza singleton
+     * 
+     * @throws Exception Se si tenta di deserializzare l'istanza
+     */
     public function __wakeup() {
-        throw new Exception("Cannot unserialize singleton");
+        throw new Exception('Deserializzazione della classe Database non permessa - Pattern Singleton');
+    }
+
+    /**
+     * Testa la connessione al database
+     * 
+     * @return bool True se la connessione è attiva, false altrimenti
+     */
+    public function testConnection(): bool {
+        try {
+            $this->connection->query('SELECT 1');
+            return true;
+        } catch (PDOException $e) {
+            logMessage('WARNING', 'Test connessione database fallito: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Chiude la connessione al database
+     * 
+     * Utile per liberare risorse quando l'applicazione termina.
+     */
+    public function closeConnection(): void {
+        $this->connection = null;
+        self::$instance = null;
+        
+        if (isDebugMode()) {
+            logMessage('DEBUG', 'Connessione database chiusa');
+        }
     }
 }
 

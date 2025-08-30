@@ -1,31 +1,59 @@
 <?php
 /**
- * Configurazione BOSTARTER
+ * =====================================================
+ * BOSTARTER - CONFIGURAZIONE PRINCIPALE APPLICAZIONE
+ * =====================================================
+ * 
+ * Questo file contiene tutte le configurazioni centrali
+ * dell'applicazione BOSTARTER per il crowdfunding.
+ * 
+ * @author BOSTARTER Team
+ * @version 2.0
+ * @created 2025
+ * @description Sistema di configurazione centralizzato
  */
 
-// Database
+// =====================================================
+// CONFIGURAZIONE DATABASE
+// =====================================================
+
+/** Host del server MySQL */
 define("DB_HOST", "localhost");
+
+/** Nome del database principale */
 define("DB_NAME", "bostarter");
+
+/** Username per la connessione al database */
 define("DB_USER", "root");
+
+/** Password per la connessione al database */
 define("DB_PASS", "");
 
-// MongoDB
-define("MONGO_HOST", "localhost");
-define("MONGO_PORT", 27017);
-define("MONGO_DB", "bostarter_logs");
-define("MONGO_COLLECTION", "eventi");
+// =====================================================
+// PARAMETRI DI SICUREZZA E AUTENTICAZIONE
+// =====================================================
 
-// Sicurezza
-define("JWT_SECRET", "bostarter_secret_key_2025");
+/** Chiave segreta per la generazione dei token JWT */
+define("JWT_SECRET", "bostarter_secret_key_2025_ultra_sicura");
+
+/** Durata della sessione utente in secondi (1 ora) */
 define("SESSION_LIFETIME", 3600);
-define("BCRYPT_COST", 12);
-define("MAX_LOGIN_ATTEMPTS", 5);
-define("LOCKOUT_TIME", 900); // 15 minuti
 
-define("UPLOAD_MAX_SIZE", 5 * 1024 * 1024); // 5MB
+/** Costo di hashing per bcrypt (più alto = più sicuro ma più lento) */
+define("BCRYPT_COST", 12);
+
+/** Numero massimo di tentativi di login falliti */
+define("MAX_LOGIN_ATTEMPTS", 5);
+
+/** Tempo di blocco account dopo tentativi falliti (15 minuti) */
+define("LOCKOUT_TIME", 900);
+
+// Gestione file upload
+define("UPLOAD_MAX_SIZE", 5 * 1024 * 1024); // Limite di 5MB per file
 define("UPLOAD_ALLOWED_TYPES", ["jpg", "jpeg", "png", "gif", "pdf"]);
 define("UPLOAD_DIR", __DIR__ . "/../../uploads/");
 
+// Configurazione email
 define("SMTP_HOST", "localhost");
 define("SMTP_PORT", 587);
 define("SMTP_USER", "");
@@ -33,21 +61,25 @@ define("SMTP_PASS", "");
 define("SMTP_FROM_EMAIL", "noreply@bostarter.local");
 define("SMTP_FROM_NAME", "BOSTARTER");
 
+// Sistema di cache
 define("CACHE_ENABLED", true);
-define("CACHE_DEFAULT_TTL", 3600); // 1 ora
+define("CACHE_DEFAULT_TTL", 3600); // Cache valida per un'ora
 define("CACHE_DIR", __DIR__ . "/../../cache/");
 
-define("DEBUG_MODE", false); // Cambiato per produzione
+// Modalità di funzionamento
+define("DEBUG_MODE", false); // Disabilitato in produzione per sicurezza
 define("ERROR_REPORTING_LEVEL", E_ALL);
 define("LOG_LEVEL", "INFO"); // DEBUG, INFO, WARNING, ERROR
 define("APP_ENV", "production"); // development, production
 define("ERROR_LOG_FILE", getAppRoot() . '/logs/errors.log');
 
+// Monitoraggio prestazioni
 define("PERFORMANCE_MONITORING", true);
-define("SLOW_QUERY_THRESHOLD", 0.1); // 100ms
+define("SLOW_QUERY_THRESHOLD", 0.1); // Soglia per query lente: 100ms
 define("MEMORY_LIMIT_WARNING", "128M");
 
-define("MIN_FUNDING_GOAL", 100); // Euro
+// Regole business per i progetti
+define("MIN_FUNDING_GOAL", 100); // Obiettivo minimo in Euro
 define("MAX_FUNDING_GOAL", 1000000); // Euro
 define("MAX_PROJECT_DURATION", 90); // giorni
 define("COMMISSION_RATE", 0.05); // 5%
@@ -90,16 +122,29 @@ function getUploadDir(): string {
 }
 
 function logMessage($level, $message, $context = []) {
+    // Non logghiamo i dettagli di debug in produzione
     if (!isDebugMode() && $level === 'DEBUG') {
         return;
     }
+    
+    // Rendiamo i log più leggibili per gli sviluppatori
+    $levelNames = [
+        'DEBUG' => 'Debug',
+        'INFO' => 'Info',
+        'WARNING' => 'Attenzione',
+        'ERROR' => 'Errore'
+    ];
+    
+    $readableLevel = $levelNames[strtoupper($level)] ?? $level;
+    
     $logEntry = sprintf(
         "[%s] %s: %s %s\n",
         date('Y-m-d H:i:s'),
-        strtoupper($level),
+        $readableLevel,
         $message,
-        !empty($context) ? json_encode($context) : ''
+        !empty($context) ? '(' . json_encode($context, JSON_UNESCAPED_UNICODE) . ')' : ''
     );
+    
     error_log($logEntry, 3, getAppRoot() . '/logs/application.log');
 }
 ?>

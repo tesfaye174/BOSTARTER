@@ -21,14 +21,14 @@ class User {
             $stmt = $this->db->prepare("SELECT id FROM utenti WHERE email = ?");
             $stmt->execute([$data['email']]);
             if ($stmt->fetch()) {
-                return ['success' => false, 'error' => 'Email già registrata'];
+                return ['success' => false, 'error' => 'Questa email risulta già associata a un account esistente'];
             }
             
             // Verifica nickname unico
             $stmt = $this->db->prepare("SELECT id FROM utenti WHERE nickname = ?");
             $stmt->execute([$data['nickname']]);
             if ($stmt->fetch()) {
-                return ['success' => false, 'error' => 'Nickname già utilizzato'];
+                return ['success' => false, 'error' => 'Il nickname scelto non è disponibile, prova con un altro'];
             }
             
             $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
@@ -54,11 +54,11 @@ class User {
             return [
                 'success' => true,
                 'user_id' => $this->db->lastInsertId(),
-                'message' => 'Utente creato con successo'
+                'message' => 'Ottimo! Il tuo account è stato creato con successo'
             ];
             
         } catch (Exception $e) {
-            return ['success' => false, 'error' => 'Errore nella creazione utente: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Si è verificato un problema durante la registrazione: ' . $e->getMessage()];
         }
     }
     
@@ -85,11 +85,11 @@ class User {
             return [
                 'success' => true,
                 'user' => $user,
-                'message' => 'Login effettuato con successo'
+                'message' => 'Accesso effettuato con successo'
             ];
             
         } catch (Exception $e) {
-            return ['success' => false, 'error' => 'Errore nell\'autenticazione: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Si è verificato un problema durante l\'accesso: ' . $e->getMessage()];
         }
     }
     

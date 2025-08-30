@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/init.php';
 require_once __DIR__ . "/../backend/config/database.php";
 
 if (!isset($_SESSION["user_id"])) {
@@ -50,17 +50,11 @@ try {
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - BOSTARTER</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/app.css">
-    <link rel="stylesheet" href="css/style.css">
+<?php $page_title = 'Dashboard'; include __DIR__ . '/includes/head.php'; ?>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="home.php">
                 <i class="fas fa-rocket me-2"></i>BOSTARTER
@@ -83,18 +77,42 @@ try {
         </div>
     </nav>
 
-    <div class="container py-4" style="margin-top: 80px;">
-        <!-- Header -->
+    <div class="container py-4 page-offset">
+        <!-- Header con messaggio personalizzato -->
         <div class="row mb-4">
             <div class="col-12">
-                <h1 class="display-6">Benvenuto, <?= htmlspecialchars($nickname) ?>!</h1>
-                <p class="text-muted">Dashboard <?= $tipo_utente === "creatore" ? "Creatore" : "Investitore" ?></p>
+                <?php 
+                $welcome_messages = [
+                    "Ciao {name}! Bentornato nella tua dashboard.",
+                    "Eccoti qui, {name}! Pronto per nuove avventure?",
+                    "Benvenuto {name}! Vediamo cosa puoi creare oggi.",
+                    "Ciao {name}! La tua creativity station ti aspetta."
+                ];
+                $random_welcome = str_replace('{name}', htmlspecialchars($nickname), $welcome_messages[array_rand($welcome_messages)]);
+                ?>
+                <h1 class="display-6"><?= $random_welcome ?></h1>
+                <p class="text-muted">
+                    <?php if ($tipo_utente === "creatore"): ?>
+                        Dashboard Creatore - Qui puoi gestire i tuoi progetti e vedere come stanno andando
+                    <?php else: ?>
+                        Dashboard Investitore - Tieni traccia dei progetti che hai supportato
+                    <?php endif; ?>
+                </p>
             </div>
         </div>
 
         <?php if (isset($error)): ?>
+            <?php 
+            $error_variations = [
+                "Attenzione! Si è verificato un piccolo problema: ",
+                "Qualcosa non ha funzionato come doveva: ",
+                "Abbiamo riscontrato un inconveniente: ",
+                "C'è stato un intoppo: "
+            ];
+            $error_prefix = $error_variations[array_rand($error_variations)];
+            ?>
             <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i><?= htmlspecialchars($error) ?>
+                <i class="fas fa-exclamation-triangle me-2"></i><?= $error_prefix . htmlspecialchars($error) ?>
             </div>
         <?php endif; ?>
 
@@ -150,7 +168,21 @@ try {
                         </div>
                         <div class="card-body">
                             <?php if (empty($progetti)): ?>
-                                <p class="text-muted text-center py-4">Nessun progetto creato ancora.</p>
+                                <?php 
+                                $empty_messages = [
+                                    "Ancora nessun progetto? È il momento perfetto per iniziare!",
+                                    "La tua prima grande idea ti aspetta. Crea il tuo primo progetto!",
+                                    "Questo spazio sembra un po' vuoto... che ne dici di riempirlo con le tue idee?",
+                                    "Zero progetti finora. Trasforma la tua creatività in realtà!"
+                                ];
+                                ?>
+                                <div class="text-center py-4">
+                                    <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted"><?= $empty_messages[array_rand($empty_messages)] ?></p>
+                                    <a href="new.php" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Crea il Tuo Primo Progetto
+                                    </a>
+                                </div>
                             <?php else: ?>
                                 <div class="table-responsive">
                                     <table class="table table-hover">
@@ -194,7 +226,21 @@ try {
                         </div>
                         <div class="card-body">
                             <?php if (empty($finanziamenti)): ?>
-                                <p class="text-muted text-center py-4">Nessun finanziamento effettuato ancora.</p>
+                                <?php 
+                                $investor_messages = [
+                                    "Non hai ancora supportato nessun progetto. Scopri le idee più interessanti!",
+                                    "Che ne dici di investire nella prossima grande innovazione?",
+                                    "Il tuo primo investimento ti aspetta. Esplora i progetti disponibili!",
+                                    "Ancora nessun finanziamento? È tempo di supportare qualche creatore!"
+                                ];
+                                ?>
+                                <div class="text-center py-4">
+                                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted"><?= $investor_messages[array_rand($investor_messages)] ?></p>
+                                    <a href="view.php" class="btn btn-primary">
+                                        <i class="fas fa-eye me-2"></i>Esplora i Progetti
+                                    </a>
+                                </div>
                             <?php else: ?>
                                 <div class="table-responsive">
                                     <table class="table table-hover">
@@ -224,6 +270,6 @@ try {
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php include __DIR__ . '/includes/scripts.php'; ?>
 </body>
 </html>

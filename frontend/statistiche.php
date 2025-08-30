@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/init.php';
 require_once __DIR__ . "/../backend/config/database.php";
 
 /**
@@ -65,16 +65,11 @@ $is_logged_in = isset($_SESSION["user_id"]);
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statistiche - BOSTARTER</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/app.css">
+<?php $page_title = 'Statistiche'; include __DIR__ . '/includes/head.php'; ?>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="home.php">
                 <i class="fas fa-rocket me-2"></i>BOSTARTER
@@ -183,7 +178,7 @@ $is_logged_in = isset($_SESSION["user_id"]);
                                         </div>
                                         <div class="col-md-3">
                                             <div class="progress">
-                                                <div class="progress-bar" style="width: <?php echo $progetto['percentuale_completamento']; ?>%">
+                                                <div class="progress-bar" style="--progress: <?php echo $progetto['percentuale_completamento']; ?>%">
                                                     <?php echo $progetto['percentuale_completamento']; ?>%
                                                 </div>
                                             </div>
@@ -253,6 +248,6 @@ $is_logged_in = isset($_SESSION["user_id"]);
         </div>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <?php include __DIR__ . '/includes/scripts.php'; ?>
 </body>
 </html>

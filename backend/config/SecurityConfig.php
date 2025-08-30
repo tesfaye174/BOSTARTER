@@ -1,47 +1,59 @@
-Remove-Item -Path "c:\xampp\htdocs\BOSTARTER\backend\config\security_check.php" -Force<?php
+<?php
+/**
+ * BOSTARTER Security Configuration
+ * Gestisce tutte le impostazioni di sicurezza della piattaforma
+ */
+
 class SecurityConfig {
+    // Configurazione per l'autenticazione degli utenti
     public const AUTH_CONFIG = [
-        'max_login_attempts' => 5,                
-        'lockout_time' => 900,                    
-        'session_lifetime' => 1800,               
-        'remember_token_lifetime' => 2592000,     
-        'csrf_token_lifetime' => 3600,            
-        'session_regenerate_interval' => 300,     
-        'password_min_length' => 8,               
-        'require_special_chars' => true,          
-        'require_uppercase' => true,              
-        'require_lowercase' => true,              
-        'require_numbers' => true                 
+        'max_login_attempts' => 5,                // Tentativi di login prima del blocco
+        'lockout_time' => 900,                    // Tempo di blocco in secondi (15 minuti)
+        'session_lifetime' => 1800,               // Durata sessione attiva (30 minuti)
+        'remember_token_lifetime' => 2592000,     // Token "ricordami" (30 giorni)
+        'csrf_token_lifetime' => 3600,            // Validità token CSRF (1 ora)
+        'session_regenerate_interval' => 300,     // Rinnovo ID sessione (5 minuti)
+        'password_min_length' => 8,               // Lunghezza minima password
+        'require_special_chars' => true,          // Richiede caratteri speciali
+        'require_uppercase' => true,              // Richiede lettere maiuscole
+        'require_lowercase' => true,              // Richiede lettere minuscole
+        'require_numbers' => true                 // Richiede numeri
     ];
+
+    // Limiti per prevenire abusi e attacchi
     public const RATE_LIMITS = [
         'login' => [
-            'max_attempts' => 5,                 
-            'time_window' => 900                 
+            'max_attempts' => 5,                 // Massimo 5 tentativi di login
+            'time_window' => 900                 // in 15 minuti
         ],
         'register' => [
-            'max_attempts' => 3,                 
-            'time_window' => 1800                
+            'max_attempts' => 3,                 // Massimo 3 registrazioni
+            'time_window' => 1800                // in 30 minuti
         ],
         'api' => [
-            'max_requests' => 100,               
-            'time_window' => 3600                
+            'max_requests' => 100,               // Massimo 100 chiamate API
+            'time_window' => 3600                // in 1 ora
         ],
         'password_reset' => [
-            'max_attempts' => 3,                 
-            'time_window' => 3600                
+            'max_attempts' => 3,                 // Massimo 3 reset password
+            'time_window' => 3600                // in 1 ora
         ]
     ];
+
+    // Impostazioni sicurezza per i cookie
     public const COOKIE_CONFIG = [
-        'secure' => true,                        
-        'httponly' => true,                      
-        'samesite' => 'Strict',                  
-        'path' => '/',                           
-        'domain' => '',                          
+        'secure' => true,                        // Solo HTTPS in produzione
+        'httponly' => true,                      // Non accessibili via JavaScript
+        'samesite' => 'Strict',                  // Protezione CSRF aggiuntiva
+        'path' => '/',                           // Validi per tutto il sito
+        'domain' => '',                          // Dominio automatico
         'lifetime' => [
-            'session' => 0,                       
-            'remember' => 2592000                 
+            'session' => 0,                       // Cookie di sessione temporaneo
+            'remember' => 2592000                 // Cookie persistente (30 giorni)
         ]
     ];
+
+    // Headers di sicurezza per il browser
     public const SECURITY_HEADERS = [
         'X-Content-Type-Options' => 'nosniff',                              
         'X-Frame-Options' => 'DENY',                                        

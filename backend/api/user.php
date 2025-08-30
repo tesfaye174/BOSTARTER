@@ -6,9 +6,10 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../utils/Validator.php';
-$database = new Database();
+// Carica l'autoloader personalizzato BOSTARTER
+require_once __DIR__ . '/../autoload.php';
+
+$database = Database::getInstance();
 $db = $database->getConnection();
 session_start();
 function requireAuth() {

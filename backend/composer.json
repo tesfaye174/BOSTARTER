@@ -1,27 +1,41 @@
 {
     "name": "bostarter/backend",
-    "description": "Backend per la piattaforma di crowdfunding BOSTARTER",
+    "description": "Backend ottimizzato per la piattaforma BOSTARTER",
     "type": "project",
+    "version": "2.0.0",
     "require": {
-        "php": ">=7.4",
-        "cboden/ratchet": "^0.4.4",
-        "firebase/php-jwt": "^6.0",
-        "vlucas/phpdotenv": "^5.5",
-        "monolog/monolog": "^2.0",
-        "phpmailer/phpmailer": "^6.8"
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "php": ">=7.4"
     },
     "autoload": {
-        "classmap": [
-            "models/",
-            "services/",
-            "utils/"
+        "psr-4": {
+            "BOSTARTER\\Models\\": "models/",
+            "BOSTARTER\\Services\\": "services/",
+            "BOSTARTER\\Utils\\": "utils/",
+            "BOSTARTER\\Config\\": "config/"
+        },
+        "files": [
+            "config/app_config.php"
         ]
+    },
+    "scripts": {
+        "test": "echo 'No tests configured yet'",
+        "install-dev": "echo 'Development environment ready'"
     },
     "authors": [
         {
             "name": "BOSTARTER Team",
-            "email": "team@bostarter.com"
+            "email": "team@bostarter.com",
+            "role": "Developer"
         }
     ],
-    "minimum-stability": "stable"
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "optimize-autoloader": true,
+        "classmap-authoritative": true
+    }
 }

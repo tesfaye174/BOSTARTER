@@ -1,16 +1,21 @@
 <?php
 /**
- * BOSTARTER - Logout Page
- * Gestisce il logout dell'utente e reindirizza alla home
+ * BOSTARTER - Logout System
+ * Gestisce il logout degli utenti con messaggio personalizzato
  */
 
 session_start();
 
-// Distruggi completamente la sessione
-session_unset();
-session_destroy();
+// Salva informazioni utente per messaggio personalizzato
+$username = '';
+if (isset($_SESSION['user_id']) && isset($_SESSION['nome'])) {
+    $username = $_SESSION['nome'];
+}
 
-// Elimina il cookie di sessione se esiste
+// Distruggi tutte le variabili di sessione
+$_SESSION = array();
+
+// Se desideri distruggere completamente la sessione, cancella anche il cookie di sessione
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
@@ -19,7 +24,14 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// Reindirizza alla home con messaggio di successo
-header("Location: ../home.php?logout=success");
+// Distruggi la sessione
+session_destroy();
+
+// Reindirizza alla homepage con messaggio di conferma
+if ($username) {
+    header('Location: ../index.php?logout=success&user=' . urlencode($username));
+} else {
+    header('Location: ../index.php?logout=success');
+}
 exit();
 ?>

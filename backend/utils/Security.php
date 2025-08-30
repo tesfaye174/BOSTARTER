@@ -9,11 +9,9 @@ use BOSTARTER\Services\MongoLoggerSingleton;
 class Security {
     private static $instance = null;
     private $csrfSecret;
-    private $jwtSecret;
     
     private function __construct() {
         $this->csrfSecret = $_ENV['CSRF_SECRET'] ?? 'default-csrf-secret';
-        $this->jwtSecret = $_ENV['JWT_SECRET'] ?? 'default-jwt-secret';
     }
     
     public static function getInstance() {

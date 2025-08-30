@@ -10,40 +10,40 @@ class Validator {
 
     public function required($field, $value) {
         $this->data[$field] = $value;
-        if (empty($value)) {
-            $this->errors[$field][] = ucfirst($field) . ' is required.';
+        if (empty($value) && $value !== '0') {
+            $this->errors[$field][] = "Il campo '$field' è obbligatorio.";
         }
         return $this;
     }
 
     public function email($field = null) {
         $field = $field ?? array_key_last($this->data);
-        if (!filter_var($this->data[$field], FILTER_VALIDATE_EMAIL)) {
-            $this->errors[$field][] = ucfirst($field) . ' must be a valid email address.';
+        if (isset($this->data[$field]) && !empty($this->data[$field]) && !filter_var($this->data[$field], FILTER_VALIDATE_EMAIL)) {
+            $this->errors[$field][] = "Il campo '$field' deve contenere un indirizzo email valido.";
         }
         return $this;
     }
 
     public function minLength($length, $field = null) {
         $field = $field ?? array_key_last($this->data);
-        if (strlen($this->data[$field]) < $length) {
-            $this->errors[$field][] = ucfirst($field) . ' must be at least ' . $length . ' characters long.';
+        if (isset($this->data[$field]) && strlen($this->data[$field]) < $length) {
+            $this->errors[$field][] = "Il campo '$field' deve contenere almeno $length caratteri.";
         }
         return $this;
     }
 
     public function maxLength($length, $field = null) {
         $field = $field ?? array_key_last($this->data);
-        if (strlen($this->data[$field]) > $length) {
-            $this->errors[$field][] = ucfirst($field) . ' must not exceed ' . $length . ' characters.';
+        if (isset($this->data[$field]) && strlen($this->data[$field]) > $length) {
+            $this->errors[$field][] = "Il campo '$field' non può superare i $length caratteri.";
         }
         return $this;
     }
 
     public function integer($field = null) {
         $field = $field ?? array_key_last($this->data);
-        if (!filter_var($this->data[$field], FILTER_VALIDATE_INT)) {
-            $this->errors[$field][] = ucfirst($field) . ' must be an integer.';
+        if (isset($this->data[$field]) && !filter_var($this->data[$field], FILTER_VALIDATE_INT)) {
+            $this->errors[$field][] = "Il campo '$field' deve essere un numero intero.";
         }
         return $this;
     }

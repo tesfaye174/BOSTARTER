@@ -88,9 +88,16 @@ $roleManager = new RoleManager();
                                 </a></li>
                             <?php endif; ?>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="<?= strpos($_SERVER['PHP_SELF'], '/admin/') !== false ? '../' : '' ?>exit.php">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </a></li>
+                            <li>
+                                <a class="dropdown-item text-danger" 
+                                   href="<?= strpos($_SERVER['PHP_SELF'], '/admin/') !== false ? '../' : '' ?>auth/exit.php"
+                                   onclick="handleLogoutClick(event, this.href)"
+                                   data-bs-toggle="tooltip" 
+                                   data-bs-placement="left" 
+                                   title="Termina la sessione in modo sicuro">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 <?php else: ?>
@@ -105,5 +112,21 @@ $roleManager = new RoleManager();
         </div>
     </div>
 </nav>
+
+<?php
+// Flash messages (set in session by server-side handlers)
+if (isset($_SESSION['flash_success'])) {
+    echo '<div class="position-fixed top-0 end-0 p-3" style="z-index: 1080">';
+    echo '<div class="alert alert-success alert-dismissible fade show" role="alert">' . htmlspecialchars($_SESSION['flash_success']) . '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+    echo '</div>';
+    unset($_SESSION['flash_success']);
+}
+if (isset($_SESSION['flash_error'])) {
+    echo '<div class="position-fixed top-0 end-0 p-3" style="z-index: 1080">';
+    echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">' . htmlspecialchars($_SESSION['flash_error']) . '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+    echo '</div>';
+    unset($_SESSION['flash_error']);
+}
+?>
 
 

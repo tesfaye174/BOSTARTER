@@ -1,10 +1,11 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/init.php';
+require_once __DIR__ . '/../includes/FrontendSecurity.php';
 require_once __DIR__ . '/../../backend/config/database.php';
 require_once __DIR__ . '/../../backend/config/app_config.php';
 
 // Simple admin check
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['tipo_utente'] ?? '') !== 'amministratore') {
     header('Location: ../auth/login.php');
     exit();
 }
@@ -12,6 +13,7 @@ $db = Database::getInstance();
 $conn = $db->getConnection();
 $error = '';
 $success = '';
+$csrf_token = generate_csrf_token();
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add') {
     if (!FrontendSecurity::verifyCSRFToken($_POST['csrf_token'] ?? '')) {
         $error = 'Token di sicurezza non valido. Riprova.';
@@ -194,11 +196,11 @@ $stats = $stmt->fetch();
 ?>
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Competenze - BOSTARTER Admin</title>
+    <?php $page_title = 'Gestione Competenze'; include __DIR__ . '/../includes/head.php'; ?>
 </head>
+
 <body class="bg-light">
     <div class="container py-5">
         <div class="row justify-content-center">
@@ -209,16 +211,16 @@ $stats = $stmt->fetch();
                     </div>
                     <div class="card-body">
                         <?php if ($error): ?>
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <?php echo $error; ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <?php echo $error; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                         <?php endif; ?>
                         <?php if ($success): ?>
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <?php echo $success; ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <?php echo $success; ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                         <?php endif; ?>
                         <!-- Form aggiunta competenza -->
                         <form method="POST" class="needs-validation" novalidate>
@@ -228,8 +230,8 @@ $stats = $stmt->fetch();
                                 <div class="col-md-4">
                                     <div class="form-floating">
                                         <input type="text" class="form-control" id="nome" name="nome" required
-                                               pattern="[a-zA-Z0-9\s\-\+\#\.]{2,50}"
-                                               value="<?php echo isset($nome) ? htmlspecialchars($nome) : ''; ?>">
+                                            pattern="[a-zA-Z0-9\s\-\+\#\.]{2,50}"
+                                            value="<?php echo isset($nome) ? htmlspecialchars($nome) : ''; ?>">
                                         <label for="nome">Nome Competenza</label>
                                         <div class="invalid-feedback">
                                             Nome non valido (2-50 caratteri, lettere, numeri e simboli base)
@@ -260,9 +262,9 @@ $stats = $stmt->fetch();
                                 </div>
                                 <div class="col-12">
                                     <div class="form-floating">
-                                        <textarea class="form-control" id="descrizione" name="descrizione" 
-                                                  style="height: 100px" required minlength="10" maxlength="500"
-                                                  ><?php echo isset($descrizione) ? htmlspecialchars($descrizione) : ''; ?></textarea>
+                                        <textarea class="form-control" id="descrizione" name="descrizione"
+                                            class="textarea-large" required minlength="10"
+                                            maxlength="500"><?php echo isset($descrizione) ? htmlspecialchars($descrizione) : ''; ?></textarea>
                                         <label for="descrizione">Descrizione</label>
                                         <div class="invalid-feedback">
                                             La descrizione deve essere tra 10 e 500 caratteri
@@ -275,55 +277,60 @@ $stats = $stmt->fetch();
                         <div class="mt-5">
                             <h2 class="h5 mb-4">Competenze Esistenti</h2>
                             <?php foreach ($competenze_per_categoria as $categoria => $competenze_categoria): ?>
-                                <div class="card mb-4">
-                                    <div class="card-header bg-light">
-                                        <h3 class="h6 mb-0"><?php echo htmlspecialchars($categoria); ?></h3>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                                            <?php foreach ($competenze_categoria as $competenza): ?>
-                                                <div class="col">
-                                                    <div class="card h-100 skill-card">
-                                                        <div class="card-body">
-                                                            <h4 class="h6 card-title d-flex justify-content-between align-items-center">
-                                                                <?php echo htmlspecialchars($competenza['nome']); ?>
-                                                                <form method="POST" class="d-inline" 
-                                                                      onsubmit="return confirm('Sei sicuro di voler eliminare questa competenza?');">
-                                                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                                                    <input type="hidden" name="action" value="delete">
-                                                                    <input type="hidden" name="skill_id" value="<?php echo $competenza['id']; ?>">
-                                                                    <button type="submit" class="btn btn-link text-danger p-0 delete-btn" 
-                                                                            title="Elimina competenza">
-                                                                        <i class="fas fa-trash-alt"></i>
-                                                                    </button>
-                                                                </form>
-                                                            </h4>
-                                                            <p class="card-text small mb-2">
-                                                                <?php echo htmlspecialchars($competenza['descrizione']); ?>
-                                                            </p>
-                                                            <div class="d-flex gap-2">
-                                                                <span class="badge bg-primary stats-badge">
-                                                                    <i class="fas fa-users me-1"></i>
-                                                                    <?php echo $competenza['num_utenti']; ?> utenti
-                                                                </span>
-                                                                <span class="badge bg-info stats-badge">
-                                                                    <i class="fas fa-project-diagram me-1"></i>
-                                                                    <?php echo $competenza['num_progetti']; ?> progetti
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="card-footer bg-transparent">
-                                                            <small class="text-muted">
-                                                                <i class="far fa-calendar-alt me-1"></i>
-                                                                Aggiunta il <?php echo date('d/m/Y', strtotime($competenza['data_creazione'])); ?>
-                                                            </small>
-                                                        </div>
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h3 class="h6 mb-0"><?php echo htmlspecialchars($categoria); ?></h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                                        <?php foreach ($competenze_categoria as $competenza): ?>
+                                        <div class="col">
+                                            <div class="card h-100 skill-card">
+                                                <div class="card-body">
+                                                    <h4
+                                                        class="h6 card-title d-flex justify-content-between align-items-center">
+                                                        <?php echo htmlspecialchars($competenza['nome']); ?>
+                                                        <form method="POST" class="d-inline"
+                                                            onsubmit="return confirm('Sei sicuro di voler eliminare questa competenza?');">
+                                                            <input type="hidden" name="csrf_token"
+                                                                value="<?php echo $csrf_token; ?>">
+                                                            <input type="hidden" name="action" value="delete">
+                                                            <input type="hidden" name="skill_id"
+                                                                value="<?php echo $competenza['id']; ?>">
+                                                            <button type="submit"
+                                                                class="btn btn-link text-danger p-0 delete-btn"
+                                                                title="Elimina competenza">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </form>
+                                                    </h4>
+                                                    <p class="card-text small mb-2">
+                                                        <?php echo htmlspecialchars($competenza['descrizione']); ?>
+                                                    </p>
+                                                    <div class="d-flex gap-2">
+                                                        <span class="badge bg-primary stats-badge">
+                                                            <i class="fas fa-users me-1"></i>
+                                                            <?php echo $competenza['num_utenti']; ?> utenti
+                                                        </span>
+                                                        <span class="badge bg-info stats-badge">
+                                                            <i class="fas fa-project-diagram me-1"></i>
+                                                            <?php echo $competenza['num_progetti']; ?> progetti
+                                                        </span>
                                                     </div>
                                                 </div>
-                                            <?php endforeach; ?>
+                                                <div class="card-footer bg-transparent">
+                                                    <small class="text-muted">
+                                                        <i class="far fa-calendar-alt me-1"></i>
+                                                        Aggiunta il
+                                                        <?php echo date('d/m/Y', strtotime($competenza['data_creazione'])); ?>
+                                                    </small>
+                                                </div>
+                                            </div>
                                         </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
+                            </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -331,20 +338,22 @@ $stats = $stmt->fetch();
             </div>
         </div>
     </div>
+    <?php include __DIR__ . '/../includes/scripts.php'; ?>
     <script>
-        (() => {
-            'use strict';
-            const forms = document.querySelectorAll('.needs-validation');
-            Array.from(forms).forEach(form => {
-                form.addEventListener('submit', event => {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                });
+    (() => {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
             });
-        })();
+        });
+    })();
     </script>
 </body>
+
 </html>

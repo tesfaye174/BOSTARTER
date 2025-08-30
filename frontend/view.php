@@ -1,5 +1,5 @@
-﻿<?php
-session_start();
+<?php
+require_once __DIR__ . '/includes/init.php';
 require_once __DIR__ . "/../backend/config/database.php";
 
 // Validazione ID progetto
@@ -80,51 +80,17 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
 <html lang="it" data-bs-theme="light">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $project ? htmlspecialchars($project["nome"]) : "Progetto" ?> - BOSTARTER</title>
-    <!-- Bootstrap 5.3.3 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="css/bootstrap.css" rel="stylesheet">
-    <!-- Favicon -->
+<?php $page_title = $project ? htmlspecialchars($project['nome']) : 'Progetto'; include __DIR__ . '/includes/head.php'; ?>
+    <!-- Favicon fallbacks -->
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" href="images/icon-144x144.png">
 </head>
 
 <body>
-    <!-- Navbar Bootstrap -->
-    <nav class="navbar navbar-expand-lg navbar-bostarter fixed-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-gradient-bostarter" href="index.php">
-                <i class="fas fa-rocket me-2"></i>BOSTARTER
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php#progetti">Progetti</a>
-                    </li>
-                </ul>
-                <div class="navbar-nav">
-                    <?php if ($is_logged_in): ?>
-                    <a class="nav-link" href="dash.php">Dashboard</a>
-                    <a class="nav-link" href="auth/exit.php">Logout</a>
-                    <?php else: ?>
-                    <a class="nav-link" href="auth/login.php">Accedi</a>
-                    <a class="btn btn-bostarter-primary ms-2" href="auth/signup.php">Registrati</a>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </nav>
-    <main style="padding-top: 100px;">
+    <?php include __DIR__ . '/includes/navbar.php'; ?>
+
+    <main class="pt-navbar">
         <div class="container py-4">
             <?php if ($error): ?>
             <div class="alert alert-danger animate-fade-up">
@@ -155,8 +121,8 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                 <!-- Contenuto principale -->
                 <div class="col-lg-8">
                     <div class="card-bostarter mb-4 animate-fade-up">
-                        <img src="images/project-placeholder.jpg" class="card-img-top"
-                            alt="<?= htmlspecialchars($project["nome"]) ?>" style="height: 400px; object-fit: cover;">
+                        <img src="images/project-placeholder.jpg" class="card-img-top project-image"
+                            alt="<?= htmlspecialchars($project["nome"]) ?>">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
@@ -225,8 +191,7 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                                 <?php foreach ($finanziamenti as $finanziamento): ?>
                                 <div class="col-md-6 mb-3">
                                     <div class="d-flex align-items-center">
-                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                                            style="width: 40px; height: 40px;">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 avatar-sm">
                                             <i class="fas fa-user"></i>
                                         </div>
                                         <div>
@@ -247,7 +212,7 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                 </div>
                 <!-- Sidebar -->
                 <div class="col-lg-4">
-                    <div class="card-bostarter sticky-top animate-fade-right" style="top: 120px;">
+                    <div class="card-bostarter sticky-top animate-fade-right sticky-top-bostarter">
                         <div class="card-body">
                             <!-- Progress -->
                             <div class="mb-4">
@@ -255,8 +220,8 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                                     <span class="text-muted">Progresso</span>
                                     <span class="fw-bold"><?= number_format($progress, 1) ?>%</span>
                                 </div>
-                                <div class="progress-bostarter">
-                                    <div class="progress-bar" style="width: <?= $progress ?>%"></div>
+                                <div class="progress-bostarter progress-thin">
+                                    <div class="progress-bar progress-bar-bostarter" style="--progress: <?= $progress ?>%"></div>
                                 </div>
                             </div>
                             <!-- Stats -->
@@ -341,6 +306,7 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                 <div class="modal-body">
                     <form id="supportForm" method="POST" action="support-view.php">
                         <input type="hidden" name="project_id" value="<?= $project["id"] ?>">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                         <div class="mb-3">
                             <label for="amount" class="form-label">Importo (?)</label>
                             <input type="number" class="form-control form-control-bostarter" id="amount" name="amount"
@@ -362,8 +328,8 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
         </div>
     </div>
     <?php endif; ?>
-    <!-- Bootstrap JS -->
-    <script src="https:
+    <!-- Scripts -->
+    <?php include __DIR__ . '/includes/scripts.php'; ?>
     <script>
     function shareProject() {
         if (navigator.share) {
@@ -376,7 +342,7 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
     });
     }
     }
-    
+
     // Redirect automatico per errori
     <?php if ($error && $redirect_to_home): ?>
     setTimeout(function() {
@@ -385,7 +351,7 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
         }
     }, 5000); // 5 secondi
     <?php endif; ?>
-    
+
     window.addEventListener("scroll", function() {
         const navbar = document.querySelector(".navbar-bostarter");
         if (window.scrollY > 100) {

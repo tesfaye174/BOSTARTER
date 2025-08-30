@@ -37,14 +37,11 @@ $display_message = $message ?: $config['default_message'];
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($config['title']) ?> - BOSTARTER</title>
-    <link href="css/app.css" rel="stylesheet">
+<?php $page_title = htmlspecialchars($config['title']) . ' - BOSTARTER'; include __DIR__ . '/head.php'; ?>
     <style>
         body { 
             font-family: 'Poppins', Arial, sans-serif; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient-hero);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -77,7 +74,7 @@ $display_message = $message ?: $config['default_message'];
         }
         .btn { 
             display: inline-block; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient-hero);
             color: white; 
             padding: 12px 30px; 
             text-decoration: none; 
@@ -88,7 +85,7 @@ $display_message = $message ?: $config['default_message'];
         }
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: var(--shadow-lg);
             color: white;
             text-decoration: none;
         }
@@ -122,6 +119,7 @@ $display_message = $message ?: $config['default_message'];
         </div>
     </div>
     
+    <?php include __DIR__ . '/scripts.php'; ?>
     <script>
         // Auto-redirect dopo 10 secondi
         setTimeout(function() {

@@ -1,8 +1,31 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/init.php';
 require_once __DIR__ . "/../../backend/config/database.php";
 
 $error = "";
+$successMessages = [
+    "Bentornato! Accesso effettuato con successo.",
+    "Eccoti qui! Login completato correttamente.", 
+    "Perfetto! Sei di nuovo online."
+];
+
+$errorMessages = [
+    "wrong_credentials" => [
+        "Attenzione! Le credenziali inserite non sono corrette.",
+        "Email o password errati. Controlla i dati inseriti.",
+        "Credenziali non valide. Riprova con i dati corretti."
+    ],
+    "missing_fields" => [
+        "Non dimenticare di compilare tutti i campi.",
+        "Email e password sono entrambi necessari.",
+        "Per favore, inserisci sia email che password."
+    ],
+    "system_error" => [
+        "Si è verificato un problema tecnico. Riprova tra poco.",
+        "Attenzione! Qualcosa è andato storto dal nostro lato.",
+        "Errore temporaneo del sistema. Ci scusiamo per il disagio."
+    ]
+];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST["email"] ?? "");
@@ -24,13 +47,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: ../dash.php");
                 exit;
             } else {
-                $error = "Credenziali non valide";
+                $error = $errorMessages["wrong_credentials"][array_rand($errorMessages["wrong_credentials"])];
             }
         } catch(Exception $e) {
-            $error = "Errore di sistema: " . $e->getMessage();
+            $error = $errorMessages["system_error"][array_rand($errorMessages["system_error"])];
         }
     } else {
-        $error = "Tutti i campi sono obbligatori";
+        $error = $errorMessages["missing_fields"][array_rand($errorMessages["missing_fields"])];
     }
 }
 ?>
@@ -38,13 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="it">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - BOSTARTER</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../css/app.css">
-    <link rel="stylesheet" href="../css/custom.css">
+<?php $page_title = 'Login'; include __DIR__ . '/../includes/head.php'; ?>
 </head>
 
 <body>
@@ -64,6 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <?php endif; ?>
 
                         <form method="POST">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
                                 <input type="email" class="form-control" id="email" name="email" required>
@@ -91,9 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../js/login.js"></script>
+        <?php include __DIR__ . '/../includes/scripts.php'; ?>
 </body>
 
 </html>

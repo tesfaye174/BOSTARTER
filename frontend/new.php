@@ -1,19 +1,19 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/init.php';
 
 require_once __DIR__ . '/../backend/config/database.php';
 require_once __DIR__ . '/../backend/models/Project.php';
 require_once __DIR__ . '/../backend/utils/RoleManager.php';
 
-// Controlla autenticazione e permessi
+// Controlla se l'utente può creare progetti
 $roleManager = new RoleManager();
 if (!$roleManager->isAuthenticated()) {
-    header('Location: auth/login.php');
+    header('Location: auth/login.php?msg=login_required');
     exit();
 }
 
 if (!$roleManager->hasPermission('can_create_project')) {
-    header('Location: home.php?error=no_permission');
+    header('Location: home.php?error=insufficient_permissions');
     exit();
 }
 
@@ -21,42 +21,52 @@ if (!$roleManager->hasPermission('can_create_project')) {
 $db = Database::getInstance();
 $conn = $db->getConnection();
 
+$successMessages = [
+    'Ottimo! Il tuo progetto è pronto per essere pubblicato.',
+    'Bene! Hai creato un progetto molto interessante.',
+    'Perfetto! Il tuo progetto è ora visibile a tutti.',
+    'Ottimo lavoro! Il progetto è stato caricato con successo.'
+];
+
 $message = '';
 $error = '';
 
-// La creazione del progetto è gestita via JavaScript/API
+// Gestione messaggi da URL
+if (isset($_GET['success'])) {
+    $message = $successMessages[array_rand($successMessages)];
+}
 
+if (isset($_GET['error'])) {
+    $errorTypes = [
+        'validation' => 'Controlla i dati inseriti, alcuni campi necessitano correzioni.',
+        'duplicate' => 'Esiste già un progetto con questo nome. Prova qualcosa di diverso!',
+        'server' => 'Si è verificato un problema tecnico. Riprova tra poco.',
+        'insufficient_permissions' => 'Non hai i permessi necessari per creare progetti.'
+    ];
+    $error = $errorTypes[$_GET['error']] ?? 'Si è verificato un errore imprevisto.';
+}
+
+// Categorie tradotte in italiano
 $categories = [
-    'technology' => 'Technology',
-    'art' => 'Art & Design',
-    'music' => 'Music',
-    'film' => 'Film & Video',
-    'games' => 'Games',
-    'publishing' => 'Publishing',
-    'food' => 'Food & Beverage',
-    'fashion' => 'Fashion',
-    'health' => 'Health & Fitness',
-    'education' => 'Education',
-    'community' => 'Community',
-    'environment' => 'Environment'
+    'tecnologia' => 'Tecnologia & Software',
+    'arte' => 'Arte & Design',
+    'musica' => 'Musica & Audio',
+    'video' => 'Film & Video',
+    'giochi' => 'Videogiochi',
+    'editoria' => 'Editoria & Libri',
+    'cibo' => 'Cibo & Bevande',
+    'moda' => 'Moda & Stile',
+    'salute' => 'Salute & Benessere',
+    'educazione' => 'Educazione',
+    'sociale' => 'Progetti Sociali',
+    'ambiente' => 'Ambiente & Sostenibilità'
 ];
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create New Project - BOSTARTER</title>
-    <!-- Stylesheets -->
-    <link href="css/app.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <!-- Favicon -->
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" href="images/icon-144x144.png">
+<?php $page_title = 'Crea il Tuo Progetto'; include __DIR__ . '/includes/head.php'; ?>
     <style>
     .create-project-container {
         background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
@@ -67,7 +77,7 @@ $categories = [
     .project-form-card {
         background: white;
         border-radius: 16px;
-        box-shadow: 0 10px 40px rgba(90, 135, 250, 0.1);
+    box-shadow: 0 10px 40px rgba(var(--bostarter-secondary-rgb), 0.08);
         padding: 2rem;
         margin-bottom: 2rem;
     }
@@ -77,7 +87,7 @@ $categories = [
     }
 
     .form-section h4 {
-        color: #2C3DB2;
+        color: var(--bostarter-secondary);
         margin-bottom: 1rem;
         font-weight: 600;
     }
@@ -92,12 +102,12 @@ $categories = [
 
     .form-control:focus,
     .form-select:focus {
-        border-color: #5A87FA;
-        box-shadow: 0 0 0 0.2rem rgba(90, 135, 250, 0.25);
+    border-color: var(--bostarter-secondary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bostarter-secondary-rgb), 0.18);
     }
 
     .btn-create {
-        background: linear-gradient(135deg, #5A87FA 0%, #2C3DB2 100%);
+    background: var(--gradient-primary);
         border: none;
         padding: 1rem 2rem;
         border-radius: 8px;
@@ -107,16 +117,10 @@ $categories = [
 
     .btn-create:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(90, 135, 250, 0.3);
+    box-shadow: 0 8px 25px rgba(var(--bostarter-secondary-rgb), 0.18);
     }
 
-    .image-preview {
-        max-width: 200px;
-        max-height: 200px;
-        border-radius: 8px;
-        margin-top: 1rem;
-        display: none;
-    }
+    /* image upload UI removed per streamlined build */
 
     .funding-goal-input {
         position: relative;
@@ -136,6 +140,67 @@ $categories = [
     .funding-goal-input input {
         padding-left: 2rem;
     }
+
+    /* Animazioni e feedback visivo */
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    .form-control.valid {
+        border-color: #28a745;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.8-.8-.8-.8 1.54 1.54L6.7 3.8l-.8-.8-1.06 1.06z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    .form-control.invalid {
+        border-color: #dc3545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 2.4 2.4m0-2.4L5.8 7'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    .btn-create.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .category-help {
+    background: rgba(var(--bostarter-secondary-rgb), 0.06);
+        padding: 0.5rem;
+        border-radius: 6px;
+    border-left: 3px solid var(--bostarter-secondary);
+    }
+
+    .project-type-option {
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .project-type-option:hover {
+    border-color: var(--bostarter-secondary);
+    background-color: rgba(var(--bostarter-secondary-rgb), 0.04);
+    }
+
+    .project-type-option.selected {
+    border-color: var(--bostarter-secondary);
+    background-color: rgba(var(--bostarter-secondary-rgb), 0.06);
+    }
     </style>
 </head>
 
@@ -144,7 +209,7 @@ $categories = [
     <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="index.php">
-                <span style="color: #5A87FA;">BO</span><span style="color: #2C3DB2;">STARTER</span>
+                <span class="brand-bo">BO</span><span class="brand-starter">STARTER</span>
             </a>
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="dash.php">
@@ -159,43 +224,54 @@ $categories = [
                 <div class="col-lg-8">
                     <!-- Header -->
                     <div class="text-center mb-4">
-                        <h1 class="display-5 fw-bold" style="color: #2C3DB2;">Create Your Project</h1>
-                        <p class="lead text-muted">Turn your idea into reality with the support of our community</p>
+                        <h1 class="display-5 fw-bold text-gradient text-gradient-hero">Crea il Tuo Progetto</h1>
+                        <p class="lead text-muted">Trasforma la tua idea in realtà con il supporto della nostra
+                            community</p>
                     </div>
+
                     <?php if ($error): ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i><?php echo htmlspecialchars($error); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     <?php endif; ?>
+
                     <?php if ($message): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="bi bi-check-circle-fill me-2"></i><?php echo htmlspecialchars($message); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     <?php endif; ?>
-                    <!-- Project Form -->
-                    <form method="POST" enctype="multipart/form-data" class="project-form-card">
-                        <!-- Basic Information -->
+
+                    <!-- Form Progetto -->
+                    <form method="POST" class="project-form-card" id="projectForm">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                        <!-- Informazioni Base -->
                         <div class="form-section">
-                            <h4><i class="bi bi-info-circle me-2"></i>Basic Information</h4>
+                            <h4><i class="bi bi-info-circle me-2"></i>Informazioni Principali</h4>
                             <div class="mb-3">
-                                <label for="name" class="form-label fw-semibold">Project Name *</label>
+                                <label for="name" class="form-label fw-semibold">Nome del Progetto *</label>
                                 <input type="text" class="form-control" id="name" name="name"
-                                    placeholder="Enter your project name" required
+                                    placeholder="Dai un nome accattivante al tuo progetto" required
                                     value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>">
+                                <div class="form-text">Scegli un nome che catturi l'attenzione e descriva la tua idea.
+                                </div>
                             </div>
+
                             <div class="mb-3">
-                                <label for="description" class="form-label fw-semibold">Description *</label>
+                                <label for="description" class="form-label fw-semibold">Descrizione del Progetto
+                                    *</label>
                                 <textarea class="form-control" id="description" name="description" rows="5"
-                                    placeholder="Describe your project, what makes it special, and why people should support it"
+                                    placeholder="Racconta la tua storia: cosa stai creando, perché è speciale e perché le persone dovrebbero sostenerti"
                                     required><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
-                                <div class="form-text">Tell your story and explain what you're trying to achieve.</div>
+                                <div class="form-text">Spiega chiaramente la tua visione e cosa rende unico il tuo
+                                    progetto.</div>
                             </div>
+
                             <div class="mb-3">
-                                <label for="category" class="form-label fw-semibold">Category *</label>
+                                <label for="category" class="form-label fw-semibold">Categoria *</label>
                                 <select class="form-select" id="category" name="category" required>
-                                    <option value="">Choose a category</option>
+                                    <option value="">Seleziona la categoria più adatta</option>
                                     <?php foreach ($categories as $value => $label): ?>
                                     <option value="<?php echo $value; ?>"
                                         <?php echo (isset($_POST['category']) && $_POST['category'] === $value) ? 'selected' : ''; ?>>
@@ -203,207 +279,314 @@ $categories = [
                                     </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="form-text">Aiuta le persone a trovare il tuo progetto scegliendo la
+                                    categoria giusta.</div>
                             </div>
                         </div>
-                        <!-- Funding Details -->
+
+                        <!-- Dettagli Finanziamento -->
                         <div class="form-section">
-                            <h4><i class="bi bi-currency-dollar me-2"></i>Funding Details</h4>
+                            <h4><i class="bi bi-currency-euro me-2"></i>Obiettivo Finanziario</h4>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <label for="funding_goal" class="form-label fw-semibold">Funding Goal *</label>
-                                    <div class="funding-goal-input">
+                                    <label for="funding_goal" class="form-label fw-semibold">Obiettivo di Raccolta (€)
+                                        *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">€</span>
                                         <input type="number" class="form-control" id="funding_goal" name="funding_goal"
-                                            min="1" step="0.01" placeholder="0.00" required
+                                            min="100" step="50" placeholder="1000" required
                                             value="<?php echo isset($_POST['funding_goal']) ? $_POST['funding_goal'] : ''; ?>">
                                     </div>
-                                    <div class="form-text">Set a realistic funding goal for your project.</div>
+                                    <div class="form-text">Stabilisci un obiettivo realistico per il tuo progetto
+                                        (minimo €100).</div>
                                 </div>
+
                                 <div class="col-md-6">
-                                    <label for="deadline" class="form-label fw-semibold">Campaign Deadline *</label>
+                                    <label for="deadline" class="form-label fw-semibold">Data di Scadenza *</label>
                                     <input type="date" class="form-control" id="deadline" name="deadline" required
                                         min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>"
+                                        max="<?php echo date('Y-m-d', strtotime('+90 days')); ?>"
                                         value="<?php echo isset($_POST['deadline']) ? $_POST['deadline'] : ''; ?>">
-                                    <div class="form-text">Choose when your campaign should end.</div>
+                                    <div class="form-text">Scegli quando la tua campagna dovrebbe terminare (massimo 90
+                                        giorni).</div>
                                 </div>
                             </div>
                         </div>
-                        <!-- Project Image -->
+                        <!-- Immagine del progetto rimossa (upload non supportato) -->
+
+                        <!-- Tipo di Progetto -->
                         <div class="form-section">
-                            <h4><i class="bi bi-image me-2"></i>Project Image</h4>
+                            <h4><i class="bi bi-gear me-2"></i>Tipologia Progetto</h4>
                             <div class="mb-3">
-                                <label for="image" class="form-label fw-semibold">Upload Project Image</label>
-                                <input type="file" class="form-control" id="image" name="image"
-                                    accept="image/jpeg,image/png,image/gif,image/webp" onchange="previewImage(this)">
-                                <div class="form-text">Upload a compelling image that represents your project (JPG, PNG,
-                                    GIF, WebP - Max 5MB).</div>
-                                <img id="imagePreview" class="image-preview" alt="Image preview">
+                                <label class="form-label fw-semibold">Che tipo di progetto stai creando? *</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="project_type"
+                                                id="software" value="software" required>
+                                            <label class="form-check-label" for="software">
+                                                <i class="bi bi-code-slash me-2"></i>Software/Digitale
+                                            </label>
+                                        </div>
+                                        <div class="form-text">App, siti web, giochi digitali, servizi online</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="project_type"
+                                                id="hardware" value="hardware" required>
+                                            <label class="form-check-label" for="hardware">
+                                                <i class="bi bi-cpu me-2"></i>Hardware/Fisico
+                                            </label>
+                                        </div>
+                                        <div class="form-text">Prodotti fisici, dispositivi, oggetti tangibili</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <!-- Submit Buttons -->
+
+                        <!-- Pulsanti di Azione -->
                         <div class="d-flex justify-content-between align-items-center">
                             <a href="dash.php" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                                <i class="bi bi-arrow-left me-2"></i>Annulla
                             </a>
-                            <button type="submit" class="btn btn-create text-white">
-                                <i class="bi bi-plus-circle me-2"></i>Create Project
+                            <button type="submit" class="btn btn-create text-white" id="submitBtn">
+                                <i class="bi bi-plus-circle me-2"></i><span id="btnText">Crea Progetto</span>
                             </button>
                         </div>
-                    </form>
                 </div>
+                </form>
             </div>
         </div>
     </div>
+    </div>
     <!-- Scripts -->
-    <script src="js/app.js"></script>
     <script>
-    function previewImage(input) {
-        const preview = document.getElementById('imagePreview');
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            }
-            reader.readAsDataURL(input.files[0]);
-        } else {
-            preview.style.display = 'none';
-        }
-    }
-    // Form validation
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const name = document.getElementById('name').value.trim();
-        const description = document.getElementById('description').value.trim();
-        const category = document.getElementById('category').value;
-        const fundingGoal = parseFloat(document.getElementById('funding_goal').value);
-        const deadline = document.getElementById('deadline').value;
-        
-        if (!name || !description || !category || !fundingGoal || !deadline) {
-            e.preventDefault();
-            alert('Please fill in all required fields.');
-            return;
-        }
-        
-        if (fundingGoal <= 0) {
-            e.preventDefault();
-            alert('Funding goal must be greater than 0.');
-            return;
-        }
-        
-        const selectedDate = new Date(deadline);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (selectedDate <= today) {
-            e.preventDefault();
-            alert('Deadline must be in the future.');
-            return;
-        }
-        
-        // Check if project name already exists
-        e.preventDefault(); // Prevent default submission
-        
-        fetch('../backend/api/check.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'check_project_name',
-                name: name
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.exists) {
-                alert('Un progetto con questo nome esiste già. Scegli un nome diverso.');
-            } else {
-                // Name is unique, submit the form
-                e.target.submit();
-            }
-        })
-        .catch(error => {
-            console.error('Error checking project name:', error);
-            // If check fails, allow submission anyway
-            e.target.submit();
-        });
-    });
-    // Character counter for description
+    // Image upload/preview removed — uploads not supported in this build.
+
+    // Contatore caratteri per la descrizione (protetto)
     const descriptionTextarea = document.getElementById('description');
     const maxLength = 1000;
 
     function updateCharacterCount() {
+        if (!descriptionTextarea) return;
         const remaining = maxLength - descriptionTextarea.value.length;
-        const counter = document.getElementById('charCounter');
+        let counter = document.getElementById('charCounter');
+
         if (!counter) {
-            const counterDiv = document.createElement('div');
-            counterDiv.id = 'charCounter';
-            counterDiv.className = 'form-text text-end';
-            descriptionTextarea.parentNode.appendChild(counterDiv);
+            counter = document.createElement('div');
+            counter.id = 'charCounter';
+            counter.className = 'form-text text-end';
+            descriptionTextarea.parentNode.appendChild(counter);
         }
-        document.getElementById('charCounter').textContent = `${remaining} characters remaining`;
-        if (remaining < 0) {
-            document.getElementById('charCounter').classList.add('text-danger');
+
+        if (remaining >= 0) {
+            counter.textContent = `${remaining} caratteri rimanenti`;
+            counter.className = 'form-text text-end text-muted';
         } else {
-            document.getElementById('charCounter').classList.remove('text-danger');
+            counter.textContent = `Hai superato di ${Math.abs(remaining)} caratteri il limite!`;
+            counter.className = 'form-text text-end text-danger';
         }
     }
-    descriptionTextarea.addEventListener('input', updateCharacterCount);
-    descriptionTextarea.setAttribute('maxlength', maxLength);
-    updateCharacterCount();
-    
-    // Gestione submit del form via API
-    document.getElementById('projectForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
-        const projectData = {
-            nome: formData.get('name'),
-            descrizione: formData.get('description'),
-            tipo: getCategoryType(formData.get('category')),
-            budget_richiesto: parseFloat(formData.get('funding_goal')),
-            data_limite: formData.get('deadline'),
-            categoria: formData.get('category')
-        };
-        
-        try {
-            const response = await fetch('../backend/api/project.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(projectData)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                alert('Progetto creato con successo!');
-                window.location.href = 'home.php';
-            } else {
-                alert('Errore: ' + result.error);
+
+    if (descriptionTextarea) {
+        descriptionTextarea.addEventListener('input', updateCharacterCount);
+        descriptionTextarea.setAttribute('maxlength', maxLength);
+        updateCharacterCount();
+    }
+
+    // Validazione in tempo reale (protetta)
+    function validateForm() {
+        const nameEl = document.getElementById('name');
+        const descriptionEl = document.getElementById('description');
+        const categoryEl = document.getElementById('category');
+        const fundingEl = document.getElementById('funding_goal');
+        const deadlineEl = document.getElementById('deadline');
+        const projectType = document.querySelector('input[name="project_type"]:checked');
+
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+
+        if (!submitBtn || !btnText) return;
+
+        const name = nameEl ? nameEl.value.trim() : '';
+        const description = descriptionEl ? descriptionEl.value.trim() : '';
+        const category = categoryEl ? categoryEl.value : '';
+        const fundingGoal = fundingEl ? parseFloat(fundingEl.value) : 0;
+        const deadline = deadlineEl ? deadlineEl.value : '';
+
+        const isValid = name && description && category && fundingGoal >= 100 && deadline && projectType;
+
+        if (isValid) {
+            submitBtn.disabled = false;
+            submitBtn.className = 'btn btn-create text-white';
+            btnText.textContent = 'Crea Progetto';
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.className = 'btn btn-create text-white disabled';
+            btnText.textContent = 'Completa i campi richiesti';
+        }
+    }
+
+    // Aggiungi validazione in tempo reale solo se gli elementi esistono
+    ['name', 'description', 'category', 'funding_goal', 'deadline'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', validateForm);
+        el.addEventListener('change', validateForm);
+    });
+
+    // Semplici check (rimosso logging verboso)
+    // If message helpers missing, UI will fall back to alerts.
+
+    document.querySelectorAll('input[name="project_type"]').forEach(radio => {
+        radio.addEventListener('change', validateForm);
+    });
+
+    // Gestione submit del form
+    const projectForm = document.getElementById('projectForm');
+    if (projectForm) {
+        projectForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+                    // Form submit
+
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            if (!submitBtn || !btnText) return;
+
+            // Mostra stato di caricamento
+            submitBtn.disabled = true;
+            btnText.innerHTML = '<i class="bi bi-arrow-clockwise me-2 spin"></i>Creazione in corso...';
+
+            // Controlla se le funzioni di messaggio esistono
+            let loadingMessage = null;
+            if (typeof showLoading === 'function') {
+                try { loadingMessage = showLoading('Stiamo creando il tuo progetto...'); } catch (e) { /* ignore */ }
             }
-        } catch (error) {
-            alert('Errore di connessione: ' + error.message);
+
+            const formData = new FormData(this);
+            const projectData = {
+                nome: formData.get('name'),
+                descrizione: formData.get('description'),
+                tipo: formData.get('project_type'),
+                budget_richiesto: parseFloat(formData.get('funding_goal')),
+                data_limite: formData.get('deadline'),
+                categoria: formData.get('category'),
+                csrf_token: formData.get('csrf_token')
+            };
+
+            // projectData prepared
+
+            try {
+                // Sending request to backend
+
+                // Always send JSON payload (uploads not supported)
+                const fetchOptions = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(projectData)
+                };
+
+                const response = await fetch('../backend/api/project.php', fetchOptions);
+
+                const result = await response.json();
+
+                // Rimuovi il messaggio di caricamento in modo sicuro
+                try {
+                    if (loadingMessage && loadingMessage.parentNode) loadingMessage.parentNode.removeChild(
+                        loadingMessage);
+                } catch (e) {
+                    /* ignore */ }
+
+                if (result && result.success) {
+                    const successText = result.message ||
+                        'Fantastico! Il tuo progetto è stato creato con successo.';
+                    if (typeof showSuccess === 'function') {
+                        showSuccess(successText);
+                    } else {
+                        alert(successText);
+                    }
+                    setTimeout(() => {
+                        window.location.href = 'dash.php';
+                    }, 1400);
+                } else {
+                    const errorMsg = (result && (result.message || result.error)) ||
+                        'Si è verificato un errore durante la creazione del progetto.';
+                    if (typeof showError === 'function') {
+                        showError(errorMsg);
+                    } else {
+                        alert('Errore: ' + errorMsg);
+                    }
+                    // Ripristina il pulsante
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Crea Progetto';
+                }
+            } catch (error) {
+                // network or unexpected error
+
+                // Rimuovi il messaggio di caricamento
+                try {
+                    if (loadingMessage && loadingMessage.parentNode) loadingMessage.parentNode.removeChild(
+                        loadingMessage);
+                } catch (e) {}
+
+                const errorMsg = 'Problemi di connessione. Verifica la tua connessione e riprova.';
+                if (typeof showError === 'function') {
+                    showError(errorMsg);
+                } else {
+                    alert(errorMsg);
+                }
+
+                // Ripristina il pulsante
+                submitBtn.disabled = false;
+                btnText.textContent = 'Crea Progetto';
+            }
+        });
+    }
+
+    // Inizializza la validazione
+    validateForm();
+
+    // Test delle funzioni di messaggio (no verbose logging)
+
+    // Suggerimenti dinamici per le categorie
+    const categoryHelp = {
+        'tecnologia': 'Perfetto per app, software, innovazioni tech e startup digitali.',
+        'arte': 'Ideale per opere d\'arte, installazioni, progetti creativi e design.',
+        'musica': 'Ottimo per album, concerti, strumenti musicali e produzioni audio.',
+        'video': 'Adatto per film, documentari, web series e contenuti video.',
+        'giochi': 'Perfetto per videogiochi, giochi da tavolo e esperienze interattive.',
+        'editoria': 'Ideale per libri, riviste, fumetti e contenuti editoriali.',
+        'cibo': 'Ottimo per ristoranti, prodotti alimentari e esperienze culinarie.',
+        'moda': 'Adatto per abbigliamento, accessori e progetti di moda.',
+        'salute': 'Perfetto per prodotti benessere, fitness e innovazioni mediche.',
+        'educazione': 'Ideale per corsi, materiali didattici e progetti formativi.',
+        'sociale': 'Ottimo per cause sociali, volontariato e impatto sociale.',
+        'ambiente': 'Adatto per progetti green, sostenibilità e tutela ambientale.'
+    };
+
+    document.getElementById('category').addEventListener('change', function() {
+        const selectedCategory = this.value;
+        let helpText = this.parentNode.querySelector('.category-help');
+
+        if (selectedCategory && categoryHelp[selectedCategory]) {
+            if (!helpText) {
+                helpText = document.createElement('div');
+                helpText.className = 'category-help form-text text-info mt-2';
+                helpText.innerHTML = '<i class="bi bi-lightbulb me-1"></i>';
+                this.parentNode.appendChild(helpText);
+            }
+            helpText.innerHTML = '<i class="bi bi-lightbulb me-1"></i>' + categoryHelp[selectedCategory];
+        } else if (helpText) {
+            helpText.remove();
         }
     });
-    
-    function getCategoryType(category) {
-        const categoryToType = {
-            'technology': 'software',
-            'games': 'software',
-            'publishing': 'software',
-            'education': 'software',
-            'community': 'software',
-            'art': 'hardware',
-            'music': 'hardware',
-            'film': 'hardware',
-            'food': 'hardware',
-            'fashion': 'hardware',
-            'health': 'hardware',
-            'environment': 'hardware'
-        };
-        return categoryToType[category] || 'software';
-    }
     </script>
+
+    <?php include __DIR__ . '/includes/scripts.php'; ?>
 </body>
 
 </html>

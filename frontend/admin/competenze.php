@@ -1,9 +1,9 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/init.php';
 require_once __DIR__ . "/../../backend/config/database.php";
 
 // Verifica autenticazione admin
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || ($_SESSION['tipo_utente'] ?? '') !== 'amministratore') {
     header("Location: ../auth/login.php");
     exit();
 }
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $competenza_id = intval($_POST['competenza_id']);
             
             // Verifica che non sia utilizzata
-            $stmt = $conn->prepare("SELECT COUNT(*) as uso FROM skill_utenti WHERE competenza_id = ?");
+            $stmt = $conn->prepare("SELECT COUNT(*) as uso FROM skill_utente WHERE competenza_id = ?");
             $stmt->execute([$competenza_id]);
             $uso = $stmt->fetch()['uso'];
             
@@ -55,7 +55,7 @@ $stmt = $conn->query("
         COUNT(su.utente_id) as utenti_utilizzatori,
         COUNT(sp.profilo_id) as profili_richiesti
     FROM competenze c
-    LEFT JOIN skill_utenti su ON c.id = su.competenza_id
+    LEFT JOIN skill_utente su ON c.id = su.competenza_id
     LEFT JOIN skill_profili sp ON c.id = sp.competenza_id
     GROUP BY c.id, c.nome
     ORDER BY c.nome
@@ -66,7 +66,7 @@ $competenze = $stmt->fetchAll();
 $stmt = $conn->query("SELECT COUNT(*) as totale FROM competenze");
 $stats_competenze = $stmt->fetch()['totale'];
 
-$stmt = $conn->query("SELECT COUNT(*) as totale FROM utenti WHERE tipo_utente = 'admin'");
+$stmt = $conn->query("SELECT COUNT(*) as totale FROM utenti WHERE tipo_utente = 'amministratore'");
 $stats_admin = $stmt->fetch()['totale'];
 
 $stmt = $conn->query("SELECT COUNT(*) as totale FROM utenti WHERE tipo_utente = 'creatore'");
@@ -78,16 +78,14 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
 
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pannello Amministratore - BOSTARTER</title>
-    <link href="../css/bootstrap.css" rel="stylesheet">
-    <link href="../css/app.css" rel="stylesheet">
+    <?php $page_title = 'Pannello Amministratore'; include __DIR__ . '/../includes/head.php'; ?>
 </head>
+
 <body>
-    <?php include '../includes/navbar.php'; ?>
-    
+    <?php include __DIR__ . '/../includes/navbar.php'; ?>
+
     <div class="container mt-4">
         <div class="row">
             <div class="col-md-12">
@@ -97,13 +95,13 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                     </div>
                     <div class="card-body">
                         <?php if (isset($success_message)): ?>
-                            <div class="alert alert-success"><?= $success_message ?></div>
+                        <div class="alert alert-success"><?= $success_message ?></div>
                         <?php endif; ?>
-                        
+
                         <?php if (isset($error_message)): ?>
-                            <div class="alert alert-danger"><?= $error_message ?></div>
+                        <div class="alert alert-danger"><?= $error_message ?></div>
                         <?php endif; ?>
-                        
+
                         <!-- Statistiche generali -->
                         <div class="row mb-4">
                             <div class="col-md-3">
@@ -139,7 +137,7 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Form aggiunta competenza -->
                         <div class="card mb-4">
                             <div class="card-header">
@@ -147,12 +145,14 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                             </div>
                             <div class="card-body">
                                 <form method="POST">
+                                    <input type="hidden" name="csrf_token"
+                                        value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                                     <input type="hidden" name="action" value="add_competenza">
                                     <div class="row">
                                         <div class="col-md-8">
-                                            <input type="text" name="nome" class="form-control" 
-                                                   placeholder="Nome della competenza (es. JavaScript, PHP, AI, Machine Learning...)" 
-                                                   required>
+                                            <input type="text" name="nome" class="form-control"
+                                                placeholder="Nome della competenza (es. JavaScript, PHP, AI, Machine Learning...)"
+                                                required>
                                         </div>
                                         <div class="col-md-4">
                                             <button type="submit" class="btn btn-success">
@@ -163,7 +163,7 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                                 </form>
                             </div>
                         </div>
-                        
+
                         <!-- Lista competenze -->
                         <div class="card">
                             <div class="card-header">
@@ -171,55 +171,59 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                             </div>
                             <div class="card-body">
                                 <?php if (empty($competenze)): ?>
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle"></i> Nessuna competenza ancora inserita.
-                                    </div>
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> Nessuna competenza ancora inserita.
+                                </div>
                                 <?php else: ?>
-                                    <div class="table-responsive">
-                                        <table class="table table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>ID</th>
-                                                    <th>Nome Competenza</th>
-                                                    <th>Utenti che la possiedono</th>
-                                                    <th>Profili che la richiedono</th>
-                                                    <th>Azioni</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($competenze as $comp): ?>
-                                                    <tr>
-                                                        <td><?= $comp['id'] ?></td>
-                                                        <td><strong><?= htmlspecialchars($comp['nome']) ?></strong></td>
-                                                        <td>
-                                                            <span class="badge bg-primary"><?= $comp['utenti_utilizzatori'] ?></span>
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge bg-info"><?= $comp['profili_richiesti'] ?></span>
-                                                        </td>
-                                                        <td>
-                                                            <?php if ($comp['utenti_utilizzatori'] == 0 && $comp['profili_richiesti'] == 0): ?>
-                                                                <form method="POST" style="display:inline;">
-                                                                    <input type="hidden" name="action" value="delete_competenza">
-                                                                    <input type="hidden" name="competenza_id" value="<?= $comp['id'] ?>">
-                                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                                            onclick="return confirm('Sei sicuro di voler eliminare questa competenza?')">
-                                                                        <i class="fas fa-trash"></i> Elimina
-                                                                    </button>
-                                                                </form>
-                                                            <?php else: ?>
-                                                                <span class="badge bg-warning">In uso</span>
-                                                            <?php endif; ?>
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Nome Competenza</th>
+                                                <th>Utenti che la possiedono</th>
+                                                <th>Profili che la richiedono</th>
+                                                <th>Azioni</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($competenze as $comp): ?>
+                                            <tr>
+                                                <td><?= $comp['id'] ?></td>
+                                                <td><strong><?= htmlspecialchars($comp['nome']) ?></strong></td>
+                                                <td>
+                                                    <span
+                                                        class="badge bg-primary"><?= $comp['utenti_utilizzatori'] ?></span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info"><?= $comp['profili_richiesti'] ?></span>
+                                                </td>
+                                                <td>
+                                                    <?php if ($comp['utenti_utilizzatori'] == 0 && $comp['profili_richiesti'] == 0): ?>
+                                                    <form method="POST" class="d-inline">
+                                                        <input type="hidden" name="csrf_token"
+                                                            value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                                                        <input type="hidden" name="action" value="delete_competenza">
+                                                        <input type="hidden" name="competenza_id"
+                                                            value="<?= $comp['id'] ?>">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('Sei sicuro di voler eliminare questa competenza?')">
+                                                            <i class="fas fa-trash"></i> Elimina
+                                                        </button>
+                                                    </form>
+                                                    <?php else: ?>
+                                                    <span class="badge bg-warning">In uso</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                                 <?php endif; ?>
                             </div>
                         </div>
-                        
+
                         <!-- Competenze più utilizzate -->
                         <div class="card mt-4">
                             <div class="card-header">
@@ -234,7 +238,7 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                                         COUNT(sp.profilo_id) as profili_richiedenti,
                                         (COUNT(su.utente_id) + COUNT(sp.profilo_id)) as popolarita_totale
                                     FROM competenze c
-                                    LEFT JOIN skill_utenti su ON c.id = su.competenza_id
+                                    LEFT JOIN skill_utente su ON c.id = su.competenza_id
                                     LEFT JOIN skill_profili sp ON c.id = sp.competenza_id
                                     GROUP BY c.id, c.nome
                                     HAVING popolarita_totale > 0
@@ -243,27 +247,26 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                                 ");
                                 $top_competenze = $stmt->fetchAll();
                                 ?>
-                                
+
                                 <?php if (empty($top_competenze)): ?>
-                                    <div class="alert alert-info">Nessuna competenza ancora utilizzata.</div>
+                                <div class="alert alert-info">Nessuna competenza ancora utilizzata.</div>
                                 <?php else: ?>
-                                    <div class="row">
-                                        <?php foreach ($top_competenze as $i => $comp): ?>
-                                            <div class="col-md-6 mb-2">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span><?= ($i+1) ?>. <strong><?= htmlspecialchars($comp['nome']) ?></strong></span>
-                                                    <div>
-                                                        <span class="badge bg-primary"><?= $comp['utenti_con_skill'] ?> utenti</span>
-                                                        <span class="badge bg-info"><?= $comp['profili_richiedenti'] ?> profili</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
+                                <div class="row">
+                                    <?php foreach ($top_competenze as $i => $comp): ?>
+                                    <div class="col-md-6 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span><?= ($i+1) ?>.
+                                                <strong><?= htmlspecialchars($comp['nome']) ?></strong></span>
+                                            <span class="badge bg-info"><?= $comp['profili_richiedenti'] ?>
+                                                profili</span>
+                                        </div>
                                     </div>
+                                    <?php endforeach; ?>
+                                </div>
                                 <?php endif; ?>
                             </div>
                         </div>
-                        
+
                         <div class="mt-4">
                             <a href="../home.php" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Torna alla Dashboard
@@ -274,8 +277,9 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
             </div>
         </div>
     </div>
-    
+
     <script src="../js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
 </body>
+
 </html>

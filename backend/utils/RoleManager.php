@@ -29,6 +29,7 @@ class RoleManager {
         
         switch ($permission) {
             case 'create_project':
+            case 'can_create_project':
                 return in_array($userType, ['creatore', 'amministratore']);
                 
             case 'edit_project':
@@ -152,6 +153,10 @@ class RoleManager {
             echo json_encode(['error' => 'Accesso riservato agli amministratori']);
             exit;
         }
+    }
+    
+    public function isAdmin() {
+        return $this->getUserType() === 'amministratore';
     }
 }
 ?>

@@ -1,10 +1,25 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+// Safer CORS: allow specific origin if present, otherwise same-origin only
+$allowedOrigin = null;
+if (!empty($_SERVER['HTTP_ORIGIN'])) {
+    $origin = $_SERVER['HTTP_ORIGIN'];
+    // Basic origin validation - allow same host or localhost for dev
+    $parsed = parse_url($origin);
+    $host = $parsed['host'] ?? '';
+    if (in_array($host, [$_SERVER['HTTP_HOST'] ?? '', 'localhost', '127.0.0.1'])) {
+        $allowedOrigin = $origin;
+    }
+}
+if ($allowedOrigin) {
+    header('Access-Control-Allow-Origin: ' . $allowedOrigin);
+    header('Access-Control-Allow-Credentials: true');
+} else {
+    header('Access-Control-Allow-Origin: same-origin');
+}
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
-header('Access-Control-Allow-Credentials: true');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
@@ -16,10 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-require_once __DIR__ . '/../services/AuthService.php';
-require_once __DIR__ . '/../utils/ApiResponse.php';
-
-use BOSTARTER\Utils\AuthService;
+// Carica l'autoloader personalizzato BOSTARTER
+require_once __DIR__ . '/../autoload.php';
 
 try {
     $input = json_decode(file_get_contents('php://input'), true);
@@ -43,7 +56,7 @@ try {
             'data_registrazione' => $user_data['created_at']
         ],
         'session_id' => session_id()  
-    ], 'Login effettuato con successo');
+    ], MessageManager::personalizedSuccess('login', $user_data['nome']));
 
 } catch (Exception $e) {
     $errorMessage = $e->getMessage();
