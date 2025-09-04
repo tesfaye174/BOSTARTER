@@ -2,28 +2,31 @@
 require_once __DIR__ . '/../config/database.php';
 
 class RoleManager {
+    // Database connection
     private $db;
     
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
     }
     
+    // Verifica presenza utente loggato
     public function isAuthenticated() {
         return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
     }
     
+    // Tipo utente: admin, creatore, standard
     public function getUserType() {
-        if (!$this->isAuthenticated()) {
-            return null;
-        }
-        
-        return $_SESSION['user_type'] ?? null;
+        if (!$this->isAuthenticated()) return null;
+        return $_SESSION['user_tipo'] 
+            ?? ($_SESSION['user'][ 'tipo_utente' ] ?? ($_SESSION['user_type'] ?? null));
     }
     
+    // ID utente corrente
     public function getUserId() {
         return $_SESSION['user_id'] ?? null;
     }
     
+    // Controllo permessi specifici
     public function hasPermission($permission) {
         $userType = $this->getUserType();
         

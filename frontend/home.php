@@ -1,63 +1,52 @@
 <?php
-/**
- * BOSTARTER - Homepage
- * Pagina principale della piattaforma
- */
+// Homepage principale
 require_once __DIR__ . '/includes/init.php';
 
 $page_title = 'Home';
 
-// Gestione messaggi di logout
+// Prepara messaggio di logout
 $logout_message = '';
 if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
     $username = $_GET['user'] ?? '';
-    if ($username) {
-        $logout_message = "Arrivederci " . htmlspecialchars($username) . "! Grazie per aver utilizzato BOSTARTER.";
-    } else {
-        $logout_message = "Logout effettuato con successo! Grazie per aver utilizzato BOSTARTER.";
-    }
+    $logout_message = $username 
+        ? "Arrivederci " . htmlspecialchars($username) . "! Grazie per aver utilizzato BOSTARTER."
+        : "Logout effettuato con successo! Grazie per aver utilizzato BOSTARTER.";
 }
 
 // Recupera progetti in evidenza
+$progetti_evidenza = [];
 try {
     $db = Database::getInstance();
     $conn = $db->getConnection();
+
     $stmt = $conn->query("
-        SELECT p.*, u.nickname as creatore_nickname,
-               COALESCE(SUM(f.importo), 0) as raccolti,
-               COUNT(f.id) as numero_finanziatori
-        FROM progetti p 
-        JOIN utenti u ON p.creatore_id = u.id 
-        LEFT JOIN finanziamenti f ON p.id = f.progetto_id 
-        WHERE p.stato = 'aperto'
-        GROUP BY p.id 
-        ORDER BY raccolti DESC, p.created_at DESC 
-        LIMIT 6
+        SELECT id, nome, descrizione, foto, budget, data_limite 
+        FROM progetti 
+        WHERE stato = 'aperto' 
+        ORDER BY data_inserimento DESC 
+        LIMIT 3
     ");
-    $progetti_evidenza = $stmt->fetchAll();
+    $progetti_evidenza = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
-    $progetti_evidenza = [];
+    error_log('Errore nel recupero dei progetti in evidenza: ' . $e->getMessage());
 }
 
 // Recupera statistiche generali
+$stats = [];
 try {
     $stmt = $conn->query("
         SELECT 
-            COUNT(DISTINCT p.id) as totale_progetti,
-            COUNT(DISTINCT CASE WHEN p.stato = 'aperto' THEN p.id END) as progetti_attivi,
-            COALESCE(SUM(f.importo), 0) as totale_raccolto,
-            COUNT(DISTINCT u.id) as totale_utenti
-        FROM progetti p 
-        LEFT JOIN finanziamenti f ON p.id = f.progetto_id 
-        CROSS JOIN utenti u
+            (SELECT COUNT(*) FROM utenti WHERE tipo = 'creatore') AS creatori_totali,
+            (SELECT COUNT(*) FROM progetti WHERE stato = 'aperto') AS progetti_aperti,
+            (SELECT SUM(importo) FROM finanziamenti) AS fondi_totali
     ");
-    $stats = $stmt->fetch();
+    $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
+    error_log('Errore nel recupero delle statistiche generali: ' . $e->getMessage());
     $stats = [
-        'totale_progetti' => 0,
-        'progetti_attivi' => 0,
-        'totale_raccolto' => 0,
-        'totale_utenti' => 0
+        'creatori_totali' => 0,
+        'progetti_aperti' => 0,
+        'fondi_totali' => 0
     ];
 }
 ?>
@@ -100,17 +89,16 @@ try {
                             <a href="new.php" class="btn btn-warning btn-lg px-4">
                                 <i class="fas fa-plus me-2"></i>Crea Progetto
                             </a>
-                            <a href="dash.php" class="btn btn-outline-light btn-lg px-4">
-                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                            </a>
-                            <?php else: ?>
-                            <a href="auth/signup.php" class="btn btn-warning btn-lg px-4">
-                                <i class="fas fa-user-plus me-2"></i>Registrati
-                            </a>
-                            <a href="auth/login.php" class="btn btn-outline-light btn-lg px-4">
-                                <i class="fas fa-sign-in-alt me-2"></i>Accedi
-                            </a>
-                            <?php endif; ?>
+                            <a href="view.php" class="btn btn-outline-light btn-lg px-4">
+                                <i class="fas fa-search me-2"></i>Esplora Progetti
+                                <?php else: ?>
+                                <a href="auth/signup.php" class="btn btn-warning btn-lg px-4">
+                                    <i class="fas fa-user-plus me-2"></i>Registrati
+                                </a>
+                                <a href="auth/login.php" class="btn btn-outline-light btn-lg px-4">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Accedi
+                                </a>
+                                <?php endif; ?>
                         </div>
                     </div>
                     <div class="col-lg-6 text-center">
@@ -128,7 +116,8 @@ try {
                     <div class="card h-100 project-card animate-fade-up">
                         <div class="card-body">
                             <i class="fas fa-project-diagram text-primary fa-3x mb-3"></i>
-                            <h3 class="fw-bold text-primary stats-number"><?= number_format($stats['totale_progetti']) ?></h3>
+                            <h3 class="fw-bold text-primary stats-number">
+                                <?= number_format($stats['totale_progetti']) ?></h3>
                             <p class="text-muted mb-0 stats-label">Progetti Totali</p>
                         </div>
                     </div>
@@ -137,7 +126,8 @@ try {
                     <div class="card h-100 project-card animate-fade-up" style="animation-delay: 0.1s">
                         <div class="card-body">
                             <i class="fas fa-rocket text-success fa-3x mb-3"></i>
-                            <h3 class="fw-bold text-success stats-number"><?= number_format($stats['progetti_attivi']) ?></h3>
+                            <h3 class="fw-bold text-success stats-number">
+                                <?= number_format($stats['progetti_attivi']) ?></h3>
                             <p class="text-muted mb-0 stats-label">Progetti Attivi</p>
                         </div>
                     </div>
@@ -146,7 +136,8 @@ try {
                     <div class="card h-100 project-card animate-fade-up" style="animation-delay: 0.2s">
                         <div class="card-body">
                             <i class="fas fa-euro-sign text-warning fa-3x mb-3"></i>
-                            <h3 class="fw-bold text-warning stats-number">€<?= number_format($stats['totale_raccolto']) ?></h3>
+                            <h3 class="fw-bold text-warning stats-number">
+                                €<?= number_format($stats['totale_raccolto']) ?></h3>
                             <p class="text-muted mb-0 stats-label">Fondi Raccolti</p>
                         </div>
                     </div>
@@ -155,7 +146,8 @@ try {
                     <div class="card h-100 project-card animate-fade-up" style="animation-delay: 0.3s">
                         <div class="card-body">
                             <i class="fas fa-users text-info fa-3x mb-3"></i>
-                            <h3 class="fw-bold text-info stats-number"><?= number_format($stats['totale_utenti']) ?></h3>
+                            <h3 class="fw-bold text-info stats-number"><?= number_format($stats['totale_utenti']) ?>
+                            </h3>
                             <p class="text-muted mb-0 stats-label">Utenti Registrati</p>
                         </div>
                     </div>
@@ -295,7 +287,7 @@ try {
     </div>
 
     <?php include __DIR__ . '/includes/scripts.php'; ?>
-    
+
     <script>
     // Initialize logout success message if present
     document.addEventListener('DOMContentLoaded', function() {

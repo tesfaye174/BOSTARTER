@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="it">
 
 <head>
-<?php $page_title = 'Login'; include __DIR__ . '/../includes/head.php'; ?>
+    <?php $page_title = 'Login'; include __DIR__ . '/../includes/head.php'; ?>
 </head>
 
 <body>
@@ -81,7 +81,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <?php endif; ?>
 
                         <form method="POST">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                            <input type="hidden" name="csrf_token"
+                                value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
                                 <input type="email" class="form-control" id="email" name="email" required>
@@ -89,6 +90,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
                                 <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="security_code" class="form-label">Codice sicurezza (solo admin)</label>
+                                <input type="text" class="form-control" id="security_code" name="security_code"
+                                    placeholder="Se sei admin, inserisci il codice" autocomplete="one-time-code">
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Accedi</button>
                         </form>
@@ -100,14 +106,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                         <hr>
                         <div class="text-muted small">
-                            <strong>Account di test:</strong><br>
-
+                            <strong>Account di test:</strong>
+                            <br>
+                            <strong>Email:</strong> admin@bostarter.com
+                            <br>
+                            <strong>Password:</strong> admin123
+                            <br>string>Codice sicurezza:</strong> ADMIN2024
+                            < </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
         <?php include __DIR__ . '/../includes/scripts.php'; ?>
 </body>

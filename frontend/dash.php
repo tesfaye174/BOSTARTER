@@ -3,6 +3,7 @@ require_once __DIR__ . '/includes/init.php';
 require_once __DIR__ . "/../backend/config/database.php";
 
 if (!isset($_SESSION["user_id"])) {
+    session_regenerate_id(true); // Rigenera l'ID sessione per sicurezza
     header("Location: auth/login.php");
     exit;
 }
@@ -49,38 +50,45 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
-<?php $page_title = 'Dashboard'; include __DIR__ . '/includes/head.php'; ?>
+    <?php $page_title = 'Dashboard'; include __DIR__ . '/includes/head.php'; ?>
 </head>
+
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top glass-effect">
         <div class="container">
             <a class="navbar-brand fw-bold" href="home.php">
                 <i class="fas fa-rocket me-2"></i>BOSTARTER
             </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="home.php">Home</a>
-                <a class="nav-link" href="view.php">Progetti</a>
-                <?php if ($tipo_utente === "creatore"): ?>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+
+                    <a class="nav-link" href="view.php">Progetti</a>
+                    <?php if ($tipo_utente === "creatore"): ?>
                     <a class="nav-link" href="new.php">Nuovo Progetto</a>
-                <?php endif; ?>
-                <div class="dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user me-1"></i><?= htmlspecialchars($nickname) ?>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="auth/exit.php">Logout</a></li>
-                    </ul>
+                    <?php endif; ?>
+                    <div class="dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i><?= htmlspecialchars($nickname) ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="auth/exit.php">Esci</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="container py-4 page-offset">
+    <div class="container py-5">
         <!-- Header con messaggio personalizzato -->
-        <div class="row mb-4">
-            <div class="col-12">
+        <div class="row mb-5">
+            <div class="col-12 text-center">
                 <?php 
                 $welcome_messages = [
                     "Ciao {name}! Bentornato nella tua dashboard.",
@@ -90,68 +98,71 @@ try {
                 ];
                 $random_welcome = str_replace('{name}', htmlspecialchars($nickname), $welcome_messages[array_rand($welcome_messages)]);
                 ?>
-                <h1 class="display-6"><?= $random_welcome ?></h1>
-                <p class="text-muted">
+                <h1 class="display-5 fw-bold text-gradient-primary"><?= $random_welcome ?></h1>
+                <p class="lead text-muted">
                     <?php if ($tipo_utente === "creatore"): ?>
-                        Dashboard Creatore - Qui puoi gestire i tuoi progetti e vedere come stanno andando
+                    Gestisci i tuoi progetti e monitora i tuoi progressi.
                     <?php else: ?>
-                        Dashboard Investitore - Tieni traccia dei progetti che hai supportato
+                    Tieni traccia dei progetti che hai supportato.
                     <?php endif; ?>
                 </p>
             </div>
         </div>
 
         <?php if (isset($error)): ?>
-            <?php 
-            $error_variations = [
-                "Attenzione! Si è verificato un piccolo problema: ",
-                "Qualcosa non ha funzionato come doveva: ",
-                "Abbiamo riscontrato un inconveniente: ",
-                "C'è stato un intoppo: "
-            ];
-            $error_prefix = $error_variations[array_rand($error_variations)];
-            ?>
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i><?= $error_prefix . htmlspecialchars($error) ?>
-            </div>
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i><strong>Ops!</strong> <?= htmlspecialchars($error) ?>
+        </div>
         <?php endif; ?>
 
         <!-- Statistiche -->
-        <div class="row mb-4">
+        <div class="row g-4 mb-5">
             <?php if ($tipo_utente === "creatore"): ?>
-                <div class="col-md-6">
-                    <div class="card text-white bg-success">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-project-diagram me-2"></i>Progetti Creati</h5>
-                            <h2><?= $stats["progetti_creati"] ?></h2>
+            <div class="col-md-6">
+                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-accent);">
+                    <div class="card-body">
+                        <div class="stat-icon">
+                            <i class="fas fa-project-diagram"></i>
                         </div>
+                        <h5 class="card-title">Progetti Creati</h5>
+                        <p class="card-text display-4 fw-bold"><?= $stats["progetti_creati"] ?></p>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card text-white bg-info">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-euro-sign me-2"></i>Fondi Raccolti</h5>
-                            <h2>€<?= number_format($stats["fondi_raccolti"], 2) ?></h2>
+            </div>
+            <div class="col-md-6">
+                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-info);">
+                    <div class="card-body">
+                        <div class="stat-icon">
+                            <i class="fas fa-euro-sign"></i>
                         </div>
+                        <h5 class="card-title">Fondi Raccolti</h5>
+                        <p class="card-text display-4 fw-bold">€<?= number_format($stats["fondi_raccolti"], 2) ?></p>
                     </div>
                 </div>
+            </div>
             <?php else: ?>
-                <div class="col-md-6">
-                    <div class="card text-white bg-primary">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-hand-holding-usd me-2"></i>Finanziamenti</h5>
-                            <h2><?= $stats["finanziamenti_fatti"] ?></h2>
+            <div class="col-md-6">
+                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-primary);">
+                    <div class="card-body">
+                        <div class="stat-icon">
+                            <i class="fas fa-hand-holding-usd"></i>
                         </div>
+                        <h5 class="card-title">Finanziamenti Fatti</h5>
+                        <p class="card-text display-4 fw-bold"><?= $stats["finanziamenti_fatti"] ?></p>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card text-white bg-warning">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-coins me-2"></i>Totale Investito</h5>
-                            <h2>€<?= number_format($stats["totale_investito"], 2) ?></h2>
+            </div>
+            <div class="col-md-6">
+                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-secondary);">
+                    <div class="card-body">
+                        <div class="stat-icon">
+                            <i class="fas fa-coins"></i>
                         </div>
+                        <h5 class="card-title">Totale Investito</h5>
+                        <p class="card-text display-4 fw-bold">€<?= number_format($stats["totale_investito"], 2) ?></p>
                     </div>
                 </div>
+            </div>
             <?php endif; ?>
         </div>
 
@@ -159,117 +170,125 @@ try {
         <div class="row">
             <div class="col-12">
                 <?php if ($tipo_utente === "creatore"): ?>
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">I Tuoi Progetti</h5>
-                            <a href="new.php" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus me-1"></i>Nuovo Progetto
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">I Tuoi Progetti</h5>
+                        <a href="new.php" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Nuovo Progetto
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <?php if (empty($progetti)): ?>
+                        <div class="text-center py-5">
+                            <i class="fas fa-lightbulb fa-4x text-primary mb-4"></i>
+                            <h4 class="mb-3">È il momento di creare!</h4>
+                            <p class="text-muted mb-4">La tua prossima grande idea è a un solo click di distanza.</p>
+                            <a href="new.php" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2"></i>Crea il Tuo Primo Progetto
                             </a>
                         </div>
-                        <div class="card-body">
-                            <?php if (empty($progetti)): ?>
-                                <?php 
-                                $empty_messages = [
-                                    "Ancora nessun progetto? È il momento perfetto per iniziare!",
-                                    "La tua prima grande idea ti aspetta. Crea il tuo primo progetto!",
-                                    "Questo spazio sembra un po' vuoto... che ne dici di riempirlo con le tue idee?",
-                                    "Zero progetti finora. Trasforma la tua creatività in realtà!"
-                                ];
-                                ?>
-                                <div class="text-center py-4">
-                                    <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
-                                    <p class="text-muted"><?= $empty_messages[array_rand($empty_messages)] ?></p>
-                                    <a href="new.php" class="btn btn-primary">
-                                        <i class="fas fa-plus me-2"></i>Crea il Tuo Primo Progetto
-                                    </a>
-                                </div>
-                            <?php else: ?>
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Nome</th>
-                                                <th>Stato</th>
-                                                <th>Raccolto</th>
-                                                <th>Data</th>
-                                                <th>Azioni</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($progetti as $progetto): ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($progetto['nome']) ?></td>
-                                                    <td>
-                                                        <span class="badge bg-<?= $progetto['stato'] === 'aperto' ? 'success' : 'secondary' ?>">
-                                                            <?= ucfirst($progetto['stato']) ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>€<?= number_format($progetto['budget_raccolto'], 2) ?></td>
-                                                    <td><?= date('d/m/Y', strtotime($progetto['data_inserimento'])) ?></td>
-                                                    <td>
-                                                        <a href="view.php?id=<?= $progetto['id'] ?>" class="btn btn-sm btn-outline-primary">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
+                        <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nome Progetto</th>
+                                        <th>Stato</th>
+                                        <th>Budget Raccolto</th>
+                                        <th>Data Creazione</th>
+                                        <th class="text-end">Azioni</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($progetti as $progetto): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold"><?= htmlspecialchars($progetto['nome']) ?></div>
+                                            <small
+                                                class="text-muted"><?= htmlspecialchars(substr($progetto['descrizione'], 0, 40)) ?>...</small>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge rounded-pill bg-<?= $progetto['stato'] === 'aperto' ? 'success' : 'secondary' ?>">
+                                                <?= ucfirst($progetto['stato']) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">€<?= number_format($progetto['budget_raccolto'], 2) ?>
+                                            </div>
+                                            <small class="text-muted">di
+                                                €<?= number_format($progetto['budget_totale'], 2) ?></small>
+                                        </td>
+                                        <td><?= date('d M Y', strtotime($progetto['data_inserimento'])) ?></td>
+                                        <td class="text-end">
+                                            <a href="view.php?id=<?= $progetto['id'] ?>"
+                                                class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i> Vedi
+                                            </a>
+                                            <a href="#" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit me-1"></i> Modifica
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
+                        <?php endif; ?>
                     </div>
+                </div>
                 <?php else: ?>
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">I Tuoi Finanziamenti</h5>
-                        </div>
-                        <div class="card-body">
-                            <?php if (empty($finanziamenti)): ?>
-                                <?php 
-                                $investor_messages = [
-                                    "Non hai ancora supportato nessun progetto. Scopri le idee più interessanti!",
-                                    "Che ne dici di investire nella prossima grande innovazione?",
-                                    "Il tuo primo investimento ti aspetta. Esplora i progetti disponibili!",
-                                    "Ancora nessun finanziamento? È tempo di supportare qualche creatore!"
-                                ];
-                                ?>
-                                <div class="text-center py-4">
-                                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                                    <p class="text-muted"><?= $investor_messages[array_rand($investor_messages)] ?></p>
-                                    <a href="view.php" class="btn btn-primary">
-                                        <i class="fas fa-eye me-2"></i>Esplora i Progetti
-                                    </a>
-                                </div>
-                            <?php else: ?>
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Progetto</th>
-                                                <th>Importo</th>
-                                                <th>Data</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($finanziamenti as $finanziamento): ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($finanziamento['nome']) ?></td>
-                                                    <td>€<?= number_format($finanziamento['importo'], 2) ?></td>
-                                                    <td><?= date('d/m/Y', strtotime($finanziamento['data_finanziamento'])) ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php endif; ?>
-                        </div>
+                <div class="card content-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">I Tuoi Finanziamenti</h5>
                     </div>
+                    <div class="card-body">
+                        <?php if (empty($finanziamenti)): ?>
+                        <div class="text-center py-5">
+                            <i class="fas fa-search-dollar fa-4x text-primary mb-4"></i>
+                            <h4 class="mb-3">Scopri nuove opportunità</h4>
+                            <p class="text-muted mb-4">Esplora i progetti e supporta le idee che ti appassionano.</p>
+                            <a href="view.php" class="btn btn-primary btn-lg">
+                                <i class="fas fa-rocket me-2"></i>Esplora i Progetti
+                            </a>
+                        </div>
+                        <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Progetto</th>
+                                        <th>Importo Investito</th>
+                                        <th>Data Finanziamento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($finanziamenti as $finanziamento): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">
+                                                <?= htmlspecialchars($finanziamento['nome_progetto']) ?></div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">€<?= number_format($finanziamento['importo'], 2) ?>
+                                            </div>
+                                        </td>
+                                        <td><?= date('d M Y', strtotime($finanziamento['data_finanziamento'])) ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
                 <?php endif; ?>
             </div>
         </div>
     </div>
 
     <?php include __DIR__ . '/includes/scripts.php'; ?>
+    <script src="<?= $basePath ?>js/dash.js"></script>
 </body>
+
 </html>

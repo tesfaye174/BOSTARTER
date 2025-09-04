@@ -136,13 +136,13 @@ class User {
     
     public function getUserSkills($userId) {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db->prepare(
                 SELECT c.nome, c.descrizione, su.livello 
                 FROM skill_utente su 
                 JOIN competenze c ON su.competenza_id = c.id 
                 WHERE su.utente_id = ?
                 ORDER BY c.nome
-            ");
+            );
             
             $stmt->execute([$userId]);
             $skills = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -176,14 +176,14 @@ class User {
     public function updateAffidabilita($utenteId) {
         try {
             // Calcola l'affidabilità basata su progetti completati e feedback
-            $stmt = $this->db->prepare("
+            $stmt = $this->db->prepare(
                 SELECT 
                     COUNT(CASE WHEN p.stato = 'completato' THEN 1 END) as progetti_completati,
                     COUNT(p.id) as progetti_totali,
                     AVG(CASE WHEN p.stato = 'completato' THEN 100 ELSE 0 END) as percentuale_successo
                 FROM progetti p 
                 WHERE p.creatore_id = ?
-            ");
+            );
             $stmt->execute([$utenteId]);
             $stats = $stmt->fetch(PDO::FETCH_ASSOC);
             

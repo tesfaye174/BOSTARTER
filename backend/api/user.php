@@ -59,13 +59,13 @@ function getUserProfile($db, $userId) {
             echo json_encode(['error' => 'Access denied']);
             return;
         }        
-        $userStmt = $db->prepare("
+        $userStmt = $db->prepare(
             SELECT id as user_id, nickname as username, email, CONCAT(nome, ' ', cognome) as full_name, 
                    '' as bio, luogo_nascita as location, '' as avatar_url, '' as website_url, 
                    'active' as status, tipo_utente as role, created_at, last_access as last_login
             FROM utenti 
             WHERE id = ?
-        ");
+        );
         $userStmt->execute([$userId]);
         $user = $userStmt->fetch(PDO::FETCH_ASSOC);
         if (!$user) {
@@ -73,7 +73,7 @@ function getUserProfile($db, $userId) {
             echo json_encode(['error' => 'User not found']);
             return;
         }        
-        $projectsStmt = $db->prepare("
+        $projectsStmt = $db->prepare(
             SELECT p.*, 
                    COALESCE(pf.totale_finanziato, 0) as total_funded,
                    COALESCE(pf.percentuale_finanziamento, 0) as funding_percentage,
@@ -83,11 +83,11 @@ function getUserProfile($db, $userId) {
             LEFT JOIN view_progetti pf ON p.id = pf.progetto_id
             WHERE p.creatore_id = ?
             ORDER BY p.data_inserimento DESC
-        ");
+        );
         $projectsStmt->execute([$userId]);
         $projects = $projectsStmt->fetchAll(PDO::FETCH_ASSOC);
         $fundings = [];        if ($_SESSION['user_id'] == $userId || canAccessProfile($db, $userId)) {
-            $fundingStmt = $db->prepare("
+            $fundingStmt = $db->prepare(
                 SELECT f.*, p.nome as project_title, p.tipo_progetto as project_type,
                        u.nickname as creator_name
                 FROM finanziamenti f
@@ -96,21 +96,21 @@ function getUserProfile($db, $userId) {
                 WHERE f.utente_id = ?
                 ORDER BY f.data_finanziamento DESC
                 LIMIT 50
-            ");
+            );
             $fundingStmt->execute([$userId]);
             $fundings = $fundingStmt->fetchAll(PDO::FETCH_ASSOC);
         }        
-        $skillsStmt = $db->prepare("
+        $skillsStmt = $db->prepare(
             SELECT c.id as skill_id, c.nome as name, c.descrizione as description, 
                    su.livello as proficiency_level, 0 as years_experience
             FROM skill_utente su
             JOIN competenze c ON su.competenza_id = c.id
             WHERE su.utente_id = ?
             ORDER BY su.livello DESC, c.nome ASC
-        ");
+        );
         $skillsStmt->execute([$userId]);
         $skills = $skillsStmt->fetchAll(PDO::FETCH_ASSOC);        
-        $statsStmt = $db->prepare("
+        $statsStmt = $db->prepare(
             SELECT 
                 COUNT(DISTINCT p.id) as projects_created,
                 COUNT(DISTINCT CASE WHEN p.stato = 'chiuso' THEN p.id END) as successful_projects,
@@ -121,7 +121,7 @@ function getUserProfile($db, $userId) {
             LEFT JOIN progetti p ON u.id = p.creatore_id
             LEFT JOIN finanziamenti f ON u.id = f.utente_id
             WHERE u.id = ?
-        ");
+        );
         $statsStmt->execute([$userId]);
         $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
         if (isset($_SESSION['user_id'])) {
@@ -170,7 +170,7 @@ function getUserList($db, $mongoLogger) {
         $status = $_GET['status'] ?? 'all';
         $role = $_GET['role'] ?? 'all';
         $limit = min(100, max(1, intval($_GET['limit'] ?? 20)));
-        $offset = max(0, intval($_GET['offset'] ?? 0));        $baseQuery = "
+        $offset = max(0, intval($_GET['offset'] ?? 0));        $baseQuery = 
             SELECT u.id as user_id, u.nickname as username, u.email, CONCAT(u.nome, ' ', u.cognome) as full_name, 
                    'active' as status, u.tipo_utente as role, 
                    u.created_at, u.last_access as last_login,
@@ -180,7 +180,7 @@ function getUserList($db, $mongoLogger) {
             LEFT JOIN progetti p ON u.id = p.creatore_id
             LEFT JOIN finanziamenti f ON u.id = f.utente_id
             WHERE 1=1
-        ";
+        ;
         $params = [];
         if (!empty($search)) {
             $baseQuery .= " AND (u.username LIKE ? OR u.email LIKE ? OR u.full_name LIKE ?)";
@@ -394,13 +394,13 @@ if (isset($_GET['skills']) && isset($_GET['user_id'])) {
                 exit;
             }
             $skillData = json_decode(file_get_contents('php://input'), true);
-            $insertStmt = $db->prepare("
+            $insertStmt = $db->prepare(
                 INSERT INTO USER_SKILLS (user_id, skill_id, proficiency_level, years_experience, created_at) 
                 VALUES (?, ?, ?, ?, NOW())
                 ON DUPLICATE KEY UPDATE 
                 proficiency_level = VALUES(proficiency_level), 
                 years_experience = VALUES(years_experience)
-            ");
+            );
             $insertStmt->execute([
                 $userId,
                 $skillData['skill_id'],
@@ -409,13 +409,13 @@ if (isset($_GET['skills']) && isset($_GET['user_id'])) {
             ]);
             echo json_encode(['success' => true, 'message' => 'Skill added successfully']);
         } else {
-            $stmt = $db->prepare("
+            $stmt = $db->prepare(
                 SELECT s.skill_id, s.name, s.description, us.proficiency_level, us.years_experience
                 FROM USER_SKILLS us
                 JOIN SKILLS s ON us.skill_id = s.skill_id
                 WHERE us.user_id = ? AND s.status = 'active'
                 ORDER BY us.proficiency_level DESC, s.name ASC
-            ");
+            );
             $stmt->execute([$userId]);
             $skills = $stmt->fetchAll(PDO::FETCH_ASSOC);
             echo json_encode(['success' => true, 'skills' => $skills]);

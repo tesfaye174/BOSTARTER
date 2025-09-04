@@ -52,10 +52,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
                 
                 // Registra l'utente con il tipo scelto
-                $stmt = $conn->prepare("
+                $stmt = $conn->prepare(
                     INSERT INTO utenti (email, nickname, password, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ");
+                );
                 $stmt->execute([$email, $nickname, $password_hash, $nome, $cognome, $anno_nascita, $luogo_nascita, $tipo_utente]);
                 $success = $successMessages[array_rand($successMessages)] . " Ora puoi effettuare il login.";
             }
@@ -69,12 +69,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 ?>
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
-<?php $page_title = 'Registrazione'; include __DIR__ . '/../includes/head.php'; ?>
+    <?php $page_title = 'Registrazione'; include __DIR__ . '/../includes/head.php'; ?>
     <!-- Favicon -->
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
     <link rel="icon" href="../favicon.ico" type="image/x-icon">
 </head>
+
 <body>
     <div class="container">
         <div class="row justify-content-center">
@@ -86,18 +88,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     </div>
                     <div class="card-body p-4">
                         <?php if ($error): ?>
-                            <div class="alert alert-danger">
-                                <?= htmlspecialchars($error) ?>
-                            </div>
+                        <div class="alert alert-danger">
+                            <?= htmlspecialchars($error) ?>
+                        </div>
                         <?php endif; ?>
                         <?php if ($success): ?>
-                            <div class="alert alert-success">
-                                <?= htmlspecialchars($success) ?>
-                                <br><a href="login.php" class="alert-link">Vai al login </a>
-                            </div>
+                        <div class="alert alert-success">
+                            <?= htmlspecialchars($success) ?>
+                            <br><a href="login.php" class="alert-link">Vai al login </a>
+                        </div>
                         <?php else: ?>
                         <form method="POST">
-                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
+                            <input type="hidden" name="csrf_token"
+                                value="<?= htmlspecialchars(generate_csrf_token()) ?>">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="nome" class="form-label">Nome</label>
@@ -123,11 +126,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="anno_nascita" class="form-label">Anno di nascita</label>
-                                    <input type="number" class="form-control" id="anno_nascita" name="anno_nascita" min="1900" max="2010" required>
+                                    <input type="number" class="form-control" id="anno_nascita" name="anno_nascita"
+                                        min="1900" max="2010" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="luogo_nascita" class="form-label">Luogo di nascita</label>
-                                    <input type="text" class="form-control" id="luogo_nascita" name="luogo_nascita" required>
+                                    <input type="text" class="form-control" id="luogo_nascita" name="luogo_nascita"
+                                        required>
                                 </div>
                             </div>
                             <div class="mb-4">
@@ -148,8 +153,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
             </div>
         </div>
-    <?php include __DIR__ . '/../includes/scripts.php'; ?>
+        <?php include __DIR__ . '/../includes/scripts.php'; ?>
     </div>
 </body>
-</html>
 
+</html>

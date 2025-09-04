@@ -21,27 +21,27 @@ if (!$project_id) {
         $db = Database::getInstance();
         $conn = $db->getConnection();
         
-        $stmt = $conn->prepare("
+        $stmt = $conn->prepare(
             SELECT p.*, u.nickname as creatore_nickname,
                    p.tipo as tipo_progetto,
                    p.data_limite as data_scadenza
             FROM progetti p 
             LEFT JOIN utenti u ON p.creatore_id = u.id
             WHERE p.id = ?
-        ");
+        );
         $stmt->execute([$project_id]);
         $project = $stmt->fetch();
         
         if ($project) {
             // Calcola statistiche
-            $stmt_stats = $conn->prepare("
+            $stmt_stats = $conn->prepare(
                 SELECT 
                     COALESCE(SUM(importo), 0) as totale_raccolto,
                     COUNT(DISTINCT utente_id) as numero_sostenitori,
                     COUNT(id) as numero_finanziamenti
                 FROM finanziamenti 
                 WHERE progetto_id = ?
-            ");
+            );
             $stmt_stats->execute([$project_id]);
             $stats = $stmt_stats->fetch();
             
@@ -51,13 +51,13 @@ if (!$project_id) {
             
             // Carica finanziamenti
             try {
-                $stmt_fin = $conn->prepare("
+                $stmt_fin = $conn->prepare(
                     SELECT f.*, u.nickname as finanziatore_nickname 
                     FROM finanziamenti f 
                     LEFT JOIN utenti u ON f.utente_id = u.id 
                     WHERE f.progetto_id = ? 
                     ORDER BY f.data_finanziamento DESC
-                ");
+                );
                 $stmt_fin->execute([$project_id]);
                 $finanziamenti = $stmt_fin->fetchAll();
             } catch(Exception $e) {
@@ -80,7 +80,7 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
 <html lang="it" data-bs-theme="light">
 
 <head>
-<?php $page_title = $project ? htmlspecialchars($project['nome']) : 'Progetto'; include __DIR__ . '/includes/head.php'; ?>
+    <?php $page_title = $project ? htmlspecialchars($project['nome']) : 'Progetto'; include __DIR__ . '/includes/head.php'; ?>
     <!-- Favicon fallbacks -->
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -191,7 +191,8 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                                 <?php foreach ($finanziamenti as $finanziamento): ?>
                                 <div class="col-md-6 mb-3">
                                     <div class="d-flex align-items-center">
-                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 avatar-sm">
+                                        <div
+                                            class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 avatar-sm">
                                             <i class="fas fa-user"></i>
                                         </div>
                                         <div>
@@ -221,7 +222,8 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                                     <span class="fw-bold"><?= number_format($progress, 1) ?>%</span>
                                 </div>
                                 <div class="progress-bostarter progress-thin">
-                                    <div class="progress-bar progress-bar-bostarter" style="--progress: <?= $progress ?>%"></div>
+                                    <div class="progress-bar progress-bar-bostarter"
+                                        style="--progress: <?= $progress ?>%"></div>
                                 </div>
                             </div>
                             <!-- Stats -->
@@ -335,12 +337,14 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
         if (navigator.share) {
             navigator.share({
                 title: " <?= htmlspecialchars($project["nome"] ?? "Progetto BOSTARTER") ?>",
-        text: "Guarda questo progetto interessante su BOSTARTER!" , url: window.location.href }); } else {
-        navigator.clipboard.writeText(window.location.href).then(()=>
-    {
-        alert("URL copiato negli appunti!");
-    });
-    }
+                text: "Guarda questo progetto interessante su BOSTARTER!",
+                url: window.location.href
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert("URL copiato negli appunti!");
+            });
+        }
     }
 
     // Redirect automatico per errori

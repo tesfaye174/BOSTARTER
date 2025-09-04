@@ -1,7 +1,5 @@
 <?php
-/**
- * Modello Project - Gestione progetti BOSTARTER
- */
+// Gestione progetti piattaforma
 class Project {
     private $db;
     
@@ -9,19 +7,20 @@ class Project {
         $this->db = Database::getInstance()->getConnection();
     }
     
-    /**
-     * Crea nuovo progetto
-     * @param array $data Dati progetto
-     * @return array Risultato operazione
-     */
+    // Creazione nuovo progetto
     public function create($data) {
         try {
-            $requiredFields = ['nome', 'descrizione', 'tipo', 'budget_richiesto', 'data_limite', 'creatore_id'];
+            // Verifica campi obbligatori
+            $requiredFields = [
+                'nome', 'descrizione', 'tipo', 
+                'budget_richiesto', 'data_limite', 'creatore_id'
+            ];
+            
             foreach ($requiredFields as $field) {
                 if (!isset($data[$field]) || empty($data[$field])) {
                     return [
                         'success' => false,
-                        'error' => "Campo obbligatorio mancante: $field"
+                        'error' => "Manca il campo: $field"
                     ];
                 }
             }
@@ -74,31 +73,30 @@ class Project {
 
             $dataLimite = date('Y-m-d', strtotime($data['data_limite']));
             
-            $sql = "INSERT INTO progetti (nome, descrizione, tipo, budget_richiesto, data_limite, creatore_id, stato) 
-                    VALUES (?, ?, ?, ?, ?, ?, 'aperto')";
-            
-            $stmt = $this->db->prepare($sql);
-            $result = $stmt->execute([
+            // Usa stored procedure per inserimento progetto
+            $call = $this->db->prepare("CALL sp_inserisci_progetto(?, ?, ?, ?, ?, ?, @p_project_id, @p_success, @p_message)");
+            $call->execute([
+                $data['creatore_id'],
                 $data['nome'],
-                $data['descrizione'], 
+                $data['descrizione'],
                 $data['tipo'],
                 $data['budget_richiesto'],
-                $dataLimite,
-                $data['creatore_id']
+                $dataLimite
             ]);
+
+            $result = $this->db->query("SELECT @p_project_id AS project_id, @p_success AS success, @p_message AS message")->fetch();
             
-            if ($result) {
-                $projectId = $this->db->lastInsertId();
-                // uploaded images are not supported in this streamlined build
+            if (!empty($result) && (int)$result['success'] === 1) {
+                $projectId = (int)$result['project_id'];
                 return [
                     'success' => true,
                     'project_id' => $projectId,
-                    'message' => 'Progetto creato con successo'
+                    'message' => $result['message'] ?? 'Progetto creato con successo'
                 ];
             } else {
                 return [
                     'success' => false,
-                    'error' => 'Errore durante la creazione del progetto'
+                    'error' => $result['message'] ?? 'Errore durante la creazione del progetto'
                 ];
             }
         } catch (Exception $e) {
@@ -117,12 +115,12 @@ class Project {
      */
     public function getById($id) {
         try {
-            $stmt = $this->db->prepare("
+            $stmt = $this->db->prepare(
                 SELECT p.*, u.nickname as creatore_nickname, u.nome as creatore_nome, u.cognome as creatore_cognome
                 FROM progetti p 
                 JOIN utenti u ON p.creatore_id = u.id 
                 WHERE p.id = ?
-            ");
+            );
             $stmt->execute([$id]);
             $project = $stmt->fetch();
             
@@ -147,12 +145,6 @@ class Project {
     
     /**
      * Lista progetti con paginazione e filtri
-     * @param int $page Pagina corrente
-     * @param int $limit Numero elementi per pagina
-     * @param string $tipo Tipo progetto (hardware/software)
-     * @param string $stato Stato progetto
-     * @param string $search Termine di ricerca
-     * @return array Risultato operazione
      */
     public function getList($page = 1, $limit = 10, $tipo = null, $stato = 'aperto', $search = '') {
         try {
@@ -179,14 +171,14 @@ class Project {
             $whereClause = !empty($conditions) ? "WHERE " . implode(" AND ", $conditions) : "";
             
             // Query per i dati
-            $sql = "
+            $sql = 
                 SELECT p.*, u.nickname as creatore_nickname
                 FROM progetti p 
                 JOIN utenti u ON p.creatore_id = u.id 
                 $whereClause
                 ORDER BY p.data_inserimento DESC 
                 LIMIT ? OFFSET ?
-            ";
+            ;
             
             $params[] = $limit;
             $params[] = $offset;
@@ -233,14 +225,14 @@ class Project {
         try {
             $offset = ($page - 1) * $limit;
             
-            $sql = "
+            $sql = 
                 SELECT p.*, u.nickname as creatore_nickname
                 FROM progetti p 
                 JOIN utenti u ON p.creatore_id = u.id 
                 WHERE p.creatore_id = ?
                 ORDER BY p.data_inserimento DESC 
                 LIMIT ? OFFSET ?
-            ";
+            ;
             
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$userId, $limit, $offset]);

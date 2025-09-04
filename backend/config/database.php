@@ -1,16 +1,5 @@
 <?php
-/**
- * =====================================================
- * BOSTARTER - GESTORE DATABASE SINGLETON
- * =====================================================
- * 
- * Implementa il pattern Singleton per la gestione
- * centralizzata delle connessioni al database MySQL.
- * 
- * @author BOSTARTER Team
- * @version 2.0
- * @description Singleton per connessioni database sicure
- */
+// BOSTARTER - GESTORE DATABASE SINGLETON
 
 // Importa le configurazioni dell'applicazione
 require_once __DIR__ . '/app_config.php';

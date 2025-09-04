@@ -29,9 +29,9 @@ session_destroy();
 
 // Reindirizza alla homepage con messaggio di conferma
 if ($username) {
-    header('Location: ../index.php?logout=success&user=' . urlencode($username));
+    header('Location: ../home.php?logout=success&user=' . urlencode($username));
 } else {
-    header('Location: ../index.php?logout=success');
+    header('Location: ../home.php?logout=success');
 }
 exit();
 ?>

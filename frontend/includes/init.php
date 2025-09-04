@@ -1,27 +1,15 @@
 <?php
-/**
- * =====================================================
- * BOSTARTER - INIZIALIZZAZIONE FRONTEND
- * =====================================================
- * 
- * File di inizializzazione per tutte le pagine frontend.
- * Gestisce sessioni, sicurezza e funzioni di utilità.
- * 
- * @author BOSTARTER Team
- * @version 2.0
- * @description Inizializzazione centralizzata frontend
- */
+// Inizializzazione frontend
+// Setup sessioni e caricamento dipendenze
 
-// =====================================================
-// INIZIALIZZAZIONE SESSIONE PHP
-// =====================================================
-
-// Avvia la sessione PHP se non è già attiva
+// Init sessione sicura
 if (session_status() === PHP_SESSION_NONE) {
-    // Configurazione sicura della sessione
     ini_set('session.cookie_httponly', 1);
-    ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) ? 1 : 0);
+    ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) ? 1 : 0); 
     ini_set('session.use_strict_mode', 1);
+    if (PHP_VERSION_ID >= 70300) {
+        ini_set('session.cookie_samesite', 'Lax');
+    }
     
     session_start();
 }

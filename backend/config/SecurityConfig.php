@@ -1,23 +1,20 @@
 <?php
-/**
- * BOSTARTER Security Configuration
- * Gestisce tutte le impostazioni di sicurezza della piattaforma
- */
+// Configurazione centralizzata della sicurezza
 
 class SecurityConfig {
-    // Configurazione per l'autenticazione degli utenti
+    // Parametri autenticazione utente
     public const AUTH_CONFIG = [
-        'max_login_attempts' => 5,                // Tentativi di login prima del blocco
-        'lockout_time' => 900,                    // Tempo di blocco in secondi (15 minuti)
-        'session_lifetime' => 1800,               // Durata sessione attiva (30 minuti)
-        'remember_token_lifetime' => 2592000,     // Token "ricordami" (30 giorni)
-        'csrf_token_lifetime' => 3600,            // Validità token CSRF (1 ora)
-        'session_regenerate_interval' => 300,     // Rinnovo ID sessione (5 minuti)
-        'password_min_length' => 8,               // Lunghezza minima password
-        'require_special_chars' => true,          // Richiede caratteri speciali
-        'require_uppercase' => true,              // Richiede lettere maiuscole
-        'require_lowercase' => true,              // Richiede lettere minuscole
-        'require_numbers' => true                 // Richiede numeri
+        'max_login_attempts' => 5,          // Max tentativi login
+        'lockout_time' => 900,             // Blocco: 15 min
+        'session_lifetime' => 1800,         // Sessione: 30 min
+        'remember_token_lifetime' => 2592000, // Remember me: 30 gg
+        'csrf_token_lifetime' => 3600,      // CSRF: 1 ora
+        'session_regenerate_interval' => 300, // Rinnovo: 5 min
+        'password_min_length' => 8,         // Min caratteri
+        'require_special_chars' => true,    // Caratteri speciali
+        'require_uppercase' => true,        // Maiuscole
+        'require_lowercase' => true,        // Minuscole
+        'require_numbers' => true           // Numeri
     ];
 
     // Limiti per prevenire abusi e attacchi

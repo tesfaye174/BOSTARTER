@@ -907,3 +907,55 @@ if (typeof window !== 'undefined') {
 }
 
 console.log('BOSTARTER Core v2.0 caricato con successo');
+
+// Theme toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    if (themeToggle && themeIcon) {
+        // Check for saved theme preference or default to 'light'
+        const currentTheme = localStorage.getItem('bostarter-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+        
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('bostarter-theme', newTheme);
+            updateThemeIcon(newTheme);
+            
+            // Trigger custom event for other components
+            document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+        });
+    }
+    
+    function updateThemeIcon(theme) {
+        if (themeIcon) {
+            if (theme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeToggle.title = 'Passa al tema chiaro';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeToggle.title = 'Passa al tema scuro';
+            }
+        }
+    }
+});
+
+// High contrast mode toggle
+function toggleHighContrast() {
+    document.documentElement.classList.toggle('high-contrast');
+    const isHighContrast = document.documentElement.classList.contains('high-contrast');
+    localStorage.setItem('bostarter-high-contrast', isHighContrast);
+}
+
+// Initialize high contrast mode
+document.addEventListener('DOMContentLoaded', function() {
+    const savedHighContrast = localStorage.getItem('bostarter-high-contrast') === 'true';
+    if (savedHighContrast) {
+        document.documentElement.classList.add('high-contrast');
+    }
+});

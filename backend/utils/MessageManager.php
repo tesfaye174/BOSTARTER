@@ -1,22 +1,24 @@
 <?php
-/**
- * BOSTARTER Message Manager
- * Gestisce messaggi dinamici e più naturali per l'interfaccia utente
- */
+// Gestione messaggi interfaccia utente
+// Varianti casuali per una UX più naturale
 
 class MessageManager {
+    // Messaggi sistema
     private static $messages = [
+        // Login completato
         'login_success' => [
-            'Bentornato! Accesso effettuato con successo.',
-            'Eccoti qui! Login completato correttamente.',
-            'Perfetto! Sei di nuovo online.',
-            'Ciao! È bello rivederti.'
+            'Bentornato! Accesso effettuato.',
+            'Login completato.',
+            'Sei di nuovo online.',
+            'Bentrovato!'
         ],
+        
+        // Errori login
         'login_failed' => [
-            'Ops! Le credenziali inserite non sono corrette.',
-            'Email o password non validi. Riprova per favore.',
-            'Non riesco a trovarti nel sistema. Controlla i tuoi dati.',
-            'Qualcosa non torna con i dati inseriti.'
+            'Credenziali non corrette.',
+            'Email o password errati.',
+            'Account non trovato.',
+            'Verifica i dati inseriti.'
         ],
         'signup_success' => [
             'Fantastico! Il tuo account è stato creato con successo.',
@@ -76,7 +78,7 @@ class MessageManager {
     public static function getValidationError($field, $type) {
         $errors = [
             'required' => [
-                "Il campo '$field' è obbligatorio.",
+                Il campo '$field' è obbligatorio.,
                 "Non dimenticare di compilare il campo '$field'.",
                 "Per favore, inserisci un valore per '$field'."
             ],

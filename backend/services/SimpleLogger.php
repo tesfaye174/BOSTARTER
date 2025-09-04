@@ -3,22 +3,13 @@
  * =====================================================
  * BOSTARTER - FILE LOGGER SERVICE
  * =====================================================
- * 
- * Sistema di logging centralizzato per la piattaforma BOSTARTER.
- * Gestisce tutti gli eventi di sistema, sicurezza e utente su file.
- * 
- * @author BOSTARTER Team
- * @version 2.0
- * @description Logging service ottimizzato e sicuro
  */
 
 require_once __DIR__ . '/../config/app_config.php';
 
 /**
  * Classe FileLogger - Pattern Singleton
- * 
- * Gestisce il logging centralizzato di tutti gli eventi
- * della piattaforma su file con rotazione giornaliera.
+
  */
 class FileLoggerSingleton {
     /** @var FileLoggerSingleton|null Istanza singleton */
@@ -79,9 +70,7 @@ class FileLoggerSingleton {
     
     /**
      * Registra un errore nel log
-     * @param string $tipo Tipo di errore
-     * @param mixed $dati Dati dell'errore
-     * @return bool Successo operazione
+   
      */
     public function registraErrore($tipo, $dati) {
         return $this->writeLog('ERROR', [

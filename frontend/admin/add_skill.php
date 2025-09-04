@@ -125,16 +125,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                     throw new Exception('ID competenza non valido');
                 }
                 $conn->beginTransaction();
-                $stmt = $conn->prepare("
+                $stmt = $conn->prepare(
                     SELECT COUNT(*) 
                     FROM utenti_competenze 
                     WHERE id_competenza = ?
-                ");
+                );
                 $stmt->execute([$skill_id]);
                 if ($stmt->fetchColumn() > 0) {
                     throw new Exception('Non � possibile eliminare questa competenza perch� � utilizzata da alcuni utenti');
                 }
-                $stmt = $conn->prepare("
+                $stmt = $conn->prepare(
                     DELETE FROM competenze 
                     WHERE id = ? 
                     AND NOT EXISTS (
@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                         FROM progetti_competenze 
                         WHERE id_competenza = competenze.id
                     )
-                ");
+                );
                 if ($stmt->execute([$skill_id])) {
                     if ($stmt->rowCount() > 0) {
                         error_log("Admin {$_SESSION['user_id']} ha eliminato la competenza ID: $skill_id");
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         }
     }
 }
-$stmt = $conn->prepare("
+$stmt = $conn->prepare(
     SELECT 
         c.id,
         c.nome,
@@ -176,21 +176,21 @@ $stmt = $conn->prepare("
     LEFT JOIN progetti_competenze pc ON c.id = pc.id_competenza
     GROUP BY c.id, c.nome, c.descrizione, c.categoria
     ORDER BY c.categoria, c.nome
-");
+);
 $stmt->execute();
 $competenze = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $competenze_per_categoria = [];
 foreach ($competenze as $competenza) {
     $competenze_per_categoria[$competenza['categoria']][] = $competenza;
 }
-$stmt = $conn->prepare("
+$stmt = $conn->prepare(
     SELECT 
         COUNT(*) as total_skills,
         COUNT(DISTINCT categoria) as total_categories,
         COUNT(DISTINCT srp.profilo_id) as used_in_projects
     FROM competenze c
     LEFT JOIN skill_richieste_profilo srp ON c.id = srp.competenza_id
-");
+);
 $stmt->execute();
 $stats = $stmt->fetch();
 ?>

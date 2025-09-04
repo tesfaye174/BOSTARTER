@@ -1,16 +1,4 @@
 <?php
-/**
- * =====================================================
- * BOSTARTER - AUTOLOADER PERSONALIZZATO
- * =====================================================
- * 
- * Sistema di autoload ottimizzato per la piattaforma BOSTARTER.
- * Carica automaticamente le classi necessarie senza dipendenze esterne.
- * 
- * @author BOSTARTER Team
- * @version 2.0
- * @description Autoloader leggero e performante
- */
 
 // =====================================================
 // CONFIGURAZIONE AUTOLOADER
@@ -43,12 +31,8 @@ $autoload_classmap = [
     'SecurityConfig' => __DIR__ . '/config/SecurityConfig.php'
 ];
 
-/**
- * Autoloader principale per classi PSR-4
- * 
- * @param string $className Nome completo della classe
- * @return bool True se la classe è stata caricata
- */
+// Carica classi PSR-4 per namespace
+// Restituisce true se il file è stato incluso
 function bostarter_autoload_psr4($className) {
     global $autoload_namespaces;
     
@@ -67,12 +51,7 @@ function bostarter_autoload_psr4($className) {
     return false;
 }
 
-/**
- * Autoloader per classi nella mappa specifica
- * 
- * @param string $className Nome della classe
- * @return bool True se la classe è stata caricata
- */
+// Carica classi dalla mappa statica (shortcut per prestazioni)
 function bostarter_autoload_classmap($className) {
     global $autoload_classmap;
     
@@ -87,13 +66,9 @@ function bostarter_autoload_classmap($className) {
     return false;
 }
 
-/**
- * Autoloader combinato
- * 
- * @param string $className Nome della classe
- */
+// Autoloader combinato: prova classmap, poi PSR-4
 function bostarter_autoload($className) {
-    // Prova prima con la mappa delle classi (più veloce)
+    // Usa la classmap prima (più veloce)
     if (bostarter_autoload_classmap($className)) {
         return;
     }
@@ -109,48 +84,28 @@ function bostarter_autoload($className) {
     }
 }
 
-// =====================================================
-// REGISTRAZIONE AUTOLOADER
-// =====================================================
-
-// Registra l'autoloader
+// Registra autoloader e carica configurazioni essenziali
 spl_autoload_register('bostarter_autoload');
 
-// Carica sempre la configurazione principale
+// Carica configurazione applicazione
 require_once __DIR__ . '/config/app_config.php';
 
-/**
- * Helper per verificare se una classe è disponibile
- * 
- * @param string $className Nome della classe
- * @return bool True se la classe è disponibile
- */
+// Controlla se una classe esiste (scatenando l'autoload se necessario)
 function class_available($className) {
     return class_exists($className, true);
 }
 
-/**
- * Helper per caricare manualmente un file
- * 
- * @param string $relativePath Path relativo alla directory backend
- * @return bool True se il file è stato caricato
- */
+// Carica manualmente un file relativo al backend
 function load_file($relativePath) {
     $fullPath = __DIR__ . '/' . ltrim($relativePath, '/');
-    
     if (file_exists($fullPath)) {
         require_once $fullPath;
         return true;
     }
-    
     return false;
 }
 
-// =====================================================
-// CARICAMENTO COMPONENTI ESSENZIALI
-// =====================================================
-
-// Carica componenti critici all'avvio
+// Carica componenti essenziali all'avvio
 $essential_components = [
     __DIR__ . '/config/database.php',
     __DIR__ . '/services/SimpleLogger.php',
@@ -158,18 +113,12 @@ $essential_components = [
 ];
 
 foreach ($essential_components as $component) {
-    if (file_exists($component)) {
-        require_once $component;
-    }
+    if (file_exists($component)) require_once $component;
 }
 
-// Inizializza error handler se disponibile
-if (class_exists('ErrorHandler')) {
-    ErrorHandler::initialize();
-}
+// Inizializza il gestore errori se presente
+if (class_exists('ErrorHandler')) ErrorHandler::initialize();
 
-// Log dell'avvio autoloader
-if (function_exists('logMessage')) {
-    logMessage('DEBUG', 'BOSTARTER Autoloader inizializzato con successo');
-}
+// Segnala avvio autoloader se esiste il logger
+if (function_exists('logMessage')) logMessage('DEBUG', 'BOSTARTER Autoloader inizializzato');
 ?>

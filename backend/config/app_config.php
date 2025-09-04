@@ -1,21 +1,7 @@
 <?php
-/**
- * =====================================================
- * BOSTARTER - CONFIGURAZIONE PRINCIPALE APPLICAZIONE
- * =====================================================
- * 
- * Questo file contiene tutte le configurazioni centrali
- * dell'applicazione BOSTARTER per il crowdfunding.
- * 
- * @author BOSTARTER Team
- * @version 2.0
- * @created 2025
- * @description Sistema di configurazione centralizzato
- */
 
-// =====================================================
+
 // CONFIGURAZIONE DATABASE
-// =====================================================
 
 /** Host del server MySQL */
 define("DB_HOST", "localhost");

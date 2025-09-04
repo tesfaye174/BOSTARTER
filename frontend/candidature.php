@@ -1,352 +1,500 @@
-?>
-<!DOCTYPE html>
-<html lang="it">
-<head>
 <?php
-require_once __DIR__ . '/includes/init.php';
+session_start();
+require_once 'includes/init.php';
 
-$user_id = $_SESSION['user_id'] ?? null;
-
-// Verifica che sia stato passato un ID progetto
-if (!isset($_GET['progetto_id']) || !is_numeric($_GET['progetto_id'])) {
-    header("Location: home.php");
+// Verifica autenticazione
+if (!isAuthenticated()) {
+    header('Location: auth/login.php');
     exit();
 }
 
-$progetto_id = intval($_GET['progetto_id']);
+$userType = getUserType();
+$userId = $_SESSION['user_id'];
+$isCreator = ($userType === 'creatore');
+$isAdmin = ($userType === 'amministratore');
 
-// Carica informazioni progetto software
-$stmt = $conn->prepare(
-    "SELECT p.*, u.nickname as creatore_nickname FROM progetti p JOIN utenti u ON p.creatore_id = u.id WHERE p.id = ? AND p.tipo = 'software'"
-);
-$stmt->execute([$progetto_id]);
-$progetto = $stmt->fetch();
+// Recupera candidature
+$candidature = [];
+$error = null;
 
-if (!$progetto) {
-    header("Location: home.php");
-    exit();
-}
-
-$is_creatore = ($user_id == $progetto['creatore_id']);
-
-// Carica profili richiesti
-$stmt = $conn->prepare("SELECT * FROM profili_richiesti WHERE progetto_id = ? ORDER BY nome");
-$stmt->execute([$progetto_id]);
-$profili = $stmt->fetchAll();
-
-// Carica skill dell'utente corrente
-$stmt = $conn->prepare(
-    "SELECT su.competenza_id, su.livello, c.nome FROM skill_utente su JOIN competenze c ON su.competenza_id = c.id WHERE su.utente_id = ?"
-);
-$stmt->execute([$user_id]);
-$skill_utenti = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-
-// Gestione candidatura (utente)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$is_creatore) {
-    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
-        $error_message = 'Token CSRF non valido.';
+try {
+    if (isset($_GET['profilo_id'])) {
+        // Candidature per un profilo specifico (solo creatore/admin del progetto)
+        $profiloId = (int)$_GET['profilo_id'];
+        $response = file_get_contents("http://localhost/BOSTARTER/backend/api/candidature.php?profilo_id=$profiloId");
+        $data = json_decode($response, true);
+        
+        if (isset($data['success']) && $data['success']) {
+            $candidature = $data['data'];
+        } else {
+            $error = $data['error'] ?? 'Errore nel recupero candidature';
+        }
     } else {
-        if (isset($_POST['action']) && $_POST['action'] === 'candidati') {
-            $profilo_id = intval($_POST['profilo_id']);
-
-            // Verifica che il profilo esista
-            $stmt = $conn->prepare("SELECT * FROM profili_richiesti WHERE id = ? AND progetto_id = ?");
-            $stmt->execute([$profilo_id, $progetto_id]);
-            $profilo = $stmt->fetch();
-
-            if ($profilo) {
-                // Verifica skill richieste
-                $stmt = $conn->prepare(
-                    "SELECT sp.competenza_id, sp.livello as livello_richiesto, c.nome FROM skill_profili sp JOIN competenze c ON sp.competenza_id = c.id WHERE sp.profilo_id = ?"
-                );
-                $stmt->execute([$profilo_id]);
-                $skill_richieste = $stmt->fetchAll();
-
-                $puo_candidarsi = true;
-                $skill_mancanti = [];
-
-                foreach ($skill_richieste as $skill_req) {
-                    $comp_id = $skill_req['competenza_id'];
-                    $livello_req = $skill_req['livello_richiesto'];
-                    $livello_utente = $skill_utenti[$comp_id] ?? 0;
-
-                    if ($livello_utente < $livello_req) {
-                        $puo_candidarsi = false;
-                        $skill_mancanti[] = [
-                            'nome' => $skill_req['nome'],
-                            'richiesto' => $livello_req,
-                            'attuale' => $livello_utente
-                        ];
-                    }
-                }
-
-                if ($puo_candidarsi) {
-                    // Verifica se non è già candidato
-                    $stmt = $conn->prepare("SELECT id FROM candidature WHERE utente_id = ? AND profilo_id = ?");
-                    $stmt->execute([$user_id, $profilo_id]);
-
-                    if (!$stmt->fetch()) {
-                        $stmt = $conn->prepare(
-                            "INSERT INTO candidature (utente_id, profilo_id, data_candidatura, stato) VALUES (?, ?, NOW(), 'in_attesa')"
-                        );
-                        $stmt->execute([$user_id, $profilo_id]);
-                        $success_message = "Candidatura inviata con successo!";
+        // Candidature dell'utente corrente
+        $response = file_get_contents("http://localhost/BOSTARTER/backend/api/candidature.php");
+        $data = json_decode($response, true);
+        
+        if (isset($data['success']) && $data['success']) {
+            $candidature = $data['data'];
                     } else {
-                        $error_message = "Ti sei già candidato per questo profilo";
-                    }
-                } else {
-                    $error_message = "Non hai le skill necessarie per candidarti a questo profilo";
-                }
-            } else {
-                $error_message = "Profilo non trovato";
-            }
+            $error = $data['error'] ?? 'Errore nel recupero candidature';
         }
     }
+} catch (Exception $e) {
+    $error = 'Errore di connessione: ' . $e->getMessage();
 }
 
-// Se è il creatore, gestisci accettazione/rifiuto candidature
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_creatore) {
-    if (!isset($_POST['csrf_token']) || !verify_csrf_token($_POST['csrf_token'])) {
-        $error_message = 'Token CSRF non valido.';
-    } else {
-        if (isset($_POST['action']) && in_array($_POST['action'], ['accetta', 'rifiuta'])) {
-            $candidatura_id = intval($_POST['candidatura_id']);
-            $nuovo_stato = $_POST['action'] === 'accetta' ? 'accettata' : 'rifiutata';
-
-            $stmt = $conn->prepare(
-                "UPDATE candidature SET stato = ?, data_risposta = NOW() WHERE id = ? AND profilo_id IN (SELECT id FROM profili_richiesti WHERE progetto_id = ?)"
-            );
-            $stmt->execute([$nuovo_stato, $candidatura_id, $progetto_id]);
-            $success_message = "Candidatura " . ($nuovo_stato === 'accettata' ? 'accettata' : 'rifiutata') . " con successo!";
-        }
+// Recupera progetti software per candidature
+$progettiSoftware = [];
+try {
+    $response = file_get_contents("http://localhost/BOSTARTER/backend/api/project.php?tipo=software&stato=aperto");
+    $data = json_decode($response, true);
+    
+    if (isset($data['success']) && $data['success']) {
+        $progettiSoftware = $data['data']['projects'] ?? $data['data'];
     }
+} catch (Exception $e) {
+    // Ignora errori per progetti software
 }
 
-// Carica candidature (se è il creatore) o stato candidature (se è un utente normale)
-if ($is_creatore) {
-    $stmt = $conn->prepare(
-        "SELECT c.id, c.stato, c.data_candidatura, c.data_risposta, u.nickname, u.nome, u.cognome, pr.nome as profilo_nome FROM candidature c JOIN utenti u ON c.utente_id = u.id JOIN profili_richiesti pr ON c.profilo_id = pr.id WHERE pr.progetto_id = ? ORDER BY c.data_candidatura DESC"
-    );
-    $stmt->execute([$progetto_id]);
-    $candidature = $stmt->fetchAll();
-} else {
-    $stmt = $conn->prepare(
-        "SELECT c.id, c.stato, c.data_candidatura, c.data_risposta, pr.nome as profilo_nome FROM candidature c JOIN profili_richiesti pr ON c.profilo_id = pr.id WHERE c.utente_id = ? AND pr.progetto_id = ? ORDER BY c.data_candidatura DESC"
-    );
-    $stmt->execute([$user_id, $progetto_id]);
-    $mie_candidature = $stmt->fetchAll();
-}
+include 'includes/head.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<?php $page_title = 'Candidature - ' . htmlspecialchars($progetto['nome']); include __DIR__ . '/includes/head.php'; ?>
-</head>
 <body>
-    <?php include __DIR__ . '/includes/navbar.php'; ?>
+    <?php include 'includes/navbar.php'; ?>
 
     <div class="container mt-4">
         <div class="row">
-            <div class="col-md-12">
-                <div class="card">
+            <div class="col-12">
+                <h1 class="mb-4">
+                    <i class="fas fa-users"></i>
+                    <?php if (isset($_GET['profilo_id'])): ?>
+                    Candidature per Profilo
+                    <?php else: ?>
+                    Le Mie Candidature
+                    <?php endif; ?>
+                </h1>
+
+                <?php if ($error): ?>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <?php echo htmlspecialchars($error); ?>
+                </div>
+                <?php endif; ?>
+
+                <!-- Form Nuova Candidatura -->
+                <?php if (!isset($_GET['profilo_id']) && !$isCreator): ?>
+                <div class="card mb-4">
                     <div class="card-header">
-                        <h3><i class="fas fa-users"></i> <?= $is_creatore ? 'Gestione' : '' ?> Candidature - <?= htmlspecialchars($progetto['nome']) ?></h3>
-                        <small class="text-muted">Progetto di <?= htmlspecialchars($progetto['creatore_nickname']) ?></small>
+                        <h5><i class="fas fa-plus"></i> Nuova Candidatura</h5>
                     </div>
                     <div class="card-body">
-                        <?php if (isset($success_message)): ?>
-                        <div class="alert alert-success"><?= $success_message ?></div>
-                        <?php endif; ?>
-
-                        <?php if (isset($error_message)): ?>
-                        <div class="alert alert-danger"><?= $error_message ?></div>
-                        <?php endif; ?>
-
-                        <?php if (isset($skill_mancanti) && !empty($skill_mancanti)): ?>
-                        <div class="alert alert-warning">
-                            <h6>Skill mancanti per la candidatura:</h6>
-                            <ul class="mb-0">
-                                <?php foreach ($skill_mancanti as $skill): ?>
-                                <li><?= htmlspecialchars($skill['nome']) ?>: hai livello <?= $skill['attuale'] ?>, richiesto <?= $skill['richiesto'] ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                            <small>Aggiorna le tue skill nella <a href="skill.php">pagina dedicata</a> prima di candidarti.</small>
-                        </div>
-                        <?php endif; ?>
-
-                        <?php if (!$is_creatore): ?>
-                        <!-- Sezione candidatura per utenti normali -->
-                        <h5>Profili disponibili per candidatura:</h5>
-                        <?php if (empty($profili)): ?>
-                        <div class="alert alert-info">
-                            Nessun profilo disponibile per questo progetto.
-                        </div>
-                        <?php else: ?>
-                        <div class="row">
-                            <?php foreach ($profili as $profilo): ?>
-                            <div class="col-md-6 mb-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title"><?= htmlspecialchars($profilo['nome']) ?></h6>
-                                        <p class="card-text"><?= htmlspecialchars($profilo['descrizione']) ?></p>
-
-                                        <!-- Skill richieste -->
-                                        <?php
-                                                    $stmt = $conn->prepare("SELECT sp.livello as livello_richiesto, c.nome FROM skill_profili sp JOIN competenze c ON sp.competenza_id = c.id WHERE sp.profilo_id = ? ORDER BY c.nome");
-                                                    $stmt->execute([$profilo['id']]);
-                                                    $skill_profilo = $stmt->fetchAll();
-                                                    ?>
-
-                                        <h6>Skill richieste:</h6>
-                                        <ul class="list-unstyled">
-                                            <?php foreach ($skill_profilo as $skill): ?>
-                                            <li>
-                                                <span class="badge bg-secondary">
-                                                    <?= htmlspecialchars($skill['nome']) ?> - Livello <?= $skill['livello_richiesto'] ?>
-                                                </span>
-                                            </li>
+                        <form id="candidaturaForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="progetto_id" class="form-label">Progetto Software *</label>
+                                        <select class="form-select" id="progetto_id" name="progetto_id" required>
+                                            <option value="">Seleziona progetto...</option>
+                                            <?php foreach ($progettiSoftware as $progetto): ?>
+                                            <option value="<?php echo $progetto['id']; ?>">
+                                                <?php echo htmlspecialchars($progetto['nome']); ?>
+                                            </option>
                                             <?php endforeach; ?>
-                                        </ul>
-
-                                        <!-- Verifica già candidato -->
-                                        <?php
-                                                    $stmt = $conn->prepare("SELECT stato FROM candidature WHERE utente_id = ? AND profilo_id = ?");
-                                                    $stmt->execute([$user_id, $profilo['id']]);
-                                                    $candidatura_esistente = $stmt->fetch();
-                                                    ?>
-
-                                        <?php if ($candidatura_esistente): ?>
-                                        <span class="badge bg-<?= $candidatura_esistente['stato'] === 'accettata' ? 'success' : ($candidatura_esistente['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
-                                            Candidatura <?= ucfirst($candidatura_esistente['stato']) ?>
-                                        </span>
-                                        <?php else: ?>
-                                        <form method="POST" class="d-inline">
-                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
-                                            <input type="hidden" name="action" value="candidati">
-                                            <input type="hidden" name="profilo_id" value="<?= $profilo['id'] ?>">
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fas fa-paper-plane"></i> Candidati
-                                            </button>
-                                        </form>
-                                        <?php endif; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="profilo_id" class="form-label">Profilo Richiesto *</label>
+                                        <select class="form-select" id="profilo_id" name="profilo_id" required disabled>
+                                            <option value="">Prima seleziona un progetto...</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <?php endif; ?>
+                            <div class="mb-3">
+                                <label for="motivazione" class="form-label">Motivazione *</label>
+                                <textarea class="form-control" id="motivazione" name="motivazione" rows="4"
+                                    placeholder="Spiega perché sei la persona giusta per questo profilo..."
+                                    required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-bostarter-primary">
+                                <i class="fas fa-paper-plane"></i> Invia Candidatura
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <?php endif; ?>
 
-                        <!-- Le mie candidature -->
-                        <?php if (!empty($mie_candidature)): ?>
-                        <h5 class="mt-4">Le mie candidature:</h5>
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Profilo</th>
-                                        <th>Data Candidatura</th>
-                                        <th>Stato</th>
-                                        <th>Data Risposta</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($mie_candidature as $cand): ?>
-                                    <tr>
-                                        <td><?= htmlspecialchars($cand['profilo_nome']) ?></td>
-                                        <td><?= date('d/m/Y H:i', strtotime($cand['data_candidatura'])) ?></td>
-                                        <td>
-                                            <span class="badge bg-<?= $cand['stato'] === 'accettata' ? 'success' : ($cand['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
-                                                <?= ucfirst($cand['stato']) ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <?= $cand['data_risposta'] ? date('d/m/Y H:i', strtotime($cand['data_risposta'])) : '-' ?>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                        <?php endif; ?>
-
-                        <?php else: ?>
-                        <!-- Sezione gestione candidature per creatori -->
-                        <h5>Candidature ricevute:</h5>
+                <!-- Lista Candidature -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>
+                            <i class="fas fa-list"></i>
+                            <?php if (isset($_GET['profilo_id'])): ?>
+                            Candidature Ricevute
+                            <?php else: ?>
+                            Le Mie Candidature
+                            <?php endif; ?>
+                        </h5>
+                        <span class="badge bg-bostarter-primary"><?php echo count($candidature); ?></span>
+                    </div>
+                    <div class="card-body">
                         <?php if (empty($candidature)): ?>
-                        <div class="alert alert-info">
-                            Nessuna candidatura ricevuta ancora.
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">
+                                <?php if (isset($_GET['profilo_id'])): ?>
+                                Nessuna candidatura ricevuta per questo profilo.
+                                <?php else: ?>
+                                Non hai ancora inviato candidature.
+                                <?php endif; ?>
+                            </p>
                         </div>
                         <?php else: ?>
                         <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
+                            <table class="table table-hover">
+                                <thead class="table-bostarter">
                                     <tr>
-                                        <th>Candidato</th>
+                                        <th>Utente</th>
+                                        <th>Progetto</th>
                                         <th>Profilo</th>
-                                        <th>Data Candidatura</th>
+                                        <th>Data</th>
                                         <th>Stato</th>
                                         <th>Azioni</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($candidature as $cand): ?>
+                                    <?php foreach ($candidature as $candidatura): ?>
                                     <tr>
                                         <td>
-                                            <strong><?= htmlspecialchars($cand['nickname']) ?></strong><br>
-                                            <small><?= htmlspecialchars($cand['nome'] . ' ' . $cand['cognome']) ?></small>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-2">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <div>
+                                                    <strong><?php echo htmlspecialchars($candidatura['nickname'] ?? $candidatura['utente_nickname']); ?></strong>
+                                                    <?php if (isset($candidatura['nome'])): ?>
+                                                    <br><small class="text-muted">
+                                                        <?php echo htmlspecialchars($candidatura['nome'] . ' ' . $candidatura['cognome']); ?>
+                                                    </small>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
                                         </td>
-                                        <td><?= htmlspecialchars($cand['profilo_nome']) ?></td>
-                                        <td><?= date('d/m/Y H:i', strtotime($cand['data_candidatura'])) ?></td>
                                         <td>
-                                            <span class="badge bg-<?= $cand['stato'] === 'accettata' ? 'success' : ($cand['stato'] === 'rifiutata' ? 'danger' : 'warning') ?>">
-                                                <?= ucfirst($cand['stato']) ?>
+                                            <strong><?php echo htmlspecialchars($candidatura['progetto_nome']); ?></strong>
+                                            <?php if (isset($candidatura['progetto_tipo'])): ?>
+                                            <br><small class="badge bg-bostarter-secondary">
+                                                <?php echo ucfirst($candidatura['progetto_tipo']); ?>
+                                            </small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-bostarter-info">
+                                                <?php echo htmlspecialchars($candidatura['profilo_nome']); ?>
                                             </span>
                                         </td>
                                         <td>
-                                            <?php if ($cand['stato'] === 'in_attesa'): ?>
-                                            <form method="POST" class="d-inline">
-                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
-                                                <input type="hidden" name="action" value="accetta">
-                                                <input type="hidden" name="candidatura_id" value="<?= $cand['id'] ?>">
-                                                <button type="submit" class="btn btn-sm btn-success">
-                                                    <i class="fas fa-check"></i> Accetta
-                                                </button>
-                                            </form>
-                                            <form method="POST" class="d-inline">
-                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(generate_csrf_token()) ?>">
-                                                <input type="hidden" name="action" value="rifiuta">
-                                                <input type="hidden" name="candidatura_id" value="<?= $cand['id'] ?>">
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-times"></i> Rifiuta
-                                                </button>
-                                            </form>
-                                            <?php else: ?>
                                             <small class="text-muted">
-                                                Risposto il <?= date('d/m/Y', strtotime($cand['data_risposta'])) ?>
+                                                <?php echo date('d/m/Y H:i', strtotime($candidatura['data_candidatura'])); ?>
                                             </small>
-                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                                    $stato = $candidatura['stato'] ?? 'in_valutazione';
+                                                    $statoClass = [
+                                                        'in_valutazione' => 'bg-warning',
+                                                        'accettata' => 'bg-success',
+                                                        'rifiutata' => 'bg-danger'
+                                                    ];
+                                                    $statoText = [
+                                                        'in_valutazione' => 'In Valutazione',
+                                                        'accettata' => 'Accettata',
+                                                        'rifiutata' => 'Rifiutata'
+                                                    ];
+                                                    ?>
+                                            <span class="badge <?php echo $statoClass[$stato]; ?>">
+                                                <?php echo $statoText[$stato]; ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary"
+                                                    onclick="viewCandidatura(<?php echo $candidatura['id']; ?>)">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+
+                                                <?php if ($isCreator || $isAdmin): ?>
+                                                <?php if ($stato === 'in_valutazione'): ?>
+                                                <button type="button" class="btn btn-outline-success"
+                                                    onclick="updateCandidaturaStatus(<?php echo $candidatura['id']; ?>, 'accettata')">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger"
+                                                    onclick="updateCandidaturaStatus(<?php echo $candidatura['id']; ?>, 'rifiutata')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                <?php endif; ?>
+                                                <?php endif; ?>
+
+                                                <?php if (!$isCreator || $candidatura['utente_id'] == $userId): ?>
+                                                <button type="button" class="btn btn-outline-danger"
+                                                    onclick="deleteCandidatura(<?php echo $candidatura['id']; ?>)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
-                        <?php endif; ?>
-                        <?php endif; ?>
-
-                        <div class="mt-4">
-                            <a href="view.php?id=<?= $progetto_id ?>" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Torna al Progetto
-                            </a>
-                        </div>
+                        <?php endif; 
+                        ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <?php include __DIR__ . '/includes/scripts.php'; ?>
+    <!-- Modal Dettaglio Candidatura -->
+    <div class="modal fade" id="candidaturaModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Dettaglio Candidatura</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="candidaturaModalBody">
+                    <!-- Contenuto caricato dinamicamente -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php include 'includes/scripts.php'; ?>
+
+    <script>
+    // Gestione form candidatura
+    document.getElementById('candidaturaForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            profilo_id: formData.get('profilo_id'),
+            motivazione: formData.get('motivazione')
+        };
+
+        fetch('/BOSTARTER/backend/api/candidature.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCSRFToken()
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('success', data.message || 'Candidatura inviata con successo!');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showMessage('error', data.error || 'Errore nell\'invio candidatura');
+                }
+            })
+            .catch(error => {
+                showMessage('error', 'Errore di connessione');
+                console.error('Error:', error);
+            });
+    });
+
+    // Carica profili quando si seleziona un progetto
+    document.getElementById('progetto_id')?.addEventListener('change', function() {
+        const progettoId = this.value;
+        const profiloSelect = document.getElementById('profilo_id');
+
+        if (!progettoId) {
+            profiloSelect.disabled = true;
+            profiloSelect.innerHTML = '<option value="">Prima seleziona un progetto...</option>';
+            return;
+        }
+
+        // Carica profili del progetto
+        fetch(`/BOSTARTER/backend/api/project.php?id=${progettoId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const progetto = data.data;
+                    if (progetto.profili_richiesti) {
+                        profiloSelect.innerHTML = '<option value="">Seleziona profilo...</option>';
+                        progetto.profili_richiesti.forEach(profilo => {
+                            const option = document.createElement('option');
+                            option.value = profilo.id;
+                            option.textContent = profilo.nome;
+                            profiloSelect.appendChild(option);
+                        });
+                        profiloSelect.disabled = false;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+    // Visualizza dettaglio candidatura
+    function viewCandidatura(candidaturaId) {
+        fetch(`/BOSTARTER/backend/api/candidature.php?id=${candidaturaId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const candidatura = data.data;
+                    document.getElementById('candidaturaModalBody').innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Informazioni Utente</h6>
+                                <p><strong>Nickname:</strong> ${candidatura.nickname}</p>
+                                <p><strong>Nome:</strong> ${candidatura.nome} ${candidatura.cognome}</p>
+                                <p><strong>Email:</strong> ${candidatura.email || 'Non disponibile'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Informazioni Candidatura</h6>
+                                <p><strong>Progetto:</strong> ${candidatura.progetto_nome}</p>
+                                <p><strong>Profilo:</strong> ${candidatura.profilo_nome}</p>
+                                <p><strong>Data:</strong> ${new Date(candidatura.data_candidatura).toLocaleDateString('it-IT')}</p>
+                                <p><strong>Stato:</strong> 
+                                    <span class="badge bg-${getStatusColor(candidatura.stato)}">
+                                        ${getStatusText(candidatura.stato)}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Motivazione</h6>
+                            <div class="border rounded p-3 bg-light">
+                                ${candidatura.motivazione}
+                            </div>
+                        </div>
+                    `;
+
+                    new bootstrap.Modal(document.getElementById('candidaturaModal')).show();
+                } else {
+                    showMessage('error', data.error || 'Errore nel caricamento candidatura');
+                }
+            })
+            .catch(error => {
+                showMessage('error', 'Errore di connessione');
+                console.error('Error:', error);
+            });
+    }
+
+    // Aggiorna stato candidatura
+    function updateCandidaturaStatus(candidaturaId, stato) {
+        if (!confirm(`Sei sicuro di voler ${stato === 'accettata' ? 'accettare' : 'rifiutare'} questa candidatura?`)) {
+            return;
+        }
+
+        fetch('/BOSTARTER/backend/api/candidature.php', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    candidatura_id: candidaturaId,
+                    stato: stato
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('success', data.message || 'Stato candidatura aggiornato');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showMessage('error', data.error || 'Errore nell\'aggiornamento');
+                }
+            })
+            .catch(error => {
+                showMessage('error', 'Errore di connessione');
+                console.error('Error:', error);
+            });
+    }
+
+    // Cancella candidatura
+    function deleteCandidatura(candidaturaId) {
+        if (!confirm('Sei sicuro di voler cancellare questa candidatura?')) {
+            return;
+        }
+
+        fetch(`/BOSTARTER/backend/api/candidature.php?id=${candidaturaId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('success', data.message || 'Candidatura cancellata');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showMessage('error', data.error || 'Errore nella cancellazione');
+                }
+            })
+            .catch(error => {
+                showMessage('error', 'Errore di connessione');
+                console.error('Error:', error);
+            });
+    }
+
+    // Utility functions
+    function getStatusColor(stato) {
+        const colors = {
+            'in_valutazione' => 'warning',
+            'accettata' => 'success',
+            'rifiutata' => 'danger'
+        };
+        return colors[stato] || 'secondary';
+    }
+
+    function getStatusText(stato) {
+        const texts = {
+            'in_valutazione' => 'In Valutazione',
+            'accettata' => 'Accettata',
+            'rifiutata' => 'Rifiutata'
+        };
+        return texts[stato] || 'Sconosciuto';
+    }
+
+    function getCSRFToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    }
+
+    function showMessage(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+
+        const alert = document.createElement('div');
+        alert.className = `alert ${alertClass} alert-dismissible fade show`;
+        alert.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+        document.querySelector('.container').insertBefore(alert, document.querySelector('.row'));
+
+        setTimeout(() => {
+            alert.remove();
+        }, 5000);
+    }
+    </script>
 </body>
 
 </html>

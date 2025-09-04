@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Carica tutte le competenze con statistiche di utilizzo
-$stmt = $conn->query("
+$stmt = $conn->query(
     SELECT 
         c.id, c.nome,
         COUNT(su.utente_id) as utenti_utilizzatori,
@@ -59,7 +59,7 @@ $stmt = $conn->query("
     LEFT JOIN skill_profili sp ON c.id = sp.competenza_id
     GROUP BY c.id, c.nome
     ORDER BY c.nome
-");
+);
 $competenze = $stmt->fetchAll();
 
 // Statistiche generali
@@ -231,7 +231,7 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                             </div>
                             <div class="card-body">
                                 <?php
-                                $stmt = $conn->query("
+                                $stmt = $conn->query(
                                     SELECT 
                                         c.nome,
                                         COUNT(su.utente_id) as utenti_con_skill,
@@ -244,7 +244,7 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                                     HAVING popolarita_totale > 0
                                     ORDER BY popolarita_totale DESC
                                     LIMIT 10
-                                ");
+                                );
                                 $top_competenze = $stmt->fetchAll();
                                 ?>
 
