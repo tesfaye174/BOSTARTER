@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $competenza_id = intval($_POST['competenza_id']);
             
             // Verifica che non sia utilizzata
-            $stmt = $conn->prepare("SELECT COUNT(*) as uso FROM skill_utente WHERE competenza_id = ?");
+            $stmt = $conn->prepare("SELECT COUNT(*) as uso FROM utenti_competenze WHERE competenza_id = ?");
             $stmt->execute([$competenza_id]);
             $uso = $stmt->fetch()['uso'];
             
@@ -49,27 +49,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Carica tutte le competenze con statistiche di utilizzo
-$stmt = $conn->query(
+$stmt = $conn->query("
     SELECT 
         c.id, c.nome,
-        COUNT(su.utente_id) as utenti_utilizzatori,
+        COUNT(uc.utente_id) as utenti_utilizzatori,
         COUNT(sp.profilo_id) as profili_richiesti
     FROM competenze c
-    LEFT JOIN skill_utente su ON c.id = su.competenza_id
+    LEFT JOIN utenti_competenze uc ON c.id = uc.competenza_id
     LEFT JOIN skill_profili sp ON c.id = sp.competenza_id
     GROUP BY c.id, c.nome
     ORDER BY c.nome
-);
+");
 $competenze = $stmt->fetchAll();
 
 // Statistiche generali
 $stmt = $conn->query("SELECT COUNT(*) as totale FROM competenze");
 $stats_competenze = $stmt->fetch()['totale'];
 
-$stmt = $conn->query("SELECT COUNT(*) as totale FROM utenti WHERE tipo_utente = 'amministratore'");
+$stmt = $conn->query("SELECT COUNT(*) as totale FROM utenti WHERE tipo_utente = 'AMMINISTRATORE'");
 $stats_admin = $stmt->fetch()['totale'];
 
-$stmt = $conn->query("SELECT COUNT(*) as totale FROM utenti WHERE tipo_utente = 'creatore'");
+$stmt = $conn->query("SELECT COUNT(*) as totale FROM utenti WHERE tipo_utente = 'CREATORE'");
 $stats_creatori = $stmt->fetch()['totale'];
 
 $stmt = $conn->query("SELECT COUNT(*) as totale FROM utenti");
@@ -231,20 +231,20 @@ $stats_totale_utenti = $stmt->fetch()['totale'];
                             </div>
                             <div class="card-body">
                                 <?php
-                                $stmt = $conn->query(
-                                    SELECT 
-                                        c.nome,
-                                        COUNT(su.utente_id) as utenti_con_skill,
-                                        COUNT(sp.profilo_id) as profili_richiedenti,
-                                        (COUNT(su.utente_id) + COUNT(sp.profilo_id)) as popolarita_totale
-                                    FROM competenze c
-                                    LEFT JOIN skill_utente su ON c.id = su.competenza_id
-                                    LEFT JOIN skill_profili sp ON c.id = sp.competenza_id
-                                    GROUP BY c.id, c.nome
-                                    HAVING popolarita_totale > 0
-                                    ORDER BY popolarita_totale DESC
-                                    LIMIT 10
-                                );
+                                $stmt = $conn->query("
+                    SELECT 
+                        c.nome,
+                        COUNT(uc.utente_id) as utenti_con_skill,
+                        COUNT(sp.profilo_id) as profili_richiedenti,
+                        (COUNT(uc.utente_id) + COUNT(sp.profilo_id)) as popolarita_totale
+                    FROM competenze c
+                    LEFT JOIN utenti_competenze uc ON c.id = uc.competenza_id
+                    LEFT JOIN skill_profili sp ON c.id = sp.competenza_id
+                    GROUP BY c.id, c.nome
+                    HAVING popolarita_totale > 0
+                    ORDER BY popolarita_totale DESC
+                    LIMIT 10
+                ");
                                 $top_competenze = $stmt->fetchAll();
                                 ?>
 

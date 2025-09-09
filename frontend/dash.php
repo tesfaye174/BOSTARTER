@@ -26,7 +26,7 @@ try {
         $stmt->execute([$user_id]);
         $stats["progetti_creati"] = $stmt->fetch()["count"] ?? 0;
         
-        $stmt = $conn->prepare("SELECT COALESCE(SUM(budget_raccolto), 0) as totale FROM progetti WHERE creatore_id = ?");
+        $stmt = $conn->prepare("SELECT COALESCE(SUM(budget_richiesto), 0) as totale FROM progetti WHERE creatore_id = ?");
         $stmt->execute([$user_id]);
         $stats["fondi_raccolti"] = $stmt->fetch()["totale"] ?? 0;
         
@@ -34,7 +34,7 @@ try {
         $stmt = $conn->prepare("
             SELECT * FROM progetti 
             WHERE creatore_id = ? 
-            ORDER BY data_inserimento DESC
+            ORDER BY data_creazione DESC
         ");
         $stmt->execute([$user_id]);
         $progetti = $stmt->fetchAll();

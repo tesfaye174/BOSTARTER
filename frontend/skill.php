@@ -34,24 +34,24 @@ try {
                 $_SESSION['flash_error'] = 'Il livello deve essere compreso tra 1 e 5.';
             } else {
                 // Controlla se già presente
-                $stmt = $conn->prepare("SELECT id FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
+                $stmt = $conn->prepare("SELECT id FROM utenti_competenze WHERE utente_id = ? AND competenza_id = ?");
                 $stmt->execute([$_SESSION['user_id'], $competenza_id]);
                 
                 if ($stmt->fetch()) {
                     // Aggiorna livello
-                    $stmt = $conn->prepare("UPDATE skill_utente SET livello = ? WHERE utente_id = ? AND competenza_id = ?");
+                    $stmt = $conn->prepare("UPDATE utenti_competenze SET livello = ? WHERE utente_id = ? AND competenza_id = ?");
                     $stmt->execute([$livello, $_SESSION['user_id'], $competenza_id]);
                     $_SESSION['flash_success'] = 'Livello competenza aggiornato!';
                 } else {
                     // Inserisci nuova skill
-                    $stmt = $conn->prepare("INSERT INTO skill_utente (utente_id, competenza_id, livello) VALUES (?, ?, ?)");
+                    $stmt = $conn->prepare("INSERT INTO utenti_competenze (utente_id, competenza_id, livello) VALUES (?, ?, ?)");
                     $stmt->execute([$_SESSION['user_id'], $competenza_id, $livello]);
                     $_SESSION['flash_success'] = 'Competenza aggiunta con successo!';
                 }
             }
         } elseif ($_POST['action'] === 'remove_skill') {
             $competenza_id = intval($_POST['competenza_id']);
-            $stmt = $conn->prepare("DELETE FROM skill_utente WHERE utente_id = ? AND competenza_id = ?");
+            $stmt = $conn->prepare("DELETE FROM utenti_competenze WHERE utente_id = ? AND competenza_id = ?");
             $stmt->execute([$_SESSION['user_id'], $competenza_id]);
             $_SESSION['flash_success'] = 'Competenza rimossa!';
         }
@@ -62,11 +62,11 @@ try {
     
     // Carica le skill dell'utente
     $stmt = $conn->prepare(
-        SELECT su.*, c.nome, c.descrizione 
-        FROM skill_utente su 
-        JOIN competenze c ON su.competenza_id = c.id 
-        WHERE su.utente_id = ? 
-        ORDER BY c.nome
+        "SELECT uc.*, c.nome, c.descrizione 
+        FROM utenti_competenze uc 
+        JOIN competenze c ON uc.competenza_id = c.id 
+        WHERE uc.utente_id = ? 
+        ORDER BY c.nome"
     );
     $stmt->execute([$_SESSION['user_id']]);
     $user_skills = $stmt->fetchAll();

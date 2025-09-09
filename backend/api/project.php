@@ -86,11 +86,11 @@ switch ($_SERVER['REQUEST_METHOD']) {
         
         $data = [
             'creatore_id' => $_SESSION['user_id'],
-            'nome' => $input['nome'],
+            'titolo' => $input['nome'],
             'descrizione' => $input['descrizione'],
             'budget_richiesto' => $input['budget_richiesto'],
-            'data_limite' => $input['data_limite'],
-            'tipo' => $input['tipo'],
+            'data_fine' => $input['data_limite'],
+            'tipo_progetto' => $input['tipo'],
             'categoria' => $input['categoria'] ?? null,
             'immagine' => $input['immagine'] ?? null
         ];

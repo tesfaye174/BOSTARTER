@@ -81,14 +81,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             if (empty($validationErrors)) {
                 try {
                     $conn->beginTransaction();
-                    $stmt = $conn->prepare("SELECT COUNT(*) FROM competenze WHERE LOWER(nome) = LOWER(?) AND categoria = ?");
+                    $stmt = $conn->prepare("SELECT COUNT(*) FROM competenze WHERE LOWER(nome) = LOWER(?) AND categoria_id = ?");
                     $stmt->execute([strtolower($nome), $categoria]);
                     if ($stmt->fetchColumn() > 0) {
                         throw new Exception("Una competenza con questo nome già esiste in questa categoria");
                     }
                     $stmt = $conn->prepare("
-                        INSERT INTO competenze (nome, descrizione, categoria, data_creazione)
-                        VALUES (?, ?, ?, NOW())
+                        INSERT INTO competenze (nome, descrizione, categoria_id)
+                        VALUES (?, ?, ?)
                     ");
                     if ($stmt->execute([$nome, $descrizione, $categoria])) {
                         // Log azione nel database tradizionale
@@ -126,22 +126,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
                 }
                 $conn->beginTransaction();
                 $stmt = $conn->prepare(
-                    SELECT COUNT(*) 
+                    "SELECT COUNT(*) 
                     FROM utenti_competenze 
-                    WHERE id_competenza = ?
+                    WHERE competenza_id = ?"
                 );
                 $stmt->execute([$skill_id]);
                 if ($stmt->fetchColumn() > 0) {
                     throw new Exception('Non � possibile eliminare questa competenza perch� � utilizzata da alcuni utenti');
                 }
                 $stmt = $conn->prepare(
-                    DELETE FROM competenze 
+                    "DELETE FROM competenze 
                     WHERE id = ? 
                     AND NOT EXISTS (
                         SELECT 1 
                         FROM progetti_competenze 
-                        WHERE id_competenza = competenze.id
-                    )
+                        WHERE competenza_id = competenze.id
+                    )"
                 );
                 if ($stmt->execute([$skill_id])) {
                     if ($stmt->rowCount() > 0) {
@@ -163,33 +163,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
     }
 }
 $stmt = $conn->prepare(
-    SELECT 
+    "SELECT 
         c.id,
         c.nome,
         c.descrizione,
-        c.categoria,
-        c.data_creazione,
-        COUNT(DISTINCT uc.id_utente) as num_utenti,
-        COUNT(DISTINCT pc.id_progetto) as num_progetti
+        c.categoria_id,
+        COUNT(DISTINCT uc.utente_id) as num_utenti,
+        COUNT(DISTINCT pc.progetto_id) as num_progetti
     FROM competenze c
-    LEFT JOIN utenti_competenze uc ON c.id = uc.id_competenza
-    LEFT JOIN progetti_competenze pc ON c.id = pc.id_competenza
-    GROUP BY c.id, c.nome, c.descrizione, c.categoria
-    ORDER BY c.categoria, c.nome
+    LEFT JOIN utenti_competenze uc ON c.id = uc.competenza_id
+    LEFT JOIN progetti_competenze pc ON c.id = pc.competenza_id
+    GROUP BY c.id, c.nome, c.descrizione, c.categoria_id
+    ORDER BY c.categoria_id, c.nome"
 );
 $stmt->execute();
 $competenze = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $competenze_per_categoria = [];
 foreach ($competenze as $competenza) {
-    $competenze_per_categoria[$competenza['categoria']][] = $competenza;
+    $competenze_per_categoria[$competenza['categoria_id']][] = $competenza;
 }
 $stmt = $conn->prepare(
-    SELECT 
+    "SELECT 
         COUNT(*) as total_skills,
-        COUNT(DISTINCT categoria) as total_categories,
-        COUNT(DISTINCT srp.profilo_id) as used_in_projects
-    FROM competenze c
-    LEFT JOIN skill_richieste_profilo srp ON c.id = srp.competenza_id
+        COUNT(DISTINCT categoria_id) as total_categories
+    FROM competenze c"
 );
 $stmt->execute();
 $stats = $stmt->fetch();

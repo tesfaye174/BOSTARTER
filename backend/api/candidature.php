@@ -100,12 +100,7 @@ function getCandidaturePerProfilo($profiloId, $roleManager) {
     $db = Database::getInstance()->getConnection();
     
     // Verifica che l'utente sia creatore/admin del progetto
-    $stmt = $db->prepare(
-        SELECT p.creatore_id, p.nome as progetto_nome
-        FROM profili_richiesti pr
-        JOIN progetti p ON pr.progetto_id = p.id
-        WHERE pr.id = ?
-    );
+    $stmt = $db->prepare("\n        SELECT p.creatore_id, p.titolo AS progetto_nome\n        FROM profili_richiesti pr\n        JOIN progetti p ON pr.progetto_id = p.id\n        WHERE pr.id = ?\n    ");
     $stmt->execute([$profiloId]);
     $progetto = $stmt->fetch();
     
@@ -118,14 +113,7 @@ function getCandidaturePerProfilo($profiloId, $roleManager) {
     }
     
     // Recupera candidature
-    $stmt = $db->prepare(
-        SELECT c.*, u.nickname, u.nome, u.cognome, pr.nome as profilo_nome
-        FROM candidature c
-        JOIN utenti u ON c.utente_id = u.id
-        JOIN profili_richiesti pr ON c.profilo_id = pr.id
-        WHERE c.profilo_id = ?
-        ORDER BY c.data_candidatura DESC
-    );
+    $stmt = $db->prepare("\n        SELECT c.*, u.nickname, u.nome, u.cognome, pr.nome AS profilo_nome, p.titolo AS progetto_nome\n        FROM candidature c\n        JOIN utenti u ON c.utente_id = u.id\n        JOIN profili_richiesti pr ON c.profilo_id = pr.id\n        JOIN progetti p ON pr.progetto_id = p.id\n        WHERE c.profilo_id = ?\n        ORDER BY c.data_candidatura DESC\n    ");
     $stmt->execute([$profiloId]);
     
     return $stmt->fetchAll();
@@ -134,14 +122,7 @@ function getCandidaturePerProfilo($profiloId, $roleManager) {
 function getCandidatureUtente($utenteId) {
     $db = Database::getInstance()->getConnection();
     
-    $stmt = $db->prepare(
-        SELECT c.*, pr.nome as profilo_nome, p.nome as progetto_nome, p.tipo as progetto_tipo
-        FROM candidature c
-        JOIN profili_richiesti pr ON c.profilo_id = pr.id
-        JOIN progetti p ON pr.progetto_id = p.id
-        WHERE c.utente_id = ?
-        ORDER BY c.data_candidatura DESC
-    );
+    $stmt = $db->prepare("\n        SELECT c.*, pr.nome AS profilo_nome, p.titolo AS progetto_nome, p.tipo_progetto AS progetto_tipo\n        FROM candidature c\n        JOIN profili_richiesti pr ON c.profilo_id = pr.id\n        JOIN progetti p ON pr.progetto_id = p.id\n        WHERE c.utente_id = ?\n        ORDER BY c.data_candidatura DESC\n    ");
     $stmt->execute([$utenteId]);
     
     return $stmt->fetchAll();
@@ -152,12 +133,7 @@ function creaCandidatura($input, $utenteId) {
     
     try {
         // Verifica che il profilo esista e sia per progetto software
-        $stmt = $db->prepare(
-            SELECT pr.*, p.tipo, p.stato
-            FROM profili_richiesti pr
-            JOIN progetti p ON pr.progetto_id = p.id
-            WHERE pr.id = ? AND pr.is_active = TRUE
-        );
+        $stmt = $db->prepare("\n            SELECT pr.*, p.tipo_progetto, p.stato\n            FROM profili_richiesti pr\n            JOIN progetti p ON pr.progetto_id = p.id\n            WHERE pr.id = ?\n        ");
         $stmt->execute([$input['profilo_id']]);
         $profilo = $stmt->fetch();
         
@@ -165,11 +141,11 @@ function creaCandidatura($input, $utenteId) {
             return ['success' => false, 'error' => 'Profilo non trovato o non attivo'];
         }
         
-        if ($profilo['tipo'] !== 'software') {
+        if (strtolower($profilo['tipo_progetto']) !== 'software') {
             return ['success' => false, 'error' => 'Candidature solo per progetti software'];
         }
         
-        if ($profilo['stato'] !== 'aperto') {
+        if (strtolower($profilo['stato']) !== 'aperto') {
             return ['success' => false, 'error' => 'Progetto non aperto alle candidature'];
         }
         
@@ -200,13 +176,7 @@ function aggiornaStatoCandidatura($candidaturaId, $stato, $roleManager) {
     
     try {
         // Verifica permessi
-        $stmt = $db->prepare(
-            SELECT c.*, p.creatore_id, pr.numero_posizioni, pr.posizioni_occupate
-            FROM candidature c
-            JOIN profili_richiesti pr ON c.profilo_id = pr.id
-            JOIN progetti p ON pr.progetto_id = p.id
-            WHERE c.id = ?
-        );
+        $stmt = $db->prepare("\n            SELECT c.*, p.creatore_id, pr.numero_posizioni, pr.posizioni_occupate\n            FROM candidature c\n            JOIN profili_richiesti pr ON c.profilo_id = pr.id\n            JOIN progetti p ON pr.progetto_id = p.id\n            WHERE c.id = ?\n        ");
         $stmt->execute([$candidaturaId]);
         $candidatura = $stmt->fetch();
         
@@ -219,20 +189,12 @@ function aggiornaStatoCandidatura($candidaturaId, $stato, $roleManager) {
         }
         
         // Aggiorna stato
-        $stmt = $db->prepare(
-            UPDATE candidature 
-            SET stato = ?, data_valutazione = NOW(), valutatore_id = ?
-            WHERE id = ?
-        );
+        $stmt = $db->prepare("\n            UPDATE candidature \n            SET stato = ?, data_valutazione = NOW(), valutatore_id = ?\n            WHERE id = ?\n        ");
         $stmt->execute([$stato, $roleManager->getUserId(), $candidaturaId]);
         
         // Se accettata, aggiorna posizioni occupate
         if ($stato === 'accettata') {
-            $stmt = $db->prepare(
-                UPDATE profili_richiesti 
-                SET posizioni_occupate = posizioni_occupate + 1
-                WHERE id = ?
-            );
+            $stmt = $db->prepare("\n                UPDATE profili_richiesti \n                SET posizioni_occupate = posizioni_occupate + 1\n                WHERE id = ?\n            ");
             $stmt->execute([$candidatura['profilo_id']]);
         }
         

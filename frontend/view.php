@@ -22,12 +22,12 @@ if (!$project_id) {
         $conn = $db->getConnection();
         
         $stmt = $conn->prepare(
-            SELECT p.*, u.nickname as creatore_nickname,
-                   p.tipo as tipo_progetto,
-                   p.data_limite as data_scadenza
+            "SELECT p.*, u.nickname as creatore_nickname,
+                   p.stato as tipo_progetto,
+                   p.data_fine as data_scadenza
             FROM progetti p 
             LEFT JOIN utenti u ON p.creatore_id = u.id
-            WHERE p.id = ?
+            WHERE p.id = ?"
         );
         $stmt->execute([$project_id]);
         $project = $stmt->fetch();
@@ -35,12 +35,12 @@ if (!$project_id) {
         if ($project) {
             // Calcola statistiche
             $stmt_stats = $conn->prepare(
-                SELECT 
+                "SELECT 
                     COALESCE(SUM(importo), 0) as totale_raccolto,
                     COUNT(DISTINCT utente_id) as numero_sostenitori,
                     COUNT(id) as numero_finanziamenti
                 FROM finanziamenti 
-                WHERE progetto_id = ?
+                WHERE progetto_id = ?"
             );
             $stmt_stats->execute([$project_id]);
             $stats = $stmt_stats->fetch();
@@ -52,11 +52,11 @@ if (!$project_id) {
             // Carica finanziamenti
             try {
                 $stmt_fin = $conn->prepare(
-                    SELECT f.*, u.nickname as finanziatore_nickname 
+                    "SELECT f.*, u.nickname as finanziatore_nickname 
                     FROM finanziamenti f 
                     LEFT JOIN utenti u ON f.utente_id = u.id 
                     WHERE f.progetto_id = ? 
-                    ORDER BY f.data_finanziamento DESC
+                    ORDER BY f.data_finanziamento DESC"
                 );
                 $stmt_fin->execute([$project_id]);
                 $finanziamenti = $stmt_fin->fetchAll();
@@ -74,13 +74,13 @@ if (!$project_id) {
 
 $is_logged_in = isset($_SESSION["user_id"]);
 $progress = $project && $project["budget_richiesto"] > 0 ? min(100, ($project["totale_raccolto"] / $project["budget_richiesto"]) * 100) : 0;
-$days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($project["data_limite"]) - time()) / (60 * 60 * 24))) : 0;
+$days_left = $project && $project["data_fine"] ? max(0, floor((strtotime($project["data_fine"]) - time()) / (60 * 60 * 24))) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="it" data-bs-theme="light">
 
 <head>
-    <?php $page_title = $project ? htmlspecialchars($project['nome']) : 'Progetto'; include __DIR__ . '/includes/head.php'; ?>
+    <?php $page_title = $project ? htmlspecialchars($project['titolo']) : 'Progetto'; include __DIR__ . '/includes/head.php'; ?>
     <!-- Favicon fallbacks -->
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -112,7 +112,7 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="index.php">Home</a></li>
                             <li class="breadcrumb-item"><a href="index.php#progetti">Progetti</a></li>
-                            <li class="breadcrumb-item active"><?= htmlspecialchars($project["nome"]) ?></li>
+                            <li class="breadcrumb-item active"><?= htmlspecialchars($project["titolo"]) ?></li>
                         </ol>
                     </nav>
                 </div>
@@ -122,11 +122,11 @@ $days_left = $project && $project["data_limite"] ? max(0, floor((strtotime($proj
                 <div class="col-lg-8">
                     <div class="card-bostarter mb-4 animate-fade-up">
                         <img src="images/project-placeholder.jpg" class="card-img-top project-image"
-                            alt="<?= htmlspecialchars($project["nome"]) ?>">
+                            alt="<?= htmlspecialchars($project["titolo"]) ?>">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
-                                    <h1 class="text-gradient-bostarter"><?= htmlspecialchars($project["nome"]) ?></h1>
+                                    <h1 class="text-gradient-bostarter"><?= htmlspecialchars($project["titolo"]) ?></h1>
                                     <p class="text-muted mb-0">
                                         <i class="fas fa-user me-2"></i>
                                         di <strong><?= htmlspecialchars($project["creatore_nickname"]) ?></strong>

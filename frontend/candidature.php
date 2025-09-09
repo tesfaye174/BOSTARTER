@@ -98,7 +98,7 @@ include 'includes/head.php';
                                             <option value="">Seleziona progetto...</option>
                                             <?php foreach ($progettiSoftware as $progetto): ?>
                                             <option value="<?php echo $progetto['id']; ?>">
-                                                <?php echo htmlspecialchars($progetto['nome']); ?>
+                                                <?php echo htmlspecialchars($progetto['titolo'] ?? $progetto['nome']); ?>
                                             </option>
                                             <?php endforeach; ?>
                                         </select>

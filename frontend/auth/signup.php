@@ -53,10 +53,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 
                 // Registra l'utente con il tipo scelto
                 $stmt = $conn->prepare(
-                    INSERT INTO utenti (email, nickname, password, nome, cognome, anno_nascita, luogo_nascita, tipo_utente) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    "INSERT INTO utenti (email, nickname, password_hash, nome, cognome, data_nascita, citta, tipo_utente) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
                 );
-                $stmt->execute([$email, $nickname, $password_hash, $nome, $cognome, $anno_nascita, $luogo_nascita, $tipo_utente]);
+                // Converti anno nascita in data nascita (MySQL DATE format)
+                $data_nascita = $anno_nascita . '-01-01';
+                $tipo_mysql = ($tipo_utente === 'creatore') ? 'CREATORE' : 'UTENTE';
+                
+                $stmt->execute([$email, $nickname, $password_hash, $nome, $cognome, $data_nascita, $luogo_nascita, $tipo_mysql]);
                 $success = $successMessages[array_rand($successMessages)] . " Ora puoi effettuare il login.";
             }
         } catch(Exception $e) {

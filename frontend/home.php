@@ -4,50 +4,137 @@ require_once __DIR__ . '/includes/init.php';
 
 $page_title = 'Home';
 
-// Prepara messaggio di logout
+// Initialize CSRF token if not exists
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Function to validate and sanitize input
+function sanitizeInput($data) {
+    if (is_array($data)) {
+        return array_map('sanitizeInput', $data);
+    }
+    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+}
+
+// Validate and sanitize GET parameters
+$get = [];
+$get['logout'] = isset($_GET['logout']) ? sanitizeInput($_GET['logout']) : '';
+$get['user'] = isset($_GET['user']) ? sanitizeInput($_GET['user']) : '';
+
+// Prepare logout message with validation
 $logout_message = '';
-if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
-    $username = $_GET['user'] ?? '';
-    $logout_message = $username 
-        ? "Arrivederci " . htmlspecialchars($username) . "! Grazie per aver utilizzato BOSTARTER."
+if ($get['logout'] === 'success') {
+    $logout_message = !empty($get['user']) 
+        ? "Arrivederci " . $get['user'] . "! Grazie per aver utilizzato BOSTARTER."
         : "Logout effettuato con successo! Grazie per aver utilizzato BOSTARTER.";
 }
 
-// Recupera progetti in evidenza
+// Initialize database connection
 $progetti_evidenza = [];
-try {
-    $db = Database::getInstance();
-    $conn = $db->getConnection();
+$stats = [
+    'creatori_totali' => 0,
+    'progetti_aperti' => 0,
+    'fondi_totali' => 0,
+    'totale_progetti' => 0,
+    'progetti_attivi' => 0,
+    'totale_raccolto' => 0,
+    'totale_utenti' => 0
+];
 
-    $stmt = $conn->query("
-        SELECT id, nome, descrizione, foto, budget, data_limite 
-        FROM progetti 
-        WHERE stato = 'aperto' 
-        ORDER BY data_inserimento DESC 
+// Include the header
+include __DIR__ . '/includes/head.php';
+?>
+
+<body>
+    <?php include __DIR__ . '/includes/navbar.php'; ?>
+
+    <div class="container py-4">
+    
+    // Set error mode to exception
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Prepare and execute query with parameterized statement
+    $query = "
+        SELECT 
+            p.id AS id,
+            p.titolo AS nome,
+            p.descrizione AS descrizione,
+            p.immagine AS immagine,
+            p.budget_richiesto AS budget_richiesto,
+            COALESCE(p.budget_raccolto, 0) AS raccolti,
+            p.data_fine AS data_limite,
+            LOWER(p.tipo_progetto) AS tipo,
+            u.nickname AS creatore_nickname
+        FROM progetti p
+        JOIN utenti u ON p.creatore_id = u.id
+        WHERE p.stato = 'ATTIVO'
+        ORDER BY p.data_inserimento DESC
         LIMIT 3
-    ");
+    ";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->execute();
     $progetti_evidenza = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
+    
+} catch (PDOException $e) {
     error_log('Errore nel recupero dei progetti in evidenza: ' . $e->getMessage());
+    $progetti_evidenza = [];
+    // Log the error but don't expose details to the user
+    if (!headers_sent()) {
+        header('HTTP/1.1 500 Internal Server Error');
+    }
+} catch (Exception $e) {
+    error_log('Errore generico: ' . $e->getMessage());
+    $progetti_evidenza = [];
+    if (!headers_sent()) {
+        header('HTTP/1.1 500 Internal Server Error');
+    }
 }
 
-// Recupera statistiche generali
-$stats = [];
+// Recupera statistiche generali con gestione errori migliorata
+$stats = [
+    'creatori_totali' => 0,
+    'progetti_aperti' => 0,
+    'fondi_totali' => 0,
+    'totale_progetti' => 0,
+    'progetti_attivi' => 0,
+    'totale_raccolto' => 0,
+    'totale_utenti' => 0
+];
+
 try {
-    $stmt = $conn->query("
-        SELECT 
-            (SELECT COUNT(*) FROM utenti WHERE tipo = 'creatore') AS creatori_totali,
-            (SELECT COUNT(*) FROM progetti WHERE stato = 'aperto') AS progetti_aperti,
-            (SELECT SUM(importo) FROM finanziamenti) AS fondi_totali
-    ");
-    $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Usa prepared statements per tutte le query
+    $queries = [
+        'creatori_totali' => "SELECT COUNT(*) as count FROM utenti WHERE tipo_utente = 'CREATORE'",
+        'progetti_aperti' => "SELECT COUNT(*) as count FROM progetti WHERE stato = 'ATTIVO'",
+        'fondi_totali' => "SELECT COALESCE(SUM(importo), 0) as total FROM finanziamenti WHERE stato = 'COMPLETATO'",
+        'totale_progetti' => "SELECT COUNT(*) as count FROM progetti",
+        'progetti_attivi' => "SELECT COUNT(*) as count FROM progetti WHERE stato = 'ATTIVO'",
+        'totale_raccolto' => "SELECT COALESCE(SUM(importo), 0) as total FROM finanziamenti WHERE stato = 'COMPLETATO'",
+        'totale_utenti' => "SELECT COUNT(*) as count FROM utenti"
+    ];
+
+    foreach ($queries as $key => $query) {
+        try {
+            $stmt = $conn->prepare($query);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (strpos($key, 'total') !== false) {
+                $stats[$key] = (float)($result['total'] ?? 0);
+            } else {
+                $stats[$key] = (int)($result['count'] ?? 0);
+            }
+        } catch (PDOException $e) {
+            error_log("Errore nel recupero della statistica {$key}: " . $e->getMessage());
+            // Continua con le altre query anche se una fallisce
+            continue;
+        }
+    }
 } catch (Exception $e) {
     error_log('Errore nel recupero delle statistiche generali: ' . $e->getMessage());
-    $stats = [
-        'creatori_totali' => 0,
-        'progetti_aperti' => 0,
-        'fondi_totali' => 0
-    ];
+    // Usa i valori di default in caso di errore
 }
 ?>
 
@@ -86,19 +173,20 @@ try {
                         </p>
                         <div class="d-flex gap-3">
                             <?php if (isLoggedIn()): ?>
-                            <a href="new.php" class="btn btn-warning btn-lg px-4">
-                                <i class="fas fa-plus me-2"></i>Crea Progetto
-                            </a>
-                            <a href="view.php" class="btn btn-outline-light btn-lg px-4">
-                                <i class="fas fa-search me-2"></i>Esplora Progetti
-                                <?php else: ?>
+                                <a href="new.php" class="btn btn-warning btn-lg px-4">
+                                    <i class="fas fa-plus me-2"></i>Crea Progetto
+                                </a>
+                                <a href="view.php" class="btn btn-outline-light btn-lg px-4">
+                                    <i class="fas fa-search me-2"></i>Esplora Progetti
+                                </a>
+                            <?php else: ?>
                                 <a href="auth/signup.php" class="btn btn-warning btn-lg px-4">
                                     <i class="fas fa-user-plus me-2"></i>Registrati
                                 </a>
                                 <a href="auth/login.php" class="btn btn-outline-light btn-lg px-4">
                                     <i class="fas fa-sign-in-alt me-2"></i>Accedi
                                 </a>
-                                <?php endif; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="col-lg-6 text-center">
@@ -286,17 +374,44 @@ try {
 
     </div>
 
-    <?php include __DIR__ . '/includes/scripts.php'; ?>
-
+    <!-- Includi CSRF token come meta tag per JavaScript -->
+    <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+    
+    <?php 
+    // Includi gli script
+    include __DIR__ . '/includes/scripts.php'; 
+    
+    // Aggiungi script per gestire le richieste AJAX con CSRF
+    ?>
+    
     <script>
-    // Initialize logout success message if present
+    // Handle global AJAX errors
     document.addEventListener('DOMContentLoaded', function() {
+        // Logout success message
         <?php if ($logout_message): ?>
-        // Show logout success notification
-        if (typeof BOSTARTER !== 'undefined' && BOSTARTER.logout) {
-            BOSTARTER.logout.showLogoutSuccess('<?= addslashes($_GET['user'] ?? '') ?>');
-        }
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+        alertDiv.role = 'alert';
+        alertDiv.style.zIndex = '9999';
+        alertDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            <?= addslashes($logout_message) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            const alert = bootstrap.Alert.getOrCreateInstance(alertDiv);
+            if (alert) alert.close();
+        }, 5000);
         <?php endif; ?>
+
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
     </script>
 

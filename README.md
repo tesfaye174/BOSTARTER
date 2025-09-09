@@ -2,7 +2,7 @@
 
 ## 📖 Descrizione
 
-Piattaforma web completa per crowdfunding di progetti hardware e software. Sistema robusto con database MySQL, trigger automatici, gestione utenti multi-ruolo e interfaccia moderna.
+Piattaforma web completa per crowdfunding di progetti hardware e software. Sistema robusto con database MySQL, trigger automatici, gestione utenti multi-ruolo e interfaccia moderna completamente ottimizzata.
 
 ## ✨ Caratteristiche Principali
 
@@ -36,7 +36,7 @@ Piattaforma web completa per crowdfunding di progetti hardware e software. Siste
 
    ```bash
    # Controlla che tutto funzioni:
-   http://localhost/BOSTARTER/database/system_check.php
+   http://localhost/BOSTARTER/test_mysql.php
    ```
 
 ### ⚡ Setup Manuale
@@ -48,10 +48,16 @@ Se preferisci l'installazione manuale:
 mysql -u root -p
 
 # 2. Importa lo schema del database
-mysql -u root -p < database/schema.sql
+mysql -u root -p < database/schema_mysql.sql
 
-# 3. Importa i dati di esempio
-mysql -u root -p < database/data.sql
+# 3. Importa stored procedures
+mysql -u root -p < database/procedures_mysql.sql
+
+# 4. Importa trigger
+mysql -u root -p < database/triggers_mysql.sql
+
+# 5. Importa i dati di esempio
+mysql -u root -p < database/data_demo_mysql.sql
 ```
 
 ## � Account di Test
@@ -66,22 +72,29 @@ mysql -u root -p < database/data.sql
 
 ```
 BOSTARTER/
-├── 🌐 frontend/          # Interfaccia utente
-│   ├── auth/            # Login, registrazione, logout
-│   ├── admin/           # Pannello amministratore
-│   ├── css/             # Stili CSS
-│   ├── js/              # JavaScript
-│   └── includes/        # File condivisi
-├── ⚙️ backend/           # Logica del server
-│   ├── api/             # Endpoint REST API
-│   ├── models/          # Modelli dati
-│   ├── services/        # Servizi business logic
-│   ├── utils/           # Utility e helper
-│   └── config/          # Configurazioni
-└── 🗄️ database/         # Schema e script DB
-    ├── schema.sql       # Struttura database
-    ├── data.sql         # Dati di esempio
-    └── install.php      # Installer automatico
+├── 🌐 frontend/              # Interfaccia utente
+│   ├── auth/                # Login, registrazione, logout
+│   ├── admin/               # Pannello amministratore
+│   ├── css/                 # Stili CSS moderni
+│   ├── js/                  # JavaScript ES6+
+│   ├── images/              # Assets grafici
+│   └── includes/            # File condivisi
+├── ⚙️ backend/               # Logica del server
+│   ├── api/                 # Endpoint REST API
+│   ├── models/              # Modelli dati MySQL
+│   ├── services/            # Servizi business logic
+│   ├── utils/               # Utility e helper
+│   └── config/              # Configurazioni database
+├── 🗄️ database/             # Schema e script MySQL
+│   ├── schema_mysql.sql     # Struttura database MySQL
+│   ├── procedures_mysql.sql # Stored procedures
+│   ├── triggers_mysql.sql   # Trigger automazione
+│   ├── data_demo_mysql.sql  # Dati di esempio
+│   ├── simple_install.php   # Installer automatico
+│   └── README_MYSQL.md      # Documentazione deploy
+├── 📁 logs/                 # File di log
+├── 📁 uploads/              # File caricati
+└── test_mysql.php           # Test sistema completo
 ```
 
 ## 🔧 Funzionalità Implementate
@@ -126,7 +139,7 @@ BOSTARTER/
 1. **Avvia l'applicazione**
 
    ```
-   http://localhost/BOSTARTER/frontend/
+   http://localhost/BOSTARTER/frontend/home.php
    ```
 
 2. **Fai Login come Amministratore**
@@ -150,9 +163,10 @@ BOSTARTER/
 
 Per problemi o domande:
 
-1. Controlla la documentazione in /database/docs.md
-2. Esegui i test automatici in /database/system_check.php
-3. Verifica i log degli errori PHP
+1. Controlla la documentazione in `/database/README_MYSQL.md`
+2. Esegui i test automatici in `/test_mysql.php`
+3. Verifica i log degli errori in `/logs/`
+4. Controlla la compatibilità MySQL con lo script di installazione
 
 ## 📄 Licenza
 

@@ -1,10 +1,24 @@
 <?php
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../utils/Logger.php';
+require_once __DIR__ . '/../utils/Validator.php';
+require_once __DIR__ . '/../utils/SecurityManager.php';
+require_once __DIR__ . '/../utils/PerformanceMonitor.php';
+require_once __DIR__ . '/../utils/CacheManager.php';
 
 class Competenza {
     private $db;
+    private $logger;
+    private $security;
+    private $performance;
+    private $cache;
     
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
+        $this->logger = Logger::getInstance();
+        $this->security = SecurityManager::getInstance();
+        $this->performance = PerformanceMonitor::getInstance();
+        $this->cache = CacheManager::getInstance();
     }
     
     /**
@@ -13,11 +27,11 @@ class Competenza {
     public function create($adminId, $codiceSicurezza, $nome, $descrizione = '', $categoria = 'generale') {
         try {
             // Verifica codice sicurezza
-            $stmt = $this->db->prepare(
+            $stmt = $this->db->prepare("
                 SELECT id, codice_sicurezza 
                 FROM utenti 
                 WHERE id = ? AND tipo_utente = 'amministratore'
-            );
+            ");
             $stmt->execute([$adminId]);
             $admin = $stmt->fetch();
             
@@ -67,7 +81,7 @@ class Competenza {
      */
     public function getAll($categoria = null) {
         try {
-            $sql = 
+            $sql = "
                 SELECT 
                     id,
                     nome,
@@ -77,7 +91,7 @@ class Competenza {
                     created_at
                 FROM competenze 
                 WHERE is_active = TRUE
-            ;
+            ";
             
             $params = [];
             
@@ -103,7 +117,7 @@ class Competenza {
      */
     public function getById($competenzaId) {
         try {
-            $stmt = $this->db->prepare(
+            $stmt = $this->db->prepare("
                 SELECT 
                     id,
                     nome,
@@ -113,7 +127,7 @@ class Competenza {
                     created_at
                 FROM competenze 
                 WHERE id = ?
-            );
+            ");
             $stmt->execute([$competenzaId]);
             
             return $stmt->fetch();
@@ -128,7 +142,7 @@ class Competenza {
      */
     public function getByCategoria($categoria) {
         try {
-            $stmt = $this->db->prepare(
+            $stmt = $this->db->prepare("
                 SELECT 
                     id,
                     nome,
@@ -138,7 +152,7 @@ class Competenza {
                 FROM competenze 
                 WHERE categoria = ? AND is_active = TRUE
                 ORDER BY nome
-            );
+            ");
             $stmt->execute([$categoria]);
             
             return $stmt->fetchAll();
@@ -199,7 +213,7 @@ class Competenza {
             }
             
             // Verifica che non sia utilizzata da utenti
-            $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM skill_utente WHERE competenza_id = ?");
+            $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM utenti_competenze WHERE competenza_id = ?");
             $stmt->execute([$competenzaId]);
             $result = $stmt->fetch();
             
@@ -232,12 +246,12 @@ class Competenza {
      */
     public function getCategorie() {
         try {
-            $stmt = $this->db->prepare(
+            $stmt = $this->db->prepare("
                 SELECT DISTINCT categoria
                 FROM competenze 
                 WHERE is_active = TRUE
                 ORDER BY categoria
-            );
+            ");
             $stmt->execute();
             
             return $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -252,20 +266,20 @@ class Competenza {
      */
     public function getMostRequested($limit = 10) {
         try {
-            $stmt = $this->db->prepare(
+            $stmt = $this->db->prepare("
                 SELECT 
                     c.nome,
                     c.categoria,
                     COUNT(sp.id) as richieste_profili,
-                    COUNT(su.id) as utenti_con_skill
+                    COUNT(uc.id) as utenti_con_skill
                 FROM competenze c
                 LEFT JOIN skill_profili sp ON c.id = sp.competenza_id
-                LEFT JOIN skill_utente su ON c.id = su.competenza_id
+                LEFT JOIN utenti_competenze uc ON c.id = uc.competenza_id
                 WHERE c.is_active = TRUE
                 GROUP BY c.id, c.nome, c.categoria
                 ORDER BY richieste_profili DESC, utenti_con_skill DESC
                 LIMIT ?
-            );
+            ");
             $stmt->execute([$limit]);
             
             return $stmt->fetchAll();
@@ -280,15 +294,15 @@ class Competenza {
      */
     public function getStats() {
         try {
-            $stmt = $this->db->prepare(
+            $stmt = $this->db->prepare("
                 SELECT 
                     COUNT(*) as totale_competenze,
                     COUNT(CASE WHEN is_active = TRUE THEN 1 END) as competenze_attive,
                     COUNT(DISTINCT categoria) as categorie_disponibili,
-                    (SELECT COUNT(*) FROM skill_utente) as skill_utenti_totali,
+                    (SELECT COUNT(*) FROM utenti_competenze) as skill_utenti_totali,
                     (SELECT COUNT(*) FROM skill_profili) as skill_profili_totali
                 FROM competenze
-            );
+            ");
             $stmt->execute();
             
             return $stmt->fetch();
@@ -303,7 +317,7 @@ class Competenza {
      */
     public function search($query, $categoria = null) {
         try {
-            $sql = 
+            $sql = "
                 SELECT 
                     id,
                     nome,
@@ -313,7 +327,7 @@ class Competenza {
                 FROM competenze 
                 WHERE is_active = TRUE 
                 AND (nome LIKE ? OR descrizione LIKE ?)
-            ;
+            ";
             
             $params = ["%$query%", "%$query%"];
             
