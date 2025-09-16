@@ -38,8 +38,7 @@ function getAllStatistiche() {
         $stats = [];
         
         // 1. Top 3 creatori per affidabilità
-        $stmt = $db->prepare(
-            SELECT 
+        $stmt = $db->prepare("SELECT 
                 u.nickname,
                 u.affidabilita,
                 COUNT(p.id) as progetti_creati,
@@ -49,14 +48,12 @@ function getAllStatistiche() {
             WHERE u.tipo_utente = 'creatore' AND u.is_active = TRUE
             GROUP BY u.id, u.nickname, u.affidabilita
             ORDER BY u.affidabilita DESC
-            LIMIT 3
-        );
+            LIMIT 3");
         $stmt->execute();
         $stats['top_creatori'] = $stmt->fetchAll();
         
         // 2. Top 3 progetti aperti più vicini al completamento
-        $stmt = $db->prepare(
-            SELECT 
+        $stmt = $db->prepare("SELECT 
                 p.nome,
                 p.budget_richiesto,
                 p.budget_raccolto,
@@ -66,14 +63,12 @@ function getAllStatistiche() {
             FROM progetti p
             WHERE p.stato = 'aperto' AND p.is_active = TRUE
             ORDER BY (p.budget_raccolto / p.budget_richiesto) DESC
-            LIMIT 3
-        );
+            LIMIT 3");
         $stmt->execute();
         $stats['progetti_quasi_completi'] = $stmt->fetchAll();
         
         // 3. Top 3 utenti per totale finanziamenti erogati
-        $stmt = $db->prepare(
-            SELECT 
+        $stmt = $db->prepare("SELECT 
                 u.nickname,
                 COUNT(f.id) as numero_finanziamenti,
                 SUM(f.importo) as totale_finanziato
@@ -83,22 +78,19 @@ function getAllStatistiche() {
             GROUP BY u.id, u.nickname
             HAVING totale_finanziato > 0
             ORDER BY totale_finanziato DESC
-            LIMIT 3
-        );
+            LIMIT 3");
         $stmt->execute();
         $stats['top_finanziatori'] = $stmt->fetchAll();
         
         // 4. Statistiche generali piattaforma
-        $stmt = $db->prepare(
-            SELECT 
+        $stmt = $db->prepare("SELECT 
                 (SELECT COUNT(*) FROM utenti WHERE is_active = TRUE) as totale_utenti,
                 (SELECT COUNT(*) FROM utenti WHERE tipo_utente = 'creatore' AND is_active = TRUE) as totale_creatori,
                 (SELECT COUNT(*) FROM progetti WHERE is_active = TRUE) as totale_progetti,
                 (SELECT COUNT(*) FROM progetti WHERE stato = 'aperto' AND is_active = TRUE) as progetti_aperti,
                 (SELECT COUNT(*) FROM progetti WHERE stato = 'chiuso' AND is_active = TRUE) as progetti_chiusi,
                 (SELECT SUM(importo) FROM finanziamenti WHERE stato_pagamento = 'completed') as totale_finanziato,
-                (SELECT COUNT(*) FROM candidature WHERE stato = 'accettata') as candidature_accettate
-        );
+                (SELECT COUNT(*) FROM candidature WHERE stato = 'accettata') as candidature_accettate");
         $stmt->execute();
         $stats['generali'] = $stmt->fetch();
         
@@ -116,8 +108,7 @@ function getStatisticheSpecifiche($tipo) {
         switch ($tipo) {
             case 'creatori':
                 // Top creatori per affidabilità
-                $stmt = $db->prepare(
-                    SELECT 
+                $stmt = $db->prepare("SELECT 
                         u.nickname,
                         u.affidabilita,
                         COUNT(p.id) as progetti_creati,
@@ -128,15 +119,13 @@ function getStatisticheSpecifiche($tipo) {
                     WHERE u.tipo_utente = 'creatore' AND u.is_active = TRUE
                     GROUP BY u.id, u.nickname, u.affidabilita
                     ORDER BY u.affidabilita DESC
-                    LIMIT 10
-                );
+                    LIMIT 10");
                 $stmt->execute();
                 return $stmt->fetchAll();
                 
             case 'progetti':
                 // Progetti aperti più vicini al completamento
-                $stmt = $db->prepare(
-                    SELECT 
+                $stmt = $db->prepare("SELECT 
                         p.nome,
                         p.descrizione,
                         p.budget_richiesto,
@@ -149,15 +138,13 @@ function getStatisticheSpecifiche($tipo) {
                     JOIN utenti u ON p.creatore_id = u.id
                     WHERE p.stato = 'aperto' AND p.is_active = TRUE
                     ORDER BY (p.budget_raccolto / p.budget_richiesto) DESC
-                    LIMIT 10
-                );
+                    LIMIT 10");
                 $stmt->execute();
                 return $stmt->fetchAll();
                 
             case 'finanziatori':
                 // Top finanziatori
-                $stmt = $db->prepare(
-                    SELECT 
+                $stmt = $db->prepare("SELECT 
                         u.nickname,
                         u.nome,
                         u.cognome,
@@ -171,15 +158,13 @@ function getStatisticheSpecifiche($tipo) {
                     GROUP BY u.id, u.nickname, u.nome, u.cognome
                     HAVING totale_finanziato > 0
                     ORDER BY totale_finanziato DESC
-                    LIMIT 10
-                );
+                    LIMIT 10");
                 $stmt->execute();
                 return $stmt->fetchAll();
                 
             case 'trend':
                 // Trend temporali
-                $stmt = $db->prepare(
-                    SELECT 
+                $stmt = $db->prepare("SELECT 
                         DATE(f.data_finanziamento) as data,
                         COUNT(f.id) as numero_finanziamenti,
                         SUM(f.importo) as totale_giornaliero
@@ -188,15 +173,13 @@ function getStatisticheSpecifiche($tipo) {
                     AND f.data_finanziamento >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
                     GROUP BY DATE(f.data_finanziamento)
                     ORDER BY data DESC
-                    LIMIT 30
-                );
+                    LIMIT 30");
                 $stmt->execute();
                 return $stmt->fetchAll();
                 
             case 'categorie':
                 // Statistiche per categoria progetto
-                $stmt = $db->prepare(
-                    SELECT 
+                $stmt = $db->prepare("SELECT 
                         p.tipo,
                         COUNT(p.id) as numero_progetti,
                         AVG(p.budget_richiesto) as budget_medio_richiesto,
@@ -204,8 +187,7 @@ function getStatisticheSpecifiche($tipo) {
                         ROUND((AVG(p.budget_raccolto) / AVG(p.budget_richiesto)) * 100, 2) as tasso_medio_completamento
                     FROM progetti p
                     WHERE p.is_active = TRUE
-                    GROUP BY p.tipo
-                );
+                    GROUP BY p.tipo");
                 $stmt->execute();
                 return $stmt->fetchAll();
                 

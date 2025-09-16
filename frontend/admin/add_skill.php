@@ -1,12 +1,20 @@
 <?php
-require_once __DIR__ . '/../includes/init.php';
-require_once __DIR__ . '/../includes/FrontendSecurity.php';
+session_start();
 require_once __DIR__ . '/../../backend/config/database.php';
 require_once __DIR__ . '/../../backend/config/app_config.php';
 
-// Simple admin check
-if (!isset($_SESSION['user_id']) || ($_SESSION['tipo_utente'] ?? '') !== 'amministratore') {
-    header('Location: ../auth/login.php');
+// Funzioni di utilità
+function isAdmin() {
+    return ($_SESSION['user_type'] ?? '') === 'amministratore';
+}
+
+function isAuthenticated() {
+    return isset($_SESSION["user_id"]);
+}
+
+// Verifica autenticazione e ruolo admin
+if (!isAuthenticated() || !isAdmin()) {
+    header('Location: /BOSTARTER/frontend/auth/login.php');
     exit();
 }
 $db = Database::getInstance();

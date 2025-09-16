@@ -1,11 +1,35 @@
 <?php
-require_once __DIR__ . '/includes/init.php';
+/**
+ * Creazione Nuovo Progetto BOSTARTER
+ *
+ * Form completo per creare progetti:
+ * - Informazioni base (nome, descrizione, categoria)
+ * - Obiettivo finanziario e scadenza
+ * - Tipo progetto (hardware/software)
+ * - Validazione e invio sicuro
+ */
+session_start();
 
+/**
+ * Verifica autenticazione utente
+ */
+function isLoggedIn() {
+    return isset($_SESSION["user_id"]);
+}
+
+/**
+ * Ottieni tipo utente dalla sessione
+ */
+function getUserType() {
+    return $_SESSION['user_type'] ?? '';
+}
+
+// Connessione database
 require_once __DIR__ . '/../backend/config/database.php';
 require_once __DIR__ . '/../backend/models/Project.php';
 require_once __DIR__ . '/../backend/utils/RoleManager.php';
 
-// Controlla se l'utente può creare progetti
+// Verifica permessi
 $roleManager = new RoleManager();
 if (!$roleManager->isAuthenticated()) {
     header('Location: auth/login.php?msg=login_required');
@@ -17,10 +41,10 @@ if (!$roleManager->hasPermission('can_create_project')) {
     exit();
 }
 
-// Ottieni connessione al database
+// Connessione database
 $db = Database::getInstance();
-$conn = $db->getConnection();
 
+// Messaggi di successo per feedback utente
 $successMessages = [
     'Ottimo! Il tuo progetto è pronto per essere pubblicato.',
     'Bene! Hai creato un progetto molto interessante.',
@@ -31,7 +55,7 @@ $successMessages = [
 $message = '';
 $error = '';
 
-// Gestione messaggi da URL
+// Gestione messaggi dalla URL (redirect dopo operazioni)
 if (isset($_GET['success'])) {
     $message = $successMessages[array_rand($successMessages)];
 }
@@ -120,11 +144,11 @@ $categories = [
     box-shadow: 0 8px 25px rgba(var(--bostarter-secondary-rgb), 0.18);
     }
 
-    /* image upload UI removed per streamlined build */
+    /* Image upload/preview removed — uploads not supported in this build. */
 
-    .funding-goal-input {
+    /* Contatore caratteri per la descrizione (protetto){
         position: relative;
-    }
+    }*/
 
     .funding-goal-input::before {
         content: '$';

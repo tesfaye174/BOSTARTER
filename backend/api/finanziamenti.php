@@ -1,11 +1,24 @@
 <?php
+/**
+ * API per la gestione dei finanziamenti
+ * 
+ * Permette agli utenti di finanziare progetti
+ * e di visualizzare lo storico dei finanziamenti
+ * 
+ * Endpoint:
+ * - GET /finanziamenti.php?progetto_id=X - Lista finanziamenti per progetto
+ * - POST /finanziamenti.php - Crea nuovo finanziamento
+ * - PUT /finanziamenti.php - Aggiorna stato finanziamento (admin)
+ */
 session_start();
 require_once __DIR__ . '/../autoload.php';
+require_once __DIR__ . '/../utils/MongoLogger.php';
 
 header('Content-Type: application/json');
 
 $roleManager = new RoleManager();
 $apiResponse = new ApiResponse();
+$mongoLogger = MongoLogger::getInstance();
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
@@ -18,6 +31,10 @@ switch ($_SERVER['REQUEST_METHOD']) {
             // Finanziamenti di un utente specifico
             $utenteId = (int)$_GET['utente_id'];
             if ($roleManager->getUserId() != $utenteId && !$roleManager->isAdmin()) {
+                $mongoLogger->logSecurity('unauthorized_funding_access', $roleManager->getUserId(), [
+                    'attempted_user_id' => $utenteId,
+                    'severity' => 'high'
+                ]);
                 $apiResponse->sendError('Accesso negato', 403);
                 exit();
             }
@@ -58,8 +75,29 @@ switch ($_SERVER['REQUEST_METHOD']) {
         
         $result = creaFinanziamento($input, $roleManager->getUserId());
         if ($result['success']) {
+            // MongoDB logging: successful funding
+            $mongoLogger->logFinancing('create', 
+                $input['progetto_id'], 
+                $roleManager->getUserId(),
+                [
+                    'financing_id' => $result['data']['finanziamento_id'],
+                    'amount' => $input['importo'],
+                    'reward_id' => $input['reward_id'] ?? null,
+                    'message_length' => isset($input['messaggio_supporto']) ? strlen($input['messaggio_supporto']) : 0
+                ]
+            );
             $apiResponse->sendSuccess($result['data'], 'Finanziamento completato con successo');
         } else {
+            // MongoDB logging: failed funding
+            $mongoLogger->logFinancing('create_failed', 
+                $input['progetto_id'] ?? null, 
+                $roleManager->getUserId(),
+                [
+                    'error' => $result['error'],
+                    'amount' => $input['importo'] ?? null,
+                    'reward_id' => $input['reward_id'] ?? null
+                ]
+            );
             $apiResponse->sendError($result['error']);
         }
         break;
@@ -67,6 +105,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case 'PUT':
         // Aggiorna stato finanziamento (solo admin)
         if (!$roleManager->isAdmin()) {
+            $mongoLogger->logSecurity('unauthorized_funding_status_update', $roleManager->getUserId(), [
+                'severity' => 'high'
+            ]);
             $apiResponse->sendError('Accesso negato', 403);
             exit();
         }
@@ -80,6 +121,16 @@ switch ($_SERVER['REQUEST_METHOD']) {
         
         $result = aggiornaStatoFinanziamento($input['finanziamento_id'], $input['stato_pagamento']);
         if ($result['success']) {
+            // MongoDB logging: status update
+            $mongoLogger->logFinancing('status_update', 
+                null, // project_id will be retrieved in the function
+                null, // user_id will be retrieved in the function
+                [
+                    'financing_id' => $input['finanziamento_id'],
+                    'new_status' => $input['stato_pagamento'],
+                    'updated_by' => $roleManager->getUserId()
+                ]
+            );
             $apiResponse->sendSuccess($result['data'], 'Stato finanziamento aggiornato');
         } else {
             $apiResponse->sendError($result['error']);
@@ -104,7 +155,7 @@ function getFinanziamentiProgetto($progettoId) {
     
     // Recupera finanziamenti con dettagli utente e reward
     $stmt = $db->prepare(
-        SELECT 
+        "SELECT 
             f.id,
             f.importo,
             f.data_finanziamento,
@@ -120,7 +171,7 @@ function getFinanziamentiProgetto($progettoId) {
         JOIN utenti u ON f.utente_id = u.id
         LEFT JOIN rewards r ON f.reward_id = r.id
         WHERE f.progetto_id = ? AND f.stato_pagamento = 'completed'
-        ORDER BY f.data_finanziamento DESC
+        ORDER BY f.data_finanziamento DESC"
     );
     $stmt->execute([$progettoId]);
     
@@ -131,7 +182,7 @@ function getFinanziamentiUtente($utenteId) {
     $db = Database::getInstance()->getConnection();
     
     $stmt = $db->prepare(
-        SELECT 
+        "SELECT 
             f.id,
             f.importo,
             f.data_finanziamento,
@@ -145,7 +196,7 @@ function getFinanziamentiUtente($utenteId) {
         JOIN progetti p ON f.progetto_id = p.id
         LEFT JOIN rewards r ON f.reward_id = r.id
         WHERE f.utente_id = ?
-        ORDER BY f.data_finanziamento DESC
+        ORDER BY f.data_finanziamento DESC"
     );
     $stmt->execute([$utenteId]);
     
@@ -179,9 +230,9 @@ function creaFinanziamento($input, $utenteId) {
         $rewardId = $input['reward_id'] ?? null;
         if ($rewardId) {
             $stmt = $db->prepare(
-                SELECT id, importo_minimo, quantita_disponibile, quantita_utilizzata 
+                "SELECT id, importo_minimo, quantita_disponibile, quantita_utilizzata 
                 FROM rewards 
-                WHERE id = ? AND progetto_id = ? AND is_active = TRUE
+                WHERE id = ? AND progetto_id = ? AND is_active = TRUE"
             );
             $stmt->execute([$rewardId, $input['progetto_id']]);
             $reward = $stmt->fetch();
@@ -200,8 +251,12 @@ function creaFinanziamento($input, $utenteId) {
         }
         
         // Usa stored procedure per inserimento
-        $stmt = $db->prepare("CALL sp_finanzia_progetto(?, ?, ?, ?, @finanziamento_id)");
-        $stmt->execute([$utenteId, $input['progetto_id'], $rewardId, $importo]);
+        $stmt = $db->prepare("CALL finanzia_progetto(:utente_id, :progetto_id, :reward_id, :importo, @finanziamento_id)");
+        $stmt->bindParam(':utente_id', $utenteId);
+        $stmt->bindParam(':progetto_id', $input['progetto_id']);
+        $stmt->bindParam(':reward_id', $rewardId);
+        $stmt->bindParam(':importo', $importo);
+        $stmt->execute();
         
         $result = $db->query("SELECT @finanziamento_id as finanziamento_id")->fetch();
         $finanziamentoId = $result['finanziamento_id'];

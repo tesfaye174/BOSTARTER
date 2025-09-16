@@ -1,10 +1,14 @@
 <?php
 
+require_once __DIR__ . '/../utils/MongoLogger.php';
+
 class Finanziamento {
     private $db;
+    private $mongoLogger;
     
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
+        $this->mongoLogger = MongoLogger::getInstance();
     }
     
     /**
@@ -13,44 +17,80 @@ class Finanziamento {
     public function create($utenteId, $progettoId, $rewardId, $importo, $messaggioSupporto = null) {
         try {
             // Verifica che il progetto esista e sia aperto
-            $stmt = $this->db->prepare("SELECT id, stato, budget_richiesto, budget_raccolto FROM progetti WHERE id = ? AND is_active = TRUE");
+            $stmt = $this->db->prepare("SELECT id, stato, budget_richiesto, budget_raccolto, creatore_id FROM progetti WHERE id = ? AND is_active = TRUE");
             $stmt->execute([$progettoId]);
             $progetto = $stmt->fetch();
             
             if (!$progetto) {
+                $this->mongoLogger->logFinancing('failed', $progettoId, $utenteId, [
+                    'reason' => 'project_not_found',
+                    'amount' => $importo
+                ]);
                 return ['success' => false, 'error' => 'Progetto non trovato'];
             }
             
             if ($progetto['stato'] !== 'aperto') {
+                $this->mongoLogger->logFinancing('failed', $progettoId, $utenteId, [
+                    'reason' => 'project_not_open',
+                    'project_status' => $progetto['stato'],
+                    'amount' => $importo
+                ]);
                 return ['success' => false, 'error' => 'Progetto non aperto ai finanziamenti'];
             }
             
             // Verifica importo
             if ($importo <= 0) {
+                $this->mongoLogger->logFinancing('failed', $progettoId, $utenteId, [
+                    'reason' => 'invalid_amount',
+                    'amount' => $importo
+                ]);
                 return ['success' => false, 'error' => 'Importo deve essere maggiore di zero'];
             }
             
             // Verifica reward se specificato
+            $rewardData = null;
             if ($rewardId) {
                 $stmt = $this->db->prepare(
-                    SELECT id, importo_minimo, quantita_disponibile, quantita_utilizzata 
+                    "SELECT id, importo_minimo, quantita_disponibile, quantita_utilizzata 
                     FROM rewards 
-                    WHERE id = ? AND progetto_id = ? AND is_active = TRUE
+                    WHERE id = ? AND progetto_id = ? AND is_active = TRUE"
                 );
                 $stmt->execute([$rewardId, $progettoId]);
                 $reward = $stmt->fetch();
                 
                 if (!$reward) {
+                    $this->mongoLogger->logFinancing('failed', $progettoId, $utenteId, [
+                        'reason' => 'reward_not_found',
+                        'reward_id' => $rewardId,
+                        'amount' => $importo
+                    ]);
                     return ['success' => false, 'error' => 'Reward non trovato o non disponibile'];
                 }
                 
                 if ($importo < $reward['importo_minimo']) {
+                    $this->mongoLogger->logFinancing('failed', $progettoId, $utenteId, [
+                        'reason' => 'insufficient_amount_for_reward',
+                        'amount' => $importo,
+                        'required_amount' => $reward['importo_minimo'],
+                        'reward_id' => $rewardId
+                    ]);
                     return ['success' => false, 'error' => "Importo insufficiente per questa reward (minimo: €{$reward['importo_minimo']})"];
                 }
                 
                 if ($reward['quantita_disponibile'] !== null && $reward['quantita_utilizzata'] >= $reward['quantita_disponibile']) {
+                    $this->mongoLogger->logFinancing('failed', $progettoId, $utenteId, [
+                        'reason' => 'reward_unavailable',
+                        'reward_id' => $rewardId,
+                        'amount' => $importo
+                    ]);
                     return ['success' => false, 'error' => 'Reward esaurita'];
                 }
+                
+                $rewardData = [
+                    'id' => $reward['id'],
+                    'min_amount' => $reward['importo_minimo'],
+                    'available' => $reward['quantita_disponibile'] - $reward['quantita_utilizzata']
+                ];
             }
             
             // Usa stored procedure per inserimento
@@ -66,6 +106,15 @@ class Finanziamento {
                 $stmt->execute([$messaggioSupporto, $finanziamentoId]);
             }
             
+            // Log successful funding
+            $this->mongoLogger->logFinancing('create', $progettoId, $utenteId, [
+                'financing_id' => $finanziamentoId,
+                'amount' => $importo,
+                'reward' => $rewardData,
+                'message' => $messaggioSupporto,
+                'project_creator_id' => $progetto['creatore_id']
+            ]);
+            
             return [
                 'success' => true, 
                 'data' => [
@@ -76,6 +125,11 @@ class Finanziamento {
             ];
             
         } catch (Exception $e) {
+            $this->mongoLogger->logFinancing('failed', $progettoId, $utenteId, [
+                'reason' => 'exception',
+                'error' => $e->getMessage(),
+                'amount' => $importo
+            ]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -86,7 +140,7 @@ class Finanziamento {
     public function getByProgetto($progettoId, $statoPagamento = 'completed') {
         try {
             $sql = 
-                SELECT 
+                "SELECT 
                     f.id,
                     f.importo,
                     f.data_finanziamento,
@@ -103,7 +157,7 @@ class Finanziamento {
                 JOIN utenti u ON f.utente_id = u.id
                 LEFT JOIN rewards r ON f.reward_id = r.id
                 WHERE f.progetto_id = ?
-            ;
+            ";
             
             $params = [$progettoId];
             
@@ -130,7 +184,7 @@ class Finanziamento {
     public function getByUtente($utenteId, $limit = null) {
         try {
             $sql = 
-                SELECT 
+                "SELECT 
                     f.id,
                     f.importo,
                     f.data_finanziamento,
@@ -146,7 +200,7 @@ class Finanziamento {
                 LEFT JOIN rewards r ON f.reward_id = r.id
                 WHERE f.utente_id = ?
                 ORDER BY f.data_finanziamento DESC
-            ;
+            ";
             
             if ($limit) {
                 $sql .= " LIMIT ?";
@@ -170,7 +224,7 @@ class Finanziamento {
     public function getById($finanziamentoId) {
         try {
             $stmt = $this->db->prepare(
-                SELECT 
+                "SELECT 
                     f.*,
                     u.nickname,
                     u.nome,
@@ -185,7 +239,7 @@ class Finanziamento {
                 JOIN progetti p ON f.progetto_id = p.id
                 LEFT JOIN rewards r ON f.reward_id = r.id
                 WHERE f.id = ?
-            );
+            ");
             $stmt->execute([$finanziamentoId]);
             
             return $stmt->fetch();
@@ -204,13 +258,38 @@ class Finanziamento {
                 return ['success' => false, 'error' => 'Stato non valido'];
             }
             
+            // Get financing details first
+            $financing = $this->getById($finanziamentoId);
+            
+            if (!$financing) {
+                $this->mongoLogger->logFinancing('status_update_failed', null, null, [
+                    'reason' => 'financing_not_found',
+                    'financing_id' => $finanziamentoId
+                ]);
+                return ['success' => false, 'error' => 'Finanziamento non trovato'];
+            }
+            
             // Aggiorna stato
             $stmt = $this->db->prepare("UPDATE finanziamenti SET stato_pagamento = ? WHERE id = ?");
             $stmt->execute([$stato, $finanziamentoId]);
             
+            // Log status change
+            $this->mongoLogger->logFinancing('status_update', $financing['progetto_id'], $financing['utente_id'], [
+                'financing_id' => $finanziamentoId,
+                'old_status' => $financing['stato_pagamento'],
+                'new_status' => $stato,
+                'amount' => $financing['importo'],
+                'reward_id' => $financing['reward_id']
+            ]);
+            
             return ['success' => true, 'stato' => $stato];
             
         } catch (Exception $e) {
+            $this->mongoLogger->logFinancing('status_update_failed', null, null, [
+                'reason' => 'exception',
+                'error' => $e->getMessage(),
+                'financing_id' => $finanziamentoId
+            ]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -221,7 +300,7 @@ class Finanziamento {
     public function getStatsByProgetto($progettoId) {
         try {
             $stmt = $this->db->prepare(
-                SELECT 
+                "SELECT 
                     COUNT(f.id) as totale_finanziamenti,
                     SUM(f.importo) as totale_raccolto,
                     AVG(f.importo) as importo_medio,
@@ -231,7 +310,7 @@ class Finanziamento {
                     MAX(f.data_finanziamento) as ultimo_finanziamento
                 FROM finanziamenti f
                 WHERE f.progetto_id = ?
-            );
+            ");
             $stmt->execute([$progettoId]);
             
             return $stmt->fetch();
@@ -247,7 +326,7 @@ class Finanziamento {
     public function getStatsByUtente($utenteId) {
         try {
             $stmt = $this->db->prepare(
-                SELECT 
+                "SELECT 
                     COUNT(f.id) as totale_finanziamenti,
                     SUM(f.importo) as totale_speso,
                     AVG(f.importo) as importo_medio,
@@ -256,7 +335,7 @@ class Finanziamento {
                     MIN(f.data_finanziamento) as primo_finanziamento
                 FROM finanziamenti f
                 WHERE f.utente_id = ? AND f.stato_pagamento = 'completed'
-            );
+            ");
             $stmt->execute([$utenteId]);
             
             return $stmt->fetch();
@@ -272,7 +351,7 @@ class Finanziamento {
     public function getTrendByPeriodo($progettoId, $periodo = '30') {
         try {
             $stmt = $this->db->prepare(
-                SELECT 
+                "SELECT 
                     DATE(f.data_finanziamento) as data,
                     COUNT(f.id) as numero_finanziamenti,
                     SUM(f.importo) as totale_giornaliero
@@ -282,7 +361,7 @@ class Finanziamento {
                 AND f.data_finanziamento >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
                 GROUP BY DATE(f.data_finanziamento)
                 ORDER BY data DESC
-            );
+            ");
             $stmt->execute([$progettoId, $periodo]);
             
             return $stmt->fetchAll();

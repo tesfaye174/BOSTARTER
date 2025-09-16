@@ -5,6 +5,7 @@ require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/SecurityManager.php';
 require_once __DIR__ . '/../utils/PerformanceMonitor.php';
 require_once __DIR__ . '/../utils/CacheManager.php';
+require_once __DIR__ . '/../utils/MongoLogger.php';
 
 class Candidatura {
     private $db;
@@ -12,6 +13,7 @@ class Candidatura {
     private $security;
     private $performance;
     private $cache;
+    private $mongoLogger;
     
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
@@ -19,6 +21,7 @@ class Candidatura {
         $this->security = SecurityManager::getInstance();
         $this->performance = PerformanceMonitor::getInstance();
         $this->cache = CacheManager::getInstance();
+        $this->mongoLogger = MongoLogger::getInstance();
     }
     
     /**
@@ -41,7 +44,10 @@ class Candidatura {
                      ->required('motivazione', $data['motivazione'])->minLength(10)->maxLength(1000);
             
             if (!$validator->isValid()) {
-                $this->logger->warning('Candidatura creation validation failed', ['errors' => $validator->getErrors()]);
+                $this->mongoLogger->logCandidature('create_failed', null, $utenteId, [
+                    'reason' => 'validation_error',
+                    'errors' => $validator->getErrors()
+                ]);
                 return ['success' => false, 'errors' => $validator->getErrors()];
             }
             
@@ -51,25 +57,35 @@ class Candidatura {
             
             if ($profilo === null) {
                 $startTime = microtime(true);
-                $sql = "SELECT pr.*, p.tipo_progetto, p.stato FROM profili_richiesti pr JOIN progetti p ON pr.progetto_id = p.id WHERE pr.id = ? AND pr.is_active = TRUE";
+                $sql = "SELECT pr.*, p.tipo_progetto, p.stato, p.creatore_id FROM profili_richiesti pr JOIN progetti p ON pr.progetto_id = p.id WHERE pr.id = ? AND pr.is_active = TRUE";
                 $stmt = $this->db->prepare($sql);
                 $stmt->execute([$data['profilo_id']]);
                 $profilo = $stmt->fetch();
                 $this->performance->logQuery($sql, [$data['profilo_id']], microtime(true) - $startTime, $operationId);
-                $this->cache->set($profileCacheKey, $profilo ?: false, 600); // Cache per 10 minuti
+                $this->cache->set($profileCacheKey, $profilo ?: false, 600);
             }
             
             if (!$profilo) {
-                $this->security->auditAction('failed_candidatura_creation', ['reason' => 'profile_not_found', 'profilo_id' => $data['profilo_id']]);
+                $this->mongoLogger->logCandidature('create_failed', null, $utenteId, [
+                    'reason' => 'profile_not_found',
+                    'profile_id' => $data['profilo_id']
+                ]);
                 return ['success' => false, 'error' => 'Profilo non trovato o non attivo'];
             }
             
             if ($profilo['tipo_progetto'] !== 'SOFTWARE') {
-                $this->security->auditAction('failed_candidatura_creation', ['reason' => 'wrong_project_type', 'tipo_progetto' => $profilo['tipo_progetto']]);
+                $this->mongoLogger->logCandidature('create_failed', null, $utenteId, [
+                    'reason' => 'wrong_project_type',
+                    'project_type' => $profilo['tipo_progetto']
+                ]);
                 return ['success' => false, 'error' => 'Candidature solo per progetti software'];
             }
             
             if ($profilo['stato'] !== 'ATTIVO') {
+                $this->mongoLogger->logCandidature('create_failed', null, $utenteId, [
+                    'reason' => 'project_not_active',
+                    'project_status' => $profilo['stato']
+                ]);
                 return ['success' => false, 'error' => 'Progetto non aperto alle candidature'];
             }
             
@@ -87,7 +103,10 @@ class Candidatura {
             }
             
             if ($candidaturaExists) {
-                $this->security->auditAction('failed_candidatura_creation', ['reason' => 'duplicate_candidatura']);
+                $this->mongoLogger->logCandidature('create_failed', null, $utenteId, [
+                    'reason' => 'duplicate_application',
+                    'profile_id' => $data['profilo_id']
+                ]);
                 return ['success' => false, 'error' => 'Candidatura già inviata per questo profilo'];
             }
             
@@ -97,122 +116,31 @@ class Candidatura {
             $stmt->execute([$data['utente_id'], $data['profilo_id'], $data['motivazione']]);
             $this->performance->logQuery('CALL sp_candidati_profilo', [$data['utente_id'], $data['profilo_id']], microtime(true) - $startTime, $operationId);
             
+            // Get the inserted application ID
+            $applicationId = $this->db->lastInsertId();
+            
+            // MongoDB logging: application created
+            $this->mongoLogger->logCandidature('create', $applicationId, $utenteId, [
+                'profile_id' => $data['profilo_id'],
+                'project_id' => $profilo['progetto_id'],
+                'creator_id' => $profilo['creatore_id'],
+                'message_length' => strlen($data['motivazione'])
+            ]);
+            
             // Invalida cache correlate
             $this->cache->delete($candidaturaCacheKey);
             $this->cache->delete($profileCacheKey);
             
-            $this->security->auditAction('candidatura_created', [
-                'utente_id' => $data['utente_id'],
-                'profilo_id' => $data['profilo_id']
-            ]);
-            
             $this->performance->endOperation($operationId);
-            $this->logger->info('Candidatura created successfully', ['utente_id' => $data['utente_id'], 'profilo_id' => $data['profilo_id']]);
             
             return ['success' => true, 'message' => 'Candidatura inviata con successo'];
             
         } catch (Exception $e) {
-            $this->performance->endOperation($operationId);
-            $this->logger->error('Candidatura creation failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            $this->mongoLogger->logCandidature('create_error', null, $utenteId, [
+                'error' => $e->getMessage(),
+                'profile_id' => $profiloId
+            ]);
             return ['success' => false, 'error' => 'Errore interno del server'];
-        }
-    }
-    
-    /**
-     * Recupera candidature per profilo
-     */
-    public function getByProfilo($profiloId, $creatoreId = null) {
-        $operationId = $this->performance->startOperation('candidature_get_by_profilo');
-        
-        try {
-            // Validazione input
-            $validator = new Validator();
-            $validator->required('profilo_id', $profiloId)->integer();
-            
-            if ($creatoreId !== null) {
-                $validator->required('creatore_id', $creatoreId)->integer();
-            }
-            
-            if (!$validator->isValid()) {
-                return ['success' => false, 'errors' => $validator->getErrors()];
-            }
-            
-            // Cache key basata sui parametri
-            $cacheKey = "candidature_profilo_{$profiloId}" . ($creatoreId ? "_creator_{$creatoreId}" : '');
-            $candidature = $this->cache->get($cacheKey);
-            
-            if ($candidature === null) {
-                $sql = "
-                    SELECT 
-                        c.*,
-                        u.nickname,
-                        u.nome,
-                        u.cognome,
-                        u.email,
-                        pr.nome as profilo_nome,
-                        p.titolo as progetto_nome
-                    FROM candidature c
-                    JOIN utenti u ON c.utente_id = u.id
-                    JOIN profili_richiesti pr ON c.profilo_id = pr.id
-                    JOIN progetti p ON pr.progetto_id = p.id
-                    WHERE c.profilo_id = ?
-                ";
-                
-                $params = [$profiloId];
-                
-                // Se specificato creatore, filtra per progetto
-                if ($creatoreId) {
-                    $sql .= " AND p.creatore_id = ?";
-                    $params[] = $creatoreId;
-                }
-                
-                $sql .= " ORDER BY c.data_candidatura DESC";
-                
-                $startTime = microtime(true);
-                $stmt = $this->db->prepare($sql);
-                $stmt->execute($params);
-                $candidature = $stmt->fetchAll();
-                $this->performance->logQuery($sql, $params, microtime(true) - $startTime, $operationId);
-                
-                $this->cache->set($cacheKey, $candidature, 600); // Cache per 10 minuti
-            }
-            
-            $this->performance->endOperation($operationId);
-            $this->logger->info('Candidature retrieved successfully', ['profilo_id' => $profiloId, 'count' => count($candidature)]);
-            
-            return ['success' => true, 'data' => $candidature];
-            
-        } catch (Exception $e) {
-            $this->performance->endOperation($operationId);
-            $this->logger->error('Failed to retrieve candidature', ['error' => $e->getMessage()]);
-            return ['success' => false, 'error' => 'Errore interno del server'];
-        }
-    }
-    
-    /**
-     * Recupera candidature di un utente
-     */
-    public function getByUtente($utenteId) {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT 
-                    c.*,
-                    pr.nome as profilo_nome,
-                    p.titolo as progetto_nome,
-                    p.tipo_progetto as progetto_tipo,
-                    p.stato as progetto_stato
-                FROM candidature c
-                JOIN profili_richiesti pr ON c.profilo_id = pr.id
-                JOIN progetti p ON pr.progetto_id = p.id
-                WHERE c.utente_id = ?
-                ORDER BY c.data_candidatura DESC
-            ");
-            $stmt->execute([$utenteId]);
-            
-            return $stmt->fetchAll();
-            
-        } catch (Exception $e) {
-            return ['error' => $e->getMessage()];
         }
     }
     
@@ -222,12 +150,16 @@ class Candidatura {
     public function updateStatus($candidaturaId, $stato, $valutatoreId) {
         try {
             if (!in_array($stato, ['accettata', 'rifiutata', 'in_valutazione'])) {
+                $this->mongoLogger->logCandidature('status_update_failed', $candidaturaId, $valutatoreId, [
+                    'reason' => 'invalid_status',
+                    'attempted_status' => $stato
+                ]);
                 return ['success' => false, 'error' => 'Stato non valido'];
             }
             
-            // Verifica permessi
+            // Verifica permessi e ottieni dati candidatura
             $stmt = $this->db->prepare("
-                SELECT c.*, p.creatore_id
+                SELECT c.*, p.creatore_id, pr.nome as profilo_nome, p.titolo as progetto_nome
                 FROM candidature c
                 JOIN profili_richiesti pr ON c.profilo_id = pr.id
                 JOIN progetti p ON pr.progetto_id = p.id
@@ -237,7 +169,19 @@ class Candidatura {
             $candidatura = $stmt->fetch();
             
             if (!$candidatura) {
+                $this->mongoLogger->logCandidature('status_update_failed', $candidaturaId, $valutatoreId, [
+                    'reason' => 'application_not_found'
+                ]);
                 return ['success' => false, 'error' => 'Candidatura non trovata'];
+            }
+            
+            // Verifica che il valutatore sia il creatore del progetto
+            if ($candidatura['creatore_id'] != $valutatoreId) {
+                $this->mongoLogger->logSecurity('unauthorized_application_update', $valutatoreId, [
+                    'application_id' => $candidaturaId,
+                    'severity' => 'high'
+                ]);
+                return ['success' => false, 'error' => 'Non autorizzato a modificare questa candidatura'];
             }
             
             // Aggiorna stato
@@ -247,6 +191,15 @@ class Candidatura {
                 WHERE id = ?
             ");
             $stmt->execute([$stato, $valutatoreId, $candidaturaId]);
+            
+            // MongoDB logging: status updated
+            $this->mongoLogger->logCandidature('status_update', $candidaturaId, $candidatura['utente_id'], [
+                'old_status' => $candidatura['stato'],
+                'new_status' => $stato,
+                'reviewer_id' => $valutatoreId,
+                'profile_id' => $candidatura['profilo_id'],
+                'project_id' => $candidatura['progetto_id']
+            ]);
             
             // Se accettata, aggiorna posizioni occupate
             if ($stato === 'accettata') {
@@ -261,105 +214,63 @@ class Candidatura {
             return ['success' => true, 'stato' => $stato];
             
         } catch (Exception $e) {
+            $this->mongoLogger->logCandidature('status_update_error', $candidaturaId ?? null, $valutatoreId ?? null, [
+                'error' => $e->getMessage()
+            ]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-    
+
     /**
      * Cancella candidatura
      */
     public function delete($candidaturaId, $utenteId, $isAdmin = false) {
         try {
-            // Verifica permessi
-            $stmt = $this->db->prepare("SELECT utente_id FROM candidature WHERE id = ?");
+            // Verifica permessi e ottieni dati candidatura
+            $stmt = $this->db->prepare("
+                SELECT c.*, p.creatore_id, pr.nome as profilo_nome, p.titolo as progetto_nome
+                FROM candidature c
+                JOIN profili_richiesti pr ON c.profilo_id = pr.id
+                JOIN progetti p ON pr.progetto_id = p.id
+                WHERE c.id = ?
+            ");
             $stmt->execute([$candidaturaId]);
             $candidatura = $stmt->fetch();
             
             if (!$candidatura) {
+                $this->mongoLogger->logCandidature('delete_failed', $candidaturaId, $utenteId, [
+                    'reason' => 'application_not_found'
+                ]);
                 return ['success' => false, 'error' => 'Candidatura non trovata'];
             }
             
             if ($candidatura['utente_id'] != $utenteId && !$isAdmin) {
+                $this->mongoLogger->logSecurity('unauthorized_application_delete', $utenteId, [
+                    'application_id' => $candidaturaId,
+                    'severity' => 'medium'
+                ]);
                 return ['success' => false, 'error' => 'Accesso negato'];
             }
             
+            // Cancella candidatura
             $stmt = $this->db->prepare("DELETE FROM candidature WHERE id = ?");
             $stmt->execute([$candidaturaId]);
+            
+            // MongoDB logging: application deleted
+            $this->mongoLogger->logCandidature('delete', $candidaturaId, $utenteId, [
+                'profile_id' => $candidatura['profilo_id'],
+                'project_id' => $candidatura['progetto_id'],
+                'status' => $candidatura['stato'],
+                'is_admin' => $isAdmin
+            ]);
             
             return ['success' => true];
             
         } catch (Exception $e) {
+            $this->mongoLogger->logCandidature('delete_error', $candidaturaId ?? null, $utenteId ?? null, [
+                'error' => $e->getMessage()
+            ]);
             return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-    
-    /**
-     * Verifica se utente può candidarsi a profilo
-     */
-    public function canApply($utenteId, $profiloId) {
-        try {
-            // Recupera skill richieste dal profilo
-            $stmt = $this->db->prepare("
-                SELECT sp.competenza_id, sp.livello_richiesto
-                FROM skill_profili sp
-                WHERE sp.profilo_id = ?
-            ");
-            $stmt->execute([$profiloId]);
-            $skillRichiesti = $stmt->fetchAll();
-            
-            if (empty($skillRichiesti)) {
-                return ['success' => false, 'error' => 'Profilo senza skill richieste'];
-            }
-            
-            // Verifica skill utente
-            foreach ($skillRichiesti as $skill) {
-                $stmt = $this->db->prepare(
-                    SELECT livello FROM utenti_competenze 
-                    WHERE utente_id = ? AND competenza_id = ?
-                );
-                $stmt->execute([$utenteId, $skill['competenza_id']]);
-                $skillUtente = $stmt->fetch();
-                
-                if (!$skillUtente || $skillUtente['livello'] < $skill['livello_richiesto']) {
-                    return [
-                        'success' => false, 
-                        'error' => 'Skill insufficienti per questo profilo'
-                    ];
-                }
-            }
-            
-            return ['success' => true, 'can_apply' => true];
-            
-        } catch (Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-    
-    /**
-     * Statistiche candidature per progetto
-     */
-    public function getStatsByProgetto($progettoId) {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT 
-                    pr.nome as profilo_nome,
-                    COUNT(c.id) as totale_candidature,
-                    COUNT(CASE WHEN c.stato = 'accettata' THEN 1 END) as accettate,
-                    COUNT(CASE WHEN c.stato = 'rifiutata' THEN 1 END) as rifiutate,
-                    COUNT(CASE WHEN c.stato = 'in_valutazione' THEN 1 END) as in_valutazione,
-                    pr.numero_posizioni,
-                    pr.posizioni_occupate
-                FROM profili_richiesti pr
-                LEFT JOIN candidature c ON pr.id = c.profilo_id
-                WHERE pr.progetto_id = ?
-                GROUP BY pr.id, pr.nome, pr.numero_posizioni, pr.posizioni_occupate
-            ");
-            $stmt->execute([$progettoId]);
-            
-            return $stmt->fetchAll();
-            
-        } catch (Exception $e) {
-            return ['error' => $e->getMessage()];
         }
     }
 }

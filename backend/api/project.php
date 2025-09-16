@@ -7,7 +7,7 @@ header('Content-Type: application/json');
 
 $roleManager = new RoleManager();
 $apiResponse = new ApiResponse();
-$project = new Project();
+$project = new Project(Database::getInstance()->getConnection());
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':

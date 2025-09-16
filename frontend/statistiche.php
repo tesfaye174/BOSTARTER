@@ -1,34 +1,101 @@
 <?php
+/**
+ * Pagina Statistiche BOSTARTER
+ *
+ * Visualizza statistiche complete della piattaforma:
+ * - Statistiche generali (utenti, progetti, finanziamenti)
+ * - Top 3 creatori per affidabilità
+ * - Top 3 progetti vicini completamento
+ * - Top 3 finanziatori più attivi
+ * - Trend temporali e categorie
+ * 
+ */
+
+// Avvia sessione
 session_start();
-require_once 'includes/init.php';
 
-// Verifica autenticazione
-if (!isAuthenticated()) {
-    header('Location: auth/login.php');
-    exit();
+/**
+ * Verifica autenticazione utente
+ * @return bool True se loggato
+ */
+function isLoggedIn() {
+    return isset($_SESSION["user_id"]);
 }
 
-$userType = getUserType();
-$userId = $_SESSION['user_id'];
+/**
+ * Chiama API con gestione errori
+ */
+function callAPI($url) {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-// Recupera statistiche
-$statistiche = [];
-$error = null;
-
-try {
-    $response = file_get_contents("http://localhost/BOSTARTER/backend/api/statistiche.php");
-    $data = json_decode($response, true);
-    
-    if (isset($data['success']) && $data['success']) {
-        $statistiche = $data['data'];
-    } else {
-        $error = $data['error'] ?? 'Errore nel recupero statistiche';
+    if ($httpCode !== 200) {
+        return ['error' => "Errore chiamata API: HTTP $httpCode"];
     }
-} catch (Exception $e) {
-    $error = 'Errore di connessione: ' . $e->getMessage();
+
+    return json_decode($response, true);
 }
 
-include 'includes/head.php';
+// Inizializzazione array per le varie statistiche
+$stats = [
+    'generali' => [],
+    'top_creatori' => [],
+    'progetti_vicini' => [],
+    'top_finanziatori' => [],
+    'trend' => [],
+    'categorie' => []
+];
+
+// URL base per le API
+$api_base = 'http://localhost/BOSTARTER/backend/api/';
+
+// Recupero statistiche generali
+$generali_data = callAPI($api_base . 'statistiche.php');
+if (!isset($generali_data['error'])) {
+    $stats['generali'] = $generali_data['data']['generali'] ?? [];
+}
+
+// Recupero classifica creatori top
+$creatori_data = callAPI($api_base . 'statistiche.php?tipo=creatori');
+if (!isset($creatori_data['error'])) {
+    $stats['top_creatori'] = $creatori_data['data'] ?? [];
+}
+
+// Recupero progetti vicini al completamento
+$progetti_data = callAPI($api_base . 'statistiche.php?tipo=progetti');
+if (!isset($progetti_data['error'])) {
+    $stats['progetti_vicini'] = $progetti_data['data'] ?? [];
+}
+
+// Recupero classifica finanziatori top
+$finanziatori_data = callAPI($api_base . 'statistiche.php?tipo=finanziatori');
+if (!isset($finanziatori_data['error'])) {
+    $stats['top_finanziatori'] = $finanziatori_data['data'] ?? [];
+}
+
+// Recupero trend temporali
+$trend_data = callAPI($api_base . 'statistiche.php?tipo=trend');
+if (!isset($trend_data['error'])) {
+    $stats['trend'] = $trend_data['data'] ?? [];
+}
+
+// Recupero statistiche per categorie
+$categorie_data = callAPI($api_base . 'statistiche.php?tipo=categorie');
+if (!isset($categorie_data['error'])) {
+    $stats['categorie'] = $categorie_data['data'] ?? [];
+}
+
+// Titolo pagina
+$page_title = 'Statistiche - BOSTARTER';
+
+// Includi header
+require_once __DIR__.'/../backend/config/SecurityConfig.php';
+require_once __DIR__.'/includes/head.php';
 ?>
 
 <body>

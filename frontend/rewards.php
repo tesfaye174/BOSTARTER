@@ -1,6 +1,14 @@
 <?php
 session_start();
-require_once 'includes/init.php';
+
+// Funzioni di utilità
+function isAuthenticated() {
+    return isset($_SESSION["user_id"]);
+}
+
+function getUserType() {
+    return $_SESSION['user_type'];
+}
 
 // Verifica autenticazione
 if (!isAuthenticated()) {

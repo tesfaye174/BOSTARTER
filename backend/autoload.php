@@ -1,8 +1,8 @@
 <?php
 
-// =====================================================
+
 // CONFIGURAZIONE AUTOLOADER
-// =====================================================
+
 
 // Mappa delle directory per namespace
 $autoload_namespaces = [

@@ -1,28 +1,17 @@
 <?php
+/**
+ * BOSTARTER - Configurazioni Applicazione
+ */
 
-
-// CONFIGURAZIONE DATABASE
-
-/** Host del server MySQL */
+// Database MySQL
 define("DB_HOST", "localhost");
-
-/** Nome del database principale */
-define("DB_NAME", "bostarter");
-
-/** Username per la connessione al database */
+define("DB_NAME", "bostarter_italiano");
 define("DB_USER", "root");
-
-/** Password per la connessione al database */
 define("DB_PASS", "");
+define("DB_PORT", "3306");
 
-// =====================================================
-// PARAMETRI DI SICUREZZA E AUTENTICAZIONE
-// =====================================================
-
-/** Chiave segreta per la generazione dei token JWT */
+// Sicurezza e Autenticazione
 define("JWT_SECRET", "bostarter_secret_key_2025_ultra_sicura");
-
-/** Durata della sessione utente in secondi (1 ora) */
 define("SESSION_LIFETIME", 3600);
 
 /** Costo di hashing per bcrypt (più alto = più sicuro ma più lento) */

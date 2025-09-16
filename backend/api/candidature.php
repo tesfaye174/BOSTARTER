@@ -1,4 +1,16 @@
 <?php
+/**
+ * API per la gestione delle candidature ai progetti software
+ * 
+ * Permette agli utenti di candidarsi a profili richiesti
+ * e ai creatori di gestire le candidature ricevute
+ * 
+ * Endpoint:
+ * - GET /candidature.php?profilo_id=X - Lista candidature per profilo
+ * - POST /candidature.php - Invia nuova candidatura
+ * - PUT /candidature.php - Aggiorna stato candidatura
+ * - DELETE /candidature.php?id=X - Cancella candidatura
+ */
 session_start();
 require_once __DIR__ . '/../autoload.php';
 
@@ -157,8 +169,11 @@ function creaCandidatura($input, $utenteId) {
         }
         
         // Usa stored procedure per verifica skill e inserimento
-        $stmt = $db->prepare("CALL sp_candidati_profilo(?, ?, ?)");
-        $stmt->execute([$utenteId, $input['profilo_id'], $input['motivazione']]);
+        $stmt = $db->prepare("CALL candida_a_profilo(:utente_id, :profilo_id, :messaggio)");
+        $stmt->bindParam(':utente_id', $utenteId);
+        $stmt->bindParam(':profilo_id', $input['profilo_id']);
+        $stmt->bindParam(':messaggio', $input['motivazione']);
+        $stmt->execute();
         
         return ['success' => true, 'data' => ['message' => 'Candidatura inviata con successo']];
         

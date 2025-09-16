@@ -276,25 +276,46 @@ class Commento {
     public function update($commentoId, $utenteId, $testo, $isAdmin = false) {
         try {
             // Verifica permessi
-            $stmt = $this->db->prepare("SELECT utente_id FROM commenti WHERE id = ?");
+            $stmt = $this->db->prepare("SELECT utente_id, progetto_id FROM commenti WHERE id = ?");
             $stmt->execute([$commentoId]);
             $commento = $stmt->fetch();
             
             if (!$commento) {
+                $this->mongoLogger->logComment('update_failed', $commentoId, $utenteId, [
+                    'reason' => 'comment_not_found'
+                ]);
                 return ['success' => false, 'error' => 'Commento non trovato'];
             }
             
             if ($commento['utente_id'] != $utenteId && !$isAdmin) {
+                $this->mongoLogger->logSecurity('unauthorized_comment_update', $utenteId, [
+                    'comment_id' => $commentoId,
+                    'severity' => 'medium'
+                ]);
                 return ['success' => false, 'error' => 'Accesso negato'];
             }
+            
+            // Get old text for logging
+            $oldText = $this->getById($commentoId)['testo'] ?? '';
             
             // Aggiorna commento
             $stmt = $this->db->prepare("UPDATE commenti SET testo = ? WHERE id = ?");
             $stmt->execute([$testo, $commentoId]);
             
+            // MongoDB logging: comment updated
+            $this->mongoLogger->logComment('update', $commentoId, $utenteId, [
+                'progetto_id' => $commento['progetto_id'],
+                'old_text_length' => strlen($oldText),
+                'new_text_length' => strlen($testo),
+                'is_admin' => $isAdmin
+            ]);
+            
             return ['success' => true, 'testo' => $testo];
             
         } catch (Exception $e) {
+            $this->mongoLogger->logComment('update_error', $commentoId ?? null, $utenteId ?? null, [
+                'error' => $e->getMessage()
+            ]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -305,25 +326,46 @@ class Commento {
     public function delete($commentoId, $utenteId, $isAdmin = false) {
         try {
             // Verifica permessi
-            $stmt = $this->db->prepare("SELECT utente_id FROM commenti WHERE id = ?");
+            $stmt = $this->db->prepare("SELECT utente_id, progetto_id FROM commenti WHERE id = ?");
             $stmt->execute([$commentoId]);
             $commento = $stmt->fetch();
             
             if (!$commento) {
+                $this->mongoLogger->logComment('delete_failed', $commentoId, $utenteId, [
+                    'reason' => 'comment_not_found'
+                ]);
                 return ['success' => false, 'error' => 'Commento non trovato'];
             }
             
             if ($commento['utente_id'] != $utenteId && !$isAdmin) {
+                $this->mongoLogger->logSecurity('unauthorized_comment_delete', $utenteId, [
+                    'comment_id' => $commentoId,
+                    'severity' => 'medium'
+                ]);
                 return ['success' => false, 'error' => 'Accesso negato'];
             }
+            
+            // Get comment data for logging before deletion
+            $commentData = $this->getById($commentoId);
             
             // Cancella commento (le risposte vengono cancellate in cascata)
             $stmt = $this->db->prepare("DELETE FROM commenti WHERE id = ?");
             $stmt->execute([$commentoId]);
             
+            // MongoDB logging: comment deleted
+            $this->mongoLogger->logComment('delete', $commentoId, $utenteId, [
+                'progetto_id' => $commento['progetto_id'],
+                'text_length' => strlen($commentData['testo'] ?? ''),
+                'had_reply' => !empty($commentData['risposta_testo']),
+                'is_admin' => $isAdmin
+            ]);
+            
             return ['success' => true];
             
         } catch (Exception $e) {
+            $this->mongoLogger->logComment('delete_error', $commentoId ?? null, $utenteId ?? null, [
+                'error' => $e->getMessage()
+            ]);
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

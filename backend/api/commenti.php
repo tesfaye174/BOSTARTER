@@ -1,4 +1,17 @@
 <?php
+/**
+ * API per la gestione dei commenti sui progetti
+ * 
+ * Permette agli utenti di commentare i progetti
+ * e ai creatori di rispondere ai commenti
+ * 
+ * Endpoint:
+ * - GET /commenti.php?progetto_id=X - Lista commenti per progetto
+ * - POST /commenti.php - Aggiungi nuovo commento/risposta
+ * - PUT /commenti.php - Modifica commento
+ * - DELETE /commenti.php?id=X - Cancella commento
+ */
+
 session_start();
 require_once __DIR__ . '/../autoload.php';
 
@@ -91,19 +104,32 @@ switch ($_SERVER['REQUEST_METHOD']) {
         break;
 }
 
-// Funzioni helper
+/**
+ * Ottiene tutti i commenti per un progetto con eventuali risposte
+ * @param int $progettoId ID del progetto
+ * @return array Lista di commenti con relative risposte
+ */
 function getCommentiProgetto($progettoId) {
     $db = Database::getInstance()->getConnection();
     
     // Verifica che il progetto esista
-    $stmt = $db->prepare("SELECT id, nome FROM progetti WHERE id = ? AND is_active = TRUE");
+    $stmt = $db->prepare("
+        SELECT 
+            id, 
+            nome 
+        FROM 
+            progetti 
+        WHERE 
+            id = ? 
+            AND is_active = TRUE
+    ");
     $stmt->execute([$progettoId]);
     if (!$stmt->fetch()) {
         return ['error' => 'Progetto non trovato'];
     }
     
-    // Recupera commenti con risposte
-    $stmt = $db->prepare(
+    // Query corretta con JOIN tra tabelle
+    $stmt = $db->prepare("
         SELECT 
             c.id,
             c.testo,
@@ -116,18 +142,30 @@ function getCommentiProgetto($progettoId) {
             r.data_risposta,
             r.creatore_id as risposta_creatore_id,
             ur.nickname as risposta_creatore_nickname
-        FROM commenti c
-        JOIN utenti u ON c.utente_id = u.id
-        LEFT JOIN risposte_commenti r ON c.id = r.commento_id
-        LEFT JOIN utenti ur ON r.creatore_id = ur.id
-        WHERE c.progetto_id = ?
-        ORDER BY c.data_commento DESC
-    );
-    $stmt->execute([$progettoId]);
+        FROM 
+            commenti c
+        JOIN 
+            utenti u ON c.utente_id = u.id
+        LEFT JOIN 
+            risposte_commenti r ON c.id = r.commento_id
+        LEFT JOIN 
+            utenti ur ON r.creatore_id = ur.id
+        WHERE 
+            c.progetto_id = ?
+        ORDER BY 
+            c.data_commento DESC
+    ");
     
+    $stmt->execute([$progettoId]);
     return $stmt->fetchAll();
 }
 
+/**
+ * Crea un nuovo commento per un progetto
+ * @param array $input Dati del commento
+ * @param int $utenteId ID dell'utente che crea il commento
+ * @return array Risultato dell'operazione
+ */
 function creaCommento($input, $utenteId) {
     $db = Database::getInstance()->getConnection();
     
@@ -140,7 +178,16 @@ function creaCommento($input, $utenteId) {
     
     try {
         // Verifica che il progetto esista e sia attivo
-        $stmt = $db->prepare("SELECT id, stato FROM progetti WHERE id = ? AND is_active = TRUE");
+        $stmt = $db->prepare("
+            SELECT 
+                id, 
+                stato 
+            FROM 
+                progetti 
+            WHERE 
+                id = ? 
+                AND is_active = TRUE
+        ");
         $stmt->execute([$input['progetto_id']]);
         $progetto = $stmt->fetch();
         
@@ -149,8 +196,11 @@ function creaCommento($input, $utenteId) {
         }
         
         // Usa stored procedure per inserimento
-        $stmt = $db->prepare("CALL sp_inserisci_commento(?, ?, ?)");
-        $stmt->execute([$utenteId, $input['progetto_id'], $input['testo']]);
+        $stmt = $db->prepare("CALL inserisci_commento(:utente_id, :progetto_id, :testo)");
+        $stmt->bindParam(':utente_id', $utenteId);
+        $stmt->bindParam(':progetto_id', $input['progetto_id']);
+        $stmt->bindParam(':testo', $input['testo']);
+        $stmt->execute();
         
         return [
             'success' => true, 
@@ -163,6 +213,12 @@ function creaCommento($input, $utenteId) {
     }
 }
 
+/**
+ * Crea una nuova risposta a un commento
+ * @param array $input Dati della risposta
+ * @param RoleManager $roleManager Gestore dei ruoli
+ * @return array Risultato dell'operazione
+ */
 function creaRisposta($input, $roleManager) {
     $db = Database::getInstance()->getConnection();
     
@@ -175,12 +231,17 @@ function creaRisposta($input, $roleManager) {
     
     try {
         // Verifica che l'utente sia creatore/admin del progetto
-        $stmt = $db->prepare(
-            SELECT c.progetto_id, p.creatore_id
-            FROM commenti c
-            JOIN progetti p ON c.progetto_id = p.id
-            WHERE c.id = ?
-        );
+        $stmt = $db->prepare("
+            SELECT 
+                c.progetto_id, 
+                p.creatore_id 
+            FROM 
+                commenti c
+            JOIN 
+                progetti p ON c.progetto_id = p.id
+            WHERE 
+                c.id = ?
+        ");
         $stmt->execute([$input['commento_id']]);
         $commento = $stmt->fetch();
         
@@ -193,8 +254,11 @@ function creaRisposta($input, $roleManager) {
         }
         
         // Usa stored procedure per inserimento risposta
-        $stmt = $db->prepare("CALL sp_rispondi_commento(?, ?, ?)");
-        $stmt->execute([$roleManager->getUserId(), $input['commento_id'], $input['testo']]);
+        $stmt = $db->prepare("CALL inserisci_risposta_commento(:creatore_id, :commento_id, :testo)");
+        $stmt->bindParam(':creatore_id', $roleManager->getUserId());
+        $stmt->bindParam(':commento_id', $input['commento_id']);
+        $stmt->bindParam(':testo', $input['testo']);
+        $stmt->execute();
         
         return [
             'success' => true, 
@@ -207,12 +271,26 @@ function creaRisposta($input, $roleManager) {
     }
 }
 
+/**
+ * Modifica un commento
+ * @param int $commentoId ID del commento
+ * @param string $testo Nuovo testo del commento
+ * @param RoleManager $roleManager Gestore dei ruoli
+ * @return array Risultato dell'operazione
+ */
 function modificaCommento($commentoId, $testo, $roleManager) {
     $db = Database::getInstance()->getConnection();
     
     try {
         // Verifica permessi
-        $stmt = $db->prepare("SELECT utente_id FROM commenti WHERE id = ?");
+        $stmt = $db->prepare("
+            SELECT 
+                utente_id 
+            FROM 
+                commenti 
+            WHERE 
+                id = ?
+        ");
         $stmt->execute([$commentoId]);
         $commento = $stmt->fetch();
         
@@ -225,7 +303,14 @@ function modificaCommento($commentoId, $testo, $roleManager) {
         }
         
         // Aggiorna commento
-        $stmt = $db->prepare("UPDATE commenti SET testo = ? WHERE id = ?");
+        $stmt = $db->prepare("
+            UPDATE 
+                commenti 
+            SET 
+                testo = ? 
+            WHERE 
+                id = ?
+        ");
         $stmt->execute([$testo, $commentoId]);
         
         return ['success' => true, 'data' => ['testo' => $testo]];
@@ -235,12 +320,25 @@ function modificaCommento($commentoId, $testo, $roleManager) {
     }
 }
 
+/**
+ * Cancella un commento
+ * @param int $commentoId ID del commento
+ * @param RoleManager $roleManager Gestore dei ruoli
+ * @return array Risultato dell'operazione
+ */
 function cancellaCommento($commentoId, $roleManager) {
     $db = Database::getInstance()->getConnection();
     
     try {
         // Verifica permessi
-        $stmt = $db->prepare("SELECT utente_id FROM commenti WHERE id = ?");
+        $stmt = $db->prepare("
+            SELECT 
+                utente_id 
+            FROM 
+                commenti 
+            WHERE 
+                id = ?
+        ");
         $stmt->execute([$commentoId]);
         $commento = $stmt->fetch();
         
@@ -253,7 +351,12 @@ function cancellaCommento($commentoId, $roleManager) {
         }
         
         // Cancella commento (le risposte vengono cancellate in cascata)
-        $stmt = $db->prepare("DELETE FROM commenti WHERE id = ?");
+        $stmt = $db->prepare("
+            DELETE FROM 
+                commenti 
+            WHERE 
+                id = ?
+        ");
         $stmt->execute([$commentoId]);
         
         return ['success' => true];

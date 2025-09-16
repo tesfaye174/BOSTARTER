@@ -1,18 +1,31 @@
 <?php
-// Central head include: meta tags, CSS links
+/**
+ * Header Comune BOSTARTER
+ *
+ * Include comune per tutte le pagine:
+ * - Meta tags e charset
+ * - CSS Bootstrap e Font Awesome
+ * - Variabili CSS personalizzate
+ * - Funzioni helper per asset
+ * 
+ */
+
+// Prevenzione inclusioni multiple
 if (!defined('BOSTARTER_HEAD_INCLUDED')) {
     define('BOSTARTER_HEAD_INCLUDED', true);
 }
 
-// Determine the correct base path for assets
-$isInSubfolder = strpos($_SERVER['PHP_SELF'], '/admin/') !== false || 
+// Determina il path corretto per gli asset
+$isInSubfolder = strpos($_SERVER['PHP_SELF'], '/admin/') !== false ||
                  strpos($_SERVER['PHP_SELF'], '/auth/') !== false;
 $basePath = $isInSubfolder ? '../' : '';
 
-// Function to get the correct asset path
+/**
+ * Funzione per ottenere il path corretto degli asset
+ */
 function asset($path) {
     $base = '/BOSTARTER/frontend/';
-    return rtrim($base, '/') . '/' . ltrim($path, '/');
+    return rtrim($base, '/') . '/assets/' . ltrim($path, '/');
 }
 ?>
 <!DOCTYPE html>
@@ -29,18 +42,18 @@ function asset($path) {
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVottefsqZBpTv==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
-    <!-- Custom CSS -->
-    <link href="<?= asset('css/app.css') ?>" rel="stylesheet">
-    <link href="<?= asset('css/custom.css') ?>" rel="stylesheet">
+    <!-- Custom CSS - Temporarily disabled for debugging -->
+    <!-- <link href="<?= asset('css/app.css') ?>" rel="stylesheet"> -->
+    <!-- <link href="<?= asset('css/custom.css') ?>" rel="stylesheet"> -->
     
-    <!-- Page-specific CSS -->
+    <!-- Page-specific CSS - Temporarily disabled for debugging -->
     <?php
-    $scriptName = basename($_SERVER['SCRIPT_NAME']);
-    $pageName = preg_replace('/\.php$/', '', $scriptName);
-    $cssPath = __DIR__ . '/../css/' . $pageName . '.css';
-    if (file_exists($cssPath)) {
-        echo '<link href="' . asset('css/' . $pageName . '.css') . '" rel="stylesheet">' . PHP_EOL;
-    }
+    // $scriptName = basename($_SERVER['SCRIPT_NAME']);
+    // $pageName = preg_replace('/\.php$/', '', $scriptName);
+    // $cssPath = __DIR__ . '/../css/' . $pageName . '.css';
+    // if (file_exists($cssPath)) {
+    //     echo '<link href="' . asset('css/' . $pageName . '.css') . '" rel="stylesheet">' . PHP_EOL;
+    // }
     ?>
     
     <style>

@@ -1,10 +1,12 @@
 <?php
 require_once __DIR__ . '/ProgettoBase.php';
+require_once __DIR__ . '/../utils/MongoLogger.php';
 
 class Progetto extends ProgettoBase {
     // Costruttore con il database
     public function __construct($db) {
         parent::__construct($db);
+        $this->mongoLogger = MongoLogger::getInstance();
     }
     
     // Ottieni progetto per ID
@@ -31,36 +33,15 @@ class Progetto extends ProgettoBase {
         return null;
     }
     
-    // Ottieni progetto per slug
-    public function getBySlug($slug) {
-        $query = "SELECT p.*, u.nickname as creatore_nickname, u.avatar_url as creatore_avatar,
-                         c.affidabilita as creatore_affidabilita
-                 FROM " . $this->table . " p
-                 JOIN utenti u ON p.creatore_id = u.id
-                 LEFT JOIN creatori c ON p.creatore_id = c.utente_id
-                 WHERE p.slug = :slug LIMIT 1";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindParam(":slug", $slug);
-        $stmt->execute();
-        
-        if($stmt->rowCount() > 0) {
-            $progetto = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            // Calcola i giorni rimanenti e la percentuale di raccolta
-            $progetto['giorni_rimanenti'] = $this->calcolaGiorniRimanenti($progetto['data_fine']);
-            $progetto['percentuale_raccolta'] = $this->calcolaPercentualeRaccolta($progetto['budget'], $progetto['finanziamento_attuale']);
-            
-            return $progetto;
-        }
-        
-        return null;
-    }
-    
     // Aggiorna un progetto
     public function aggiorna($id, $dati, $utente_id) {
         // Verifica che l'utente sia il creatore del progetto o un amministratore
         if(!$this->utentePuoModificareProgetto($id, $utente_id)) {
+            $this->mongoLogger->logSecurity('unauthorized_project_update', $utente_id, [
+                'project_id' => $id,
+                'attempted_changes' => $dati,
+                'severity' => 'high'
+            ]);
             throw new Exception("Non hai i permessi per modificare questo progetto");
         }
         
@@ -140,7 +121,44 @@ class Progetto extends ProgettoBase {
         $query = "UPDATE " . $this->table . " SET " . implode(", ", $campiDaAggiornare) . " WHERE id = :id";
         $stmt = $this->db->prepare($query);
         
-        return $stmt->execute($parametri);
+        $result = $stmt->execute($parametri);
+        
+        // Log the update operation
+        if($result) {
+            $this->mongoLogger->logProject('update', $id, $utente_id, [
+                'fields_updated' => array_keys($dati),
+                'old_values' => $this->getById($id),
+                'new_values' => $dati
+            ]);
+        }
+        
+        return $result;
+    }
+    
+    // Ottieni progetto per slug
+    public function getBySlug($slug) {
+        $query = "SELECT p.*, u.nickname as creatore_nickname, u.avatar_url as creatore_avatar,
+                         c.affidabilita as creatore_affidabilita
+                 FROM " . $this->table . " p
+                 JOIN utenti u ON p.creatore_id = u.id
+                 LEFT JOIN creatori c ON p.creatore_id = c.utente_id
+                 WHERE p.slug = :slug LIMIT 1";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(":slug", $slug);
+        $stmt->execute();
+        
+        if($stmt->rowCount() > 0) {
+            $progetto = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // Calcola i giorni rimanenti e la percentuale di raccolta
+            $progetto['giorni_rimanenti'] = $this->calcolaGiorniRimanenti($progetto['data_fine']);
+            $progetto['percentuale_raccolta'] = $this->calcolaPercentualeRaccolta($progetto['budget'], $progetto['finanziamento_attuale']);
+            
+            return $progetto;
+        }
+        
+        return null;
     }
     
     // Verifica se l'utente può modificare il progetto
@@ -316,6 +334,12 @@ class Progetto extends ProgettoBase {
         return (int)$risultato['totale'];
     }
     
+    // Metodo getAll per compatibilità con l'API
+    public function getAll($filters = []) {
+        $result = $this->elenca($filters, 1, isset($filters['limit']) ? (int)$filters['limit'] : 10);
+        return $result['progetti'];
+    }
+    
     // Ottieni le categorie dei progetti
     public function getCategorie() {
         $query = "SELECT DISTINCT categoria FROM " . $this->table . " WHERE categoria IS NOT NULL AND categoria != '' ORDER BY categoria";
@@ -335,6 +359,10 @@ class Progetto extends ProgettoBase {
         }
         
         if($progetto['creatore_id'] != $utente_id) {
+            $this->mongoLogger->logSecurity('unauthorized_project_publish', $utente_id, [
+                'project_id' => $progetto_id,
+                'severity' => 'high'
+            ]);
             throw new Exception("Non hai i permessi per pubblicare questo progetto");
         }
         
@@ -362,6 +390,10 @@ class Progetto extends ProgettoBase {
         }
         
         if(!empty($campiMancanti)) {
+            $this->mongoLogger->logProject('publish_failed', $progetto_id, $utente_id, [
+                'missing_fields' => $campiMancanti,
+                'reason' => 'required_fields_missing'
+            ]);
             throw new Exception("Compila tutti i campi obbligatori prima di pubblicare: " . implode(", ", $campiMancanti));
         }
         
@@ -370,11 +402,19 @@ class Progetto extends ProgettoBase {
         $data_fine = new DateTime($progetto['data_fine']);
         
         if($data_fine <= $oggi) {
+            $this->mongoLogger->logProject('publish_failed', $progetto_id, $utente_id, [
+                'reason' => 'invalid_end_date',
+                'end_date' => $progetto['data_fine']
+            ]);
             throw new Exception("La data di fine progetto deve essere nel futuro");
         }
         
         // Verifica che il budget sia maggiore di 0
         if($progetto['budget'] <= 0) {
+            $this->mongoLogger->logProject('publish_failed', $progetto_id, $utente_id, [
+                'reason' => 'invalid_budget',
+                'budget' => $progetto['budget']
+            ]);
             throw new Exception("Il budget deve essere maggiore di 0");
         }
         
@@ -383,18 +423,31 @@ class Progetto extends ProgettoBase {
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(":id", $progetto_id);
         
-        return $stmt->execute();
+        $result = $stmt->execute();
+        
+        if($result) {
+            $this->mongoLogger->logProject('publish', $progetto_id, $utente_id, [
+                'new_status' => 'in_revisione',
+                'project_data' => $progetto
+            ]);
+        }
+        
+        return $result;
     }
     
     // Approva un progetto (da parte di un amministratore)
     public function approva($progetto_id, $amministratore_id) {
-        // Verifica che l'utente sia un amministratore
+        // Verifica que l'utente sia un amministratore
         $utente = new Utente($this->db);
         if(!$utente->isAmministratore($amministratore_id)) {
+            $this->mongoLogger->logSecurity('unauthorized_project_approval', $amministratore_id, [
+                'project_id' => $progetto_id,
+                'severity' => 'high'
+            ]);
             throw new Exception("Solo un amministratore può approvare un progetto");
         }
         
-        // Verifica che il progetto esista e sia in attesa di approvazione
+        // Verifica que il progetto esista e sia in attesa di approvazione
         $progetto = $this->getById($progetto_id);
         
         if(!$progetto) {
@@ -402,6 +455,10 @@ class Progetto extends ProgettoBase {
         }
         
         if($progetto['stato'] !== 'in_revisione') {
+            $this->mongoLogger->logProject('approval_failed', $progetto_id, $amministratore_id, [
+                'reason' => 'invalid_status',
+                'current_status' => $progetto['stato']
+            ]);
             throw new Exception("Questo progetto non è in attesa di approvazione");
         }
         
@@ -415,18 +472,32 @@ class Progetto extends ProgettoBase {
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(":id", $progetto_id);
         
-        return $stmt->execute();
+        $result = $stmt->execute();
+        
+        if($result) {
+            $this->mongoLogger->logProject('approval', $progetto_id, $amministratore_id, [
+                'new_status' => 'pubblicato',
+                'start_date' => date('Y-m-d H:i:s'),
+                'project_data' => $progetto
+            ]);
+        }
+        
+        return $result;
     }
     
     // Rifiuta un progetto (da parte di un amministratore)
     public function rifiuta($progetto_id, $amministratore_id, $motivo) {
-        // Verifica che l'utente sia un amministratore
+        // Verifica que l'utente sia un amministratore
         $utente = new Utente($this->db);
         if(!$utente->isAmministratore($amministratore_id)) {
+            $this->mongoLogger->logSecurity('unauthorized_project_rejection', $amministratore_id, [
+                'project_id' => $progetto_id,
+                'severity' => 'high'
+            ]);
             throw new Exception("Solo un amministratore può rifiutare un progetto");
         }
         
-        // Verifica che il progetto esista e sia in attesa di approvazione
+        // Verifica que il progetto esista e sia in attesa di approvazione
         $progetto = $this->getById($progetto_id);
         
         if(!$progetto) {
@@ -434,6 +505,10 @@ class Progetto extends ProgettoBase {
         }
         
         if($progetto['stato'] !== 'in_revisione') {
+            $this->mongoLogger->logProject('rejection_failed', $progetto_id, $amministratore_id, [
+                'reason' => 'invalid_status',
+                'current_status' => $progetto['stato']
+            ]);
             throw new Exception("Questo progetto non è in attesa di approvazione");
         }
         
@@ -451,12 +526,22 @@ class Progetto extends ProgettoBase {
         $stmt->bindParam(":id", $progetto_id);
         $stmt->bindParam(":motivo", $motivo);
         
-        return $stmt->execute();
+        $result = $stmt->execute();
+        
+        if($result) {
+            $this->mongoLogger->logProject('rejection', $progetto_id, $amministratore_id, [
+                'new_status' => 'bozza',
+                'rejection_reason' => $motivo,
+                'project_data' => $progetto
+            ]);
+        }
+        
+        return $result;
     }
     
     // Chiudi un progetto (quando viene raggiunto il budget o scade il tempo)
     public function chiudi($progetto_id, $utente_id) {
-        // Verifica che l'utente sia il creatore del progetto o un amministratore
+        // Verifica que l'utente sia il creatore del progetto o un amministratore
         $progetto = $this->getById($progetto_id);
         
         if(!$progetto) {
@@ -465,11 +550,18 @@ class Progetto extends ProgettoBase {
         
         $utente = new Utente($this->db);
         if($progetto['creatore_id'] != $utente_id && !$utente->isAmministratore($utente_id)) {
+            $this->mongoLogger->logSecurity('unauthorized_project_closure', $utente_id, [
+                'project_id' => $progetto_id,
+                'severity' => 'high'
+            ]);
             throw new Exception("Non hai i permessi per chiudere questo progetto");
         }
         
-        // Verifica che il progetto non sia già chiuso
+        // Verifica que il progetto non sia già chiuso
         if($progetto['stato'] === 'chiuso') {
+            $this->mongoLogger->logProject('closure_failed', $progetto_id, $utente_id, [
+                'reason' => 'already_closed'
+            ]);
             throw new Exception("Questo progetto è già stato chiuso");
         }
         
@@ -483,7 +575,17 @@ class Progetto extends ProgettoBase {
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(":id", $progetto_id);
         
-        return $stmt->execute();
+        $result = $stmt->execute();
+        
+        if($result) {
+            $this->mongoLogger->logProject('closure', $progetto_id, $utente_id, [
+                'new_status' => 'chiuso',
+                'closure_date' => date('Y-m-d H:i:s'),
+                'project_data' => $progetto
+            ]);
+        }
+        
+        return $result;
     }
     
     // Aggiungi un'immagine alla galleria del progetto
@@ -510,7 +612,18 @@ class Progetto extends ProgettoBase {
         $stmt->bindParam(":url_immagine", $url_immagine);
         $stmt->bindParam(":didascalia", $didascalia);
         
-        return $stmt->execute();
+        $result = $stmt->execute();
+        
+        if($result) {
+            $imageId = $this->db->lastInsertId();
+            $this->mongoLogger->logProject('gallery_add', $progetto_id, $progetto['creatore_id'], [
+                'image_id' => $imageId,
+                'image_url' => $url_immagine,
+                'caption' => $didascalia
+            ]);
+        }
+        
+        return $result;
     }
     
     // Ottieni le immagini della galleria di un progetto
@@ -536,6 +649,10 @@ class Progetto extends ProgettoBase {
         $stmt->execute();
         
         if($stmt->rowCount() === 0) {
+            $this->mongoLogger->logProject('gallery_remove_failed', null, $utente_id, [
+                'reason' => 'image_not_found',
+                'image_id' => $immagine_id
+            ]);
             throw new Exception("Immagine non trovata");
         }
         
@@ -543,6 +660,10 @@ class Progetto extends ProgettoBase {
         
         $utente = new Utente($this->db);
         if($risultato['creatore_id'] != $utente_id && !$utente->isAmministratore($utente_id)) {
+            $this->mongoLogger->logSecurity('unauthorized_gallery_remove', $utente_id, [
+                'image_id' => $immagine_id,
+                'severity' => 'medium'
+            ]);
             throw new Exception("Non hai i permessi per rimuovere questa immagine");
         }
         
@@ -551,7 +672,15 @@ class Progetto extends ProgettoBase {
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(":id", $immagine_id);
         
-        return $stmt->execute();
+        $result = $stmt->execute();
+        
+        if($result) {
+            $this->mongoLogger->logProject('gallery_remove', $risultato['progetto_id'], $utente_id, [
+                'image_id' => $immagine_id
+            ]);
+        }
+        
+        return $result;
     }
 }
 ?>

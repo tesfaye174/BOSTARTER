@@ -11,6 +11,27 @@ require_once __DIR__ . '/../utils/SecurityManager.php';
 require_once __DIR__ . '/../utils/PerformanceMonitor.php';
 require_once __DIR__ . '/../utils/Logger.php';
 
+// Codici errore standard
+const ERR_AUTH_REQUIRED = 'auth_required';
+const ERR_INVALID_INPUT = 'invalid_input';
+const ERR_NOT_FOUND = 'not_found';
+const ERR_PERMISSION_DENIED = 'permission_denied';
+
+class ApiResponse {
+    public function sendError($message, $code = 400, $errorCode = ERR_INVALID_INPUT, $details = []) {
+        http_response_code($code);
+        echo json_encode([
+            'success' => false,
+            'error' => [
+                'message' => $message,
+                'code' => $errorCode,
+                'details' => $details
+            ]
+        ]);
+        exit();
+    }
+}
+
 class APIMiddleware {
     private $security;
     private $performance;

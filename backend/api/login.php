@@ -60,8 +60,6 @@ $logger = new SimpleLogger(__DIR__ . '/../../logs/auth.log');
 
 /**
  * Verifica se l'account è bloccato per troppi tentativi falliti
- * @param string $email Email dell'utente
- * @return bool True se l'account è bloccato
  */
 function isAccountLocked($email) {
     global $logger;
@@ -85,9 +83,7 @@ function isAccountLocked($email) {
 }
 
 /**
- * Registra un tentativo di login fallito
- * @param string $email Email dell'utente
- * @return void
+ * Registra un tentativo di login fallito                   
  */
 function recordFailedAttempt($email) {
     global $logger;

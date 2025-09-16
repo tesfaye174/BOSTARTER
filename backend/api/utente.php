@@ -1,21 +1,34 @@
 <?php
+/*
+ API User - Gestione Utenti BOSTARTER
+ */
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
+
 // Carica l'autoloader personalizzato BOSTARTER
 require_once __DIR__ . '/../autoload.php';
 
 $database = Database::getInstance();
 $db = $database->getConnection();
 session_start();
+
+// Inizializza il logger MongoDB
+$mongoLogger = new BOSTARTER_Audit();
+
+/**
+ * Verifica autenticazione utente
+ */
 function requireAuth() {
     if (!isset($_SESSION['user_id'])) {
         http_response_code(401);
-        echo json_encode(['error' => 'Authentication required']);
+        echo json_encode(['error' => 'Autenticazione richiesta']);
         exit;
     }
 }
@@ -58,13 +71,15 @@ function getUserProfile($db, $userId) {
             http_response_code(403);
             echo json_encode(['error' => 'Access denied']);
             return;
-        }        
+        }
+
         $userStmt = $db->prepare(
-            SELECT id as user_id, nickname as username, email, CONCAT(nome, ' ', cognome) as full_name, 
-                   '' as bio, luogo_nascita as location, '' as avatar_url, '' as website_url, 
-                   'active' as status, tipo_utente as role, created_at, last_access as last_login
-            FROM utenti 
-            WHERE id = ?
+            "SELECT id as user_id, nickname as username, email, CONCAT(nome, ' ', cognome) AS full_name,
+                   COALESCE(bio, '') AS bio, COALESCE(luogo_nascita, '') AS location,
+                   COALESCE(avatar_url, '') AS avatar_url, COALESCE(website_url, '') AS website_url,
+                   'active' AS status, tipo_utente AS role, created_at, COALESCE(last_access, '0000-00-00 00:00:00') AS last_login
+             FROM utenti
+             WHERE id = ?"
         );
         $userStmt->execute([$userId]);
         $user = $userStmt->fetch(PDO::FETCH_ASSOC);
