@@ -1,51 +1,26 @@
 <?php
 /**
- * BOSTARTER - Gestione Candidature
- *
- * Questa pagina permette agli utenti di visualizzare e gestire le proprie candidature
- * per progetti software, e ai creatori di gestire le candidature ricevute.
- *
- * Funzionalità implementate:
- * - Visualizzazione candidature inviate (per utenti normali)
- * - Gestione candidature ricevute (per creatori)
- * - Accettazione/rifiuto candidature
- * - Filtro per progetto/profilo specifico
- * - Integrazione con sistema skill-matching
- *
- * Sicurezza:
- * - Solo utenti autenticati possono accedere
- * - Controllo permessi basato sul tipo utente
- * - Validazione input e sanitizzazione
- * - Protezione CSRF per operazioni critiche
- *
- * @author BOSTARTER Development Team
- * @version 1.0
- * @since 2025
+ * GESTIONE CANDIDATURE BOSTARTER
+ * Visualizzazione e gestione candidature per progetti software
  */
-
-// Avvia la sessione
 session_start();
 
 /**
- * Verifica se l'utente è autenticato
- * @return bool True se l'utente è loggato, false altrimenti
+ * Verifica autenticazione utente
  */
 function isAuthenticated() {
     return isset($_SESSION["user_id"]);
 }
 
 /**
- * Ottiene il tipo di utente dalla sessione
- * @return string Tipo di utente (creatore, admin, utente)
+ * Recupera tipo utente dalla sessione
  */
 function getUserType() {
     return $_SESSION['user_type'] ?? '';
 }
 
 /**
- * Funzione per effettuare chiamate API sicure
- * @param string $url URL dell'endpoint API
- * @return mixed Risultato della chiamata API
+ * Effettua chiamate API sicure
  */
 function callAPI($url) {
     $ch = curl_init();
@@ -63,13 +38,13 @@ function callAPI($url) {
     return json_decode($response, true);
 }
 
-// Verifica autenticazione - redirect se non loggato
+// Verifica autenticazione
 if (!isAuthenticated()) {
     header('Location: auth/login.php?msg=login_required');
     exit();
 }
 
-// Recupero dati utente dalla sessione
+// Recupero dati utente
 $userType = getUserType();
 $userId = $_SESSION['user_id'];
 $isCreator = ($userType === 'creatore');
@@ -80,13 +55,12 @@ $candidature = [];
 $error = null;
 $success = null;
 
-// Gestione azioni POST (accettazione/rifiuto candidature)
+// Gestione azioni POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $candidaturaId = $_POST['candidatura_id'] ?? null;
     $azione = $_POST['azione'] ?? null;
 
     if ($candidaturaId && in_array($azione, ['accetta', 'rifiuta'])) {
-        // Chiamata API per aggiornare stato candidatura
         $apiData = [
             'candidatura_id' => $candidaturaId,
             'azione' => $azione
@@ -103,47 +77,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $result = json_decode($response, true);
         if (isset($result['success']) && $result['success']) {
-            $success = $azione === 'accetta' ? 'Candidatura accettata con successo!' : 'Candidatura rifiutata.';
+            $success = $azione === 'accetta' ? 'Candidatura accettata!' : 'Candidatura rifiutata.';
         } else {
-            $error = $result['error'] ?? 'Errore nell\'aggiornamento della candidatura.';
+            $error = $result['error'] ?? 'Errore aggiornamento candidatura.';
         }
     }
 }
 
-// Recupero candidature in base al contesto
+// Recupero candidature
 try {
     if (isset($_GET['profilo_id'])) {
-        // Candidature per un profilo specifico (solo creatore/admin del progetto)
         $profiloId = (int)$_GET['profilo_id'];
         $apiResult = callAPI("http://localhost/BOSTARTER/backend/api/candidature.php?profilo_id=$profiloId");
 
         if (isset($apiResult['success']) && $apiResult['success']) {
             $candidature = $apiResult['data'];
         } else {
-            $error = $apiResult['error'] ?? 'Errore nel recupero candidature per profilo';
+            $error = $apiResult['error'] ?? 'Errore recupero candidature profilo';
         }
     } elseif (isset($_GET['progetto_id'])) {
-        // Candidature per un progetto specifico
         $progettoId = (int)$_GET['progetto_id'];
         $apiResult = callAPI("http://localhost/BOSTARTER/backend/api/candidature.php?progetto_id=$progettoId");
 
         if (isset($apiResult['success']) && $apiResult['success']) {
             $candidature = $apiResult['data'];
         } else {
-            $error = $apiResult['error'] ?? 'Errore nel recupero candidature per progetto';
+            $error = $apiResult['error'] ?? 'Errore recupero candidature progetto';
         }
     } else {
-        // Candidature dell'utente corrente
         $apiResult = callAPI("http://localhost/BOSTARTER/backend/api/candidature.php");
 
         if (isset($apiResult['success']) && $apiResult['success']) {
             $candidature = $apiResult['data'];
         } else {
-            $error = $apiResult['error'] ?? 'Errore nel recupero candidature utente';
+            $error = $apiResult['error'] ?? 'Errore recupero candidature utente';
         }
     }
 } catch (Exception $e) {
-    $error = 'Errore di connessione: ' . $e->getMessage();
+    $error = 'Errore connessione: ' . $e->getMessage();
 }
 
 // Titolo pagina dinamico
@@ -435,7 +406,8 @@ try {
                                 </thead>
                                 <tbody>
                                     <?php foreach ($candidature as $candidatura): ?>
-                                    <tr>
+                                    <tr data-candidatura-id="<?php echo $candidatura['id']; ?>">
+                                        <td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-2">
@@ -549,219 +521,352 @@ try {
     <?php include 'includes/scripts.php'; ?>
 
     <script>
-    // Gestione form candidatura
-    document.getElementById('candidaturaForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
+        // Variabili globali
+        let progettiSoftwareCache = null;
+        let isLoading = false;
 
-        const formData = new FormData(this);
-        const data = {
-            profilo_id: formData.get('profilo_id'),
-            motivazione: formData.get('motivazione')
-        };
+        // Gestione errori API
+        function handleApiError(error, context = '') {
+            console.error(`API Error ${context}:`, error);
+            let message = 'Errore connessione server';
 
-        fetch('/BOSTARTER/backend/api/candidature.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCSRFToken()
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showMessage('success', data.message || 'Candidatura inviata con successo!');
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    showMessage('error', data.error || 'Errore nell\'invio candidatura');
-                }
-            })
-            .catch(error => {
-                showMessage('error', 'Errore di connessione');
-                console.error('Error:', error);
-            });
-    });
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                message = 'Impossibile contattare server';
+            } else if (error.status) {
+                message = `Errore server (${error.status})`;
+            }
 
-    // Carica profili quando si seleziona un progetto
-    document.getElementById('progetto_id')?.addEventListener('change', function() {
-        const progettoId = this.value;
-        const profiloSelect = document.getElementById('profilo_id');
-
-        if (!progettoId) {
-            profiloSelect.disabled = true;
-            profiloSelect.innerHTML = '<option value="">Prima seleziona un progetto...</option>';
-            return;
+            showMessage('error', message);
+            return false;
         }
 
-        // Carica profili del progetto
-        fetch(`/BOSTARTER/backend/api/project.php?id=${progettoId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const progetto = data.data;
-                    if (progetto.profili_richiesti) {
-                        profiloSelect.innerHTML = '<option value="">Seleziona profilo...</option>';
-                        progetto.profili_richiesti.forEach(profilo => {
-                            const option = document.createElement('option');
-                            option.value = profilo.id;
-                            option.textContent = profilo.nome;
-                            profiloSelect.appendChild(option);
-                        });
-                        profiloSelect.disabled = false;
-                    }
+        // Gestione stati caricamento
+        function setLoadingState(button, loading = true) {
+            if (loading) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Caricamento...';
+            } else {
+                button.disabled = false;
+                const icon = button.querySelector('i');
+                if (icon && icon.classList.contains('fa-spinner')) {
+                    button.innerHTML = '<i class="fas fa-paper-plane"></i> Invia Candidatura';
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-    });
-
-    // Visualizza dettaglio candidatura
-    function viewCandidatura(candidaturaId) {
-        fetch(`/BOSTARTER/backend/api/candidature.php?id=${candidaturaId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const candidatura = data.data;
-                    document.getElementById('candidaturaModalBody').innerHTML = `
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6>Informazioni Utente</h6>
-                                <p><strong>Nickname:</strong> ${candidatura.nickname}</p>
-                                <p><strong>Nome:</strong> ${candidatura.nome} ${candidatura.cognome}</p>
-                                <p><strong>Email:</strong> ${candidatura.email || 'Non disponibile'}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>Informazioni Candidatura</h6>
-                                <p><strong>Progetto:</strong> ${candidatura.progetto_nome}</p>
-                                <p><strong>Profilo:</strong> ${candidatura.profilo_nome}</p>
-                                <p><strong>Data:</strong> ${new Date(candidatura.data_candidatura).toLocaleDateString('it-IT')}</p>
-                                <p><strong>Stato:</strong> 
-                                    <span class="badge bg-${getStatusColor(candidatura.stato)}">
-                                        ${getStatusText(candidatura.stato)}
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <h6>Motivazione</h6>
-                            <div class="border rounded p-3 bg-light">
-                                ${candidatura.motivazione}
-                            </div>
-                        </div>
-                    `;
-
-                    new bootstrap.Modal(document.getElementById('candidaturaModal')).show();
-                } else {
-                    showMessage('error', data.error || 'Errore nel caricamento candidatura');
-                }
-            })
-            .catch(error => {
-                showMessage('error', 'Errore di connessione');
-                console.error('Error:', error);
-            });
-    }
-
-    // Aggiorna stato candidatura
-    function updateCandidaturaStatus(candidaturaId, stato) {
-        if (!confirm(`Sei sicuro di voler ${stato === 'accettata' ? 'accettare' : 'rifiutare'} questa candidatura?`)) {
-            return;
+            }
         }
 
-        fetch('/BOSTARTER/backend/api/candidature.php', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCSRFToken()
-                },
-                body: JSON.stringify({
-                    candidatura_id: candidaturaId,
-                    stato: stato
+        // Validazione form
+        function validateCandidaturaForm(formData) {
+            const errors = [];
+
+            if (!formData.get('profilo_id')) {
+                errors.push('Seleziona profilo');
+            }
+
+            const motivazione = formData.get('motivazione')?.trim();
+            if (!motivazione) {
+                errors.push('Inserisci motivazione');
+            } else if (motivazione.length < 50) {
+                errors.push('Motivazione minima 50 caratteri');
+            } else if (motivazione.length > 1000) {
+                errors.push('Motivazione massima 1000 caratteri');
+            }
+
+            return errors;
+        }
+
+        // Gestione form candidatura
+        document.getElementById('candidaturaForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const errors = validateCandidaturaForm(formData);
+
+            if (errors.length) {
+                showMessage('error', 'Errore validazione: ' + errors.join(', '));
+                return;
+            }
+
+            const data = {
+                profilo_id: formData.get('profilo_id'),
+                motivazione: formData.get('motivazione')
+            };
+
+            fetch('/BOSTARTER/backend/api/candidature.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCSRFToken()
+                    },
+                    body: JSON.stringify(data)
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showMessage('success', data.message || 'Stato candidatura aggiornato');
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    showMessage('error', data.error || 'Errore nell\'aggiornamento');
-                }
-            })
-            .catch(error => {
-                showMessage('error', 'Errore di connessione');
-                console.error('Error:', error);
-            });
-    }
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showMessage('success', data.message || 'Candidatura inviata!');
+                        this.reset();
+                        document.getElementById('profilo_id').disabled = true;
+                        document.getElementById('profilo_id').innerHTML = '<option value="">Prima seleziona progetto...</option>';
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showMessage('error', data.error || 'Errore invio candidatura');
+                    }
+                })
+                .catch(error => handleApiError(error, 'invio candidatura'));
+        });
 
-    // Cancella candidatura
-    function deleteCandidatura(candidaturaId) {
-        if (!confirm('Sei sicuro di voler cancellare questa candidatura?')) {
-            return;
+        // Carica profili progetto
+        document.getElementById('progetto_id')?.addEventListener('change', function() {
+            const progettoId = this.value;
+            const profiloSelect = document.getElementById('profilo_id');
+
+            if (!progettoId) {
+                profiloSelect.disabled = true;
+                profiloSelect.innerHTML = '<option value="">Prima seleziona progetto...</option>';
+                return;
+            }
+
+            profiloSelect.disabled = true;
+            profiloSelect.innerHTML = '<option value="">Caricamento profili...</option>';
+
+            fetch(`/BOSTARTER/backend/api/project.php?id=${progettoId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const progetto = data.data;
+                        if (progetto.profili_richiesti && progetto.profili_richiesti.length > 0) {
+                            profiloSelect.innerHTML = '<option value="">Seleziona profilo...</option>';
+                            progetto.profili_richiesti.forEach(profilo => {
+                                const option = document.createElement('option');
+                                option.value = profilo.id;
+                                option.textContent = profilo.nome;
+                                profiloSelect.appendChild(option);
+                            });
+                            profiloSelect.disabled = false;
+                        } else {
+                            profiloSelect.innerHTML = '<option value="">Nessun profilo disponibile</option>';
+                            profiloSelect.disabled = true;
+                        }
+                    } else {
+                        throw new Error(data.error || 'Errore caricamento profili');
+                    }
+                })
+                .catch(error => {
+                    profiloSelect.innerHTML = '<option value="">Errore caricamento</option>';
+                    profiloSelect.disabled = true;
+                    handleApiError(error, 'caricamento profili');
+                });
+        });
+
+        // Visualizza dettaglio candidatura
+        function viewCandidatura(candidaturaId) {
+            if (isLoading) return;
+            isLoading = true;
+
+            fetch(`/BOSTARTER/backend/api/candidature.php?id=${candidaturaId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const candidatura = data.data;
+                        document.getElementById('candidaturaModalBody').innerHTML = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Informazioni Utente</h6>
+                                    <p><strong>Nickname:</strong> ${candidatura.nickname || 'N/A'}</p>
+                                    <p><strong>Nome:</strong> ${candidatura.nome || ''} ${candidatura.cognome || ''}</p>
+                                    <p><strong>Email:</strong> ${candidatura.email || 'Non disponibile'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Informazioni Candidatura</h6>
+                                    <p><strong>Progetto:</strong> ${candidatura.progetto_nome || 'N/A'}</p>
+                                    <p><strong>Profilo:</strong> ${candidatura.profilo_nome || 'N/A'}</p>
+                                    <p><strong>Data:</strong> ${candidatura.data_candidatura ? new Date(candidatura.data_candidatura).toLocaleDateString('it-IT') : 'N/A'}</p>
+                                    <p><strong>Stato:</strong>
+                                        <span class="badge bg-${getStatusColor(candidatura.stato)}">
+                                            ${getStatusText(candidatura.stato)}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <h6>Motivazione</h6>
+                                <div class="border rounded p-3 bg-light">
+                                    ${candidatura.motivazione ? candidatura.motivazione.replace(/\n/g, '<br>') : 'Nessuna motivazione fornita'}
+                                </div>
+                            </div>
+                        `;
+
+                        new bootstrap.Modal(document.getElementById('candidaturaModal')).show();
+                    } else {
+                        throw new Error(data.error || 'Errore caricamento candidatura');
+                    }
+                })
+                .catch(error => handleApiError(error, 'visualizzazione candidatura'))
+                .finally(() => {
+                    isLoading = false;
+                });
         }
 
-        fetch(`/BOSTARTER/backend/api/candidature.php?id=${candidaturaId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': getCSRFToken()
+        // Aggiorna stato candidatura
+        function updateCandidaturaStatus(candidaturaId, stato) {
+            if (isLoading) return;
+            if (!confirm(`Sei sicuro di voler ${stato === 'accettata' ? 'accettare' : 'rifiutare'} questa candidatura?`)) {
+                return;
+            }
+
+            isLoading = true;
+
+            fetch('/BOSTARTER/backend/api/candidature.php', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        candidatura_id: candidaturaId,
+                        stato: stato
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showMessage('success', data.message || 'Stato candidatura aggiornato');
+                        updateCandidaturaInTable(candidaturaId, stato);
+                    } else {
+                        throw new Error(data.error || 'Errore aggiornamento');
+                    }
+                })
+                .catch(error => handleApiError(error, 'aggiornamento stato'))
+                .finally(() => {
+                    isLoading = false;
+                });
+        }
+
+        // Cancella candidatura
+        function deleteCandidatura(candidaturaId) {
+            if (isLoading) return;
+            if (!confirm('Sei sicuro di voler cancellare questa candidatura? Questa azione non può essere annullata.')) {
+                return;
+            }
+
+            isLoading = true;
+
+            fetch(`/BOSTARTER/backend/api/candidature.php?id=${candidaturaId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': getCSRFToken()
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showMessage('success', data.message || 'Candidatura cancellata');
+                        removeCandidaturaFromTable(candidaturaId);
+                    } else {
+                        throw new Error(data.error || 'Errore cancellazione');
+                    }
+                })
+                .catch(error => handleApiError(error, 'cancellazione candidatura'))
+                .finally(() => {
+                    isLoading = false;
+                });
+        }
+
+        // Helper functions
+        function updateCandidaturaInTable(candidaturaId, nuovoStato) {
+            const row = document.querySelector(`tr[data-candidatura-id="${candidaturaId}"]`);
+            if (row) {
+                const badge = row.querySelector('.badge');
+                if (badge) {
+                    badge.className = `badge bg-${getStatusColor(nuovoStato)}`;
+                    badge.textContent = getStatusText(nuovoStato);
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showMessage('success', data.message || 'Candidatura cancellata');
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    showMessage('error', data.error || 'Errore nella cancellazione');
+            }
+        }
+
+        function removeCandidaturaFromTable(candidaturaId) {
+            const row = document.querySelector(`tr[data-candidatura-id="${candidaturaId}"]`);
+            if (row) {
+                row.remove();
+                const badge = document.querySelector('.card-header .badge');
+                if (badge) {
+                    const currentCount = parseInt(badge.textContent) || 0;
+                    badge.textContent = Math.max(0, currentCount - 1);
                 }
-            })
-            .catch(error => {
-                showMessage('error', 'Errore di connessione');
-                console.error('Error:', error);
-            });
-    }
+            }
+        }
 
-    // Utility functions
-    function getStatusColor(stato) {
-        const colors = {
-            'in_valutazione' => 'warning',
-            'accettata' => 'success',
-            'rifiutata' => 'danger'
-        };
-        return colors[stato] || 'secondary';
-    }
+        // Utility functions
+        function getStatusColor(stato) {
+            const colors = {
+                'in_valutazione': 'warning',
+                'accettata': 'success',
+                'rifiutata': 'danger'
+            };
+            return colors[stato] || 'secondary';
+        }
 
-    function getStatusText(stato) {
-        const texts = {
-            'in_valutazione' => 'In Valutazione',
-            'accettata' => 'Accettata',
-            'rifiutata' => 'Rifiutata'
-        };
-        return texts[stato] || 'Sconosciuto';
-    }
+        function getStatusText(stato) {
+            const texts = {
+                'in_valutazione': 'In Valutazione',
+                'accettata': 'Accettata',
+                'rifiutata': 'Rifiutata'
+            };
+            return texts[stato] || 'Sconosciuto';
+        }
 
-    function getCSRFToken() {
-        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-    }
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        }
 
-    function showMessage(type, message) {
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+        function showMessage(type, message) {
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
 
-        const alert = document.createElement('div');
-        alert.className = `alert ${alertClass} alert-dismissible fade show`;
-        alert.innerHTML = `
-                <i class="fas fa-${icon}"></i>
-                ${message}
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+
+            const alert = document.createElement('div');
+            alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+            alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alert.innerHTML = `
+                <i class="fas fa-${icon} me-2"></i>
+                <strong>${type === 'success' ? 'Successo!' : 'Errore!'}</strong> ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
 
-        document.querySelector('.container').insertBefore(alert, document.querySelector('.row'));
+            document.body.appendChild(alert);
 
-        setTimeout(() => {
-            alert.remove();
-        }, 5000);
-    }
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
     </script>
 </body>
 

@@ -176,6 +176,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $tipoUtente
                 ]);
 
+                // Leggi il result set restituito dalla stored procedure
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($result && isset($result['success']) && $result['success']) {
@@ -198,404 +199,238 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+// Titolo pagina per header moderno
+$page_title = 'Registrati - BOSTARTER';
+
+// Includi header moderno
+require_once '../includes/head.php';
 ?>
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-    <title>Registrati - BOSTARTER</title>
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<body class="d-flex align-items-center justify-content-center min-vh-100 py-4">
+    <!-- Navbar minima -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="../home.php">
+                <i class="fas fa-rocket me-2"></i>BOSTARTER
+            </a>
 
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="../home.php">
+                    <i class="fas fa-home me-1"></i>Home
+                </a>
+            </div>
+        </div>
+    </nav>
 
-    <style>
-        :root {
-            --bostarter-primary: #2563eb;
-            --bostarter-secondary: #7c3aed;
-            --bostarter-success: #059669;
-            --bostarter-warning: #d97706;
-            --bostarter-danger: #dc2626;
-            --bostarter-info: #0891b2;
-        }
-
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        .signup-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-            max-width: 500px;
-            width: 100%;
-        }
-
-        .signup-header {
-            background: linear-gradient(135deg, var(--bostarter-primary), var(--bostarter-secondary));
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .signup-header .logo {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .signup-body {
-            padding: 2rem;
-        }
-
-        .form-floating > label {
-            color: #6b7280;
-        }
-
-        .btn-bostarter {
-            background: linear-gradient(135deg, var(--bostarter-primary), var(--bostarter-secondary));
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: transform 0.2s;
-        }
-
-        .btn-bostarter:hover {
-            transform: translateY(-1px);
-            color: white;
-        }
-
-        .user-type-card {
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .user-type-card:hover {
-            border-color: var(--bostarter-primary);
-            background-color: #f8fafc;
-        }
-
-        .user-type-card.selected {
-            border-color: var(--bostarter-primary);
-            background-color: #eff6ff;
-        }
-
-        .user-type-card .form-check-input:checked {
-            background-color: var(--bostarter-primary);
-            border-color: var(--bostarter-primary);
-        }
-
-        .admin-code-field {
-            display: none;
-        }
-
-        .admin-code-field.show {
-            display: block;
-        }
-
-        .alert {
-            border-radius: 8px;
-            border: none;
-        }
-
-        .links {
-            text-align: center;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .links a {
-            color: var(--bostarter-primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .links a:hover {
-            text-decoration: underline;
-        }
-
-        .password-strength {
-            font-size: 0.875rem;
-            margin-top: 0.25rem;
-        }
-
-        .password-strength.weak {
-            color: var(--bostarter-danger);
-        }
-
-        .password-strength.medium {
-            color: var(--bostarter-warning);
-        }
-
-        .password-strength.strong {
-            color: var(--bostarter-success);
-        }
-    </style>
-</head>
-<body>
+    <!-- Container principale -->
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <div class="signup-container">
-                    <!-- Header -->
-                    <div class="signup-header">
-                        <div class="logo">
-                            <i class="fas fa-rocket"></i>
-                        </div>
-                        <h2 class="mb-0">BOSTARTER</h2>
-                        <p class="mb-0 opacity-75">Crea il tuo account</p>
-                    </div>
-
-                    <!-- Body -->
-                    <div class="signup-body">
-                        <!-- Messaggi di errore/successo -->
-                        <?php if ($error): ?>
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <?php echo htmlspecialchars($error); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                        <?php endif; ?>
-
-                        <?php if ($message): ?>
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <?php echo htmlspecialchars($message); ?>
-                            <div class="mt-2">
-                                <small class="text-muted">Reindirizzamento automatico al login...</small>
+            <div class="col-lg-6 col-md-8">
+                <!-- Card di registrazione moderna -->
+                <div class="card shadow-lg border-0 animate-fade-up">
+                    <div class="card-body p-4 p-md-5">
+                        <!-- Header -->
+                        <div class="text-center mb-4">
+                            <div class="mb-3">
+                                <i class="fas fa-user-plus fa-3x text-primary"></i>
                             </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <h2 class="h3 mb-2">Unisciti a BOSTARTER</h2>
+                            <p class="text-muted">Crea il tuo account e inizia a sostenere progetti innovativi</p>
+                        </div>
+
+                        <!-- Messaggi di feedback -->
+                        <?php if (!empty($error)): ?>
+                        <div class="alert alert-danger border-0 shadow-sm animate-fade-up" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <div><?php echo htmlspecialchars($error); ?></div>
+                            </div>
                         </div>
                         <?php endif; ?>
 
-                        <?php if (!$message): // Mostra form solo se non c'è messaggio di successo ?>
+                        <?php if (!empty($message)): ?>
+                        <div class="alert alert-success border-0 shadow-sm animate-fade-up" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <div><?php echo htmlspecialchars($message); ?></div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
                         <!-- Form di registrazione -->
-                        <form method="POST" id="signupForm">
+                        <form method="POST" class="animate-fade-up" id="signupForm">
                             <!-- Token CSRF -->
-                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
-                            <!-- Tipo di utente -->
+                            <!-- Sezione Dati Personali -->
                             <div class="mb-4">
-                                <label class="form-label fw-bold">Tipo di Account</label>
-                                <div class="row g-2">
-                                    <div class="col-md-4">
-                                        <div class="user-type-card text-center" data-type="utente">
-                                            <input class="form-check-input d-none" type="radio" name="tipo_utente" id="type_user" value="utente" checked>
-                                            <i class="fas fa-user fa-2x text-primary mb-2"></i>
-                                            <h6 class="mb-1">Utente</h6>
-                                            <small class="text-muted">Finanzia progetti</small>
+                                <h5 class="mb-3">
+                                    <i class="fas fa-user me-2 text-primary"></i>Dati Personali
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="nome" class="form-label fw-semibold">
+                                            <i class="fas fa-signature me-2 text-muted"></i>Nome
+                                        </label>
+                                        <input type="text" class="form-control form-control-lg border-0 shadow-sm"
+                                               id="nome" name="nome" placeholder="Il tuo nome"
+                                               value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="cognome" class="form-label fw-semibold">
+                                            <i class="fas fa-signature me-2 text-muted"></i>Cognome
+                                        </label>
+                                        <input type="text" class="form-control form-control-lg border-0 shadow-sm"
+                                               id="cognome" name="cognome" placeholder="Il tuo cognome"
+                                               value="<?php echo htmlspecialchars($_POST['cognome'] ?? ''); ?>" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="nickname" class="form-label fw-semibold">
+                                        <i class="fas fa-at me-2 text-muted"></i>Nickname
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg border-0 shadow-sm"
+                                           id="nickname" name="nickname" placeholder="Scegli un nickname unico"
+                                           value="<?php echo htmlspecialchars($_POST['nickname'] ?? ''); ?>" required>
+                                </div>
+                            </div>
+
+                            <!-- Sezione Credenziali -->
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-shield-alt me-2 text-primary"></i>Credenziali
+                                </h5>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label fw-semibold">
+                                        <i class="fas fa-envelope me-2 text-muted"></i>Email
+                                    </label>
+                                    <input type="email" class="form-control form-control-lg border-0 shadow-sm"
+                                           id="email" name="email" placeholder="nome@esempio.com"
+                                           value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label fw-semibold">
+                                        <i class="fas fa-lock me-2 text-muted"></i>Password
+                                    </label>
+                                    <input type="password" class="form-control form-control-lg border-0 shadow-sm"
+                                           id="password" name="password" placeholder="Crea una password sicura" required>
+                                    <div id="password-strength" class="mt-1"></div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirm_password" class="form-label fw-semibold">
+                                        <i class="fas fa-lock me-2 text-muted"></i>Conferma Password
+                                    </label>
+                                    <input type="password" class="form-control form-control-lg border-0 shadow-sm"
+                                           id="confirm_password" name="confirm_password" placeholder="Ripeti la password" required>
+                                </div>
+                            </div>
+
+                            <!-- Sezione Tipo Utente -->
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-users me-2 text-primary"></i>Tipo di Account
+                                </h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="user-type-card border-0 shadow-sm p-3 h-100" data-type="utente">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipo_utente" id="tipo_utente" value="utente" checked>
+                                                <label class="form-check-label fw-semibold" for="tipo_utente">
+                                                    <i class="fas fa-user me-2 text-primary"></i>Utente Standard
+                                                </label>
+                                            </div>
+                                            <p class="text-muted small mt-2 mb-0">Sostieni progetti e candidati alle opportunità</p>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="user-type-card text-center" data-type="creatore">
-                                            <input class="form-check-input d-none" type="radio" name="tipo_utente" id="type_creator" value="creatore">
-                                            <i class="fas fa-lightbulb fa-2x text-warning mb-2"></i>
-                                            <h6 class="mb-1">Creatore</h6>
-                                            <small class="text-muted">Crea progetti</small>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="user-type-card border-0 shadow-sm p-3 h-100" data-type="creatore">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="tipo_utente" id="tipo_creatore" value="creatore">
+                                            <label class="form-check-label fw-semibold" for="tipo_creatore">
+                                                <i class="fas fa-lightbulb me-2 text-warning"></i>Creatore
+                                            </label>
                                         </div>
+                                        <p class="text-muted small mt-2 mb-0">Pubblica i tuoi progetti innovativi</p>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="user-type-card text-center" data-type="amministratore">
-                                            <input class="form-check-input d-none" type="radio" name="tipo_utente" id="type_admin" value="amministratore">
-                                            <i class="fas fa-shield-alt fa-2x text-danger mb-2"></i>
-                                            <h6 class="mb-1">Admin</h6>
-                                            <small class="text-muted">Gestisce sistema</small>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Dati personali -->
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="nome" name="nome"
-                                               placeholder="Nome" required
-                                               value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>">
-                                        <label for="nome">
-                                            <i class="fas fa-user me-2"></i>Nome
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="cognome" name="cognome"
-                                               placeholder="Cognome" required
-                                               value="<?php echo htmlspecialchars($_POST['cognome'] ?? ''); ?>">
-                                        <label for="cognome">
-                                            <i class="fas fa-user me-2"></i>Cognome
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Dati account -->
-                            <div class="mb-3">
-                                <div class="form-floating">
-                                    <input type="email" class="form-control" id="email" name="email"
-                                           placeholder="nome@esempio.com" required
-                                           value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
-                                    <label for="email">
-                                        <i class="fas fa-envelope me-2"></i>Email
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-floating">
-                                    <input type="text" class="form-control" id="nickname" name="nickname"
-                                           placeholder="IlTuoNickname" required
-                                           value="<?php echo htmlspecialchars($_POST['nickname'] ?? ''); ?>">
-                                    <label for="nickname">
-                                        <i class="fas fa-at me-2"></i>Nickname
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Informazioni nascita -->
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-floating">
-                                        <input type="number" class="form-control" id="anno_nascita" name="anno_nascita"
-                                               placeholder="1990" min="1900" max="2010" required
-                                               value="<?php echo htmlspecialchars($_POST['anno_nascita'] ?? ''); ?>">
-                                        <label for="anno_nascita">
-                                            <i class="fas fa-calendar me-2"></i>Anno di Nascita
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="form-floating">
-                                        <input type="text" class="form-control" id="luogo_nascita" name="luogo_nascita"
-                                               placeholder="Città" required
-                                               value="<?php echo htmlspecialchars($_POST['luogo_nascita'] ?? ''); ?>">
-                                        <label for="luogo_nascita">
-                                            <i class="fas fa-map-marker-alt me-2"></i>Luogo di Nascita
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Password -->
-                            <div class="mb-3">
-                                <div class="form-floating">
-                                    <input type="password" class="form-control" id="password" name="password"
-                                           placeholder="Password" required>
-                                    <label for="password">
-                                        <i class="fas fa-lock me-2"></i>Password
-                                    </label>
-                                </div>
-                                <div id="passwordStrength" class="password-strength"></div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="form-floating">
-                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password"
-                                           placeholder="Conferma Password" required>
-                                    <label for="confirm_password">
-                                        <i class="fas fa-lock me-2"></i>Conferma Password
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Campo Codice Sicurezza Amministratore (nascosto inizialmente) -->
-                            <div class="form-floating mb-3 admin-code-field" id="adminCodeField">
-                                <input type="password" class="form-control" id="admin_code" name="admin_code"
-                                       placeholder="Codice di sicurezza">
-                                <label for="admin_code">
-                                    <i class="fas fa-shield-alt me-2"></i>Codice Amministratore
+                            <!-- Campo Codice Amministratore (nascosto) -->
+                            <div class="mb-4 admin-code-container" id="adminCodeContainer" style="display: none;">
+                                <label for="admin_code" class="form-label fw-semibold">
+                                    <i class="fas fa-shield-alt me-2 text-muted"></i>Codice Amministratore
                                 </label>
+                                <input type="password" class="form-control form-control-lg border-0 shadow-sm"
+                                       id="admin_code" name="admin_code" placeholder="Codice di sicurezza">
                                 <div class="form-text">
-                                    <small class="text-muted">
-                                        Codice di sicurezza richiesto per account amministratore
-                                    </small>
+                                    <small class="text-muted">Richiesto solo per registrazione amministratore</small>
                                 </div>
                             </div>
 
                             <!-- Pulsante di registrazione -->
-                            <button type="submit" class="btn btn-bostarter w-100 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 mb-4 shadow-sm">
                                 <i class="fas fa-user-plus me-2"></i>Crea Account
                             </button>
                         </form>
 
                         <!-- Link aggiuntivi -->
-                        <div class="links">
+                        <div class="text-center">
                             <p class="mb-2">
                                 Hai già un account?
-                                <a href="login.php">Accedi</a>
+                                <a href="login.php" class="text-decoration-none">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Accedi
+                                </a>
                             </p>
                             <p class="mb-0">
-                                <a href="../home.php">Torna alla Home</a>
+                                <a href="../home.php" class="text-decoration-none text-muted">
+                                    <i class="fas fa-arrow-left me-1"></i>Torna alla Home
+                                </a>
                             </p>
-
-                            <hr class="my-3">
-                            <div class="text-muted small">
-                                <strong>Password sicura:</strong> Minimo 8 caratteri con maiuscola, minuscola e numero
-                            </div>
                         </div>
-                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Script personalizzato -->
+    <!-- JavaScript per funzionalità avanzate -->
     <script>
-        // Gestione selezione tipo utente
-        document.querySelectorAll('.user-type-card').forEach(card => {
+        // Selezione tipo utente
+        document.querySelectorAll('.user-type-card').forEach(function(card) {
             card.addEventListener('click', function() {
-                // Rimuovi selezione precedente
-                document.querySelectorAll('.user-type-card').forEach(c => {
+                // Rimuovi selezione da tutte le card
+                document.querySelectorAll('.user-type-card').forEach(function(c) {
                     c.classList.remove('selected');
-                    c.querySelector('input[type="radio"]').checked = false;
                 });
 
-                // Seleziona card corrente
+                // Aggiungi selezione alla card cliccata
                 this.classList.add('selected');
-                this.querySelector('input[type="radio"]').checked = true;
 
-                // Gestisci campo codice amministratore
-                const userType = this.dataset.type;
-                const adminField = document.getElementById('adminCodeField');
-                const adminInput = document.getElementById('admin_code');
+                // Seleziona il radio button
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
 
-                if (userType === 'amministratore') {
-                    adminField.classList.add('show');
-                    adminInput.required = true;
-                } else {
-                    adminField.classList.remove('show');
-                    adminInput.required = false;
+                    // Mostra campo admin se selezionato creatore
+                    const adminContainer = document.getElementById('adminCodeContainer');
+                    if (radio.value === 'creatore') {
+                        adminContainer.style.display = 'block';
+                        adminContainer.classList.add('animate-fade-up');
+                        document.getElementById('admin_code').required = false; // Opzionale per creatori
+                    } else {
+                        adminContainer.style.display = 'none';
+                        document.getElementById('admin_code').required = false;
+                    }
                 }
             });
         });
 
-        // Inizializza selezione utente normale
-        document.querySelector('.user-type-card[data-type="utente"]').click();
-
-        // Validazione password in tempo reale
+        // Controllo forza password
         document.getElementById('password').addEventListener('input', function() {
             const password = this.value;
-            const strengthDiv = document.getElementById('passwordStrength');
+            const strengthDiv = document.getElementById('password-strength');
 
             if (password.length === 0) {
                 strengthDiv.textContent = '';
@@ -623,59 +458,41 @@ if (empty($_SESSION['csrf_token'])) {
 
             if (strength < 3) {
                 strengthText = 'Debole: ' + feedback.join(', ');
-                strengthClass = 'weak';
+                strengthClass = 'text-danger';
             } else if (strength < 4) {
                 strengthText = 'Media: manca ' + feedback.join(', ');
-                strengthClass = 'medium';
+                strengthClass = 'text-warning';
             } else {
                 strengthText = 'Forte: password sicura!';
-                strengthClass = 'strong';
+                strengthClass = 'text-success';
             }
 
             strengthDiv.textContent = strengthText;
-            strengthDiv.className = 'password-strength ' + strengthClass;
+            strengthDiv.className = 'small ' + strengthClass;
         });
 
-        // Validazione form
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
+        // Validazione conferma password
+        document.getElementById('confirm_password').addEventListener('input', function() {
             const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-            const userType = document.querySelector('input[name="tipo_utente"]:checked').value;
+            const confirmPassword = this.value;
 
-            if (password !== confirmPassword) {
-                e.preventDefault();
-                alert('Le password non coincidono!');
-                return false;
-            }
-
-            if (!isValidPassword(password)) {
-                e.preventDefault();
-                alert('La password non soddisfa i requisiti di sicurezza!');
-                return false;
-            }
-
-            if (userType === 'amministratore') {
-                const adminCode = document.getElementById('admin_code').value;
-                if (!adminCode) {
-                    e.preventDefault();
-                    alert('Il codice amministratore è obbligatorio!');
-                    return false;
-                }
+            if (confirmPassword && password !== confirmPassword) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
             }
         });
 
-        // Funzione validazione password
-        function isValidPassword(password) {
-            return password.length >= 8 &&
-                   /[A-Z]/.test(password) &&
-                   /[a-z]/.test(password) &&
-                   /[0-9]/.test(password);
-        }
-
-        // Auto-focus sul primo campo
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('nome').focus();
-        });
+        // Auto-hide alerts dopo 5 secondi
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
     </script>
+
+    <!-- JavaScript Ottimizzato -->
+    <script src="../assets/js/bostarter-optimized.min.js"></script>
 </body>
 </html>

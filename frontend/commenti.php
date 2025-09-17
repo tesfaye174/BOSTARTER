@@ -1,42 +1,56 @@
 <?php
+/**
+ * GESTIONE COMMENTI BOSTARTER
+ *
+ * Pagina per visualizzare e gestire commenti di un progetto.
+ * Include pubblicazione, modifica, risposte e gestione permessi.
+ */
 session_start();
 
 // Funzioni di utilità
+/**
+ * Verifica autenticazione utente
+ */
 function isAuthenticated() {
     return isset($_SESSION["user_id"]);
 }
 
+/**
+ * Recupera tipo utente dalla sessione
+ */
 function getUserType() {
     return $_SESSION['user_type'] ?? '';
 }
 
-// Verifica autenticazione
+// Verifica autenticazione obbligatoria
 if (!isAuthenticated()) {
     header('Location: auth/login.php');
     exit();
 }
 
+// Inizializzazione variabili sessione
 $userType = getUserType();
 $userId = $_SESSION['user_id'];
 $isCreator = ($userType === 'creatore');
 $isAdmin = ($userType === 'amministratore');
 
-// Recupera ID progetto dalla query string
+// Recupero ID progetto dalla query string
 $progettoId = isset($_GET['progetto_id']) ? (int)$_GET['progetto_id'] : null;
 
+// Validazione ID progetto obbligatoria
 if (!$progettoId) {
     header('Location: home.php');
     exit();
 }
 
-// Recupera informazioni progetto
+// Recupero informazioni progetto via API
 $progetto = null;
 $error = null;
 
 try {
     $response = file_get_contents("http://localhost/BOSTARTER/backend/api/project.php?id=$progettoId");
     $data = json_decode($response, true);
-    
+
     if (isset($data['success']) && $data['success']) {
         $progetto = $data['data'];
     } else {
@@ -46,13 +60,13 @@ try {
     $error = 'Errore di connessione: ' . $e->getMessage();
 }
 
-// Recupera commenti
+// Recupero commenti del progetto
 $commenti = [];
 if (!$error) {
     try {
         $response = file_get_contents("http://localhost/BOSTARTER/backend/api/commenti.php?progetto_id=$progettoId");
         $data = json_decode($response, true);
-        
+
         if (isset($data['success']) && $data['success']) {
             $commenti = $data['data'];
         } else {
@@ -77,7 +91,7 @@ include 'includes/head.php';
                 <a href="home.php" class="btn btn-sm btn-outline-danger ms-3">Torna alla Home</a>
             </div>
         <?php else: ?>
-            <!-- Header Progetto -->
+            <!-- Header progetto -->
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="row">
@@ -103,7 +117,7 @@ include 'includes/head.php';
                 </div>
             </div>
 
-            <!-- Form Nuovo Commento -->
+            <!-- Form nuovo commento -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5><i class="fas fa-plus"></i> Aggiungi Commento</h5>
@@ -122,7 +136,7 @@ include 'includes/head.php';
                 </div>
             </div>
 
-            <!-- Lista Commenti -->
+            <!-- Lista commenti -->
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5>
@@ -187,7 +201,7 @@ include 'includes/head.php';
                                                 </div>
                                             </div>
 
-                                            <!-- Risposta del creatore -->
+                                            <!-- Risposta creatore -->
                                             <?php if (isset($commento['risposta_testo']) && $commento['risposta_testo']): ?>
                                                 <div class="risposta-creatore mt-3 p-3 bg-light border-start border-primary border-4">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -205,7 +219,7 @@ include 'includes/head.php';
                                                 </div>
                                             <?php endif; ?>
 
-                                            <!-- Form risposta (solo per creatore/admin) -->
+                                            <!-- Form risposta per creatori/admin -->
                                             <?php if (($isCreator && $progetto['creatore_id'] == $userId) || $isAdmin): ?>
                                                 <?php if (!isset($commento['risposta_testo'])): ?>
                                                     <div class="risposta-form mt-3" style="display: none;">
@@ -242,13 +256,13 @@ include 'includes/head.php';
         // Gestione form commento
         document.getElementById('commentoForm')?.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const formData = new FormData(this);
             const data = {
                 progetto_id: <?php echo $progettoId; ?>,
                 testo: formData.get('testo')
             };
-            
+
             fetch('/BOSTARTER/backend/api/commenti.php', {
                 method: 'POST',
                 headers: {
@@ -260,15 +274,15 @@ include 'includes/head.php';
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showMessage('success', data.message || 'Commento pubblicato con successo!');
+                    showMessage('success', data.message || 'Commento pubblicato!');
                     this.reset();
                     setTimeout(() => refreshCommenti(), 1500);
                 } else {
-                    showMessage('error', data.error || 'Errore nella pubblicazione commento');
+                    showMessage('error', data.error || 'Errore pubblicazione');
                 }
             })
             .catch(error => {
-                showMessage('error', 'Errore di connessione');
+                showMessage('error', 'Errore connessione');
                 console.error('Error:', error);
             });
         });
@@ -277,10 +291,10 @@ include 'includes/head.php';
         document.addEventListener('submit', function(e) {
             if (e.target.classList.contains('rispostaForm')) {
                 e.preventDefault();
-                
+
                 const commentoId = e.target.dataset.commentoId;
                 const testo = e.target.querySelector('textarea').value;
-                
+
                 fetch('/BOSTARTER/backend/api/commenti.php', {
                     method: 'POST',
                     headers: {
@@ -295,14 +309,14 @@ include 'includes/head.php';
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showMessage('success', data.message || 'Risposta pubblicata con successo!');
+                        showMessage('success', data.message || 'Risposta pubblicata!');
                         setTimeout(() => refreshCommenti(), 1500);
                     } else {
-                        showMessage('error', data.error || 'Errore nella pubblicazione risposta');
+                        showMessage('error', data.error || 'Errore risposta');
                     }
                 })
                 .catch(error => {
-                    showMessage('error', 'Errore di connessione');
+                    showMessage('error', 'Errore connessione');
                     console.error('Error:', error);
                 });
             }
@@ -313,7 +327,7 @@ include 'includes/head.php';
             const commentoItem = document.querySelector(`[data-commento-id="${commentoId}"]`);
             const commentoTesto = commentoItem.querySelector('.commento-testo');
             const commentoEdit = commentoItem.querySelector('.commento-edit');
-            
+
             commentoTesto.style.display = 'none';
             commentoEdit.style.display = 'block';
         }
@@ -323,7 +337,7 @@ include 'includes/head.php';
             const commentoItem = document.querySelector(`[data-commento-id="${commentoId}"]`);
             const textarea = commentoItem.querySelector('.commento-edit textarea');
             const nuovoTesto = textarea.value;
-            
+
             fetch('/BOSTARTER/backend/api/commenti.php', {
                 method: 'PUT',
                 headers: {
@@ -338,14 +352,14 @@ include 'includes/head.php';
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showMessage('success', data.message || 'Commento aggiornato con successo!');
+                    showMessage('success', data.message || 'Commento aggiornato!');
                     setTimeout(() => refreshCommenti(), 1500);
                 } else {
-                    showMessage('error', data.error || 'Errore nell\'aggiornamento commento');
+                    showMessage('error', data.error || 'Errore aggiornamento');
                 }
             })
             .catch(error => {
-                showMessage('error', 'Errore di connessione');
+                showMessage('error', 'Errore connessione');
                 console.error('Error:', error);
             });
         }
@@ -355,7 +369,7 @@ include 'includes/head.php';
             const commentoItem = document.querySelector(`[data-commento-id="${commentoId}"]`);
             const commentoTesto = commentoItem.querySelector('.commento-testo');
             const commentoEdit = commentoItem.querySelector('.commento-edit');
-            
+
             commentoTesto.style.display = 'block';
             commentoEdit.style.display = 'none';
         }
@@ -365,7 +379,7 @@ include 'includes/head.php';
             if (!confirm('Sei sicuro di voler cancellare questo commento?')) {
                 return;
             }
-            
+
             fetch(`/BOSTARTER/backend/api/commenti.php?id=${commentoId}`, {
                 method: 'DELETE',
                 headers: {
@@ -375,14 +389,14 @@ include 'includes/head.php';
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showMessage('success', data.message || 'Commento cancellato con successo!');
+                    showMessage('success', data.message || 'Commento cancellato!');
                     setTimeout(() => refreshCommenti(), 1500);
                 } else {
-                    showMessage('error', data.error || 'Errore nella cancellazione commento');
+                    showMessage('error', data.error || 'Errore cancellazione');
                 }
             })
             .catch(error => {
-                showMessage('error', 'Errore di connessione');
+                showMessage('error', 'Errore connessione');
                 console.error('Error:', error);
             });
         }
@@ -398,28 +412,33 @@ include 'includes/head.php';
             window.location.reload();
         }
 
-        // Utility functions
+        // Funzioni utilità
         function getCSRFToken() {
             return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
         }
 
         function showMessage(type, message) {
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+
             const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
             const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
-            
+
             const alert = document.createElement('div');
             alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
             alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
             alert.innerHTML = `
-                <i class="fas fa-${icon}"></i>
-                ${message}
+                <i class="fas fa-${icon} me-2"></i>
+                <strong>${type === 'success' ? 'Successo!' : 'Errore!'}</strong> ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
-            
+
             document.body.appendChild(alert);
-            
+
             setTimeout(() => {
-                alert.remove();
+                if (alert.parentNode) {
+                    alert.remove();
+                }
             }, 5000);
         }
     </script>

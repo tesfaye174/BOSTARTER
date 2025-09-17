@@ -152,355 +152,338 @@ try {
     error_log('Errore dashboard: ' . $e->getMessage());
     $error = "Errore nel caricamento dei dati: " . $e->getMessage();
 }
-?>
-<!DOCTYPE html>
-<html lang="it">
 
-<head>
-    <?php $page_title = 'Dashboard'; include __DIR__ . '/includes/head.php'; ?>
-</head>
+// Titolo pagina per header moderno
+$page_title = 'Dashboard - BOSTARTER';
+
+// Includi header moderno
+require_once 'includes/head.php';
+
+// Includi navbar moderno
+require_once 'includes/navbar.php';
+?>
 
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top glass-effect">
+    <!-- Hero Section -->
+    <div class="hero-section">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="home.php">
-                <i class="fas fa-rocket me-2"></i>BOSTARTER
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <div class="navbar-nav ms-auto">
-
-                    <a class="nav-link" href="view.php">Progetti</a>
-                    <?php if ($tipo_utente === "creatore"): ?>
-                    <a class="nav-link" href="new.php">Nuovo Progetto</a>
-                    <?php endif; ?>
-                    <div class="dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user me-1"></i><?= htmlspecialchars($nickname) ?>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="auth/logout.php">Esci</a></li>
-                        </ul>
-                    </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <?php
+                    $welcome_messages = [
+                        "Ciao {name}! Bentornato nella tua dashboard.",
+                        "Benvenuto {name}! Ecco il riepilogo delle tue attività.",
+                        "Salve {name}! Pronto per gestire i tuoi progetti?",
+                        "Eccoti qui {name}! Vediamo i tuoi progressi.",
+                        "Buongiorno {name}! La tua dashboard ti aspetta."
+                    ];
+                    $random_welcome = str_replace('{name}', htmlspecialchars($nickname), $welcome_messages[array_rand($welcome_messages)]);
+                    ?>
+                    <h1 class="hero-title animate-fade-up"><?php echo $random_welcome; ?></h1>
+                    <p class="hero-subtitle animate-fade-up">
+                        <?php if ($tipo_utente === "creatore"): ?>
+                        Gestisci i tuoi progetti e monitora i tuoi progressi di crescita.
+                        <?php else: ?>
+                        Tieni traccia dei progetti che hai supportato e scopri nuove opportunità.
+                        <?php endif; ?>
+                    </p>
                 </div>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <div class="container py-5">
-        <!-- Header con messaggio personalizzato -->
-        <div class="row mb-5">
-            <div class="col-12 text-center">
-                <?php 
-                $welcome_messages = [
-                    "Ciao {name}! Bentornato nella tua dashboard.",
-                    "Eccoti qui, {name}! Pronto per nuove avventure?",
-                    "Benvenuto {name}! Vediamo cosa puoi creare oggi.",
-                    "Ciao {name}! La tua creativity station ti aspetta."
-                ];
-                $random_welcome = str_replace('{name}', htmlspecialchars($nickname), $welcome_messages[array_rand($welcome_messages)]);
-                ?>
-                <h1 class="display-5 fw-bold text-gradient-primary"><?= $random_welcome ?></h1>
-                <p class="lead text-muted">
-                    <?php if ($tipo_utente === "creatore"): ?>
-                    Gestisci i tuoi progetti e monitora i tuoi progressi.
-                    <?php else: ?>
-                    Tieni traccia dei progetti che hai supportato.
-                    <?php endif; ?>
-                </p>
-            </div>
-        </div>
-
-        <?php if (isset($error)): ?>
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle me-2"></i><strong>Ops!</strong> <?= htmlspecialchars($error) ?>
-        </div>
-        <?php endif; ?>
-
-        <!-- Statistiche -->
-        <div class="row g-4 mb-5">
-            <?php if ($tipo_utente === "creatore"): ?>
-            <div class="col-md-6 col-lg-3">
-                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-accent);">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-project-diagram"></i>
-                        </div>
-                        <h5 class="card-title">Progetti Creati</h5>
-                        <p class="card-text display-4 fw-bold"><?= $stats["progetti_creati"] ?></p>
-                        <small class="text-muted">
-                            <?= $stats["progetti_attivi"] ?> attivi, <?= $stats["progetti_completati"] ?> completati
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-info);">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-euro-sign"></i>
-                        </div>
-                        <h5 class="card-title">Fondi Raccolti</h5>
-                        <p class="card-text display-4 fw-bold">€<?= number_format($stats["fondi_raccolti"], 0) ?></p>
-                        <small class="text-muted">
-                            di €<?= number_format($stats["fondi_richiesti"], 0) ?> richiesti
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-success);">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <h5 class="card-title">Affidabilità</h5>
-                        <p class="card-text display-4 fw-bold"><?= number_format($stats["affidabilita"], 1) ?>%</p>
-                        <small class="text-muted">
-                            Basata sui progetti completati
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-warning);">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h5 class="card-title">Success Rate</h5>
-                        <p class="card-text display-4 fw-bold">
-                            <?php
-                            $successRate = $stats["progetti_creati"] > 0 ?
-                                round(($stats["progetti_completati"] / $stats["progetti_creati"]) * 100, 1) : 0;
-                            echo $successRate;
-                            ?>%
-                        </p>
-                        <small class="text-muted">
-                            Progetti completati
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <?php else: ?>
-            <div class="col-md-6 col-lg-4">
-                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-primary);">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-hand-holding-usd"></i>
-                        </div>
-                        <h5 class="card-title">Finanziamenti Fatti</h5>
-                        <p class="card-text display-4 fw-bold"><?= $stats["finanziamenti_fatti"] ?></p>
-                        <small class="text-muted">
-                            Investimenti effettuati
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-secondary);">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-coins"></i>
-                        </div>
-                        <h5 class="card-title">Totale Investito</h5>
-                        <p class="card-text display-4 fw-bold">€<?= number_format($stats["totale_investito"], 0) ?></p>
-                        <small class="text-muted">
-                            Valore totale finanziamenti
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card stat-card h-100" style="--stat-color: var(--bostarter-success);">
-                    <div class="card-body">
-                        <div class="stat-icon">
-                            <i class="fas fa-project-diagram"></i>
-                        </div>
-                        <h5 class="card-title">Progetti Supportati</h5>
-                        <p class="card-text display-4 fw-bold"><?= $stats["progetti_finanziati"] ?? 0 ?></p>
-                        <small class="text-muted">
-                            Progetti unici finanziati
-                        </small>
-                    </div>
+    <!-- Main Content -->
+    <div class="container-fluid py-5">
+        <div class="container">
+            <!-- Error Message -->
+            <?php if (!empty($error)): ?>
+            <div class="alert alert-danger border-0 shadow-sm animate-fade-up mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div><?php echo htmlspecialchars($error); ?></div>
                 </div>
             </div>
             <?php endif; ?>
-        </div>
 
-        <!-- Contenuto principale -->
-        <div class="row">
-            <div class="col-12">
+            <!-- Statistics Section -->
+            <div class="row g-4 mb-5">
                 <?php if ($tipo_utente === "creatore"): ?>
-                <div class="card content-card">
-                    <div class="card-header">
-                        <h5 class="mb-0">I Tuoi Progetti</h5>
-                        <a href="new.php" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>Nuovo Progetto
-                        </a>
+                <!-- Creator Statistics -->
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 stat-card animate-fade-up">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-lightbulb fa-2x text-primary"></i>
+                            </div>
+                            <h3 class="stat-number" data-target="<?php echo $stats['progetti_creati']; ?>"><?php echo $stats['progetti_creati']; ?></h3>
+                            <h6 class="stat-label text-muted">Progetti Creati</h6>
+                            <small class="text-muted d-block mt-2">
+                                Idee innovative portate al mondo
+                            </small>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <?php if (empty($progetti)): ?>
-                        <div class="text-center py-5">
-                            <i class="fas fa-lightbulb fa-4x text-primary mb-4"></i>
-                            <h4 class="mb-3">È il momento di creare!</h4>
-                            <p class="text-muted mb-4">La tua prossima grande idea è a un solo click di distanza.</p>
-                            <a href="new.php" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus me-2"></i>Crea il Tuo Primo Progetto
-                            </a>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 stat-card animate-fade-up">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-euro-sign fa-2x text-success"></i>
+                            </div>
+                            <h3 class="stat-number" data-target="<?php echo intval($stats['fondi_raccolti']); ?>"><?php echo number_format($stats['fondi_raccolti'], 0); ?></h3>
+                            <h6 class="stat-label text-muted">Fondi Raccolti</h6>
+                            <small class="text-muted d-block mt-2">
+                                di €<?php echo number_format($stats['fondi_richiesti'], 0); ?> richiesti
+                            </small>
                         </div>
-                        <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Progetto</th>
-                                        <th>Tipo</th>
-                                        <th>Progresso</th>
-                                        <th>Finanziatori</th>
-                                        <th>Data Creazione</th>
-                                        <th class="text-end">Azioni</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($progetti as $progetto):
-                                        $progressPercent = $progetto['budget_totale'] > 0 ?
-                                            min(100, round(($progetto['budget_raccolto'] / $progetto['budget_totale']) * 100, 1)) : 0;
-                                        $progressColor = $progressPercent >= 100 ? 'success' :
-                                                        ($progressPercent >= 50 ? 'warning' : 'info');
-                                    ?>
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold">
-                                                <a href="view.php?id=<?= $progetto['id'] ?>" class="text-decoration-none">
-                                                    <?= htmlspecialchars($progetto['nome']) ?>
-                                                </a>
-                                            </div>
-                                            <small class="text-muted">
-                                                <?= htmlspecialchars(substr($progetto['descrizione'], 0, 50)) ?>...
-                                            </small>
-                                            <div class="mt-1">
-                                                <small class="badge bg-<?= $progressColor ?>">
-                                                    €<?= number_format($progetto['budget_raccolto'], 0) ?> /
-                                                    €<?= number_format($progetto['budget_totale'], 0) ?>
-                                                </small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary">
-                                                <i class="fas fa-<?= $progetto['tipo_progetto'] === 'hardware' ? 'cogs' : 'code' ?> me-1"></i>
-                                                <?= ucfirst($progetto['tipo_progetto']) ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                                                    <div class="progress-bar bg-<?= $progressColor ?>"
-                                                         style="width: <?= $progressPercent ?>%"></div>
-                                                </div>
-                                                <small class="text-muted fw-bold">
-                                                    <?= $progressPercent ?>%
-                                                </small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary">
-                                                <i class="fas fa-users me-1"></i>
-                                                <?= $progetto['numero_finanziamenti'] ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <?= date('d/m/Y', strtotime($progetto['data_inserimento'])) ?>
-                                            <br>
-                                            <small class="text-muted">
-                                                <?= date('H:i', strtotime($progetto['data_inserimento'])) ?>
-                                            </small>
-                                        </td>
-                                        <td class="text-end">
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="view.php?id=<?= $progetto['id'] ?>"
-                                                   class="btn btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>Vedi
-                                                </a>
-                                                <a href="edit.php?id=<?= $progetto['id'] ?>"
-                                                   class="btn btn-outline-secondary">
-                                                    <i class="fas fa-edit me-1"></i>Modifica
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 stat-card animate-fade-up">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-star fa-2x text-warning"></i>
+                            </div>
+                            <h3 class="stat-number" data-target="<?php echo intval($stats['affidabilita']); ?>"><?php echo number_format($stats['affidabilita'], 1); ?></h3>
+                            <h6 class="stat-label text-muted">Affidabilità</h6>
+                            <small class="text-muted d-block mt-2">
+                                Basata sui progetti completati
+                            </small>
                         </div>
-                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 stat-card animate-fade-up">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-chart-line fa-2x text-info"></i>
+                            </div>
+                            <h3 class="stat-number" data-target="<?php echo intval($stats['success_rate']); ?>"><?php echo $stats['success_rate']; ?></h3>
+                            <h6 class="stat-label text-muted">Success Rate</h6>
+                            <small class="text-muted d-block mt-2">
+                                Progetti completati con successo
+                            </small>
+                        </div>
                     </div>
                 </div>
                 <?php else: ?>
-                <div class="card content-card">
-                    <div class="card-header">
-                        <h5 class="mb-0">I Tuoi Finanziamenti</h5>
+                <!-- User Statistics -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 stat-card animate-fade-up">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-hand-holding-heart fa-2x text-primary"></i>
+                            </div>
+                            <h3 class="stat-number" data-target="<?php echo $stats['finanziamenti_fatti']; ?>"><?php echo $stats['finanziamenti_fatti']; ?></h3>
+                            <h6 class="stat-label text-muted">Progetti Supportati</h6>
+                            <small class="text-muted d-block mt-2">
+                                Idee che hai aiutato a crescere
+                            </small>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <?php if (empty($finanziamenti)): ?>
-                        <div class="text-center py-5">
-                            <i class="fas fa-search-dollar fa-4x text-primary mb-4"></i>
-                            <h4 class="mb-3">Scopri nuove opportunità</h4>
-                            <p class="text-muted mb-4">Esplora i progetti e supporta le idee che ti appassionano.</p>
-                            <a href="view.php" class="btn btn-primary btn-lg">
-                                <i class="fas fa-rocket me-2"></i>Esplora i Progetti
-                            </a>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 stat-card animate-fade-up">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-coins fa-2x text-success"></i>
+                            </div>
+                            <h3 class="stat-number" data-target="<?php echo intval($stats['totale_investito']); ?>"><?php echo number_format($stats['totale_investito'], 0); ?></h3>
+                            <h6 class="stat-label text-muted">Totale Investito</h6>
+                            <small class="text-muted d-block mt-2">
+                                Il tuo impatto sulla comunità
+                            </small>
                         </div>
-                        <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Progetto</th>
-                                        <th>Importo Investito</th>
-                                        <th>Data Finanziamento</th>
-                                        <th>Stato</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($finanziamenti as $finanziamento): ?>
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold">
-                                                <a href="view.php?id=<?= $finanziamento['progetto_id'] ?>" class="text-decoration-none">
-                                                    <?= htmlspecialchars($finanziamento['nome_progetto']) ?>
-                                                </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 stat-card animate-fade-up">
+                        <div class="card-body text-center">
+                            <div class="stat-icon mb-3">
+                                <i class="fas fa-heart fa-2x text-danger"></i>
+                            </div>
+                            <h3 class="stat-number" data-target="<?php echo count($finanziamenti); ?>"><?php echo count($finanziamenti); ?></h3>
+                            <h6 class="stat-label text-muted">Progetti Amati</h6>
+                            <small class="text-muted d-block mt-2">
+                                Visioni che hai scelto di supportare
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row g-4 mb-5">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">
+                                <i class="fas fa-bolt me-2 text-warning"></i>Azioni Rapide
+                            </h5>
+                            <div class="row g-3">
+                                <?php if ($tipo_utente === "creatore"): ?>
+                                <div class="col-md-3">
+                                    <a href="new.php" class="btn btn-primary w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-plus-circle me-2"></i>
+                                        Nuovo Progetto
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="skill.php" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-brain me-2"></i>
+                                        Le Mie Skill
+                                    </a>
+                                </div>
+                                <?php else: ?>
+                                <div class="col-md-4">
+                                    <a href="view.php" class="btn btn-primary w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-search me-2"></i>
+                                        Esplora Progetti
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="skill.php" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-brain me-2"></i>
+                                        Le Mie Skill
+                                    </a>
+                                </div>
+                                <?php endif; ?>
+                                <div class="col-md-<?php echo $tipo_utente === "creatore" ? "3" : "4"; ?>">
+                                    <a href="candidature.php" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-user-check me-2"></i>
+                                        Candidature
+                                    </a>
+                                </div>
+                                <div class="col-md-<?php echo $tipo_utente === "creatore" ? "3" : "4"; ?>">
+                                    <a href="profilo.php" class="btn btn-outline-info w-100 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-user-edit me-2"></i>
+                                        Modifica Profilo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Projects/Financements -->
+            <div class="row g-4">
+                <?php if ($tipo_utente === "creatore" && !empty($progetti)): ?>
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-project-diagram me-2 text-primary"></i>I Tuoi Progetti Recenti
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <?php foreach (array_slice($progetti, 0, 3) as $progetto): ?>
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="card h-100 shadow-sm project-card animate-fade-up">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title mb-1"><?php echo htmlspecialchars($progetto['nome']); ?></h6>
+                                                <span class="badge bg-<?php
+                                                    switch($progetto['stato']) {
+                                                        case 'attivo': echo 'success'; break;
+                                                        case 'in_attesa': echo 'warning'; break;
+                                                        case 'completato': echo 'info'; break;
+                                                        default: echo 'secondary';
+                                                    }
+                                                ?>">
+                                                    <?php echo htmlspecialchars($progetto['stato']); ?>
+                                                </span>
                                             </div>
-                                            <small class="text-muted">
-                                                Progetto finanziato
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <div class="fw-bold text-success">
-                                                €<?= number_format($finanziamento['importo'], 2) ?>
+                                            <p class="card-text text-muted small mb-2">
+                                                <?php echo htmlspecialchars(substr($progetto['descrizione'], 0, 100)); ?>...
+                                            </p>
+                                            <div class="mb-2">
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-success"
+                                                         style="width: <?php echo $progetto['budget_totale'] > 0 ? min(100, ($progetto['budget_raccolto'] / $progetto['budget_totale']) * 100) : 0; ?>%"></div>
+                                                </div>
+                                                <small class="text-muted">
+                                                    €<?php echo number_format($progetto['budget_raccolto'], 0); ?> di €<?php echo number_format($progetto['budget_totale'], 0); ?>
+                                                </small>
                                             </div>
-                                        </td>
-                                        <td>
-                                            <?= date('d/m/Y', strtotime($finanziamento['data_finanziamento'])) ?>
-                                            <br>
-                                            <small class="text-muted">
-                                                <?= date('H:i', strtotime($finanziamento['data_finanziamento'])) ?>
-                                            </small>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-<?= $finanziamento['stato_pagamento'] === 'completed' ? 'success' : 'warning' ?>">
-                                                <?= ucfirst($finanziamento['stato_pagamento']) ?>
+                                            <a href="view.php?id=<?php echo $progetto['id']; ?>" class="btn btn-outline-primary btn-sm w-100">
+                                                <i class="fas fa-eye me-1"></i>Vedi Progetto
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php if (count($progetti) > 3): ?>
+                            <div class="text-center mt-4">
+                                <a href="view.php" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-right me-1"></i>Vedi Tutti i Progetti
+                                </a>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php elseif (!empty($finanziamenti)): ?>
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-heart me-2 text-danger"></i>I Tuoi Finanziamenti Recenti
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <?php foreach (array_slice($finanziamenti, 0, 3) as $finanziamento): ?>
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="card h-100 shadow-sm project-card animate-fade-up">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-2"><?php echo htmlspecialchars($finanziamento['nome_progetto']); ?></h6>
+                                            <div class="mb-2">
+                                                <span class="badge bg-primary mb-2">
+                                                    <i class="fas fa-coins me-1"></i>€<?php echo number_format($finanziamento['importo'], 2); ?>
+                                                </span>
+                                            </div>
+                                            <p class="card-text text-muted small mb-2">
+                                                Finanziato il <?php echo date('d/m/Y', strtotime($finanziamento['data_finanziamento'])); ?>
+                                            </p>
+                                            <span class="badge bg-<?php
+                                                switch($finanziamento['stato_pagamento']) {
+                                                    case 'completed': echo 'success'; break;
+                                                    case 'pending': echo 'warning'; break;
+                                                    case 'failed': echo 'danger'; break;
+                                                    default: echo 'secondary';
+                                                }
+                                            ?>">
+                                                <i class="fas fa-<?php
+                                                    switch($finanziamento['stato_pagamento']) {
+                                                        case 'completed': echo 'check-circle'; break;
+                                                        case 'pending': echo 'clock'; break;
+                                                        case 'failed': echo 'times-circle'; break;
+                                                        default: echo 'question-circle';
+                                                    }
+                                                ?> me-1"></i>
+                                                <?php echo htmlspecialchars($finanziamento['stato_pagamento']); ?>
                                             </span>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php if (count($finanziamenti) > 3): ?>
+                            <div class="text-center mt-4">
+                                <a href="candidature.php" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-right me-1"></i>Vedi Tutti i Finanziamenti
+                                </a>
+                            </div>
+                            <?php endif; ?>
                         </div>
-                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -508,8 +491,41 @@ try {
         </div>
     </div>
 
-    <?php include __DIR__ . '/includes/scripts.php'; ?>
-    <script src="<?= $basePath ?>js/dash.js"></script>
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTopBtn" title="Torna in cima">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- JavaScript Ottimizzato -->
+    <script src="assets/js/bostarter-optimized.min.js"></script>
+
+    <!-- Custom Dashboard Script -->
+    <script>
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize counters
+            BOSTARTER.animations.counter(document.querySelectorAll('.stat-number')[0]);
+
+            // Add smooth scrolling to action buttons
+            document.querySelectorAll('.btn[href^="#"]').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // Add loading animation to cards
+            document.querySelectorAll('.project-card').forEach(function(card, index) {
+                setTimeout(function() {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
 </body>
 
 </html>

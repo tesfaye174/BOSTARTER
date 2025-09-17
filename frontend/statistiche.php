@@ -16,7 +16,6 @@ session_start();
 
 /**
  * Verifica autenticazione utente
- * @return bool True se loggato
  */
 function isLoggedIn() {
     return isset($_SESSION["user_id"]);

@@ -208,70 +208,274 @@ if (isset($_SESSION['flash_error'])) {
     unset($_SESSION['flash_error']);
 }
 
-// Includi header comune
-require_once __DIR__.'/../backend/config/SecurityConfig.php';
-require_once __DIR__.'/includes/head.php';
+// Titolo pagina per header moderno
+$page_title = 'Le Mie Skill - BOSTARTER';
+
+// Includi header moderno
+require_once 'includes/head.php';
+
+// Includi navbar moderno
+require_once 'includes/navbar.php';
 ?>
 
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
-    <title><?= htmlspecialchars($page_title) ?> - BOSTARTER</title>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <div class="animate-fade-up">
+                        <h1 class="hero-title mb-3">
+                            <i class="fas fa-brain me-3 text-primary"></i>Le Mie Competenze
+                        </h1>
+                        <p class="hero-subtitle mb-4">
+                            Gestisci le tue competenze e mostra al mondo le tue abilità.
+                            Un profilo completo aumenta le possibilità di successo nei progetti.
+                        </p>
+                        <div class="row g-3 justify-content-center">
+                            <div class="col-auto">
+                                <div class="stat-badge">
+                                    <div class="stat-number"><?php echo count($userSkills ?? []); ?></div>
+                                    <small class="text-muted">Competenze</small>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <div class="stat-badge">
+                                    <div class="stat-number"><?php echo count($allSkills ?? []); ?></div>
+                                    <small class="text-muted">Disponibili</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Main Content -->
+    <div class="container-fluid py-5">
+        <div class="container">
+            <!-- Messages -->
+            <?php if (!empty($error)): ?>
+            <div class="alert alert-danger border-0 shadow-sm animate-fade-up mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div><?php echo htmlspecialchars($error); ?></div>
+                </div>
+            </div>
+            <?php endif; ?>
 
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+            <?php if (!empty($message)): ?>
+            <div class="alert alert-success border-0 shadow-sm animate-fade-up mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div><?php echo htmlspecialchars($message); ?></div>
+                </div>
+            </div>
+            <?php endif; ?>
 
-    <style>
-        :root {
-            --bostarter-primary: #2563eb;
-            --bostarter-secondary: #7c3aed;
-            --bostarter-success: #059669;
-            --bostarter-warning: #d97706;
-            --bostarter-danger: #dc2626;
-            --bostarter-info: #0891b2;
-        }
+            <div class="row">
+                <!-- Current Skills -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="mb-0">
+                                <i class="fas fa-star me-2 text-warning"></i>Le Tue Competenze
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <?php if (!empty($userSkills)): ?>
+                            <div class="row g-3">
+                                <?php foreach ($userSkills as $skill): ?>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="skill-card border-0 shadow-sm animate-fade-up">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-1"><?php echo htmlspecialchars($skill['competenza_nome']); ?></h6>
+                                            <form method="POST" class="d-inline">
+                                                <input type="hidden" name="action" value="remove_skill">
+                                                <input type="hidden" name="competenza_id" value="<?php echo $skill['competenza_id']; ?>">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        onclick="return confirm('Rimuovere questa competenza?')">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        </div>
 
-        body {
-            padding-top: 76px;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: #f8fafc;
-        }
+                                        <!-- Skill Level Indicator -->
+                                        <div class="skill-level mb-2">
+                                            <small class="text-muted d-block mb-1">Livello</small>
+                                            <div class="progress" style="height: 8px;">
+                                                <div class="progress-bar bg-primary"
+                                                     style="width: <?php echo ($skill['livello'] / 5) * 100; ?>%"></div>
+                                            </div>
+                                            <small class="text-muted"><?php echo $skill['livello']; ?>/5</small>
+                                        </div>
 
-        .navbar {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+                                        <!-- Skill Level Badges -->
+                                        <div class="skill-badges">
+                                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                            <span class="badge <?php echo $i <= $skill['livello'] ? 'bg-primary' : 'bg-light text-muted'; ?> me-1">
+                                                <?php echo $i; ?>
+                                            </span>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php else: ?>
+                            <div class="text-center py-5">
+                                <i class="fas fa-brain fa-4x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nessuna competenza aggiunta</h5>
+                                <p class="text-muted">Aggiungi le tue prime competenze per completare il profilo</p>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
 
-        .skill-card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
+                <!-- Add New Skill -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white border-0">
+                            <h6 class="mb-0">
+                                <i class="fas fa-plus-circle me-2 text-success"></i>Aggiungi Competenza
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" id="addSkillForm">
+                                <input type="hidden" name="action" value="add_skill">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
-        .skill-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-        }
+                                <div class="mb-3">
+                                    <label for="competenza_id" class="form-label fw-semibold">
+                                        <i class="fas fa-search me-2 text-muted"></i>Seleziona Competenza
+                                    </label>
+                                    <select name="competenza_id" id="competenza_id" class="form-select border-0 shadow-sm" required>
+                                        <option value="">Scegli una competenza...</option>
+                                        <?php foreach ($allSkills as $skill): ?>
+                                        <option value="<?php echo $skill['id']; ?>">
+                                            <?php echo htmlspecialchars($skill['nome']); ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 
-        .skill-star {
-            color: #e5e7eb;
-            font-size: 16px;
-        }
+                                <div class="mb-3">
+                                    <label for="livello" class="form-label fw-semibold">
+                                        <i class="fas fa-chart-line me-2 text-muted"></i>Livello di Competenza
+                                    </label>
+                                    <select name="livello" id="livello" class="form-select border-0 shadow-sm" required>
+                                        <option value="">Seleziona livello...</option>
+                                        <option value="1">1 - Principiante</option>
+                                        <option value="2">2 - Base</option>
+                                        <option value="3">3 - Intermedio</option>
+                                        <option value="4">4 - Avanzato</option>
+                                        <option value="5">5 - Esperto</option>
+                                    </select>
+                                </div>
 
-        .skill-star.active {
-            color: #fbbf24;
-        }
+                                <!-- Level Preview -->
+                                <div class="mb-3" id="levelPreview" style="display: none;">
+                                    <small class="text-muted d-block mb-1">Anteprima livello</small>
+                                    <div id="levelBadges"></div>
+                                </div>
 
-        .level-badge {
-            display: inline-flex;
-            align-items: center;
-            background: linear-gradient(135deg, var(--bostarter-primary), var(--bostarter-secondary));
+                                <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                                    <i class="fas fa-plus me-2"></i>Aggiungi Competenza
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Skill Statistics -->
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white border-0">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chart-bar me-2 text-info"></i>Statistiche Competenze
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <?php
+                            $totalSkills = count($userSkills ?? []);
+                            $avgLevel = $totalSkills > 0 ? array_sum(array_column($userSkills ?? [], 'livello')) / $totalSkills : 0;
+                            $expertSkills = count(array_filter($userSkills ?? [], function($skill) { return $skill['livello'] >= 4; }));
+                            ?>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="text-center p-2 bg-light rounded">
+                                        <div class="h5 mb-1 text-primary"><?php echo $totalSkills; ?></div>
+                                        <small class="text-muted">Totali</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 bg-light rounded">
+                                        <div class="h5 mb-1 text-success"><?php echo number_format($avgLevel, 1); ?></div>
+                                        <small class="text-muted">Media</small>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="text-center p-2 bg-warning bg-opacity-10 rounded">
+                                        <div class="h5 mb-1 text-warning"><?php echo $expertSkills; ?></div>
+                                        <small class="text-muted">Esperto (livello 4-5)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button class="scroll-to-top" id="scrollToTopBtn" title="Torna in cima">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- JavaScript per funzionalità avanzate -->
+    <script>
+        // Preview livello competenza
+        document.getElementById('livello').addEventListener('change', function() {
+            const level = parseInt(this.value);
+            const preview = document.getElementById('levelPreview');
+            const badges = document.getElementById('levelBadges');
+
+            if (level && level >= 1 && level <= 5) {
+                let badgesHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    const isActive = i <= level;
+                    badgesHtml += `<span class="badge ${isActive ? 'bg-primary' : 'bg-light text-muted'} me-1">${i}</span>`;
+                }
+                badges.innerHTML = badgesHtml;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
+        // Aggiorna anteprima quando cambia la competenza
+        document.getElementById('competenza_id').addEventListener('change', function() {
+            const livelloSelect = document.getElementById('livello');
+            if (this.value) {
+                livelloSelect.focus();
+            }
+        });
+
+        // Auto-hide alerts dopo 5 secondi
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+
+    <!-- JavaScript Ottimizzato -->
+    <script src="assets/js/bostarter-optimized.min.js"></script>
+</body>
+</html>
             color: white;
             padding: 6px 12px;
             border-radius: 20px;

@@ -169,12 +169,12 @@ function creaCandidatura($input, $utenteId) {
         }
         
         // Usa stored procedure per verifica skill e inserimento
-        $stmt = $db->prepare("CALL candida_a_profilo(:utente_id, :profilo_id, :messaggio)");
+        $stmt = $db->prepare("CALL invia_candidatura(:utente_id, :profilo_id, :messaggio)");
         $stmt->bindParam(':utente_id', $utenteId);
         $stmt->bindParam(':profilo_id', $input['profilo_id']);
         $stmt->bindParam(':messaggio', $input['motivazione']);
         $stmt->execute();
-        
+
         return ['success' => true, 'data' => ['message' => 'Candidatura inviata con successo']];
         
     } catch (Exception $e) {

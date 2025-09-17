@@ -23,17 +23,17 @@ $basePath = $isInSubfolder ? '../' : '';
 
 <!-- Librerie JavaScript Core -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="<?= $basePath ?>js/core.js"></script>
-<script src="<?= $basePath ?>js/app.js"></script>
-<script src="<?= $basePath ?>js/messages.js"></script>
+<script src="<?= $basePath ?>assets/js/core.js"></script>
+<script src="<?= $basePath ?>assets/js/app.js"></script>
+<script src="<?= $basePath ?>assets/js/messages.js"></script>
 
 <?php
 // Include automaticamente script specifico della pagina
 $scriptName = basename($_SERVER['SCRIPT_NAME']);
 $pageName = preg_replace('/\.php$/', '', $scriptName);
-$jsPath = __DIR__ . '/../js/' . $pageName . '.js';
+$jsPath = __DIR__ . '/../assets/js/' . $pageName . '.js';
 
 if (file_exists($jsPath)) {
-    echo '    <script src="' . $basePath . 'js/' . htmlspecialchars($pageName) . '.js"></script>' . PHP_EOL;
+    echo '    <script src="' . $basePath . 'assets/js/' . htmlspecialchars($pageName) . '.js"></script>' . PHP_EOL;
 }
 ?>

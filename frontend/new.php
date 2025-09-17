@@ -70,33 +70,15 @@ if (isset($_GET['error'])) {
     $error = $errorTypes[$_GET['error']] ?? 'Si è verificato un errore imprevisto.';
 }
 
-// Categorie tradotte in italiano
-$categories = [
-    'tecnologia' => 'Tecnologia & Software',
-    'arte' => 'Arte & Design',
-    'musica' => 'Musica & Audio',
-    'video' => 'Film & Video',
-    'giochi' => 'Videogiochi',
-    'editoria' => 'Editoria & Libri',
-    'cibo' => 'Cibo & Bevande',
-    'moda' => 'Moda & Stile',
-    'salute' => 'Salute & Benessere',
-    'educazione' => 'Educazione',
-    'sociale' => 'Progetti Sociali',
-    'ambiente' => 'Ambiente & Sostenibilità'
-];
-?>
-<!DOCTYPE html>
-<html lang="it">
+// Titolo pagina per header moderno
+$page_title = 'Crea Nuovo Progetto - BOSTARTER';
 
-<head>
-<?php $page_title = 'Crea il Tuo Progetto'; include __DIR__ . '/includes/head.php'; ?>
-    <style>
-    .create-project-container {
-        background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
-        min-height: 100vh;
-        padding: 2rem 0;
-    }
+// Includi header moderno
+require_once 'includes/head.php';
+
+// Includi navbar moderno
+require_once 'includes/navbar.php';
+?>
 
     .project-form-card {
         background: white;
