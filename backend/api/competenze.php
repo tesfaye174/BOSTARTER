@@ -100,7 +100,7 @@ function getCompetenze() {
             is_active,
             created_at
         FROM competenze 
-        WHERE is_active = TRUE
+        WHERE 1=1
         ORDER BY categoria, nome
     );
     $stmt->execute();
@@ -173,7 +173,7 @@ function modificaCompetenza($competenzaId, $campo, $valore) {
     
     try {
         // Verifica che la competenza esista
-        $stmt = $db->prepare("SELECT id FROM competenze WHERE id = ? AND is_active = TRUE");
+        $stmt = $db->prepare("SELECT id FROM competenze WHERE id = ? AND 1=1");
         $stmt->execute([$competenzaId]);
         if (!$stmt->fetch()) {
             return ['success' => false, 'error' => 'Competenza non trovata'];
@@ -204,7 +204,7 @@ function disattivaCompetenza($competenzaId) {
     
     try {
         // Verifica che la competenza esista
-        $stmt = $db->prepare("SELECT id FROM competenze WHERE id = ? AND is_active = TRUE");
+        $stmt = $db->prepare("SELECT id FROM competenze WHERE id = ? AND 1=1");
         $stmt->execute([$competenzaId]);
         if (!$stmt->fetch()) {
             return ['success' => false, 'error' => 'Competenza non trovata'];

@@ -17,7 +17,7 @@ class Finanziamento {
     public function create($utenteId, $progettoId, $rewardId, $importo, $messaggioSupporto = null) {
         try {
             // Verifica che il progetto esista e sia aperto
-            $stmt = $this->db->prepare("SELECT id, stato, budget_richiesto, budget_raccolto, creatore_id FROM progetti WHERE id = ? AND is_active = TRUE");
+            $stmt = $this->db->prepare("SELECT id, stato, budget_richiesto, budget_raccolto, creatore_id FROM progetti WHERE id = ? AND 1=1");
             $stmt->execute([$progettoId]);
             $progetto = $stmt->fetch();
             
@@ -53,7 +53,7 @@ class Finanziamento {
                 $stmt = $this->db->prepare(
                     "SELECT id, importo_minimo, quantita_disponibile, quantita_utilizzata 
                     FROM rewards 
-                    WHERE id = ? AND progetto_id = ? AND is_active = TRUE"
+                    WHERE id = ? AND progetto_id = ? AND 1=1"
                 );
                 $stmt->execute([$rewardId, $progettoId]);
                 $reward = $stmt->fetch();
@@ -377,7 +377,7 @@ class Finanziamento {
     public function canFinance($utenteId, $progettoId) {
         try {
             // Verifica che il progetto esista e sia aperto
-            $stmt = $this->db->prepare("SELECT id, stato FROM progetti WHERE id = ? AND is_active = TRUE");
+            $stmt = $this->db->prepare("SELECT id, stato FROM progetti WHERE id = ? AND 1=1");
             $stmt->execute([$progettoId]);
             $progetto = $stmt->fetch();
             

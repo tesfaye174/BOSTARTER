@@ -1,22 +1,22 @@
 <?php
+/**
+ * Sistema ricompense BOSTARTER
+ * Gestione rewards e benefici progetti
+ */
+
+// Include funzioni comuni
+require_once 'includes/functions.php';
+
 session_start();
 
-// Funzioni di utilità
-function isAuthenticated() {
-    return isset($_SESSION["user_id"]);
-}
-
-function getUserType() {
-    return $_SESSION['user_type'];
-}
-
-// Verifica autenticazione
-if (!isAuthenticated()) {
+// Controllo autenticazione
+if (!isLoggedIn()) {
     header('Location: auth/login.php');
-    exit();
+    exit;
 }
 
-$userType = getUserType();
+// Dati utente dalla sessione
+$userType = $_SESSION['tipo_utente'] ?? '';
 $userId = $_SESSION['user_id'];
 $isCreator = ($userType === 'creatore');
 $isAdmin = ($userType === 'amministratore');
@@ -305,8 +305,8 @@ include 'includes/head.php';
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <span class="badge bg-<?php echo $reward['is_active'] ? 'success' : 'secondary'; ?>">
-                                                    <?php echo $reward['is_active'] ? 'Attiva' : 'Disattivata'; ?>
+                                                <span class="badge bg-<?php echo $reward['stato'] ? 'success' : 'secondary'; ?>">
+                                                    <?php echo $reward['stato'] ? 'Attiva' : 'Disattivata'; ?>
                                                 </span>
                                             </td>
                                             <td>

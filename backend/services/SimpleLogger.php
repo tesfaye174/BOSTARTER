@@ -238,17 +238,6 @@ class FileLoggerSingleton {
     public function __wakeup() {}
 }
 
-// =====================================================
-// ALIAS E RETROCOMPATIBILITÀ
-// =====================================================
-
-/**
- * Alias per retrocompatibilità con codice esistente
- */
-class MongoLoggerSingleton extends FileLoggerSingleton {}
-class MongoLogger extends FileLoggerSingleton {}
-class SimpleLogger extends FileLoggerSingleton {}
-
 /**
  * Helper function per accesso rapido al logger
  * @return FileLoggerSingleton
@@ -256,4 +245,3 @@ class SimpleLogger extends FileLoggerSingleton {}
 function getLogger() {
     return FileLoggerSingleton::getInstance();
 }
-?>

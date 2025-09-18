@@ -1,8 +1,8 @@
 <?php
-// Start secure session with strict parameters
+// Avvia sessione sicura con parametri rigorosi
 $sessionParams = session_get_cookie_params();
 session_set_cookie_params([
-    'lifetime' => 86400, // 24 hours
+    'lifetime' => 86400, // 24 ore
     'path' => '/',
     'domain' => $_SERVER['HTTP_HOST'] ?? '',
     'secure' => isset($_SERVER['HTTPS']),
@@ -12,20 +12,20 @@ session_set_cookie_params([
 
 session_start();
 
-// Regenerate session ID to prevent session fixation
+// Rigenera ID sessione per prevenire session fixation
 if (empty($_SESSION['initiated'])) {
     session_regenerate_id(true);
     $_SESSION['initiated'] = true;
 }
 
-// Set security headers
+// Imposta header di sicurezza
 header('Content-Type: application/json');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('X-XSS-Protection: 1; mode=block');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 
-// CORS Configuration
+// Configurazione CORS
 $allowedOrigins = [
     'https://' . ($_SERVER['HTTP_HOST'] ?? ''),
     'http://localhost',
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once __DIR__ . '/../autoload.php';
 
 // Inizializza il logger
-$logger = new SimpleLogger(__DIR__ . '/../../logs/auth.log');
+$logger = FileLoggerSingleton::getInstance();
 
 /**
  * Verifica se l'account è bloccato per troppi tentativi falliti
@@ -72,7 +72,7 @@ function isAccountLocked($email) {
         $lockDuration = 15 * 60; // 15 minuti di blocco
         
         if (time() - $lockTime < $lockDuration) {
-            $logger->warning("Login bloccato per troppi tentativi falliti", ['email' => $email]);
+        $logger->logSecurity('Login bloccato per troppi tentativi falliti', ['email' => $email]);
             return true;
         } else {
             // Rimuovi il file di lock scaduto
@@ -120,10 +120,7 @@ function recordFailedAttempt($email) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
     if (!$csrfToken || !hash_equals($_SESSION['csrf_token'] ?? '', $csrfToken)) {
-        $logger->warning("Tentativo di login con CSRF token non valido", [
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
-        ]);
+        $logger->registraEventoSistema('WARNING', 'Tentativo di login con CSRF token non valido');
         ApiResponse::error('Token di sicurezza non valido', 403);
     }
 }
@@ -177,23 +174,14 @@ try {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
         
-        $logger->info("Login riuscito", [
-            'user_id' => $user_data['id'],
-            'email' => $email,
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-        ]);
+        $logger->registraEventoSistema('INFO', 'Login riuscito');
         
     } catch (Exception $e) {
         // Registra il tentativo fallito
         recordFailedAttempt($email);
         
         // Logga l'errore ma non rivelare dettagli sensibili
-        $logger->error("Tentativo di login fallito", [
-            'email' => $email,
-            'error' => $e->getMessage(),
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
-            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
-        ]);
+        $logger->registraErrore('LOGIN_FAILED', 'Tentativo di login fallito');
         
         // Delay per prevenire attacchi a forza bruta
         usleep(rand(100000, 2000000)); // 100ms-2s di ritardo casuale
@@ -231,17 +219,13 @@ try {
         ]
     );
     
-    ApiResponse::success($response, MessageManager::personalizedSuccess('login', $user_data['nome']));
+    ApiResponse::success($response, MessageManager::get('login_success'));
 
 } catch (Exception $e) {
     $errorMessage = $e->getMessage();
     
     // Log dettagliato dell'errore
-    $logger->error("Errore durante il login", [
-        'error' => $errorMessage,
-        'trace' => $e->getTraceAsString(),
-        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-    ]);
+    $logger->registraErrore('LOGIN_ERROR', 'Errore durante il login');
     
     // Mappa i messaggi di errore a risposte appropriate
     if (strpos($errorMessage, '{') === 0) {

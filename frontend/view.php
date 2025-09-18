@@ -1,67 +1,17 @@
 <?php
 /**
- * BOSTARTER - Visualizzazione Progetto Migliorata
- *
- * Pagina completa per visualizzare i dettagli di un progetto con:
- * - Gestione errori elegante e user-friendly
- * - Design responsive moderno
- * - Sistema commenti interattivo
- * - Gestione immagini progetti
- * - Navbar completa
- * - Sicurezza avanzata
+ * Pagina dettaglio progetto BOSTARTER
+ * Visualizza progetto con commenti, finanziamenti e statistiche
  */
 
-// Avvia la sessione sicura
-session_start();
+// Include funzioni comuni
+require_once 'includes/functions.php';
 
-// Configurazione errori per debug
+// Debug attivo in sviluppo
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-/**
- * Verifica se l'utente è autenticato
- */
-function isLoggedIn() {
-    return isset($_SESSION['user_id']);
-}
-
-/**
- * Genera token CSRF sicuro
- */
-function generate_csrf_token() {
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
-}
-
-/**
- * Sanitizza output HTML
- */
-function sanitize_output($data) {
-    return htmlspecialchars($data ?? '', ENT_QUOTES, 'UTF-8');
-}
-
-/**
- * Formatta data in italiano
- */
-function format_date($date) {
-    if (!$date) return 'Non specificata';
-    return date('d/m/Y', strtotime($date));
-}
-
-/**
- * Calcola giorni rimanenti
- */
-function calculate_days_left($deadline) {
-    if (!$deadline) return 0;
-    $now = time();
-    $deadline_time = strtotime($deadline);
-    $diff = $deadline_time - $now;
-    return max(0, ceil($diff / (60 * 60 * 24)));
-}
-
-// Inizializza variabili
+// Inizializza variabili progetto
 $project_id = $_GET['id'] ?? null;
 $error = '';
 $warning = '';
@@ -72,7 +22,7 @@ $commenti = [];
 $redirect_to_home = false;
 $can_edit = false;
 
-// Validazione ID progetto
+// Valida ID progetto dall'URL
 if (!$project_id) {
     $error = 'ID progetto mancante nell\'URL.';
     $redirect_to_home = true;
@@ -87,13 +37,13 @@ if (!$project_id) {
     }
 }
 
-// Carica dati se ID valido
+// Carica dati progetto se ID valido
 if (!$error) {
     try {
         require_once '../backend/config/database.php';
         $db = Database::getInstance();
 
-        // Query progetto principale
+        // Query dati progetto principale
         $query = "
             SELECT p.*,
                    u.nickname as creatore_nickname,
@@ -112,7 +62,7 @@ if (!$error) {
         $project = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($project) {
-            // Verifica se utente può modificare il progetto
+            // Verifica permessi modifica
             $can_edit = isLoggedIn() && $_SESSION['user_id'] == $project['creatore_id'];
 
             // Carica statistiche finanziarie
@@ -132,7 +82,7 @@ if (!$error) {
             $project['numero_sostenitori'] = $stats['numero_sostenitori'] ?? 0;
             $project['numero_finanziamenti'] = $stats['numero_finanziamenti'] ?? 0;
 
-            // Carica finanziamenti
+            // Carica lista finanziamenti
             $query_finanziamenti = "
                 SELECT f.*,
                        u.nickname as finanziatore_nickname,

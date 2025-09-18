@@ -19,11 +19,10 @@ $autoload_classmap = [
     'Project' => __DIR__ . '/models/Project.php',
     'AuthService' => __DIR__ . '/services/AuthService.php',
     'FileLoggerSingleton' => __DIR__ . '/services/SimpleLogger.php',
-    'MongoLoggerSingleton' => __DIR__ . '/services/SimpleLogger.php',
-    'MongoLogger' => __DIR__ . '/services/SimpleLogger.php',
+    'MongoLoggerSingleton' => __DIR__ . '/services/MongoLogger.php',
+    'MongoLogger' => __DIR__ . '/services/MongoLogger.php',
     'SimpleLogger' => __DIR__ . '/services/SimpleLogger.php',
     'ApiResponse' => __DIR__ . '/utils/ApiResponse.php',
-    'ErrorHandler' => __DIR__ . '/utils/ErrorHandler.php',
     'MessageManager' => __DIR__ . '/utils/MessageManager.php',
     'RoleManager' => __DIR__ . '/utils/RoleManager.php',
     'Security' => __DIR__ . '/utils/Security.php',
@@ -108,16 +107,12 @@ function load_file($relativePath) {
 // Carica componenti essenziali all'avvio
 $essential_components = [
     __DIR__ . '/config/database.php',
-    __DIR__ . '/services/SimpleLogger.php',
-    __DIR__ . '/utils/ErrorHandler.php'
+    __DIR__ . '/services/SimpleLogger.php'
 ];
 
 foreach ($essential_components as $component) {
     if (file_exists($component)) require_once $component;
 }
-
-// Inizializza il gestore errori se presente
-if (class_exists('ErrorHandler')) ErrorHandler::initialize();
 
 // Segnala avvio autoloader se esiste il logger
 if (function_exists('logMessage')) logMessage('DEBUG', 'BOSTARTER Autoloader inizializzato');

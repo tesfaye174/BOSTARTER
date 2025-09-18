@@ -1,22 +1,22 @@
 <?php
+/**
+ * Gestione finanziamenti BOSTARTER
+ * Visualizza e gestisci contributi ai progetti
+ */
+
+// Include funzioni comuni
+require_once 'includes/functions.php';
+
 session_start();
 
-// Funzioni di utilità
-function isAuthenticated() {
-    return isset($_SESSION["user_id"]);
-}
-
-function getUserType() {
-    return $_SESSION['user_type'] ?? '';
-}
-
-// Verifica autenticazione
-if (!isAuthenticated()) {
+// Controllo autenticazione
+if (!isLoggedIn()) {
     header('Location: auth/login.php');
-    exit();
+    exit;
 }
 
-$userType = getUserType();
+// Dati utente dalla sessione
+$userType = $_SESSION['tipo_utente'] ?? '';
 $userId = $_SESSION['user_id'];
 $isCreator = ($userType === 'creatore');
 $isAdmin = ($userType === 'amministratore');

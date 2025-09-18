@@ -1,7 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-// Safer CORS handling
+// Gestione sicura CORS
 $allowedOrigin = null;
 if (!empty($_SERVER['HTTP_ORIGIN'])) {
     $origin = $_SERVER['HTTP_ORIGIN'];

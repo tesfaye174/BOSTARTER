@@ -45,7 +45,7 @@ function getAllStatistiche() {
                 COUNT(CASE WHEN p.stato = 'chiuso' THEN 1 END) as progetti_completati
             FROM utenti u
             LEFT JOIN progetti p ON u.id = p.creatore_id
-            WHERE u.tipo_utente = 'creatore' AND u.is_active = TRUE
+            WHERE u.tipo_utente = 'creatore' AND u.stato = "attivo"
             GROUP BY u.id, u.nickname, u.affidabilita
             ORDER BY u.affidabilita DESC
             LIMIT 3");
@@ -61,7 +61,7 @@ function getAllStatistiche() {
                 p.data_limite,
                 DATEDIFF(p.data_limite, CURDATE()) as giorni_rimanenti
             FROM progetti p
-            WHERE p.stato = 'aperto' AND p.is_active = TRUE
+            WHERE p.stato = 'aperto' AND p.stato = "attivo"
             ORDER BY (p.budget_raccolto / p.budget_richiesto) DESC
             LIMIT 3");
         $stmt->execute();
@@ -74,7 +74,7 @@ function getAllStatistiche() {
                 SUM(f.importo) as totale_finanziato
             FROM utenti u
             LEFT JOIN finanziamenti f ON u.id = f.utente_id AND f.stato_pagamento = 'completed'
-            WHERE u.is_active = TRUE
+            WHERE u.stato = "attivo"
             GROUP BY u.id, u.nickname
             HAVING totale_finanziato > 0
             ORDER BY totale_finanziato DESC
@@ -84,11 +84,11 @@ function getAllStatistiche() {
         
         // 4. Statistiche generali piattaforma
         $stmt = $db->prepare("SELECT 
-                (SELECT COUNT(*) FROM utenti WHERE is_active = TRUE) as totale_utenti,
-                (SELECT COUNT(*) FROM utenti WHERE tipo_utente = 'creatore' AND is_active = TRUE) as totale_creatori,
-                (SELECT COUNT(*) FROM progetti WHERE is_active = TRUE) as totale_progetti,
-                (SELECT COUNT(*) FROM progetti WHERE stato = 'aperto' AND is_active = TRUE) as progetti_aperti,
-                (SELECT COUNT(*) FROM progetti WHERE stato = 'chiuso' AND is_active = TRUE) as progetti_chiusi,
+                (SELECT COUNT(*) FROM utenti WHERE stato = "attivo") as totale_utenti,
+                (SELECT COUNT(*) FROM utenti WHERE tipo_utente = 'creatore' AND stato = "attivo") as totale_creatori,
+                (SELECT COUNT(*) FROM progetti WHERE stato = "attivo") as totale_progetti,
+                (SELECT COUNT(*) FROM progetti WHERE stato = 'aperto' AND stato = "attivo") as progetti_aperti,
+                (SELECT COUNT(*) FROM progetti WHERE stato = 'chiuso' AND stato = "attivo") as progetti_chiusi,
                 (SELECT SUM(importo) FROM finanziamenti WHERE stato_pagamento = 'completed') as totale_finanziato,
                 (SELECT COUNT(*) FROM candidature WHERE stato = 'accettata') as candidature_accettate");
         $stmt->execute();
@@ -116,7 +116,7 @@ function getStatisticheSpecifiche($tipo) {
                         ROUND((COUNT(CASE WHEN p.stato = 'chiuso' THEN 1 END) / COUNT(p.id)) * 100, 2) as tasso_successo
                     FROM utenti u
                     LEFT JOIN progetti p ON u.id = p.creatore_id
-                    WHERE u.tipo_utente = 'creatore' AND u.is_active = TRUE
+                    WHERE u.tipo_utente = 'creatore' AND u.stato = "attivo"
                     GROUP BY u.id, u.nickname, u.affidabilita
                     ORDER BY u.affidabilita DESC
                     LIMIT 10");
@@ -136,7 +136,7 @@ function getStatisticheSpecifiche($tipo) {
                         u.nickname as creatore
                     FROM progetti p
                     JOIN utenti u ON p.creatore_id = u.id
-                    WHERE p.stato = 'aperto' AND p.is_active = TRUE
+                    WHERE p.stato = 'aperto' AND p.stato = "attivo"
                     ORDER BY (p.budget_raccolto / p.budget_richiesto) DESC
                     LIMIT 10");
                 $stmt->execute();
@@ -154,7 +154,7 @@ function getStatisticheSpecifiche($tipo) {
                         MAX(f.data_finanziamento) as ultimo_finanziamento
                     FROM utenti u
                     LEFT JOIN finanziamenti f ON u.id = f.utente_id AND f.stato_pagamento = 'completed'
-                    WHERE u.is_active = TRUE
+                    WHERE u.stato = "attivo"
                     GROUP BY u.id, u.nickname, u.nome, u.cognome
                     HAVING totale_finanziato > 0
                     ORDER BY totale_finanziato DESC
@@ -186,7 +186,7 @@ function getStatisticheSpecifiche($tipo) {
                         AVG(p.budget_raccolto) as budget_medio_raccolto,
                         ROUND((AVG(p.budget_raccolto) / AVG(p.budget_richiesto)) * 100, 2) as tasso_medio_completamento
                     FROM progetti p
-                    WHERE p.is_active = TRUE
+                    WHERE p.stato = "attivo"
                     GROUP BY p.tipo");
                 $stmt->execute();
                 return $stmt->fetchAll();

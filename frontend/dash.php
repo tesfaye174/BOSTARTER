@@ -1,33 +1,28 @@
 <?php
 /**
- * Dashboard Utente BOSTARTER
- *
- * Visualizzazione personalizzata basata sul ruolo:
- * - Per creatori: progetti creati, statistiche, affidabilità
- * - Per utenti: finanziamenti effettuati, progetti supportati
+ * Dashboard utente BOSTARTER
+ * Progetti e statistiche personalizzate per ruolo
  */
 
-// Avvia sessione
+// Include funzioni comuni
+require_once 'includes/functions.php';
+
+// Avvia sessione sicura
 session_start();
 
-// Verifica autenticazione
-function isLoggedIn() {
-    return isset($_SESSION["user_id"]);
-}
-
-// Reindirizza se non loggato
+// Controlla autenticazione
 if (!isLoggedIn()) {
     session_regenerate_id(true);
     header("Location: auth/login.php");
     exit;
 }
 
-// Recupera dati utente
+// Dati utente dalla sessione
 $user_id = $_SESSION["user_id"];
 $nickname = $_SESSION["nickname"];
 $tipo_utente = $_SESSION["tipo_utente"];
 
-// Inizializzazione array statistiche
+// Statistiche iniziali
 $stats = [
     "progetti_creati" => 0,
     "fondi_raccolti" => 0,
@@ -35,29 +30,28 @@ $stats = [
     "totale_investito" => 0
 ];
 
-// Array per contenere progetti e finanziamenti
+// Array dati dinamici
 $progetti = [];
 $finanziamenti = [];
 
-// Connessione al database e recupero dati
+// Connessione database e caricamento dati
 try {
     require_once "../backend/config/database.php";
     $db = Database::getInstance();
 
-    // IMPORTANTE: Chiudi eventuali result set pendenti
+    // Pulizia eventuali result set pendenti
     while ($db->query('SELECT 1')) {
-        // Consuma eventuali result set pendenti
         break;
     }
 
     if ($tipo_utente === "creatore") {
         // Statistiche creatore
-        $stmt = $db->prepare("SELECT COUNT(*) as count FROM progetti WHERE creatore_id = ? AND is_active = TRUE");
+        $stmt = $db->prepare("SELECT COUNT(*) as count FROM progetti WHERE creatore_id = ? AND stato = TRUE");
         $stmt->execute([$user_id]);
         $stats["progetti_creati"] = $stmt->fetch()["count"] ?? 0;
 
         // Fondi totali richiesti (budget_richiesto)
-        $stmt = $db->prepare("SELECT COALESCE(SUM(budget_richiesto), 0) as totale FROM progetti WHERE creatore_id = ? AND is_active = TRUE");
+        $stmt = $db->prepare("SELECT COALESCE(SUM(budget_richiesto), 0) as totale FROM progetti WHERE creatore_id = ? AND stato = TRUE");
         $stmt->execute([$user_id]);
         $stats["fondi_richiesti"] = $stmt->fetch()["totale"] ?? 0;
 
@@ -66,7 +60,7 @@ try {
             SELECT COALESCE(SUM(f.importo), 0) as totale_raccolto
             FROM progetti p
             LEFT JOIN finanziamenti f ON p.id = f.progetto_id AND f.stato_pagamento = 'completed'
-            WHERE p.creatore_id = ? AND p.is_active = TRUE
+            WHERE p.creatore_id = ? AND p.stato = TRUE
         ");
         $stmt->execute([$user_id]);
         $stats["fondi_raccolti"] = $stmt->fetch()["totale_raccolto"] ?? 0;
@@ -97,7 +91,7 @@ try {
                 COUNT(f.id) as numero_finanziamenti
             FROM progetti p
             LEFT JOIN finanziamenti f ON p.id = f.progetto_id AND f.stato_pagamento = 'completed'
-            WHERE p.creatore_id = ? AND p.is_active = TRUE
+            WHERE p.creatore_id = ? AND p.stato = TRUE
             GROUP BY p.id, p.titolo, p.descrizione, p.stato, p.budget_richiesto, p.data_inserimento, p.tipo_progetto
             ORDER BY p.data_inserimento DESC
         ");

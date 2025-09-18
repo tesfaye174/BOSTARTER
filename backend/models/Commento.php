@@ -53,7 +53,7 @@ class Commento {
             
             if ($progetto === null) {
                 $startTime = microtime(true);
-                $stmt = $this->db->prepare("SELECT id, stato FROM progetti WHERE id = ? AND is_active = TRUE");
+                $stmt = $this->db->prepare("SELECT id, stato FROM progetti WHERE id = ? AND 1=1");
                 $stmt->execute([$data['progetto_id']]);
                 $progetto = $stmt->fetch();
                 $this->performance->logQuery($stmt->queryString, [$data['progetto_id']], microtime(true) - $startTime, $operationId);

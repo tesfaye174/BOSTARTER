@@ -1,14 +1,11 @@
 <?php
 /**
- * Pagina Login BOSTARTER - Design Moderno e Ottimizzato
- *
- * Autenticazione utenti con design moderno:
- * - Design acromatico pulito
- * - Dark mode integrato
- * - Form responsive e accessibile
- * - Animazioni sottili
- * - Performance ottimizzata
+ * Pagina login BOSTARTER
+ * Form autenticazione con design moderno
  */
+
+// Include funzioni comuni
+require_once '../includes/functions.php';
 
 // Avvia sessione sicura
 session_start();
@@ -25,13 +22,6 @@ if (empty($_SESSION['csrf_token'])) {
 }
 
 /**
- * Verifica se utente già autenticato
- */
-function isLoggedIn() {
-    return isset($_SESSION["user_id"]);
-}
-
-/**
  * Seleziona messaggio casuale da array
  */
 function getRandomMessage($messages) {
@@ -40,7 +30,7 @@ function getRandomMessage($messages) {
 
 // Reindirizza se già loggato
 if (isLoggedIn()) {
-    header("Location: ../dashboard.php");
+    header("Location: ../dash.php");
     exit;
 }
 
@@ -75,20 +65,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error = "Inserisci un indirizzo email valido.";
             } else {
-                // Query per verificare credenziali
-                $stmt = $db->prepare("SELECT id, nickname, email, password_hash, tipo_utente, stato FROM utenti WHERE email = ?");
+                // Query per verificare credenziali - versione semplificata senza stored procedure
+                $stmt = $db->prepare("SELECT id, nickname, email, password_hash, tipo_utente, stato, codice_sicurezza FROM utenti WHERE email = ?");
                 $stmt->execute([$email]);
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($user) {
-                    // Verifica password
+                    // Verifica password con password_verify() invece di stored procedure
                     if (password_verify($password, $user['password_hash'])) {
                         // Verifica stato utente
                         if ($user['stato'] !== 'attivo') {
                             $error = "Il tuo account non è attivo. Contatta l'amministratore.";
                         } elseif ($user['tipo_utente'] === 'amministratore' && empty($admin_code)) {
                             $error = "Il codice amministratore è richiesto per account amministratore.";
-                        } elseif ($user['tipo_utente'] === 'amministratore' && $admin_code !== 'ADMIN2024') {
+                        } elseif ($user['tipo_utente'] === 'amministratore' && $admin_code !== 'ADMIN001') {
                             $error = "Codice amministratore non valido.";
                         } else {
                             // Login riuscito
@@ -109,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if ($user['tipo_utente'] === 'amministratore') {
                                 header("Location: ../admin/dashboard.php");
                             } else {
-                                header("Location: ../dashboard.php");
+                                header("Location: ../dash.php");
                             }
                             exit;
                         }
@@ -142,20 +132,6 @@ require_once '../includes/head.php';
 ?>
 
 <body class="d-flex align-items-center justify-content-center min-vh-100">
-    <!-- Navbar minima -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="../home.php">
-                <i class="fas fa-rocket me-2"></i>BOSTARTER
-            </a>
-
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="../home.php">
-                    <i class="fas fa-home me-1"></i>Home
-                </a>
-            </div>
-        </div>
-    </nav>
 
     <!-- Container principale -->
     <div class="container">
@@ -205,6 +181,9 @@ require_once '../includes/head.php';
                                 <input type="email" class="form-control form-control-lg border-0 shadow-sm"
                                        id="email" name="email" placeholder="nome@esempio.com"
                                        value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
+                                <div class="form-text">
+                                    <small class="text-muted">Per account amministratore, il campo codice apparirà automaticamente</small>
+                                </div>
                             </div>
 
                             <!-- Campo Password -->
@@ -216,13 +195,23 @@ require_once '../includes/head.php';
                                        id="password" name="password" placeholder="La tua password" required>
                             </div>
 
-                            <!-- Campo Codice Amministratore (nascosto inizialmente) -->
-                            <div class="mb-4 admin-code-container" id="adminCodeContainer" style="display: none;">
+                            <!-- Campo Codice Amministratore -->
+                            <div class="mb-4 admin-code-container" id="adminCodeContainer" style="<?php
+                                // Mostra sempre se l'email POST contiene admin o se c'è un errore admin
+                                $showAdminField = false;
+                                if (isset($_POST['email']) && (stripos($_POST['email'], 'admin') !== false || stripos($_POST['email'], '@bostarter.it') !== false)) {
+                                    $showAdminField = true;
+                                } elseif (isset($error) && strpos($error, 'codice amministratore') !== false) {
+                                    $showAdminField = true;
+                                }
+                                echo $showAdminField ? 'display: block;' : 'display: none;';
+                            ?>">
                                 <label for="admin_code" class="form-label fw-semibold">
                                     <i class="fas fa-shield-alt me-2 text-muted"></i>Codice Amministratore
                                 </label>
                                 <input type="password" class="form-control form-control-lg border-0 shadow-sm"
-                                       id="admin_code" name="admin_code" placeholder="Codice di sicurezza">
+                                       id="admin_code" name="admin_code" placeholder="Codice di sicurezza"
+                                       value="<?php echo htmlspecialchars($_POST['admin_code'] ?? ''); ?>">
                                 <div class="form-text">
                                     <small class="text-muted">Richiesto solo per account amministratore</small>
                                 </div>
@@ -242,7 +231,7 @@ require_once '../includes/head.php';
                                 </a>
                             </p>
                             <p class="mb-0">
-                                <a href="../home.php" class="text-decoration-none text-muted">
+                                <a href="../../home.php" class="text-decoration-none text-muted">
                                     <i class="fas fa-arrow-left me-1"></i>Torna alla Home
                                 </a>
                             </p>
@@ -254,9 +243,9 @@ require_once '../includes/head.php';
                         <div class="text-center">
                             <small class="text-muted">
                                 <strong>Account di test:</strong><br>
-                                Email: <code>admin@bostarter.com</code><br>
+                                Email: <code>admin@bostarter.it</code><br>
                                 Password: <code>admin123</code><br>
-                                Codice Admin: <code>ADMIN2024</code>
+                                Codice Admin: <code>ADMIN001</code>
                             </small>
                         </div>
                         <?php endif; ?>
@@ -267,9 +256,9 @@ require_once '../includes/head.php';
     </div>
 
     <!-- Script personalizzato per login -->
-    <script src="../assets/js/login.js"></script>
+    <script src="../../assets/js/login.js"></script>
 
     <!-- JavaScript Ottimizzato -->
-    <script src="../assets/js/bostarter-optimized.min.js"></script>
+    <script src="../../assets/js/bostarter-optimized.min.js"></script>
 </body>
 </html>

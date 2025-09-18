@@ -1,25 +1,14 @@
 <?php
 /**
- * Pagina Statistiche BOSTARTER
- *
- * Visualizza statistiche complete della piattaforma:
- * - Statistiche generali (utenti, progetti, finanziamenti)
- * - Top 3 creatori per affidabilità
- * - Top 3 progetti vicini completamento
- * - Top 3 finanziatori più attivi
- * - Trend temporali e categorie
- * 
+ * Pagina statistiche BOSTARTER
+ * Dashboard analytics con classifiche e trend
  */
 
-// Avvia sessione
+// Include funzioni comuni
+require_once 'includes/functions.php';
+
+// Avvia sessione sicura
 session_start();
-
-/**
- * Verifica autenticazione utente
- */
-function isLoggedIn() {
-    return isset($_SESSION["user_id"]);
-}
 
 /**
  * Chiama API con gestione errori

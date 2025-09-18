@@ -20,10 +20,12 @@ $currentPath = $_SERVER['PHP_SELF'];
 $basePath = '';
 
 if (strpos($currentPath, '/admin/') !== false) {
-    $basePath = '../';
+    $basePath = '../../';
 } elseif (strpos($currentPath, '/auth/') !== false) {
-    $basePath = '../';
+    $basePath = '../../';
 } elseif (strpos($currentPath, '/includes/') !== false) {
+    $basePath = '../../';
+} else {
     $basePath = '../';
 }
 

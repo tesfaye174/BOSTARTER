@@ -1,19 +1,16 @@
--- =====================================================
--- BOSTARTER - Trigger di Automazione
--- =====================================================
--- Database: bostarter_italiano
--- Versione: 1.0
--- Data creazione: 2025
--- =====================================================
+
+-- BOSTARTER - Database Triggers
+
+
 
 USE bostarter_italiano;
 DELIMITER //
 
--- =====================================================
--- TRIGGER UTENTI
--- =====================================================
 
--- Trigger: Log registrazione utente
+-- AUTOMAZIONE UTENTI
+
+
+-- Registra automaticamente ogni nuova registrazione utente
 CREATE TRIGGER trg_log_registrazione_utente
 AFTER INSERT ON utenti
 FOR EACH ROW
@@ -22,12 +19,12 @@ BEGIN
         tipo_evento, descrizione, utente_id
     ) VALUES (
         'UTENTE_REGISTRATO',
-        CONCAT('Nuovo utente registrato: ', NEW.nickname, ' (', NEW.email, ')'),
+        CONCAT('Registrazione completata per: ', NEW.nickname, ' (', NEW.email, ')'),
         NEW.id
     );
 END //
 
--- Trigger: Log aggiornamento profilo utente
+-- Traccia modifiche al profilo utente
 CREATE TRIGGER trg_log_aggiornamento_utente
 AFTER UPDATE ON utenti
 FOR EACH ROW
@@ -36,18 +33,18 @@ BEGIN
         INSERT INTO log_eventi (
             tipo_evento, descrizione, utente_id
         ) VALUES (
-            'UTENTE_AGGIORNATO',
-            CONCAT('Profilo aggiornato per: ', NEW.nickname),
+            'PROFILO_AGGIORNATO',
+            CONCAT('Modifiche profilo per: ', NEW.nickname),
             NEW.id
         );
     END IF;
 END //
 
--- =====================================================
--- TRIGGER PROGETTI
--- =====================================================
 
--- Trigger: Incrementa contatore progetti creatore
+-- AUTOMAZIONE PROGETTI
+
+
+-- Aggiorna contatore progetti quando viene creato un nuovo progetto
 CREATE TRIGGER trg_incrementa_conteggio_progetti
 AFTER INSERT ON progetti
 FOR EACH ROW
@@ -57,7 +54,7 @@ BEGIN
     WHERE id = NEW.creatore_id;
 END //
 
--- Trigger: Log creazione progetto
+-- Registra automaticamente ogni nuovo progetto creato
 CREATE TRIGGER trg_log_creazione_progetto
 AFTER INSERT ON progetti
 FOR EACH ROW
@@ -66,13 +63,13 @@ BEGIN
         tipo_evento, descrizione, utente_id, progetto_id
     ) VALUES (
         'PROGETTO_CREATO',
-        CONCAT('Nuovo progetto creato: ', NEW.titolo, ' (', NEW.tipo_progetto, ')'),
+        CONCAT('Nuovo progetto pubblicato: ', NEW.titolo, ' (', NEW.tipo_progetto, ')'),
         NEW.creatore_id,
         NEW.id
     );
 END //
 
--- Trigger: Log aggiornamento progetto
+-- Traccia modifiche ai progetti esistenti
 CREATE TRIGGER trg_log_aggiornamento_progetto
 AFTER UPDATE ON progetti
 FOR EACH ROW
@@ -81,15 +78,15 @@ BEGIN
         INSERT INTO log_eventi (
             tipo_evento, descrizione, utente_id, progetto_id
         ) VALUES (
-            'PROGETTO_AGGIORNATO',
-            CONCAT('Progetto aggiornato: ', NEW.titolo),
+            'PROGETTO_MODIFICATO',
+            CONCAT('Aggiornamento progetto: ', NEW.titolo),
             NEW.creatore_id,
             NEW.id
         );
     END IF;
 END //
 
--- Trigger: Chiudi progetto automaticamente per data scadenza
+-- Chiude automaticamente progetti quando scade la data limite
 CREATE TRIGGER trg_chiudi_progetto_scadenza
 AFTER UPDATE ON progetti
 FOR EACH ROW
@@ -99,9 +96,9 @@ BEGIN
     END IF;
 END //
 
--- =====================================================
+
 -- TRIGGER FINANZIAMENTI
--- =====================================================
+
 
 -- Trigger: Log finanziamento
 CREATE TRIGGER trg_log_finanziamento
@@ -213,9 +210,9 @@ BEGIN
     END IF;
 END //
 
--- =====================================================
+
 -- TRIGGER COMMENTI
--- =====================================================
+
 
 -- Trigger: Log commento
 CREATE TRIGGER trg_log_commento
@@ -285,9 +282,9 @@ BEGIN
     END IF;
 END //
 
--- =====================================================
+
 -- TRIGGER CANDIDATURE
--- =====================================================
+
 
 -- Trigger: Log candidatura
 CREATE TRIGGER trg_log_candidatura
@@ -321,9 +318,8 @@ BEGIN
     END IF;
 END //
 
--- =====================================================
 -- TRIGGER COMPETENZE
--- =====================================================
+
 
 -- Trigger: Log aggiunta competenza
 CREATE TRIGGER trg_log_aggiunta_competenza
@@ -353,9 +349,9 @@ BEGIN
     );
 END //
 
--- =====================================================
+
 -- TRIGGER REWARDS
--- =====================================================
+
 
 -- Trigger: Log creazione reward
 CREATE TRIGGER trg_log_creazione_reward
@@ -383,9 +379,8 @@ BEGIN
     END IF;
 END //
 
--- =====================================================
 -- TRIGGER COMPONENTI HARDWARE
--- =====================================================
+
 
 -- Trigger: Log aggiunta componente hardware
 CREATE TRIGGER trg_log_componente_hardware
@@ -401,9 +396,8 @@ BEGIN
     );
 END //
 
--- =====================================================
 -- TRIGGER PROFILI SOFTWARE
--- =====================================================
+
 
 -- Trigger: Log creazione profilo software
 CREATE TRIGGER trg_log_creazione_profilo
@@ -433,9 +427,9 @@ BEGIN
     );
 END //
 
--- =====================================================
+
 -- TRIGGER SESSIONI UTENTE
--- =====================================================
+
 
 -- Trigger: Log login utente
 CREATE TRIGGER trg_log_login_utente
@@ -451,9 +445,9 @@ BEGIN
     );
 END //
 
--- =====================================================
+
 -- TRIGGER NOTIFICHE
--- =====================================================
+
 
 -- Trigger: Crea notifica per nuovo commento
 CREATE TRIGGER trg_notifica_nuovo_commento
@@ -524,9 +518,8 @@ BEGIN
     );
 END //
 
--- =====================================================
 -- TRIGGER DI PULIZIA E MANUTENZIONE
--- =====================================================
+
 
 -- Trigger: Rimuovi notifiche lette dopo 30 giorni
 CREATE TRIGGER trg_pulisci_notifiche_lette

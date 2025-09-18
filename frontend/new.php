@@ -1,35 +1,20 @@
 <?php
 /**
- * Creazione Nuovo Progetto BOSTARTER
- *
- * Form completo per creare progetti:
- * - Informazioni base (nome, descrizione, categoria)
- * - Obiettivo finanziario e scadenza
- * - Tipo progetto (hardware/software)
- * - Validazione e invio sicuro
+ * Creazione progetto BOSTARTER
+ * Form creazione progetti con validazione
  */
+
+// Include funzioni comuni
+require_once 'includes/functions.php';
+
 session_start();
 
-/**
- * Verifica autenticazione utente
- */
-function isLoggedIn() {
-    return isset($_SESSION["user_id"]);
-}
-
-/**
- * Ottieni tipo utente dalla sessione
- */
-function getUserType() {
-    return $_SESSION['user_type'] ?? '';
-}
-
-// Connessione database
+// Connessione database e modelli
 require_once __DIR__ . '/../backend/config/database.php';
 require_once __DIR__ . '/../backend/models/Project.php';
 require_once __DIR__ . '/../backend/utils/RoleManager.php';
 
-// Verifica permessi
+// Controllo autorizzazioni
 $roleManager = new RoleManager();
 if (!$roleManager->isAuthenticated()) {
     header('Location: auth/login.php?msg=login_required');

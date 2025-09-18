@@ -1,24 +1,25 @@
--- =====================================================
+
 -- BOSTARTER - DEPLOYMENT COMPLETO DATABASE
--- =====================================================
+
 -- Database: bostarter_italiano
--- Versione: 1.0
+-- Versione: 2.0
 -- Data creazione: 2025
--- =====================================================
+
 -- File combinato per deployment completo
--- Esegue: Schema + Stored Procedures + Trigger
--- =====================================================
+-- Include: Schema + Stored Procedures + Trigger + Viste
+
 
 -- Creazione database
-CREATE DATABASE IF NOT EXISTS bostarter_italiano
+DROP DATABASE IF EXISTS bostarter_italiano;
+CREATE DATABASE bostarter_italiano
 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE bostarter_italiano;
 
--- =====================================================
--- SCHEMA DATABASE
--- =====================================================
 
--- 1. Tabella Utenti
+-- SCHEMA DATABASE
+
+
+-- Utenti registrati
 CREATE TABLE utenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -41,7 +42,7 @@ CREATE TABLE utenti (
     INDEX idx_stato (stato)
 );
 
--- 2. Tabella Competenze
+-- Catalogo competenze
 CREATE TABLE competenze (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL UNIQUE,
@@ -54,7 +55,7 @@ CREATE TABLE competenze (
     INDEX idx_categoria (categoria)
 );
 
--- 3. Tabella Progetti
+-- Progetti pubblicati
 CREATE TABLE progetti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     titolo VARCHAR(200) NOT NULL,
@@ -75,7 +76,7 @@ CREATE TABLE progetti (
     INDEX idx_categoria (categoria)
 );
 
--- 4. Tabella Rewards/Ricompense
+-- Ricompense progetto
 CREATE TABLE rewards (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -90,7 +91,7 @@ CREATE TABLE rewards (
     INDEX idx_progetto (progetto_id)
 );
 
--- 5. Tabella Finanziamenti
+-- Transazioni finanziarie
 CREATE TABLE finanziamenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -110,7 +111,7 @@ CREATE TABLE finanziamenti (
     INDEX idx_data (data_finanziamento)
 );
 
--- 6. Tabella Commenti
+-- Sistema commenti
 CREATE TABLE commenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -126,7 +127,7 @@ CREATE TABLE commenti (
     INDEX idx_data (data_commento)
 );
 
--- 7. Tabella Profili Software
+-- Profili lavoro software
 CREATE TABLE profili_software (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -137,7 +138,7 @@ CREATE TABLE profili_software (
     INDEX idx_progetto (progetto_id)
 );
 
--- 8. Tabella Candidature
+-- Candidature lavoro
 CREATE TABLE candidature (
     id INT PRIMARY KEY AUTO_INCREMENT,
     utente_id INT NOT NULL,
@@ -155,7 +156,7 @@ CREATE TABLE candidature (
     INDEX idx_stato (stato)
 );
 
--- 9. Tabella Skill Curriculum (Utente)
+-- Competenze utente
 CREATE TABLE skill_curriculum (
     id INT PRIMARY KEY AUTO_INCREMENT,
     utente_id INT NOT NULL,
@@ -169,7 +170,7 @@ CREATE TABLE skill_curriculum (
     INDEX idx_competenza (competenza_id)
 );
 
--- 10. Tabella Skill Profilo (Richiesti)
+-- Requisiti competenze progetto
 CREATE TABLE skill_profilo (
     id INT PRIMARY KEY AUTO_INCREMENT,
     profilo_id INT NOT NULL,
@@ -181,7 +182,7 @@ CREATE TABLE skill_profilo (
     INDEX idx_competenza (competenza_id)
 );
 
--- 11. Tabella Componenti Hardware
+-- Componenti hardware progetto
 CREATE TABLE componenti_hardware (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -195,7 +196,7 @@ CREATE TABLE componenti_hardware (
     INDEX idx_progetto (progetto_id)
 );
 
--- 12. Tabella Like Commenti
+-- Like/dislike commenti
 CREATE TABLE like_commenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     commento_id INT NOT NULL,
@@ -209,7 +210,7 @@ CREATE TABLE like_commenti (
     INDEX idx_utente (utente_id)
 );
 
--- 13. Tabella Risposte Commenti
+-- Risposte commenti
 CREATE TABLE risposte_commenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     commento_id INT NOT NULL UNIQUE,
@@ -219,7 +220,7 @@ CREATE TABLE risposte_commenti (
     INDEX idx_commento (commento_id)
 );
 
--- 14. Tabella Notifiche
+-- Sistema notifiche
 CREATE TABLE notifiche (
     id INT PRIMARY KEY AUTO_INCREMENT,
     utente_id INT NOT NULL,
@@ -234,7 +235,7 @@ CREATE TABLE notifiche (
     INDEX idx_letta (letta)
 );
 
--- 15. Tabella Log Eventi
+-- Log eventi sistema
 CREATE TABLE log_eventi (
     id INT PRIMARY KEY AUTO_INCREMENT,
     tipo_evento VARCHAR(50) NOT NULL,
@@ -252,7 +253,7 @@ CREATE TABLE log_eventi (
     INDEX idx_progetto (progetto_id)
 );
 
--- 16. Tabella Sessioni Utente
+-- Sessioni utente
 CREATE TABLE sessioni_utente (
     id INT PRIMARY KEY AUTO_INCREMENT,
     utente_id INT NOT NULL,
@@ -266,11 +267,9 @@ CREATE TABLE sessioni_utente (
     INDEX idx_utente (utente_id)
 );
 
--- =====================================================
 -- VISTE STATISTICHE
--- =====================================================
 
--- Vista: Top 3 creatori per affidabilità
+-- Top creators by reliability ranking
 CREATE VIEW top_creatori_affidabilita AS
 SELECT
     u.id,
@@ -341,13 +340,312 @@ SELECT
     (SELECT AVG(affidabilita) FROM utenti WHERE tipo_utente = 'creatore' AND affidabilita > 0) as affidabilita_media
 FROM dual;
 
--- =====================================================
+-- STORED PROCEDURES
+
+
+DELIMITER //
+
+-- Procedura: Registrazione utente sicura
+CREATE PROCEDURE registra_utente(
+    IN p_email VARCHAR(255),
+    IN p_nickname VARCHAR(100),
+    IN p_password VARCHAR(255),
+    IN p_nome VARCHAR(100),
+    IN p_cognome VARCHAR(100),
+    IN p_anno_nascita YEAR,
+    IN p_luogo_nascita VARCHAR(100),
+    IN p_tipo ENUM('utente','creatore','amministratore')
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Verifica unicità email
+    IF EXISTS (SELECT 1 FROM utenti WHERE email = p_email) THEN
+        SELECT FALSE AS success, 'Email già registrata' AS error, NULL AS user_id;
+        ROLLBACK;
+    END IF;
+
+    -- Verifica unicità nickname
+    IF EXISTS (SELECT 1 FROM utenti WHERE nickname = p_nickname) THEN
+        SELECT FALSE AS success, 'Nickname già in uso' AS error, NULL AS user_id;
+        ROLLBACK;
+    END IF;
+
+    -- Validazione tipo utente
+    IF p_tipo NOT IN ('utente','creatore','amministratore') THEN
+        SELECT FALSE AS success, 'Tipo utente non valido' AS error, NULL AS user_id;
+        ROLLBACK;
+    END IF;
+
+    -- Inserisci utente con password hash sicura
+    INSERT INTO utenti (
+        email, nickname, password_hash, nome, cognome,
+        anno_nascita, luogo_nascita, tipo_utente
+    ) VALUES (
+        p_email, p_nickname, PASSWORD(p_password), p_nome, p_cognome,
+        p_anno_nascita, p_luogo_nascita, p_tipo
+    );
+
+    -- Restituisci successo con ID utente
+    SELECT TRUE AS success, NULL AS error, LAST_INSERT_ID() AS user_id;
+
+    COMMIT;
+END //
+
+-- Procedura: Autenticazione utente con supporto multi-ruolo
+CREATE PROCEDURE autentica_utente(
+    IN p_email VARCHAR(255),
+    IN p_password VARCHAR(255)
+)
+BEGIN
+    DECLARE user_count INT DEFAULT 0;
+    DECLARE stored_password VARCHAR(255);
+    DECLARE user_id INT;
+    DECLARE user_tipo VARCHAR(20);
+    DECLARE user_codice_sicurezza VARCHAR(10);
+    DECLARE user_stato VARCHAR(20);
+
+    -- Verifica se l'utente esiste e recupera i dati
+    SELECT COUNT(*), password_hash, id, tipo_utente, codice_sicurezza, stato
+    INTO user_count, stored_password, user_id, user_tipo, user_codice_sicurezza, user_stato
+    FROM utenti
+    WHERE email = p_email;
+
+    -- Se l'utente non esiste o la password non corrisponde
+    IF user_count = 0 OR stored_password != PASSWORD(p_password) THEN
+        SELECT FALSE AS success, 'Credenziali non valide' AS message, NULL AS user_id, NULL AS tipo, NULL AS codice_sicurezza;
+    ELSEIF user_stato != 'attivo' THEN
+        SELECT FALSE AS success, 'Account non attivo' AS message, NULL AS user_id, NULL AS tipo, NULL AS codice_sicurezza;
+    ELSE
+        -- Aggiorna ultimo accesso
+        UPDATE utenti SET ultimo_accesso = NOW() WHERE id = user_id;
+
+        -- Restituisci dati utente (incluso codice sicurezza per verifica admin)
+        SELECT TRUE AS success, 'Autenticazione riuscita' AS message, user_id, user_tipo AS tipo, user_codice_sicurezza AS codice_sicurezza;
+    END IF;
+END //
+
+-- Procedura: Crea progetto
+CREATE PROCEDURE crea_progetto(
+    IN p_creatore_id INT,
+    IN p_titolo VARCHAR(200),
+    IN p_descrizione TEXT,
+    IN p_categoria VARCHAR(50),
+    IN p_tipo_progetto ENUM('hardware','software'),
+    IN p_budget DECIMAL(10,2),
+    IN p_data_limite DATE,
+    IN p_immagine VARCHAR(255)
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Verifica che il creatore esista e sia attivo
+    IF NOT EXISTS (SELECT 1 FROM utenti WHERE id = p_creatore_id AND stato = 'attivo') THEN
+        SELECT FALSE AS success, 'Creatore non valido' AS error, NULL AS project_id;
+        ROLLBACK;
+    END IF;
+
+    -- Verifica che il creatore abbia il ruolo appropriato
+    IF NOT EXISTS (SELECT 1 FROM utenti WHERE id = p_creatore_id AND tipo_utente IN ('creatore','amministratore')) THEN
+        SELECT FALSE AS success, 'Solo creatori possono creare progetti' AS error, NULL AS project_id;
+        ROLLBACK;
+    END IF;
+
+    -- Validazione budget minimo
+    IF p_budget < 100 THEN
+        SELECT FALSE AS success, 'Budget minimo €100' AS error, NULL AS project_id;
+        ROLLBACK;
+    END IF;
+
+    -- Validazione data limite
+    IF p_data_limite <= CURDATE() THEN
+        SELECT FALSE AS success, 'Data limite deve essere futura' AS error, NULL AS project_id;
+        ROLLBACK;
+    END IF;
+
+    -- Inserisci progetto
+    INSERT INTO progetti (
+        creatore_id, titolo, descrizione, categoria, tipo_progetto,
+        budget_richiesto, data_limite, immagine
+    ) VALUES (
+        p_creatore_id, p_titolo, p_descrizione, p_categoria, p_tipo_progetto,
+        p_budget, p_data_limite, p_immagine
+    );
+
+    -- Restituisci successo con ID progetto
+    SELECT TRUE AS success, 'Progetto creato con successo' AS message, LAST_INSERT_ID() AS project_id;
+
+    COMMIT;
+END //
+
+-- Procedura: Effettua finanziamento
+CREATE PROCEDURE effettua_finanziamento(
+    IN p_utente_id INT,
+    IN p_progetto_id INT,
+    IN p_importo DECIMAL(10,2),
+    IN p_reward_id INT,
+    IN p_metodo_pagamento VARCHAR(50),
+    IN p_note TEXT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Verifica che l'utente esista e sia attivo
+    IF NOT EXISTS (SELECT 1 FROM utenti WHERE id = p_utente_id AND stato = 'attivo') THEN
+        SELECT FALSE AS success, 'Utente non valido' AS error, NULL AS financing_id;
+        ROLLBACK;
+    END IF;
+
+    -- Verifica che il progetto esista e sia aperto
+    IF NOT EXISTS (SELECT 1 FROM progetti WHERE id = p_progetto_id AND stato = 'aperto') THEN
+        SELECT FALSE AS success, 'Progetto non disponibile' AS error, NULL AS financing_id;
+        ROLLBACK;
+    END IF;
+
+    -- Validazione importo minimo
+    IF p_importo < 1 THEN
+        SELECT FALSE AS success, 'Importo minimo €1' AS error, NULL AS financing_id;
+        ROLLBACK;
+    END IF;
+
+    -- Inserisci finanziamento
+    INSERT INTO finanziamenti (
+        utente_id, progetto_id, importo, reward_id, metodo_pagamento, note
+    ) VALUES (
+        p_utente_id, p_progetto_id, p_importo, p_reward_id, p_metodo_pagamento, p_note
+    );
+
+    -- Restituisci successo
+    SELECT TRUE AS success, 'Finanziamento effettuato con successo' AS message, LAST_INSERT_ID() AS financing_id;
+
+    COMMIT;
+END //
+
+-- Procedura: Inserisci commento
+CREATE PROCEDURE inserisci_commento(
+    IN p_utente_id INT,
+    IN p_progetto_id INT,
+    IN p_testo TEXT
+)
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    -- Verifica che l'utente esista e sia attivo
+    IF NOT EXISTS (SELECT 1 FROM utenti WHERE id = p_utente_id AND stato = 'attivo') THEN
+        SELECT FALSE AS success, 'Utente non valido' AS error, NULL AS comment_id;
+        ROLLBACK;
+    END IF;
+
+    -- Verifica che il progetto esista
+    IF NOT EXISTS (SELECT 1 FROM progetti WHERE id = p_progetto_id) THEN
+        SELECT FALSE AS success, 'Progetto non trovato' AS error, NULL AS comment_id;
+        ROLLBACK;
+    END IF;
+
+    -- Validazione testo commento
+    IF LENGTH(TRIM(p_testo)) < 5 THEN
+        SELECT FALSE AS success, 'Commento troppo breve' AS error, NULL AS comment_id;
+        ROLLBACK;
+    END IF;
+
+    -- Inserisci commento
+    INSERT INTO commenti (utente_id, progetto_id, testo)
+    VALUES (p_utente_id, p_progetto_id, p_testo);
+
+    -- Restituisci successo
+    SELECT TRUE AS success, 'Commento aggiunto con successo' AS message, LAST_INSERT_ID() AS comment_id;
+
+    COMMIT;
+END //
+
+DELIMITER ;
+
+-- TRIGGER DI AUTOMAZIONE
+
+
+DELIMITER //
+
+-- Trigger: Log registrazione utente
+CREATE TRIGGER trg_log_registrazione_utente
+AFTER INSERT ON utenti
+FOR EACH ROW
+BEGIN
+    INSERT INTO log_eventi (
+        tipo_evento, descrizione, utente_id
+    ) VALUES (
+        'UTENTE_REGISTRATO',
+        CONCAT('Nuovo utente registrato: ', NEW.nickname, ' (', NEW.email, ')'),
+        NEW.id
+    );
+END //
+
+-- Trigger: Incrementa contatore progetti creatore
+CREATE TRIGGER trg_incrementa_conteggio_progetti
+AFTER INSERT ON progetti
+FOR EACH ROW
+BEGIN
+    UPDATE utenti
+    SET nr_progetti = nr_progetti + 1
+    WHERE id = NEW.creatore_id;
+END //
+
+-- Trigger: Log creazione progetto
+CREATE TRIGGER trg_log_creazione_progetto
+AFTER INSERT ON progetti
+FOR EACH ROW
+BEGIN
+    INSERT INTO log_eventi (
+        tipo_evento, descrizione, utente_id, progetto_id
+    ) VALUES (
+        'PROGETTO_CREATO',
+        CONCAT('Nuovo progetto creato: ', NEW.titolo, ' (', NEW.tipo_progetto, ')'),
+        NEW.creatore_id,
+        NEW.id
+    );
+END //
+
+-- Trigger: Chiudi progetto automaticamente per data scadenza
+CREATE TRIGGER trg_chiudi_progetto_scadenza
+AFTER UPDATE ON progetti
+FOR EACH ROW
+BEGIN
+    IF OLD.stato = 'aperto' AND NEW.data_limite < CURDATE() THEN
+        UPDATE progetti SET stato = 'scaduto' WHERE id = NEW.id;
+    END IF;
+END //
+
+DELIMITER ;
+
 -- DATI DI ESEMPIO
--- =====================================================
+
 
 -- Amministratore di default
 INSERT INTO utenti (email, nickname, password_hash, nome, cognome, tipo_utente, codice_sicurezza)
-VALUES ('admin@bostarter.it', 'admin', SHA2('admin123', 256), 'Amministratore', 'Sistema', 'amministratore', 'ADMIN001');
+VALUES ('admin@bostarter.it', 'admin', PASSWORD('admin123'), 'Amministratore', 'Sistema', 'amministratore', 'ADMIN001');
 
 -- Competenze di base
 INSERT INTO competenze (nome, descrizione, categoria) VALUES
@@ -369,3 +667,4 @@ INSERT INTO competenze (nome, descrizione, categoria) VALUES
 ('Project Management', 'Gestione progetti e team', 'Management');
 
 COMMIT;
+

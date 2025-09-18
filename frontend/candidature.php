@@ -1,23 +1,13 @@
 <?php
 /**
- * GESTIONE CANDIDATURE BOSTARTER
- * Visualizzazione e gestione candidature per progetti software
+ * Gestione candidature BOSTARTER
+ * Visualizza e gestisci candidature progetti
  */
+
+// Include funzioni comuni
+require_once 'includes/functions.php';
+
 session_start();
-
-/**
- * Verifica autenticazione utente
- */
-function isAuthenticated() {
-    return isset($_SESSION["user_id"]);
-}
-
-/**
- * Recupera tipo utente dalla sessione
- */
-function getUserType() {
-    return $_SESSION['user_type'] ?? '';
-}
 
 /**
  * Effettua chiamate API sicure

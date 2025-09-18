@@ -1,19 +1,13 @@
--- =====================================================
--- BOSTARTER - Stored Procedures Complete
--- =====================================================
--- Database: bostarter_italiano
--- Versione: 1.0
--- Data creazione: 2025
--- =====================================================
+
+-- BOSTARTER - Stored Procedures
 
 USE bostarter_italiano;
 DELIMITER //
 
--- =====================================================
 -- GESTIONE UTENTI
--- =====================================================
 
--- Procedura: Registrazione utente sicura
+
+-- Registrazione nuovo utente con validazione completa
 CREATE PROCEDURE registra_utente(
     IN p_email VARCHAR(255),
     IN p_nickname VARCHAR(100),
@@ -33,40 +27,40 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Verifica unicità email
+    -- Controllo unicità indirizzo email
     IF EXISTS (SELECT 1 FROM utenti WHERE email = p_email) THEN
-        SELECT FALSE AS success, 'Email già registrata' AS error, NULL AS user_id;
+        SELECT FALSE AS success, 'Indirizzo email già utilizzato' AS error, NULL AS user_id;
         ROLLBACK;
     END IF;
 
-    -- Verifica unicità nickname
+    -- Controllo unicità nome utente
     IF EXISTS (SELECT 1 FROM utenti WHERE nickname = p_nickname) THEN
-        SELECT FALSE AS success, 'Nickname già in uso' AS error, NULL AS user_id;
+        SELECT FALSE AS success, 'Nome utente già in uso' AS error, NULL AS user_id;
         ROLLBACK;
     END IF;
 
-    -- Validazione tipo utente
+    -- Validazione ruolo utente
     IF p_tipo NOT IN ('utente','creatore','amministratore') THEN
-        SELECT FALSE AS success, 'Tipo utente non valido' AS error, NULL AS user_id;
+        SELECT FALSE AS success, 'Ruolo utente non valido' AS error, NULL AS user_id;
         ROLLBACK;
     END IF;
 
-    -- Inserisci utente con password hash sicura
+    -- Creazione account utente con hash password sicuro
     INSERT INTO utenti (
         email, nickname, password_hash, nome, cognome,
         anno_nascita, luogo_nascita, tipo_utente
     ) VALUES (
-        p_email, p_nickname, SHA2(p_password, 256), p_nome, p_cognome,
+        p_email, p_nickname, PASSWORD(p_password), p_nome, p_cognome,
         p_anno_nascita, p_luogo_nascita, p_tipo
     );
 
-    -- Restituisci successo con ID utente
+    -- Restituzione conferma registrazione
     SELECT TRUE AS success, NULL AS error, LAST_INSERT_ID() AS user_id;
 
     COMMIT;
 END //
 
--- Procedura: Autenticazione utente con supporto multi-ruolo
+-- Autenticazione utente con gestione sicurezza avanzata
 CREATE PROCEDURE autentica_utente(
     IN p_email VARCHAR(255),
     IN p_password VARCHAR(255)
@@ -79,27 +73,27 @@ BEGIN
     DECLARE user_codice_sicurezza VARCHAR(10);
     DECLARE user_stato VARCHAR(20);
 
-    -- Verifica se l'utente esiste e recupera i dati
+    -- Recupero dati utente per verifica
     SELECT COUNT(*), password_hash, id, tipo_utente, codice_sicurezza, stato
     INTO user_count, stored_password, user_id, user_tipo, user_codice_sicurezza, user_stato
     FROM utenti
     WHERE email = p_email;
 
-    -- Se l'utente non esiste o la password non corrisponde
-    IF user_count = 0 OR stored_password != SHA2(p_password, 256) THEN
-        SELECT FALSE AS success, 'Credenziali non valide' AS message, NULL AS user_id, NULL AS tipo, NULL AS codice_sicurezza;
+    -- Verifica credenziali e stato account
+    IF user_count = 0 OR stored_password != PASSWORD(p_password) THEN
+        SELECT FALSE AS success, 'Credenziali di accesso non valide' AS message, NULL AS user_id, NULL AS tipo, NULL AS codice_sicurezza;
     ELSEIF user_stato != 'attivo' THEN
-        SELECT FALSE AS success, 'Account non attivo' AS message, NULL AS user_id, NULL AS tipo, NULL AS codice_sicurezza;
+        SELECT FALSE AS success, 'Account utente non attivo' AS message, NULL AS user_id, NULL AS tipo, NULL AS codice_sicurezza;
     ELSE
-        -- Aggiorna ultimo accesso
+        -- Aggiornamento timestamp ultimo accesso
         UPDATE utenti SET ultimo_accesso = NOW() WHERE id = user_id;
 
-        -- Restituisci dati utente (incluso codice sicurezza per verifica admin)
-        SELECT TRUE AS success, 'Autenticazione riuscita' AS message, user_id, user_tipo AS tipo, user_codice_sicurezza AS codice_sicurezza;
+        -- Restituzione dati sessione utente
+        SELECT TRUE AS success, 'Accesso effettuato con successo' AS message, user_id, user_tipo AS tipo, user_codice_sicurezza AS codice_sicurezza;
     END IF;
 END //
 
--- Procedura: Aggiorna profilo utente
+-- Aggiornamento informazioni profilo utente
 CREATE PROCEDURE aggiorna_profilo_utente(
     IN p_user_id INT,
     IN p_nome VARCHAR(100),
@@ -116,13 +110,13 @@ BEGIN
 
     START TRANSACTION;
 
-    -- Verifica che l'utente esista
+    -- Controllo esistenza utente
     IF NOT EXISTS (SELECT 1 FROM utenti WHERE id = p_user_id) THEN
         SELECT FALSE AS success, 'Utente non trovato' AS error;
         ROLLBACK;
     END IF;
 
-    -- Aggiorna i dati del profilo
+    -- Modifica dati profilo personale
     UPDATE utenti SET
         nome = p_nome,
         cognome = p_cognome,
@@ -135,11 +129,10 @@ BEGIN
     COMMIT;
 END //
 
--- =====================================================
 -- GESTIONE PROGETTI
--- =====================================================
 
--- Procedura: Creazione progetto
+
+-- Pubblicazione nuovo progetto con validazione completa
 CREATE PROCEDURE crea_progetto(
     IN p_creatore_id INT,
     IN p_titolo VARCHAR(200),
@@ -183,7 +176,7 @@ BEGIN
         ROLLBACK;
     END IF;
 
-    -- Inserisci progetto
+    -- Pubblicazione progetto nel database
     INSERT INTO progetti (
         creatore_id, titolo, descrizione, categoria, tipo_progetto,
         budget_richiesto, data_limite, immagine
@@ -192,13 +185,13 @@ BEGIN
         p_budget, p_data_limite, p_immagine
     );
 
-    -- Restituisci successo con ID progetto
+    -- Conferma pubblicazione riuscita
     SELECT TRUE AS success, 'Progetto creato con successo' AS message, LAST_INSERT_ID() AS project_id;
 
     COMMIT;
 END //
 
--- Procedura: Aggiorna progetto
+-- Modifica progetto esistente con controlli di sicurezza
 CREATE PROCEDURE aggiorna_progetto(
     IN p_progetto_id INT,
     IN p_creatore_id INT,
@@ -229,7 +222,7 @@ BEGIN
         ROLLBACK;
     END IF;
 
-    -- Aggiorna progetto
+    -- Modifica dettagli progetto
     UPDATE progetti SET
         titolo = p_titolo,
         descrizione = p_descrizione,
@@ -243,11 +236,11 @@ BEGIN
     COMMIT;
 END //
 
--- =====================================================
--- GESTIONE FINANZIAMENTI
--- =====================================================
 
--- Procedura: Effettua finanziamento
+-- GESTIONE FINANZIAMENTI
+
+
+-- Elaborazione contributo finanziario a progetto
 CREATE PROCEDURE effettua_finanziamento(
     IN p_utente_id INT,
     IN p_progetto_id INT,
@@ -330,9 +323,9 @@ BEGIN
     COMMIT;
 END //
 
--- =====================================================
+
 -- GESTIONE COMMENTI
--- =====================================================
+
 
 -- Procedura: Inserisci commento
 CREATE PROCEDURE inserisci_commento(
@@ -461,9 +454,8 @@ BEGIN
     COMMIT;
 END //
 
--- =====================================================
 -- GESTIONE COMPETENZE E SKILL
--- =====================================================
+
 
 -- Procedura: Aggiungi competenza
 CREATE PROCEDURE aggiungi_competenza(
@@ -539,9 +531,8 @@ BEGIN
     COMMIT;
 END //
 
--- =====================================================
 -- GESTIONE PROFILI E CANDIDATURE
--- =====================================================
+
 
 -- Procedura: Crea profilo software
 CREATE PROCEDURE crea_profilo_software(
@@ -707,9 +698,8 @@ BEGIN
     COMMIT;
 END //
 
--- =====================================================
 -- GESTIONE COMPONENTI HARDWARE
--- =====================================================
+
 
 -- Procedura: Aggiungi componente hardware
 CREATE PROCEDURE aggiungi_componente_hardware(
@@ -760,9 +750,9 @@ BEGIN
     COMMIT;
 END //
 
--- =====================================================
+
 -- GESTIONE REWARDS
--- =====================================================
+
 
 -- Procedura: Crea reward per progetto
 CREATE PROCEDURE crea_reward(
@@ -807,9 +797,9 @@ BEGIN
     COMMIT;
 END //
 
--- =====================================================
+
 -- STATISTICHE E REPORT
--- =====================================================
+
 
 -- Procedura: Ottieni statistiche generali
 CREATE PROCEDURE get_statistiche_generali()

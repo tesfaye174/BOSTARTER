@@ -57,7 +57,7 @@ class Candidatura {
             
             if ($profilo === null) {
                 $startTime = microtime(true);
-                $sql = "SELECT pr.*, p.tipo_progetto, p.stato, p.creatore_id FROM profili_richiesti pr JOIN progetti p ON pr.progetto_id = p.id WHERE pr.id = ? AND pr.is_active = TRUE";
+                $sql = "SELECT pr.*, p.tipo_progetto, p.stato, p.creatore_id FROM profili_richiesti pr JOIN progetti p ON pr.progetto_id = p.id WHERE pr.id = ? AND pr.1=1";
                 $stmt = $this->db->prepare($sql);
                 $stmt->execute([$data['profilo_id']]);
                 $profilo = $stmt->fetch();

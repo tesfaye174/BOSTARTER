@@ -1,28 +1,19 @@
 <?php
 /**
- * BOSTARTER - Gestione Skill Curriculum Utente
- *
- * Pagina per la gestione delle competenze personali dell'utente.
- * Permette di aggiungere, modificare, visualizzare le proprie skill.
- *
- * Funzionalità:
- * - Visualizzazione skill attuali con livelli
- * - Aggiunta nuove competenze
- * - Modifica livelli esistenti
- * - Rimozione skill (se necessario)
- *
- * @author BOSTARTER Development Team
- * @version 2.0
- * @since 2025
+ * Gestione competenze utente BOSTARTER
+ * Aggiunta, modifica e rimozione skill personali
  */
 
+// Avvia sessione sicura
 session_start();
 
+// Controllo autenticazione
 if (!isset($_SESSION['user_id'])) {
     header('Location: auth/login.php');
     exit;
 }
 
+// Dati utente dalla sessione
 $user_id = $_SESSION['user_id'];
 $user_type = $_SESSION['tipo_utente'] ?? '';
 $nickname = $_SESSION['nickname'] ?? '';

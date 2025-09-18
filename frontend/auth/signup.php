@@ -1,51 +1,15 @@
 <?php
 /**
- * Pagina Registrazione BOSTARTER
- *
- * Registrazione nuovi utenti con supporto multi-ruolo:
- * - Utenti normali e creatori
- * - Amministratori con codice sicurezza
- * - Validazione completa e hashing sicuro
+ * Pagina registrazione BOSTARTER
+ * Form iscrizione con validazione sicura
  */
+
+// Include funzioni comuni
+require_once '../includes/functions.php';
 
 // Avvia sessione sicura
 session_start();
 require_once __DIR__ . "/../../backend/config/database.php";
-
-/**
- * Verifica se utente già autenticato
- */
-function isLoggedIn() {
-    return isset($_SESSION["user_id"]);
-}
-
-/**
- * Seleziona messaggio casuale da array
- */
-function getRandomMessage($messages) {
-    return $messages[array_rand($messages)];
-}
-
-/**
- * Valida forza password
- */
-function isValidPassword($password) {
-    return strlen($password) >= 8 &&
-           preg_match('/[A-Z]/', $password) &&
-           preg_match('/[a-z]/', $password) &&
-           preg_match('/[0-9]/', $password);
-}
-
-/**
- * Genera token CSRF sicuro
- * @return string Token CSRF
- */
-function generate_csrf_token() {
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
-}
 
 // Reindirizza se già loggato
 if (isLoggedIn()) {
@@ -155,38 +119,47 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // Verifica codice amministratore se necessario
             if ($tipoUtente === "amministratore") {
                 // Includi header comune
-                require_once 'C:/xampp/htdocs/BOSTARTER/backend/config/SecurityConfig.php';
-                if ($adminCode !== "ADMIN2024") {
+                require_once __DIR__ . '/../../backend/config/SecurityConfig.php';
+                if ($adminCode !== "ADMIN001") {
                     $error = getRandomMessage($errorMessages["admin_code_wrong"]);
                 }
             }
 
             // Se non ci sono errori, procedi con la registrazione
             if (empty($error)) {
-                // Utilizzo stored procedure per la registrazione sicura
-                $stmt = $conn->prepare("CALL registra_utente(?, ?, ?, ?, ?, ?, ?, ?)");
+                // Registrazione diretta invece di stored procedure (per compatibilità hashing)
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+                $stmt = $conn->prepare("
+                    INSERT INTO utenti (
+                        email, nickname, password_hash, nome, cognome,
+                        anno_nascita, luogo_nascita, tipo_utente, stato
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'attivo')
+                ");
+
                 $stmt->execute([
                     $email,
                     $nickname,
-                    $password,
+                    $hashedPassword,
                     $nome,
                     $cognome,
-                    $annoNascita,
-                    $luogoNascita,
+                    $annoNascita ?: null,
+                    $luogoNascita ?: null,
                     $tipoUtente
                 ]);
 
-                // Leggi il result set restituito dalla stored procedure
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $userId = $conn->lastInsertId();
 
-                if ($result && isset($result['success']) && $result['success']) {
-                    // Registrazione riuscita
-                    $message = getRandomMessage($successMessages);
-                    // Reindirizza alla dashboard dopo 3 secondi
-                    header("refresh:3;url=../dash.php");
-                } else {
-                    $error = $result['error'] ?? getRandomMessage($errorMessages["system_error"]);
+                // Se registrazione amministratore, imposta codice sicurezza
+                if ($tipoUtente === "amministratore") {
+                    $stmt = $conn->prepare("UPDATE utenti SET codice_sicurezza = ? WHERE id = ?");
+                    $stmt->execute([$adminCode, $userId]);
                 }
+
+                // Registrazione riuscita
+                $message = getRandomMessage($successMessages);
+                // Reindirizza alla dashboard dopo 3 secondi
+                header("refresh:3;url=../dash.php");
             }
         } catch (Exception $e) {
             error_log('Errore registrazione: ' . $e->getMessage());
@@ -208,20 +181,7 @@ require_once '../includes/head.php';
 ?>
 
 <body class="d-flex align-items-center justify-content-center min-vh-100 py-4">
-    <!-- Navbar minima -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="../home.php">
-                <i class="fas fa-rocket me-2"></i>BOSTARTER
-            </a>
-
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" href="../home.php">
-                    <i class="fas fa-home me-1"></i>Home
-                </a>
-            </div>
-        </div>
-    </nav>
+   
 
     <!-- Container principale -->
     <div class="container">
@@ -384,7 +344,7 @@ require_once '../includes/head.php';
                                 </a>
                             </p>
                             <p class="mb-0">
-                                <a href="../home.php" class="text-decoration-none text-muted">
+                                <a href="../../home.php" class="text-decoration-none text-muted">
                                     <i class="fas fa-arrow-left me-1"></i>Torna alla Home
                                 </a>
                             </p>
@@ -493,6 +453,6 @@ require_once '../includes/head.php';
     </script>
 
     <!-- JavaScript Ottimizzato -->
-    <script src="../assets/js/bostarter-optimized.min.js"></script>
+    <script src="../../assets/js/bostarter-optimized.min.js"></script>
 </body>
 </html>

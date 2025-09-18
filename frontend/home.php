@@ -1,56 +1,21 @@
 <?php
 /**
- * BOSTARTER - Homepage Moderna e Pulita
- *
- * Design minimalista con colori acromatici (bianco, nero, grigio)
- * - Layout moderno e responsive
- * - Animazioni sottili e eleganti
- * - Dark mode integrato
- * - Performance ottimizzata
+ * Homepage BOSTARTER - Design moderno e responsive
+ * Layout pulito con dark mode integrato
  */
 
-// Avvia sessione sicura
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Include funzioni comuni
+require_once 'includes/functions.php';
 
-// Configurazione errori per debug
+// Debug attivo in sviluppo
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Connessione database
-require_once __DIR__ . '/../backend/config/database.php';
-
-try {
-    $conn = Database::getInstance();
-} catch(Exception $e) {
-    error_log('Errore connessione database: ' . $e->getMessage());
+// Connessione database sicura
+$conn = getDatabaseConnection();
+if (!$conn) {
     header('Location: /error.php?code=500');
     exit();
-}
-
-/**
- * Verifica autenticazione utente
- */
-function isLoggedIn() {
-    return isset($_SESSION["user_id"]);
-}
-
-/**
- * Genera token CSRF sicuro
- */
-function generate_csrf_token() {
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
-    return $_SESSION['csrf_token'];
-}
-
-/**
- * Sanitizza output HTML
- */
-function sanitize_output($data) {
-    return htmlspecialchars($data ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 /**
@@ -63,10 +28,10 @@ function format_number($number) {
 // Titolo pagina
 $page_title = 'BOSTARTER - Piattaforma di Crowdfunding';
 
-// Inizializza CSRF token
+// Token CSRF per sicurezza
 $csrf_token = generate_csrf_token();
 
-// Gestione messaggio di logout
+// Messaggio logout se presente
 $logout_message = '';
 if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
     $user = isset($_GET['user']) ? sanitize_output($_GET['user']) : '';
@@ -75,7 +40,7 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'success') {
         : "Logout effettuato con successo!";
 }
 
-// Inizializzazione dati
+// Dati iniziali
 $progetti_evidenza = [];
 $top_creatori = [];
 $progetti_vicini = [];
@@ -106,8 +71,8 @@ function callAPI($url) {
     return json_decode($response, true);
 }
 
-// API base URL
-$api_base = 'http://localhost/BOSTARTER/backend/api/';
+// API base URL - usa percorso relativo invece di URL assoluto
+$api_base = '../backend/api/';
 
 // Carica dati dalle API
 $progetti_evidenza_data = callAPI($api_base . 'project.php?limit=3');
@@ -174,7 +139,7 @@ $top_finanziatori = $top_finanziatori_data['data'] ?? [];
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="progetti.php">
+                        <a class="nav-link" href="view.php">
                             <i class="fas fa-lightbulb me-1"></i>Progetti
                         </a>
                     </li>
@@ -190,7 +155,7 @@ $top_finanziatori = $top_finanziatori_data['data'] ?? [];
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="crea_progetto.php">
+                        <a class="nav-link" href="new.php">
                             <i class="fas fa-plus-circle me-1"></i>Crea Progetto
                         </a>
                     </li>
@@ -212,14 +177,14 @@ $top_finanziatori = $top_finanziatori_data['data'] ?? [];
                             <?php echo sanitize_output($_SESSION['nickname'] ?? 'Utente'); ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="profilo.php">
+                            <li><a class="dropdown-item" href="dash.php">
                                 <i class="fas fa-user me-2"></i>Profilo
                             </a></li>
-                            <li><a class="dropdown-item" href="dashboard.php">
+                            <li><a class="dropdown-item" href="dash.php">
                                 <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="logout.php">
+                            <li><a class="dropdown-item" href="auth/logout.php">
                                 <i class="fas fa-sign-out-alt me-2"></i>Logout
                             </a></li>
                         </ul>
@@ -252,7 +217,7 @@ $top_finanziatori = $top_finanziatori_data['data'] ?? [];
                         Sostieni creatori ambiziosi e porta idee innovative alla realtà con una piattaforma semplice e affidabile.
                     </p>
                     <div class="d-flex gap-3 justify-content-center flex-wrap animate-fade-up">
-                        <a href="progetti.php" class="btn btn-primary">
+                        <a href="view.php" class="btn btn-primary">
                             <i class="fas fa-search me-2"></i>Esplora Progetti
                         </a>
                         <a href="auth/signup.php" class="btn btn-outline-secondary">
@@ -280,7 +245,7 @@ $top_finanziatori = $top_finanziatori_data['data'] ?? [];
                 <div class="col-lg-4 col-md-6 animate-fade-up" style="animation-delay: <?php echo $index * 0.1; ?>s">
                     <div class="card h-100">
                         <?php
-                        $imagePath = !empty($project['immagine']) ? "../backend/uploads/{$project['immagine']}" : "assets/images/placeholder.jpg";
+                        $imagePath = !empty($project['immagine']) ? "assets/images/{$project['immagine']}" : "assets/images/placeholder.jpg";
                         $fallbackImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect width='400' height='200' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='16'%3EImmagine non disponibile%3C/text%3E%3C/svg%3E";
                         ?>
                         <img src="<?php echo $imagePath; ?>"
@@ -429,10 +394,10 @@ $top_finanziatori = $top_finanziatori_data['data'] ?? [];
                         Unisciti a centinaia di creatori che hanno trasformato le loro idee in realtà
                     </p>
                     <div class="d-flex gap-3 justify-content-center flex-wrap">
-                        <a href="crea_progetto.php" class="btn btn-light">
+                        <a href="new.php" class="btn btn-light">
                             <i class="fas fa-plus me-2"></i>Lancia il Tuo Progetto
                         </a>
-                        <a href="progetti.php" class="btn btn-outline-light">
+                        <a href="view.php" class="btn btn-outline-light">
                             <i class="fas fa-search me-2"></i>Sfoglia Tutti i Progetti
                         </a>
                     </div>
@@ -471,8 +436,8 @@ $top_finanziatori = $top_finanziatori_data['data'] ?? [];
                 <div class="col-lg-2 col-md-3">
                     <h6 class="mb-3">Piattaforma</h6>
                     <ul class="list-unstyled">
-                        <li class="mb-2"><a href="progetti.php">Progetti</a></li>
-                        <li class="mb-2"><a href="crea_progetto.php">Crea Progetto</a></li>
+                        <li class="mb-2"><a href="view.php">Progetti</a></li>
+                        <li class="mb-2"><a href="new.php">Crea Progetto</a></li>
                         <li class="mb-2"><a href="skill.php">Le Mie Skill</a></li>
                         <li class="mb-2"><a href="statistiche.php">Statistiche</a></li>
                     </ul>

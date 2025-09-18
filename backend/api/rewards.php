@@ -106,7 +106,7 @@ function getRewardsProgetto($progettoId) {
     $db = Database::getInstance()->getConnection();
     
     // Verifica che il progetto esista
-    $stmt = $db->prepare("SELECT id, nome FROM progetti WHERE id = ? AND is_active = TRUE");
+    $stmt = $db->prepare("SELECT id, nome FROM progetti WHERE id = ? AND 1=1");
     $stmt->execute([$progettoId]);
     if (!$stmt->fetch()) {
         return ['error' => 'Progetto non trovato'];
@@ -125,7 +125,7 @@ function getRewardsProgetto($progettoId) {
             is_active,
             created_at
         FROM rewards 
-        WHERE progetto_id = ? AND is_active = TRUE
+        WHERE progetto_id = ? AND 1=1
         ORDER BY importo_minimo ASC
     );
     $stmt->execute([$progettoId]);

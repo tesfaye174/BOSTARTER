@@ -147,7 +147,7 @@ function getFinanziamentiProgetto($progettoId) {
     $db = Database::getInstance()->getConnection();
     
     // Verifica che il progetto esista
-    $stmt = $db->prepare("SELECT id, nome FROM progetti WHERE id = ? AND is_active = TRUE");
+    $stmt = $db->prepare("SELECT id, nome FROM progetti WHERE id = ? AND 1=1");
     $stmt->execute([$progettoId]);
     if (!$stmt->fetch()) {
         return ['error' => 'Progetto non trovato'];
@@ -208,7 +208,7 @@ function creaFinanziamento($input, $utenteId) {
     
     try {
         // Verifica che il progetto esista e sia aperto
-        $stmt = $db->prepare("SELECT id, stato, budget_richiesto, budget_raccolto FROM progetti WHERE id = ? AND is_active = TRUE");
+        $stmt = $db->prepare("SELECT id, stato, budget_richiesto, budget_raccolto FROM progetti WHERE id = ? AND 1=1");
         $stmt->execute([$input['progetto_id']]);
         $progetto = $stmt->fetch();
         
@@ -232,7 +232,7 @@ function creaFinanziamento($input, $utenteId) {
             $stmt = $db->prepare(
                 "SELECT id, importo_minimo, quantita_disponibile, quantita_utilizzata 
                 FROM rewards 
-                WHERE id = ? AND progetto_id = ? AND is_active = TRUE"
+                WHERE id = ? AND progetto_id = ? AND 1=1"
             );
             $stmt->execute([$rewardId, $input['progetto_id']]);
             $reward = $stmt->fetch();

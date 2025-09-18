@@ -21,11 +21,11 @@ switch ($_SERVER['REQUEST_METHOD']) {
         } else {
             $filters = $_GET;
             $result = $project->getAll($filters);
-            // Support legacy getAll() which returns an array of projects,
-            // and newer implementations that return ['success'=>..., 'data'=>...]
+            // Supporta getAll() legacy che restituisce array di progetti,
+            // e implementazioni più recenti che restituiscono ['success'=>..., 'data'=>...]
             if (is_array($result) && isset($result['success'])) {
                 if ($result['success']) {
-                    // If structured result, try to send data.projects or data
+                // Se risultato strutturato, prova a inviare data.projects o data
                     if (isset($result['data']['projects'])) {
                         $apiResponse->sendSuccess($result['data']);
                     } else {
@@ -35,21 +35,21 @@ switch ($_SERVER['REQUEST_METHOD']) {
                     $apiResponse->sendError($result['error']);
                 }
             } else {
-                // Assume $result is a plain array of projects
+                // Presumi che $result sia un array semplice di progetti
                 $apiResponse->sendSuccess($result);
             }
         }
         break;
         
     case 'POST':
-    // POST request for project creation
+    // Richiesta POST per creazione progetto
         
         if (!$roleManager->isAuthenticated()) {
             $apiResponse->sendError('Per favore, effettua il login per continuare', 401);
             exit();
         }
         
-        // Basic CSRF verification: accept token in JSON body, header or POST
+        // Verifica CSRF di base: accetta token in body JSON, header o POST
         $security = Security::getInstance();
         $csrfToken = null;
         $rawForCsrf = file_get_contents('php://input');
@@ -67,14 +67,14 @@ switch ($_SERVER['REQUEST_METHOD']) {
             exit();
         }
 
-        // Support both JSON body and multipart/form-data with file upload
+        // Supporta sia body JSON che multipart/form-data con upload file
         $raw = file_get_contents('php://input');
         $input = json_decode($raw, true);
         if (!is_array($input)) {
-            // Try to read standard $_POST (multipart/form-data)
+            // Prova a leggere $_POST standard (multipart/form-data)
             $input = $_POST;
         }
-    // input parsed (json or post)
+    // input parsato (json o post)
 
         $requiredFields = ['nome', 'descrizione', 'budget_richiesto', 'data_limite', 'tipo'];
         foreach ($requiredFields as $field) {
@@ -95,8 +95,8 @@ switch ($_SERVER['REQUEST_METHOD']) {
             'immagine' => $input['immagine'] ?? null
         ];
 
-    // Uploads are not supported in this streamlined build (removed per request).
-    // The frontend should send JSON; no $_FILES/multipart handling is performed here.
+    // Upload non supportati in questa build semplificata (rimossi su richiesta).
+    // Il frontend dovrebbe inviare JSON; nessun handling $_FILES è eseguito qui.
 
         $result = $project->create($data);
         
@@ -119,7 +119,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
             exit();
         }
         
-        // CSRF check for update
+        // Verifica CSRF per aggiornamento
         $security = Security::getInstance();
         $rawPut = file_get_contents('php://input');
         $jsonPut = json_decode($rawPut, true);
@@ -153,7 +153,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
             exit();
         }
         
-        // CSRF check for delete (token via header preferred)
+        // Verifica CSRF per eliminazione (token via header preferibile)
         $security = Security::getInstance();
         $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
         if (!$security->verifyCSRFToken($csrfToken)) {

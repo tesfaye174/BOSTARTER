@@ -2,23 +2,58 @@
 // Gestisce l'attivazione dinamica del campo codice amministratore
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Attiva campo codice amministratore quando email contiene "admin"
     const emailInput = document.getElementById('email');
     const adminContainer = document.getElementById('adminCodeContainer');
     const adminCodeInput = document.getElementById('admin_code');
 
     if (emailInput && adminContainer && adminCodeInput) {
-        emailInput.addEventListener('input', function() {
-            const isAdmin = this.value.toLowerCase().includes('admin');
-
-            if (isAdmin) {
+        // Funzione per mostrare/nascondere il campo admin
+        function toggleAdminField(show) {
+            if (show) {
                 adminContainer.style.display = 'block';
                 adminContainer.classList.add('animate-fade-up');
                 adminCodeInput.required = true;
+                adminCodeInput.focus();
             } else {
                 adminContainer.style.display = 'none';
                 adminCodeInput.required = false;
                 adminCodeInput.value = '';
+            }
+        }
+
+        // Controlla se ci sono errori relativi al codice amministratore
+        const errorAlert = document.querySelector('.alert-danger');
+        if (errorAlert && errorAlert.textContent.toLowerCase().includes('codice amministratore')) {
+            toggleAdminField(true);
+        }
+
+        // Controlla se il campo admin è già visibile (impostato dal server)
+        if (adminContainer.style.display === 'block') {
+            adminCodeInput.required = true;
+        }
+
+        // Controllo dinamico basato sull'email
+        emailInput.addEventListener('input', function() {
+            const email = this.value.toLowerCase().trim();
+
+            // Mostra il campo se l'email contiene "admin" o se è un dominio amministrativo
+            const isAdmin = email.includes('admin') ||
+                          email.includes('@bostarter.it') ||
+                          email.includes('@admin.') ||
+                          email.includes('.admin');
+
+            toggleAdminField(isAdmin);
+        });
+
+        // Controllo anche al blur (quando l'utente finisce di digitare)
+        emailInput.addEventListener('blur', function() {
+            const email = this.value.toLowerCase().trim();
+
+            // Se l'email sembra essere di un admin ma il campo non è visibile, mostralo
+            if ((email.includes('admin') || email.includes('@bostarter.it')) &&
+                adminContainer.style.display === 'none') {
+                // Piccolo delay per UX migliore
+                setTimeout(() => toggleAdminField(true), 300);
             }
         });
     }

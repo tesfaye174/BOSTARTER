@@ -1,21 +1,16 @@
--- =====================================================
--- BOSTARTER - Schema Database Completo
--- =====================================================
--- Database: bostarter_italiano
--- Versione: 1.0
--- Data creazione: 2025
--- =====================================================
 
--- Creazione database
+-- BOSTARTER - Schema Database 
+
+
+-- DB Setup
 CREATE DATABASE IF NOT EXISTS bostarter_italiano
 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE bostarter_italiano;
 
--- =====================================================
--- TABELLE PRINCIPALI
--- =====================================================
+-- CORE TABLES
 
--- 1. Tabella Utenti
+
+-- Users table
 CREATE TABLE utenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -38,7 +33,7 @@ CREATE TABLE utenti (
     INDEX idx_stato (stato)
 );
 
--- 2. Tabella Competenze
+-- Skills catalog
 CREATE TABLE competenze (
     id INT PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL UNIQUE,
@@ -51,7 +46,7 @@ CREATE TABLE competenze (
     INDEX idx_categoria (categoria)
 );
 
--- 3. Tabella Progetti
+-- Progetti pubblicati
 CREATE TABLE progetti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     titolo VARCHAR(200) NOT NULL,
@@ -72,7 +67,7 @@ CREATE TABLE progetti (
     INDEX idx_categoria (categoria)
 );
 
--- 4. Tabella Rewards/Ricompense
+-- Ricompense progetto
 CREATE TABLE rewards (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -87,7 +82,7 @@ CREATE TABLE rewards (
     INDEX idx_progetto (progetto_id)
 );
 
--- 5. Tabella Finanziamenti
+-- Transazioni finanziarie
 CREATE TABLE finanziamenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -107,7 +102,7 @@ CREATE TABLE finanziamenti (
     INDEX idx_data (data_finanziamento)
 );
 
--- 6. Tabella Commenti
+-- Sistema commenti
 CREATE TABLE commenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -123,7 +118,7 @@ CREATE TABLE commenti (
     INDEX idx_data (data_commento)
 );
 
--- 7. Tabella Profili Software
+-- Profili lavoro software
 CREATE TABLE profili_software (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -134,7 +129,7 @@ CREATE TABLE profili_software (
     INDEX idx_progetto (progetto_id)
 );
 
--- 8. Tabella Candidature
+-- Candidature lavoro
 CREATE TABLE candidature (
     id INT PRIMARY KEY AUTO_INCREMENT,
     utente_id INT NOT NULL,
@@ -152,7 +147,7 @@ CREATE TABLE candidature (
     INDEX idx_stato (stato)
 );
 
--- 9. Tabella Skill Curriculum (Utente)
+-- Competenze utente
 CREATE TABLE skill_curriculum (
     id INT PRIMARY KEY AUTO_INCREMENT,
     utente_id INT NOT NULL,
@@ -166,7 +161,7 @@ CREATE TABLE skill_curriculum (
     INDEX idx_competenza (competenza_id)
 );
 
--- 10. Tabella Skill Profilo (Richiesti)
+-- Requisiti competenze progetto
 CREATE TABLE skill_profilo (
     id INT PRIMARY KEY AUTO_INCREMENT,
     profilo_id INT NOT NULL,
@@ -178,7 +173,7 @@ CREATE TABLE skill_profilo (
     INDEX idx_competenza (competenza_id)
 );
 
--- 11. Tabella Componenti Hardware
+-- Componenti hardware progetto
 CREATE TABLE componenti_hardware (
     id INT PRIMARY KEY AUTO_INCREMENT,
     progetto_id INT NOT NULL,
@@ -192,7 +187,7 @@ CREATE TABLE componenti_hardware (
     INDEX idx_progetto (progetto_id)
 );
 
--- 12. Tabella Like Commenti
+-- Like/dislike commenti
 CREATE TABLE like_commenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     commento_id INT NOT NULL,
@@ -206,7 +201,7 @@ CREATE TABLE like_commenti (
     INDEX idx_utente (utente_id)
 );
 
--- 13. Tabella Risposte Commenti
+-- Risposte commenti
 CREATE TABLE risposte_commenti (
     id INT PRIMARY KEY AUTO_INCREMENT,
     commento_id INT NOT NULL UNIQUE,
@@ -216,7 +211,7 @@ CREATE TABLE risposte_commenti (
     INDEX idx_commento (commento_id)
 );
 
--- 14. Tabella Notifiche
+-- Sistema notifiche
 CREATE TABLE notifiche (
     id INT PRIMARY KEY AUTO_INCREMENT,
     utente_id INT NOT NULL,
@@ -231,7 +226,7 @@ CREATE TABLE notifiche (
     INDEX idx_letta (letta)
 );
 
--- 15. Tabella Log Eventi
+-- Log eventi sistema
 CREATE TABLE log_eventi (
     id INT PRIMARY KEY AUTO_INCREMENT,
     tipo_evento VARCHAR(50) NOT NULL,
@@ -249,7 +244,7 @@ CREATE TABLE log_eventi (
     INDEX idx_progetto (progetto_id)
 );
 
--- 16. Tabella Sessioni Utente
+-- Sessioni utente
 CREATE TABLE sessioni_utente (
     id INT PRIMARY KEY AUTO_INCREMENT,
     utente_id INT NOT NULL,
@@ -263,11 +258,10 @@ CREATE TABLE sessioni_utente (
     INDEX idx_utente (utente_id)
 );
 
--- =====================================================
--- VISTE STATISTICHE
--- =====================================================
+-- STATISTICS VIEWS
 
--- Vista: Top 3 creatori per affidabilità
+
+-- Migliori creatori per affidabilità
 CREATE VIEW top_creatori_affidabilita AS
 SELECT
     u.id,
@@ -285,7 +279,7 @@ HAVING u.affidabilita > 0
 ORDER BY u.affidabilita DESC, progetti_completati DESC
 LIMIT 3;
 
--- Vista: Top 3 progetti vicini al completamento
+-- Progetti vicini al completamento
 CREATE VIEW top_progetti_vicini_completamento AS
 SELECT
     p.id,
@@ -306,7 +300,7 @@ HAVING budget_raccolto > 0 AND percentuale_completamento >= 50
 ORDER BY percentuale_completamento DESC
 LIMIT 3;
 
--- Vista: Top 3 finanziatori per importo totale
+-- Migliori finanziatori per importo totale
 CREATE VIEW top_finanziatori_importo AS
 SELECT
     u.id,
@@ -324,7 +318,7 @@ GROUP BY u.id, u.nickname, u.nome, u.cognome
 ORDER BY totale_finanziato DESC
 LIMIT 3;
 
--- Vista: Statistiche generali
+-- Riepilogo statistiche generali piattaforma
 CREATE VIEW statistiche_generali AS
 SELECT
     (SELECT COUNT(*) FROM utenti WHERE stato = 'attivo') as totale_utenti,
@@ -338,15 +332,15 @@ SELECT
     (SELECT AVG(affidabilita) FROM utenti WHERE tipo_utente = 'creatore' AND affidabilita > 0) as affidabilita_media
 FROM dual;
 
--- =====================================================
--- DATI DI ESEMPIO (per test)
--- =====================================================
 
--- Inserimento amministratore di default
+-- SAMPLE DATA (for testing)
+
+
+-- Account amministratore predefinito
 INSERT INTO utenti (email, nickname, password_hash, nome, cognome, tipo_utente, codice_sicurezza)
 VALUES ('admin@bostarter.it', 'admin', PASSWORD('admin123'), 'Amministratore', 'Sistema', 'amministratore', 'ADMIN001');
 
--- Inserimento competenze di base
+-- Catalogo competenze iniziali
 INSERT INTO competenze (nome, descrizione, categoria) VALUES
 ('PHP', 'Linguaggio di programmazione web lato server', 'Programmazione'),
 ('JavaScript', 'Linguaggio di programmazione web lato client', 'Programmazione'),
@@ -366,3 +360,4 @@ INSERT INTO competenze (nome, descrizione, categoria) VALUES
 ('Project Management', 'Gestione progetti e team', 'Management');
 
 COMMIT;
+

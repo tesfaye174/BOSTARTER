@@ -121,7 +121,7 @@ function getCommentiProgetto($progettoId) {
             progetti 
         WHERE 
             id = ? 
-            AND is_active = TRUE
+            AND 1=1
     ");
     $stmt->execute([$progettoId]);
     if (!$stmt->fetch()) {
@@ -186,7 +186,7 @@ function creaCommento($input, $utenteId) {
                 progetti 
             WHERE 
                 id = ? 
-                AND is_active = TRUE
+                AND 1=1
         ");
         $stmt->execute([$input['progetto_id']]);
         $progetto = $stmt->fetch();

@@ -1,23 +1,13 @@
 <?php
 /**
- * GESTIONE COMMENTI BOSTARTER
- *
- * Pagina per visualizzare e gestire commenti di un progetto.
- * Include pubblicazione, modifica, risposte e gestione permessi.
+ * Sistema commenti BOSTARTER
+ * Gestione commenti e risposte progetti
  */
+
+// Include funzioni comuni
+require_once 'includes/functions.php';
+
 session_start();
-
-// Funzioni di utilità
-/**
- * Verifica autenticazione utente
- */
-function isAuthenticated() {
-    return isset($_SESSION["user_id"]);
-}
-
-/**
- * Recupera tipo utente dalla sessione
- */
 function getUserType() {
     return $_SESSION['user_type'] ?? '';
 }

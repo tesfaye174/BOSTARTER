@@ -59,9 +59,9 @@ try {
     // Statistiche generali
     $stmt = $conn->query("
         SELECT
-            (SELECT COUNT(*) FROM utenti WHERE is_active = TRUE) as total_users,
-            (SELECT COUNT(*) FROM utenti WHERE tipo_utente = 'creatore' AND is_active = TRUE) as total_creators,
-            (SELECT COUNT(*) FROM progetti WHERE is_active = TRUE) as total_projects,
+            (SELECT COUNT(*) FROM utenti WHERE stato = TRUE) as total_users,
+            (SELECT COUNT(*) FROM utenti WHERE tipo_utente = 'creatore' AND stato = TRUE) as total_creators,
+            (SELECT COUNT(*) FROM progetti WHERE stato = TRUE) as total_projects,
             (SELECT COALESCE(SUM(importo), 0) FROM finanziamenti WHERE stato_pagamento = 'completed') as total_funds
     ");
     $stats = $stmt->fetch(PDO::FETCH_ASSOC) ?? $stats;
@@ -71,9 +71,9 @@ try {
 
     // Utenti recenti
     $stmt = $conn->prepare("
-        SELECT id, nickname, email, tipo_utente, data_registrazione, is_active
+        SELECT id, nickname, email, tipo_utente, data_registrazione, stato
         FROM utenti
-        WHERE is_active = TRUE
+        WHERE stato = TRUE
         ORDER BY data_registrazione DESC
         LIMIT 10
     ");
@@ -87,7 +87,7 @@ try {
                p.tipo_progetto
         FROM progetti p
         JOIN utenti u ON p.creatore_id = u.id
-        WHERE p.is_active = TRUE
+        WHERE p.stato = TRUE
         ORDER BY p.data_inserimento DESC
         LIMIT 5
     ");
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user_id = intval($_POST['user_id']);
             $current_status = $_POST['current_status'] === '1' ? 0 : 1;
 
-            $stmt = $conn->prepare("UPDATE utenti SET is_active = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE utenti SET stato = ? WHERE id = ?");
             $stmt->execute([$current_status, $user_id]);
 
             $message = $current_status ? 'Utente riattivato.' : 'Utente disattivato.';
@@ -316,11 +316,11 @@ if (isset($_GET['message'])) {
             <i class="fas fa-home"></i>Dashboard
         </a>
 
-        <a href="competenze.php" class="sidebar-link">
+        <a href="api/competenze.php" class="sidebar-link">
             <i class="fas fa-tools"></i>Competenze
         </a>
 
-        <a href="add_skill.php" class="sidebar-link">
+        <a href="frontend/admin/add_skill.php" class="sidebar-link">
             <i class="fas fa-plus-circle"></i>Aggiungi Skill
         </a>
 
@@ -330,7 +330,7 @@ if (isset($_GET['message'])) {
             <i class="fas fa-globe"></i>Sito Pubblico
         </a>
 
-        <a href="../statistiche.php" class="sidebar-link">
+        <a href="frontend/statistiche.php" class="sidebar-link">
             <i class="fas fa-chart-bar"></i>Statistiche Pubbliche
         </a>
     </div>
@@ -527,18 +527,18 @@ if (isset($_GET['message'])) {
                                         </td>
                                         <td><?php echo date('d/m/Y', strtotime($user['data_registrazione'])); ?></td>
                                         <td>
-                                            <span class="badge <?php echo $user['is_active'] ? 'bg-success' : 'bg-danger'; ?>">
-                                                <?php echo $user['is_active'] ? 'Attivo' : 'Disattivato'; ?>
+                                            <span class="badge <?php echo $user['stato'] ? 'bg-success' : 'bg-danger'; ?>">
+                                                <?php echo $user['stato'] ? 'Attivo' : 'Disattivato'; ?>
                                             </span>
                                         </td>
                                         <td>
                                             <form method="POST" class="d-inline">
                                                 <input type="hidden" name="action" value="toggle_user_status">
                                                 <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                                <input type="hidden" name="current_status" value="<?php echo $user['is_active'] ? '1' : '0'; ?>">
-                                                <button type="submit" class="btn btn-sm <?php echo $user['is_active'] ? 'btn-danger' : 'btn-success'; ?>"
-                                                        onclick="return confirm('<?php echo $user['is_active'] ? 'Disattivare' : 'Riattivare'; ?> questo utente?')">
-                                                    <i class="fas fa-<?php echo $user['is_active'] ? 'ban' : 'check'; ?>"></i>
+                                                <input type="hidden" name="current_status" value="<?php echo $user['stato'] ? '1' : '0'; ?>">
+                                                <button type="submit" class="btn btn-sm <?php echo $user['stato'] ? 'btn-danger' : 'btn-success'; ?>"
+                                                        onclick="return confirm('<?php echo $user['stato'] ? 'Disattivare' : 'Riattivare'; ?> questo utente?')">
+                                                    <i class="fas fa-<?php echo $user['stato'] ? 'ban' : 'check'; ?>"></i>
                                                 </button>
                                             </form>
                                         </td>
